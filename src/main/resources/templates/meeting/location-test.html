@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MeetBack 장소 입력 테스트</title>
+
+    <style>
+        body {
+            width: 600px;
+            margin: 40px auto;
+            font-family: Arial, sans-serif;
+        }
+
+        .field {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-right: 8px;
+            margin-bottom: 10px;
+        }
+
+        #result,
+        #calcResult,
+        #candidateCalcResult {
+            margin-top: 15px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>MeetBack 장소 입력 테스트</h2>
+
+
+<div class="field">
+    <label for="participantId">
+        참가자 ID
+    </label>
+
+    <input
+            type="number"
+            id="participantId"
+            value="1">
+</div>
+
+
+<div class="field">
+    <label for="departureQuery">
+        출발 장소
+    </label>
+
+    <input
+            type="text"
+            id="departureQuery"
+            value="수원역">
+</div>
+
+
+<div class="field">
+    <label for="returnQuery">
+        귀가 장소
+    </label>
+
+    <input
+            type="text"
+            id="returnQuery"
+            value="신림역">
+</div>
+
+
+<div class="field">
+    <label for="candidateQuery">
+        희망 장소
+    </label>
+
+    <input
+            type="text"
+            id="candidateQuery"
+            value="건대입구역">
+</div>
+
+
+<button
+        type="button"
+        onclick="saveAll()">
+    장소 입력 완료
+</button>
+
+
+<button
+        type="button"
+        onclick="loadParticipant()">
+    참가자 DB 조회
+</button>
+
+
+<div id="result">
+    결과가 여기에 표시됩니다.
+</div>
+
+
+<hr>
+
+
+<h3>계산 테스트</h3>
+
+
+<button
+        type="button"
+        onclick="calculateReturn()">
+    귀가 계산 테스트
+</button>
+
+
+<pre id="calcResult">
+참가자 1명 계산 결과
+</pre>
+
+
+<button
+        type="button"
+        onclick="calculateCandidate()">
+    후보 전체 계산 테스트
+</button>
+
+
+<pre id="candidateCalcResult">
+후보 전체 계산 결과
+</pre>
+
+
+<script th:inline="javascript">
+
+    const participantBaseUrl =
+        /*[[@{/participants}]]*/ "/participants";
+
+
+    /*
+     * 참가자 1명 × 후보 1개 계산
+     */
+    async function calculateReturn() {
+
+        const participantId = 1;
+        const candidateId = 1;
+
+        const resultDiv =
+            document.getElementById("calcResult");
+
+        try {
+
+            resultDiv.textContent =
+                "귀가 경로 / 막차 계산 중...";
+
+
+            const response = await fetch(
+                `/calculations/return?participantId=${participantId}&candidateId=${candidateId}`,
+                {
+                    method: "POST"
+                }
+            );
+
+
+            if (!response.ok) {
+
+                const errorText =
+                    await response.text();
+
+                throw new Error(
+                    "귀가 계산 실패: "
+                    + errorText
+                );
+            }
+
+
+            const data =
+                await response.json();
+
+
+            resultDiv.textContent =
+                JSON.stringify(
+                    data,
+                    null,
+                    2
+                );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            resultDiv.textContent =
+                error.message;
+        }
+    }
+
+
+    /*
+     * 후보 1개 × 참가자 전원 계산
+     */
+    async function calculateCandidate() {
+
+        const candidateId = 1;
+
+        const resultDiv =
+            document.getElementById(
+                "candidateCalcResult"
+            );
+
+
+        try {
+
+            resultDiv.textContent =
+                "참가자 전원 귀가 / 막차 계산 중...\n"
+                + "ODsay 호출 때문에 시간이 조금 걸릴 수 있습니다.";
+
+
+            const response = await fetch(
+                `/calculations/candidate?candidateId=${candidateId}`,
+                {
+                    method: "POST"
+                }
+            );
+
+
+            if (!response.ok) {
+
+                const errorText =
+                    await response.text();
+
+                throw new Error(
+                    "후보 전체 계산 실패: "
+                    + errorText
+                );
+            }
+
+
+            const data =
+                await response.json();
+
+
+            resultDiv.textContent =
+                JSON.stringify(
+                    data,
+                    null,
+                    2
+                );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            resultDiv.textContent =
+                error.message;
+        }
+    }
+
+
+    /*
+     * 출발지 + 귀가지 + 후보 장소 저장
+     */
+    async function saveAll() {
+
+        const participantId =
+            document.getElementById(
+                "participantId"
+            ).value;
+
+        const departureQuery =
+            document.getElementById(
+                "departureQuery"
+            ).value.trim();
+
+        const returnQuery =
+            document.getElementById(
+                "returnQuery"
+            ).value.trim();
+
+        const candidateQuery =
+            document.getElementById(
+                "candidateQuery"
+            ).value.trim();
+
+        const resultDiv =
+            document.getElementById(
+                "result"
+            );
+
+
+        if (
+            !participantId ||
+            !departureQuery ||
+            !returnQuery ||
+            !candidateQuery
+        ) {
+
+            alert(
+                "모든 값을 입력해주세요."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            resultDiv.textContent =
+                "출발지 / 귀가지 저장 중...";
+
+
+            /*
+             * 1. 출발지 + 귀가지 저장
+             */
+            const locationResponse =
+                await fetch(
+                    participantBaseUrl
+                    + "/"
+                    + participantId
+                    + "/location",
+                    {
+                        method: "PUT",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            departureQuery:
+                            departureQuery,
+
+                            returnQuery:
+                            returnQuery
+                        })
+                    }
+                );
+
+
+            if (!locationResponse.ok) {
+
+                const errorText =
+                    await locationResponse.text();
+
+                throw new Error(
+                    "위치 저장 실패: "
+                    + errorText
+                );
+            }
+
+
+            resultDiv.textContent =
+                "희망 장소 저장 중...";
+
+
+            /*
+             * 2. 희망 장소 저장
+             */
+            const candidateResponse =
+                await fetch(
+                    participantBaseUrl
+                    + "/"
+                    + participantId
+                    + "/candidate",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            candidateQuery:
+                            candidateQuery
+                        })
+                    }
+                );
+
+
+            if (!candidateResponse.ok) {
+
+                const errorText =
+                    await candidateResponse.text();
+
+                throw new Error(
+                    "희망 장소 저장 실패: "
+                    + errorText
+                );
+            }
+
+
+            /*
+             * 3. 저장 완료 후 참가자 다시 조회
+             */
+            await loadParticipant();
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            resultDiv.textContent =
+                error.message;
+        }
+    }
+
+
+    /*
+     * 참가자 DB 조회
+     */
+    async function loadParticipant() {
+
+        const participantId =
+            document.getElementById(
+                "participantId"
+            ).value;
+
+        const resultDiv =
+            document.getElementById(
+                "result"
+            );
+
+
+        try {
+
+            const response =
+                await fetch(
+                    participantBaseUrl
+                    + "/"
+                    + participantId
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "조회 실패: "
+                    + response.status
+                );
+            }
+
+
+            const participant =
+                await response.json();
+
+
+            resultDiv.textContent =
+                JSON.stringify(
+                    participant,
+                    null,
+                    2
+                );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            resultDiv.textContent =
+                error.message;
+        }
+    }
+
+</script>
+
+</body>
+</html>

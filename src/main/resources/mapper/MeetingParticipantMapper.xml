@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.MeetingParticipantMapper">
+
+    <select id="findById"
+            parameterType="long"
+            resultType="com.meetback.dev.domain.MeetingParticipant">
+        SELECT
+        participant_id,
+        meeting_id,
+        user_id,
+        input_status,
+
+        departure_name,
+        departure_address,
+        departure_latitude,
+        departure_longitude,
+
+        return_name,
+        return_address,
+        return_latitude,
+        return_longitude,
+
+        submitted_at,
+        created_at,
+        updated_at
+
+        FROM meeting_participants
+
+        WHERE participant_id = #{participantId}
+    </select>
+
+    <update id="updateLocation">
+        UPDATE meeting_participants
+        SET
+        departure_name = #{departureName},
+        departure_address = #{departureAddress},
+        departure_latitude = #{departureLatitude},
+        departure_longitude = #{departureLongitude},
+
+        return_name = #{returnName},
+        return_address = #{returnAddress},
+        return_latitude = #{returnLatitude},
+        return_longitude = #{returnLongitude},
+
+        updated_at = NOW()
+
+        WHERE participant_id = #{participantId}
+    </update>
+
+    <update id="completeInput">
+        UPDATE meeting_participants
+        SET
+        input_status = 'COMPLETE',
+        submitted_at = NOW(),
+        updated_at = NOW()
+        WHERE participant_id = #{participantId}
+    </update>
+
+    <select id="countByMeetingId"
+            parameterType="long"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM meeting_participants
+        WHERE meeting_id = #{meetingId}
+    </select>
+
+
+    <select id="countCompleteByMeetingId"
+            parameterType="long"
+            resultType="int">
+        SELECT COUNT(*)
+        FROM meeting_participants
+        WHERE meeting_id = #{meetingId}
+        AND input_status = 'COMPLETE'
+    </select>
+
+    <select id="findByMeetingId"
+            parameterType="long"
+            resultType="com.meetback.dev.domain.MeetingParticipant">
+        SELECT
+        participant_id,
+        meeting_id,
+        user_id,
+        input_status,
+        departure_name,
+        departure_address,
+        departure_latitude,
+        departure_longitude,
+        return_name,
+        return_address,
+        return_latitude,
+        return_longitude,
+        submitted_at,
+        created_at,
+        updated_at
+        FROM meeting_participants
+        WHERE meeting_id = #{meetingId}
+        ORDER BY participant_id
+    </select>
+</mapper>
