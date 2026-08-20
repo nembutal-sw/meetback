@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.mapper.RefreshTokenMapper">
+
+    <resultMap id="refreshTokenResultMap"
+               type="com.meetback.dev.domain.RefreshToken">
+
+        <id property="refreshTokenId" column="refresh_token_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="tokenHash" column="token_hash"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+
+    </resultMap>
+
+
+    <select id="selectByUserId"
+            resultMap="refreshTokenResultMap">
+
+        SELECT
+        refresh_token_id,
+        user_id,
+        token_hash,
+        expires_at,
+        created_at,
+        updated_at
+        FROM refresh_tokens
+        WHERE user_id = #{userId}
+
+    </select>
+
+
+    <select id="selectByTokenHash"
+            resultMap="refreshTokenResultMap">
+
+        SELECT
+        refresh_token_id,
+        user_id,
+        token_hash,
+        expires_at,
+        created_at,
+        updated_at
+        FROM refresh_tokens
+        WHERE token_hash = #{tokenHash}
+
+    </select>
+
+
+    <insert id="insertRefreshToken"
+            parameterType="com.meetback.dev.domain.RefreshToken"
+            useGeneratedKeys="true"
+            keyProperty="refreshTokenId">
+
+        INSERT INTO refresh_tokens
+        (
+        user_id,
+        token_hash,
+        expires_at,
+        created_at,
+        updated_at
+        )
+        VALUES
+        (
+        #{userId},
+        #{tokenHash},
+        #{expiresAt},
+        NOW(),
+        NOW()
+        )
+
+    </insert>
+
+
+    <update id="updateRefreshToken"
+            parameterType="com.meetback.dev.domain.RefreshToken">
+
+        UPDATE refresh_tokens
+        SET
+        token_hash = #{tokenHash},
+        expires_at = #{expiresAt},
+        updated_at = NOW()
+        WHERE user_id = #{userId}
+
+    </update>
+
+    <!-- 로그아웃 / 사용자 Refresh Token 삭제 -->
+    <delete id="deleteByUserId">
+
+        DELETE FROM refresh_tokens
+        WHERE user_id = #{userId}
+
+    </delete>
+
+    <!-- 유효기간이 지난 Refresh Token 전체 삭제 -->
+    <delete id="deleteExpiredTokens">
+
+        DELETE FROM refresh_tokens
+        WHERE expires_at &lt;= NOW()
+
+    </delete>
+
+</mapper>
