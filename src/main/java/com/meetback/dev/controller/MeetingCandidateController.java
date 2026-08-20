@@ -13,25 +13,23 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/participants")
 public class MeetingCandidateController {
+
     private final MeetingCandidateService meetingCandidateService;
 
     @PostMapping("/{participantId}/candidate")
     public ResponseEntity<Void> saveCandidate(
             @PathVariable Long participantId,
             @RequestBody CandidateRequestDTO request) {
-
         meetingCandidateService.saveCandidate(
                 participantId,
                 request.candidateQuery()
         );
-
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/meeting/{meetingId}/candidates")
     public List<MeetingCandidate> findCandidates(
             @PathVariable Long meetingId) {
-
         return meetingCandidateService.findByMeetingId(meetingId);
     }
 }

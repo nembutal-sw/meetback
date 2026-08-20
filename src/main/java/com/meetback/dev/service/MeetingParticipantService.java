@@ -20,9 +20,11 @@ public class MeetingParticipantService {
     public MeetingParticipant findById(Long participantId) {
         return meetingParticipantMapper.findById(participantId);
     }
+
     public void updateLocation(
             Long participantId,
-            ParticipantLocationRequestDTO request) {
+            ParticipantLocationRequestDTO request
+    ) {
 
         List<PlaceDTO> departureResults =
                 kakaoLocalClient.search(request.departureQuery());
@@ -32,14 +34,19 @@ public class MeetingParticipantService {
 
 
         if (departureResults.isEmpty()) {
-            throw new IllegalArgumentException("출발 장소를 찾을 수 없습니다.");
+            throw new IllegalArgumentException(
+                    "출발 장소를 찾을 수 없습니다."
+            );
         }
+
         if (returnResults.isEmpty()) {
-            throw new IllegalArgumentException("귀가 장소를 찾을 수 없습니다.");
+            throw new IllegalArgumentException(
+                    "귀가 장소를 찾을 수 없습니다."
+            );
         }
 
 
-        // 지금은 테스트니까 첫 번째 검색 결과 사용
+        // 검색 결과 중 첫 번째 장소 사용
         PlaceDTO departurePlace =
                 departureResults.get(0);
 
@@ -52,7 +59,9 @@ public class MeetingParticipantService {
 
 
         if (participant == null) {
-            throw new IllegalArgumentException("참가자를 찾을 수 없습니다.");
+            throw new IllegalArgumentException(
+                    "참가자를 찾을 수 없습니다."
+            );
         }
 
 
@@ -61,7 +70,8 @@ public class MeetingParticipantService {
         );
 
         participant.setDepartureAddress(
-                departurePlace.roadAddress().isBlank()
+                departurePlace.roadAddress() == null
+                        || departurePlace.roadAddress().isBlank()
                         ? departurePlace.address()
                         : departurePlace.roadAddress()
         );
@@ -80,7 +90,8 @@ public class MeetingParticipantService {
         );
 
         participant.setReturnAddress(
-                returnPlace.roadAddress().isBlank()
+                returnPlace.roadAddress() == null
+                        || returnPlace.roadAddress().isBlank()
                         ? returnPlace.address()
                         : returnPlace.roadAddress()
         );
@@ -93,10 +104,12 @@ public class MeetingParticipantService {
                 returnPlace.longitude()
         );
 
+
         meetingParticipantMapper.updateLocation(
                 participant
         );
     }
+
 
     public boolean isAllComplete(Long meetingId) {
 
@@ -110,8 +123,8 @@ public class MeetingParticipantService {
                 && totalCount == completeCount;
     }
 
+
     public List<MeetingParticipant> findByMeetingId(Long meetingId) {
         return meetingParticipantMapper.findByMeetingId(meetingId);
     }
-
 }

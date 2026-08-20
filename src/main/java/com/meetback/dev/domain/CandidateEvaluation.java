@@ -10,17 +10,13 @@ public class CandidateEvaluation {
     private Long evaluationId;
     private Long candidateId;
     private Integer calculationVersion;
-
     private Boolean allReturnable;
     private LocalDateTime deadlineAt;
     private Integer goldenMarginMinutes;
-
     private Double averageReturnMinutes;
     private Integer fairnessGapMinutes;
     private Integer fairnessScore;
-
     private Double ruleScore;
     private Integer recommendationRank;
-
     private LocalDateTime updatedAt;
 }

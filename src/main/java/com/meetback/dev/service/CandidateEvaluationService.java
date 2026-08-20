@@ -7,7 +7,6 @@ import com.meetback.dev.repository.CandidateEvaluationMapper;
 import com.meetback.dev.repository.MeetingMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,17 +18,14 @@ public class CandidateEvaluationService {
     private final CandidateEvaluationMapper candidateEvaluationMapper;
     private final MeetingMapper meetingMapper;
 
-
     public LocalDateTime calculateDeadline(
             List<CandidateReturnResult> results
     ) {
-
         if (results == null || results.isEmpty()) {
             throw new IllegalArgumentException(
                     "귀가 계산 결과가 없습니다."
             );
         }
-
         return results.stream()
                 .map(CandidateReturnResult::getLastSafeDepartureAt)
                 .filter(time -> time != null)
@@ -46,19 +42,15 @@ public class CandidateEvaluationService {
             LocalDateTime desiredEndAt,
             LocalDateTime deadlineAt
     ) {
-
         if (desiredEndAt == null || deadlineAt == null) {
             throw new IllegalArgumentException(
                     "종료시간 또는 Deadline이 없습니다."
             );
         }
-
         LocalDateTime desired =
                 desiredEndAt.withSecond(0).withNano(0);
-
         LocalDateTime deadline =
                 deadlineAt.withSecond(0).withNano(0);
-
         return (int) Duration.between(
                 desired,
                 deadline
@@ -69,7 +61,6 @@ public class CandidateEvaluationService {
     public int calculateFairnessGap(
             List<CandidateReturnResult> results
     ) {
-
         if (results == null || results.isEmpty()) {
             throw new IllegalArgumentException(
                     "귀가 계산 결과가 없습니다."
@@ -97,7 +88,6 @@ public class CandidateEvaluationService {
                                         "귀가 시간이 없습니다."
                                 )
                         );
-
         return maxReturnMinutes - minReturnMinutes;
     }
 
@@ -105,7 +95,6 @@ public class CandidateEvaluationService {
     public int calculateFairnessScore(
             int fairnessGapMinutes
     ) {
-
         if (fairnessGapMinutes <= 10) {
             return 50;
         }
@@ -131,7 +120,6 @@ public class CandidateEvaluationService {
             Long meetingId,
             List<CandidateReturnResult> results
     ) {
-
         Meeting meeting =
                 meetingMapper.findById(meetingId);
 
@@ -140,8 +128,6 @@ public class CandidateEvaluationService {
                     "모임을 찾을 수 없습니다."
             );
         }
-
-
         LocalDateTime deadline =
                 calculateDeadline(results);
 
@@ -150,13 +136,11 @@ public class CandidateEvaluationService {
                         meeting.getDesiredEndAt(),
                         deadline
                 );
-
         int fairnessGap =
                 calculateFairnessGap(results);
 
         int fairnessScore =
                 calculateFairnessScore(fairnessGap);
-
 
         double averageReturnMinutes =
                 results.stream()
@@ -166,7 +150,6 @@ public class CandidateEvaluationService {
                         .average()
                         .orElse(0.0);
 
-
         boolean allReturnable =
                 results.stream()
                         .allMatch(result ->
@@ -174,7 +157,6 @@ public class CandidateEvaluationService {
                                         result.getCanReturn()
                                 )
                         );
-
 
         CandidateEvaluation evaluation =
                 new CandidateEvaluation();
@@ -220,7 +202,6 @@ public class CandidateEvaluationService {
                 candidateEvaluationMapper.findByCandidateId(
                         candidateId
                 );
-
         if (saved == null) {
             candidateEvaluationMapper.insert(
                     evaluation
@@ -230,7 +211,6 @@ public class CandidateEvaluationService {
                     evaluation
             );
         }
-
         return evaluation;
     }
 }

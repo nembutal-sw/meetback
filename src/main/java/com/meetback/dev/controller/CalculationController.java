@@ -22,7 +22,6 @@ public class CalculationController {
             @RequestParam Long participantId,
             @RequestParam Long candidateId
     ) {
-
         return calculationService.calculateReturn(
                 participantId,
                 candidateId
