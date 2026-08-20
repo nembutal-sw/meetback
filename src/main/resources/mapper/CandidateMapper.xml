@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.CandidateMapper">
+
+    <insert id="insertCandidate"
+            parameterType="com.meetback.dev.domain.MeetingCandidate"
+            useGeneratedKeys="true"
+            keyProperty="candidateId">
+
+        INSERT INTO meeting_candidates(
+            meeting_id,
+            proposer_participant_id,
+            place_name,
+            address,
+            latitude,
+            longitude,
+            is_active
+        )
+        VALUES(
+            #{meetingId},
+            #{proposerParticipantId},
+            #{placeName},
+            #{address},
+            #{latitude},
+            #{longitude},
+            #{isActive}
+        )
+    </insert>
+
+    <select id="countCandidateByMeetingAndParticipant"
+            resultType="int">
+
+        SELECT COUNT(*)
+        FROM meeting_candidates
+        WHERE meeting_id = #{meetingId}
+            AND proposer_participant_id = #{participantId}
+            AND is_active = TRUE
+
+    </select>
+
+</mapper>

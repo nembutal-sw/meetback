@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.MeetingMapper">
+
+    <insert id="insertMeeting"
+            parameterType="com.meetback.dev.domain.Meeting"
+            useGeneratedKeys="true"
+            keyProperty="meetingId">
+
+        INSERT INTO meetings (
+        host_user_id,
+        title,
+        status,
+        desired_end_at,
+        calculation_version,
+        invite_code
+        )
+        VALUES (
+        #{hostUserId},
+        #{title},
+        #{status},
+        #{desiredEndAt},
+        #{calculationVersion},
+        #{inviteCode}
+        )
+
+    </insert>
+
+    <select id="selectByInviteCode"
+            parameterType="string"
+            resultType="com.meetback.dev.domain.Meeting">
+
+        SELECT
+            meeting_id,
+            host_user_id,
+            title,
+            status,
+            desired_end_at,
+            calculation_version,
+            invite_code,
+            final_candidate_id,
+            created_at,
+            updated_at
+
+        FROM meetings
+
+        WHERE invite_code = #{inviteCode}
+
+    </select>
+
+</mapper>

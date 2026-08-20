@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.ParticipantMapper">
+
+    <insert id="insertParticipant">
+
+        INSERT INTO meeting_participants(
+            meeting_id,
+            user_id,
+            input_status
+        )
+        VALUES (
+            #{meetingId},
+            #{userId},
+            #{inputStatus}
+        )
+
+    </insert>
+
+    <select id="countParticipantByMeetingAndUser"
+            resultType="int">
+
+        SELECT COUNT(*)
+        FROM meeting_participants
+        WHERE meeting_id = #{meetingId}
+            AND user_id = #{userId}
+
+    </select>
+
+    <update id="updateLocation"
+            parameterType="com.meetback.dev.domain.MeetingParticipant">
+
+        UPDATE meeting_participants
+        SET
+            departure_name = #{departureName},
+            departure_address = #{departureAddress},
+            departure_latitude = #{departureLatitude},
+            departure_longitude = #{departureLongitude},
+
+            return_name = #{returnName},
+            return_address = #{returnAddress},
+            return_latitude = #{returnLatitude},
+            return_longitude = #{returnLongitude},
+
+            input_status = #{inputStatus},
+            submitted_at = NOW()
+
+        WHERE participant_id = #{participantId}
+
+    </update>
+
+    <select id="countParticipant"
+            parameterType="long"
+            resultType="int">
+
+        SELECT COUNT(*)
+        FROM meeting_participants
+        WHERE meeting_id = #{meetingId}
+
+    </select>
+
+    <select id="countSubmittedParticipant"
+            parameterType="long"
+            resultType="int">
+
+        SELECT COUNT(*)
+        FROM meeting_participants
+        WHERE meeting_id = #{meetingId}
+          AND input_status = 'SUBMITTED'
+
+    </select>
+
+</mapper>
