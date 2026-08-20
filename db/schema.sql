@@ -12,7 +12,7 @@ CREATE TABLE users (
                        email VARCHAR(255),
                        nickname VARCHAR(255),
                        password_hash VARCHAR(255),
-                       role VARCHAR(255),
+                       role VARCHAR(255) DEFAULT "user",
                        deleted_at DATETIME,
                        created_at DATETIME,
                        updated_at DATETIME,
