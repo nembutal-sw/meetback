@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.meetback.dev.mapper.UserMapper">
+<mapper namespace="com.meetback.dev.repository.UserMapper">
 
     <resultMap id="userResultMap"
                type="com.meetback.dev.domain.User">
@@ -112,5 +112,22 @@
         WHERE user_id = #{userId}
 
     </update>
+
+    <select id="selectById"
+            resultMap="userResultMap">
+
+        SELECT
+            user_id,
+            email,
+            nickname,
+            password_hash,
+            role,
+            deleted_at,
+            created_at,
+            updated_at
+        FROM users
+        WHERE user_id = #{userId}
+
+    </select>
 
 </mapper>

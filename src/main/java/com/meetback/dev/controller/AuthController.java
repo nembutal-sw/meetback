@@ -31,16 +31,17 @@ public class AuthController {
     }
 
     // 일반로그인
+
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @RequestBody LoginRequest request
-            ) {
-                LoginResponse response =
-                        authService.login(request);
+    ) {
+        LoginResponse response =
+                authService.login(request);
 
-            return ResponseEntity.ok(
-                    response
-            );
+        return ResponseEntity.ok(
+                response
+        );
     }
 
     // 카카오 로그인
@@ -48,19 +49,20 @@ public class AuthController {
     @PostMapping("/kakao")
     public ResponseEntity<KakaoLoginResponse> kakaoLogin(
             @RequestBody KakaoLoginRequest request
-            ) {
+    ) {
 
-                KakaoLoginResponse response =
-                        authService.kakaoLogin(
-                                request
-                        );
-
-                return  ResponseEntity.ok(
-                        response
+        KakaoLoginResponse response =
+                authService.kakaoLogin(
+                        request
                 );
+
+        return  ResponseEntity.ok(
+                response
+        );
     }
 
     // Refresh Token 재발급
+
     @PostMapping("/refresh")
     public ResponseEntity<TokenRefreshResponse> refresh(
             @RequestBody TokenRefreshRequest request
@@ -77,7 +79,6 @@ public class AuthController {
     }
 
     // 로그아웃
-    // ============================================================
 
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
@@ -98,10 +99,7 @@ public class AuthController {
                 .build();
     }
 
-
-    // ============================================================
     // 회원탈퇴 요청
-    // ============================================================
 
     @DeleteMapping("/withdraw")
     public ResponseEntity<Void> withdraw(
@@ -122,10 +120,7 @@ public class AuthController {
                 .build();
     }
 
-
-    // ============================================================
     // 회원탈퇴 취소
-    // ============================================================
 
     @PostMapping("/withdraw/cancel")
     public ResponseEntity<Void> cancelWithdrawal(
@@ -146,10 +141,23 @@ public class AuthController {
                 .build();
     }
 
+    // 로그인 상태 확인
 
-    // ============================================================
+    @GetMapping("/check")
+    public ResponseEntity<Void> checkLogin(
+            @RequestHeader("Authorization") String authorization
+    ) {
+
+        getUserIdFromAuthorization(
+                authorization
+        );
+
+        return ResponseEntity
+                .ok()
+                .build();
+    }
+
     // Authorization Header에서 userId 추출
-    // ============================================================
 
     private Long getUserIdFromAuthorization(
             String authorization

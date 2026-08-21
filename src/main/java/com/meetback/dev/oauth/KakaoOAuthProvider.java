@@ -17,15 +17,18 @@ import tools.jackson.databind.JsonNode;
 
         private final String clientId;
         private final String redirectUri;
+        private final String clientSecret;
 
         public KakaoOAuthProvider(
                 @Value ("${kakao.client-id}") String clientId,
-                @Value("${kakao.redirect-uri}") String redirectUri
+                @Value("${kakao.redirect-uri}") String redirectUri,
+                @Value("${kakao.client-secret}") String clientSecret
         ) {
 
             this.restClient = RestClient.create();
             this.clientId = clientId;
             this.redirectUri = redirectUri;
+            this.clientSecret = clientSecret;
         }
 
 
@@ -53,6 +56,11 @@ import tools.jackson.databind.JsonNode;
             form.add(
                     "code",
                     code
+            );
+
+            form.add(
+                    "client_secret",
+                    clientSecret
             );
 
 

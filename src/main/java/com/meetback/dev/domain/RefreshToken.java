@@ -11,7 +11,7 @@ public class RefreshToken {
     private Long userId;
     private String tokenHash;
     private LocalDateTime expiresAt;
-    private LocalDateTime createAt;
-    private LocalDateTime updateAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 }

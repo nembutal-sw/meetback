@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.meetback.dev.mapper.RefreshTokenMapper">
+<mapper namespace="com.meetback.dev.repository.RefreshTokenMapper">
 
     <resultMap id="refreshTokenResultMap"
                type="com.meetback.dev.domain.RefreshToken">
@@ -97,7 +97,6 @@
 
     <!-- 유효기간이 지난 Refresh Token 전체 삭제 -->
     <delete id="deleteExpiredTokens">
-
         DELETE FROM refresh_tokens
         WHERE expires_at &lt;= NOW()
 
