@@ -5,40 +5,38 @@
 
 <mapper namespace="com.meetback.dev.repository.CandidateMapper">
 
-    <insert id="insertCandidate"
-            parameterType="com.meetback.dev.domain.MeetingCandidate"
-            useGeneratedKeys="true"
-            keyProperty="candidateId">
+    <select id="countActiveCandidate"
+            parameterType="long"
+            resultType="int">
 
-        INSERT INTO meeting_candidates(
+        SELECT COUNT(*)
+        FROM meeting_candidates
+        WHERE meeting_id = #{meetingId}
+        AND is_active = TRUE
+
+    </select>
+
+    <select id="selectActiveCandidate"
+            resultType="com.meetback.dev.domain.MeetingCandidate">
+
+        SELECT
+            candidate_id,
             meeting_id,
             proposer_participant_id,
             place_name,
             address,
             latitude,
             longitude,
-            is_active
-        )
-        VALUES(
-            #{meetingId},
-            #{proposerParticipantId},
-            #{placeName},
-            #{address},
-            #{latitude},
-            #{longitude},
-            #{isActive}
-        )
-    </insert>
-
-    <select id="countCandidateByMeetingAndParticipant"
-            resultType="int">
-
-        SELECT COUNT(*)
+            is_active,
+            created_at,
+            updated_at
         FROM meeting_candidates
         WHERE meeting_id = #{meetingId}
-            AND proposer_participant_id = #{participantId}
+            AND candidate_id = #{candidateId}
             AND is_active = TRUE
 
     </select>
+
+
 
 </mapper>

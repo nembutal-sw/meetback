@@ -7,11 +7,14 @@ import org.apache.ibatis.annotations.Param;
 @Mapper
 public interface CandidateMapper {
 
-    int insertCandidate(MeetingCandidate candidate);
+    int countActiveCandidate(
+            Long meetingId
+    );
 
-    int countCandidateByMeetingAndParticipant(
+    MeetingCandidate selectActiveCandidate(
             @Param("meetingId") Long meetingId,
-            @Param("participantId") Long participantId);
+            @Param("candidateId") Long candidateId
+    );
 
 
 }

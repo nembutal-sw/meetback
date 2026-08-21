@@ -13,7 +13,10 @@ public interface ParticipantMapper {
             @Param("userId") Long userId
     );
 
-    int updateLocation(MeetingParticipant participant);
+    int countParticipantByIdAndMeeting(
+            @Param("participantId") Long participantId,
+            @Param("meetingId") Long meetingId
+    );
 
     // 전체 투표 했는지 확인
     int countParticipant(Long meetingId);

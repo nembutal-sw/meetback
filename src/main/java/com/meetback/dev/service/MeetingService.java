@@ -1,11 +1,10 @@
 package com.meetback.dev.service;
 
-import com.meetback.dev.domain.InputStatus;
-import com.meetback.dev.domain.Meeting;
-import com.meetback.dev.domain.MeetingStatus;
+import com.meetback.dev.domain.*;
+import com.meetback.dev.dto.FinalCandidateRequest;
 import com.meetback.dev.dto.MeetingJoinRequest;
+import com.meetback.dev.repository.CandidateMapper;
 import com.meetback.dev.repository.MeetingMapper;
-import com.meetback.dev.domain.MeetingParticipant;
 import com.meetback.dev.dto.MeetingCreateRequest;
 import com.meetback.dev.dto.MeetingCreateResponse;
 import com.meetback.dev.repository.ParticipantMapper;
@@ -21,6 +20,9 @@ public class MeetingService {
 
     private final MeetingMapper meetingMapper;
     private final ParticipantMapper participantMapper;
+    private final CandidateMapper candidateMapper;
+    private final ParticipantService participantService;
+    private final CandidateService candidateService;
 
     @Transactional
     public MeetingCreateResponse createMeeting(
@@ -103,6 +105,134 @@ public class MeetingService {
         participantMapper.insertParticipant(participant);
 
         return meeting.getMeetingId();
+    }
+
+    @Transactional
+    public void confirmFinalCandidate(
+            Long meetingId,
+            Long hostUserId,
+            FinalCandidateRequest request
+    ) {
+
+        if (request.getCandidateId() == null) {
+            throw new IllegalArgumentException(
+                    "candidateId는 필수입니다."
+            );
+        }
+
+
+        // 모임 조회
+        Meeting meeting =
+                meetingMapper.selectMeetingById(meetingId);
+
+        if (meeting == null) {
+            throw new IllegalArgumentException(
+                    "존재하지 않는 모임입니다."
+            );
+        }
+
+
+        // 방장 확인
+        if (!meeting.getHostUserId().equals(hostUserId)) {
+            throw new IllegalStateException(
+                    "방장만 최종 장소를 확정할 수 있습니다."
+            );
+        }
+
+
+        // VOTING 상태인지
+        if (meeting.getStatus() != MeetingStatus.VOTING) {
+            throw new IllegalStateException(
+                    "현재 최종 후보를 확정할 수 없는 상태입니다."
+            );
+        }
+
+
+        // 후보 확인
+        MeetingCandidate candidate =
+                candidateMapper.selectActiveCandidate(
+                        meetingId,
+                        request.getCandidateId()
+                );
+
+        if (candidate == null) {
+            throw new IllegalArgumentException(
+                    "유효하지 않은 후보지입니다."
+            );
+        }
+
+
+        // 최종 장소 확정
+        int result =
+                meetingMapper.updateFinalCandidate(
+                        meetingId,
+                        request.getCandidateId(),
+                        MeetingStatus.CONFIRMED
+                );
+
+
+        if (result == 0) {
+            throw new IllegalStateException(
+                    "최종 장소 확정에 실패했습니다."
+            );
+        }
+    }
+
+    @Transactional
+    public void startVoting(
+            Long meetingId,
+            Long hostUserId
+    ) {
+
+        // 1. 모임 존재 확인
+        Meeting meeting =
+                meetingMapper.selectMeetingById(meetingId);
+
+        if (meeting == null) {
+            throw new IllegalArgumentException(
+                    "존재하지 않는 모임입니다."
+            );
+        }
+
+        // 2. 방장 확인
+        if (!meeting.getHostUserId().equals(hostUserId)) {
+            throw new IllegalStateException(
+                    "방장만 투표를 시작할 수 있습니다."
+            );
+        }
+
+        // 3. 현재 상태 확인
+        if (meeting.getStatus() != MeetingStatus.INPUT_OPEN) {
+            throw new IllegalStateException(
+                    "투표를 시작할 수 없는 모임 상태입니다."
+            );
+        }
+
+        // 4. 전원 위치 제출 확인
+        boolean allSubmitted =
+                participantService.isAllSubmitted(meetingId);
+
+        if (!allSubmitted) {
+            throw new IllegalStateException(
+                    "모든 참가자의 위치 입력이 완료되지 않았습니다."
+            );
+        }
+
+        // 5. 후보 존재 확인
+        boolean candidateExists =
+                candidateService.existsCandidate(meetingId);
+
+        if (!candidateExists) {
+            throw new IllegalStateException(
+                    "등록된 후보지가 없습니다."
+            );
+        }
+
+        // 6. VOTING으로 변경
+        meetingMapper.updateMeetingStatus(
+                meetingId,
+                MeetingStatus.VOTING
+        );
     }
 
 }

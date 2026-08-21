@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.VoteMapper">
+
+    <select id="selectVoteByMeetingAndParticipant"
+            resultType="com.meetback.dev.domain.PlaceVote">
+
+        SELECT
+            vote_id,
+            meeting_id,
+            participant_id,
+            candidate_id,
+            vote_change_count,
+            created_at,
+            updated_at
+        FROM place_votes
+        WHERE meeting_id = #{meetingId}
+            AND participant_id = #{participantId}
+
+    </select>
+
+
+    <insert id="insertVote"
+            parameterType="com.meetback.dev.domain.PlaceVote"
+            useGeneratedKeys="true"
+            keyProperty="voteId">
+
+        INSERT INTO place_votes (
+            meeting_id,
+            participant_id,
+            candidate_id,
+            vote_change_count
+        )
+        VALUES (
+            #{meetingId},
+            #{participantId},
+            #{candidateId},
+            #{voteChangeCount}
+        )
+
+    </insert>
+
+
+    <update id="updateVote"
+            parameterType="com.meetback.dev.domain.PlaceVote">
+
+        UPDATE place_votes
+        SET
+            candidate_id = #{candidateId},
+            vote_change_count = vote_change_count + 1
+        WHERE meeting_id = #{meetingId}
+            AND participant_id = #{participantId}
+
+    </update>
+
+    <select id="selectVoteResults"
+            parameterType="long"
+            resultType="com.meetback.dev.dto.CandidateVoteResult">
+
+        SELECT
+            mc.candidate_id AS candidateId,
+            mc.place_name AS placeName,
+            COUNT(pv.vote_id) AS voteCount
+        FROM meeting_candidates mc
+
+        LEFT JOIN place_votes pv
+            ON mc.candidate_id = pv.candidate_id
+            AND pv.meeting_id = #{meetingId}
+
+        WHERE mc.meeting_id = #{meetingId}
+            AND mc.is_active = TRUE
+
+        GROUP BY
+            mc.candidate_id,
+            mc.place_name
+
+        ORDER BY voteCount DESC,
+            mc.candidate_id ASC
+
+    </select>
+
+</mapper>

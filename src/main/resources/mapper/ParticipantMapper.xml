@@ -30,28 +30,6 @@
 
     </select>
 
-    <update id="updateLocation"
-            parameterType="com.meetback.dev.domain.MeetingParticipant">
-
-        UPDATE meeting_participants
-        SET
-            departure_name = #{departureName},
-            departure_address = #{departureAddress},
-            departure_latitude = #{departureLatitude},
-            departure_longitude = #{departureLongitude},
-
-            return_name = #{returnName},
-            return_address = #{returnAddress},
-            return_latitude = #{returnLatitude},
-            return_longitude = #{returnLongitude},
-
-            input_status = #{inputStatus},
-            submitted_at = NOW()
-
-        WHERE participant_id = #{participantId}
-
-    </update>
-
     <select id="countParticipant"
             parameterType="long"
             resultType="int">
@@ -70,6 +48,16 @@
         FROM meeting_participants
         WHERE meeting_id = #{meetingId}
           AND input_status = 'SUBMITTED'
+
+    </select>
+
+    <select id="countParticipantByIdAndMeeting"
+            resultType="int">
+
+        SELECT COUNT(*)
+        FROM meeting_participants
+        WHERE participant_id = #{participantId}
+        AND meeting_id = #{meetingId}
 
     </select>
 

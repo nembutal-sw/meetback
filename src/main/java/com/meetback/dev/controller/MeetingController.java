@@ -1,5 +1,6 @@
 package com.meetback.dev.controller;
 
+import com.meetback.dev.dto.FinalCandidateRequest;
 import com.meetback.dev.dto.MeetingCreateRequest;
 import com.meetback.dev.dto.MeetingCreateResponse;
 import com.meetback.dev.dto.MeetingJoinRequest;
@@ -34,6 +35,32 @@ public class MeetingController {
             )
     {
         return meetingService.joinMeeting(userId,request);
+    }
+
+    @PutMapping("/{meetingId}/final-candidate")
+    public void confirmFinalCandidate(
+            @PathVariable Long meetingId,
+            @RequestParam Long hostUserId,
+            @RequestBody FinalCandidateRequest request
+            )
+    {
+        meetingService.confirmFinalCandidate(
+                meetingId,
+                hostUserId,
+                request
+        );
+    }
+
+    @PutMapping("/{meetingId}/voting")
+    public void startVoting(
+            @PathVariable Long meetingId,
+            @RequestParam Long hostUserId
+    ) {
+
+        meetingService.startVoting(
+                meetingId,
+                hostUserId
+        );
     }
 
 }

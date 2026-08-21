@@ -51,4 +51,42 @@
 
     </select>
 
+    <update id="updateMeetingStatus">
+
+        UPDATE meetings
+        SET status = #{status}
+        WHERE meeting_id = #{meetingId}
+
+    </update>
+
+    <select id="selectMeetingById"
+            parameterType="long"
+            resultType="com.meetback.dev.domain.Meeting">
+
+        SELECT
+            meeting_id,
+            host_user_id,
+            title,
+            status,
+            desired_end_at,
+            calculation_version,
+            invite_code,
+            final_candidate_id,
+            created_at,
+            updated_at
+        FROM meetings
+        WHERE meeting_id = #{meetingId}
+
+    </select>
+
+    <update id="updateFinalCandidate">
+
+        UPDATE meetings
+        SET
+            final_candidate_id = #{candidateId},
+            status = #{status}
+        WHERE meeting_id = #{meetingId}
+
+    </update>
+
 </mapper>
