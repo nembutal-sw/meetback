@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html lang="ko">
-     <"xmlns:th="http://www.thymeleaf.org">
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>MeetBack</title>
@@ -8,59 +9,47 @@
 
 <body>
 
-<div class="home-container">
+<div class="home-container"
+     id="homeContainer"
+     th:attr="
+        data-login-url=@{/login},
+        data-check-url=@{/auth/check},
+        data-logout-url=@{/auth/logout},
+        data-withdraw-url=@{/auth/withdraw},
+        data-withdraw-cancel-url=@{/auth/withdraw/cancel}
+     ">
 
     <h1>MeetBack</h1>
-
 
     <div>
         <h2>로그인 정보</h2>
 
         <div id="userId"></div>
-
         <div id="role"></div>
     </div>
 
-
-    <br>
-
+    <br><br>
 
     <div id="homeMessage"></div>
 
+    <br><br>
 
-    <br>
+    <button type="button"
+            id="logoutButton">
+        로그아웃
+    </button>
 
+    <br><br>
 
-    <div>
-        <button
-                type="button"
-                id="logoutButton"
-        >
-            로그아웃
-        </button>
-    </div>
+    <button type="button"
+            id="withdrawButton">
+        회원탈퇴
+    </button>
 
+    <br><br>
 
-    <br>
-
-
-    <div>
-        <button
-                type="button"
-                id="withdrawButton"
-        >
-            회원탈퇴
-        </button>
-    </div>
-
-
-    <br>
-
-
-    <div
-            id="withdrawConfirm"
-            style="display: none;"
-    >
+    <div id="withdrawConfirm"
+         style="display: none;">
 
         <div>
             정말 회원탈퇴를 요청하시겠습니까?
@@ -68,57 +57,65 @@
 
         <br>
 
-        <button
-                type="button"
-                id="withdrawConfirmButton"
-        >
+        <button type="button"
+                id="withdrawConfirmButton">
             탈퇴 요청
         </button>
 
-        <button
-                type="button"
-                id="withdrawCancelButton"
-        >
+        <button type="button"
+                id="withdrawCancelButton">
             취소
         </button>
 
     </div>
 
+    <br><br>
 
-    <br>
-
-
-    <div>
-        <button
-                type="button"
-                id="cancelWithdrawalButton"
-        >
-            회원탈퇴 취소
-        </button>
-    </div>
+    <button type="button"
+            id="cancelWithdrawalButton">
+        회원탈퇴 취소
+    </button>
 
 </div>
 
 
 <script>
 
+    const homeContainer =
+        document.getElementById(
+            "homeContainer"
+        );
+
+
+    // Thymeleaf가 생성한 URL
+
+    const loginUrl =
+        homeContainer.dataset.loginUrl;
+
+    const checkUrl =
+        homeContainer.dataset.checkUrl;
+
+    const logoutUrl =
+        homeContainer.dataset.logoutUrl;
+
+    const withdrawUrl =
+        homeContainer.dataset.withdrawUrl;
+
+    const withdrawCancelUrl =
+        homeContainer.dataset.withdrawCancelUrl;
+
+
+    // 로그인 정보
+
     const accessToken =
         localStorage.getItem(
             "accessToken"
         );
 
-
-    const refreshToken =
-        localStorage.getItem(
-            "refreshToken"
-        );
-
-
     const userId =
         localStorage.getItem(
             "userId"
         );
-
 
     const role =
         localStorage.getItem(
@@ -126,58 +123,171 @@
         );
 
 
+    const userIdDiv =
+        document.getElementById(
+            "userId"
+        );
+
+    const roleDiv =
+        document.getElementById(
+            "role"
+        );
+
     const homeMessage =
         document.getElementById(
             "homeMessage"
         );
 
 
-    if (!accessToken)
-    {
-
-        window.location.href =
-            "/login";
-
-    }
-
-
-    document.getElementById(
-        "userId"
-    ).innerText =
-        "사용자 ID : "
-        + userId;
-
-
-    document.getElementById(
-        "role"
-    ).innerText =
-        "권한 : "
-        + role;
-
-
-
-    // 로그아웃
-
     const logoutButton =
         document.getElementById(
             "logoutButton"
         );
 
+    const withdrawButton =
+        document.getElementById(
+            "withdrawButton"
+        );
+
+    const withdrawConfirm =
+        document.getElementById(
+            "withdrawConfirm"
+        );
+
+    const withdrawConfirmButton =
+        document.getElementById(
+            "withdrawConfirmButton"
+        );
+
+    const withdrawCancelButton =
+        document.getElementById(
+            "withdrawCancelButton"
+        );
+
+    const cancelWithdrawalButton =
+        document.getElementById(
+            "cancelWithdrawalButton"
+        );
+
+
+    // localStorage 로그인 정보 삭제
+
+    function clearLoginStorage()
+    {
+
+        localStorage.removeItem(
+            "accessToken"
+        );
+
+        localStorage.removeItem(
+            "refreshToken"
+        );
+
+        localStorage.removeItem(
+            "userId"
+        );
+
+        localStorage.removeItem(
+            "role"
+        );
+
+    }
+
+
+    // 로그인 상태 확인
+
+    async function checkLogin()
+    {
+
+        if (!accessToken)
+        {
+
+            window.location.href =
+                loginUrl;
+
+            return;
+
+        }
+
+
+        try
+        {
+
+            const response =
+                await fetch(
+                    checkUrl,
+                    {
+
+                        method: "GET",
+
+                        headers: {
+
+                            "Authorization":
+                                "Bearer "
+                                + accessToken
+
+                        }
+
+                    }
+                );
+
+
+            if (!response.ok)
+            {
+
+                clearLoginStorage();
+
+                window.location.href =
+                    loginUrl;
+
+                return;
+
+            }
+
+
+            userIdDiv.innerText =
+                "사용자 ID : "
+                + userId;
+
+
+            roleDiv.innerText =
+                "권한 : "
+                + role;
+
+        }
+        catch (error)
+        {
+
+            console.error(
+                "로그인 상태 확인 오류:",
+                error
+            );
+
+
+            clearLoginStorage();
+
+
+            window.location.href =
+                loginUrl;
+
+        }
+
+    }
+
+
+    // 로그아웃
 
     logoutButton.addEventListener(
         "click",
         async function()
         {
 
-            homeMessage.innerText = "";
-
-
             try
             {
 
                 const response =
                     await fetch(
-                        "/auth/logout",
+                        logoutUrl,
                         {
 
                             method: "POST",
@@ -198,47 +308,18 @@
                 {
 
                     homeMessage.innerText =
-                        "로그아웃에 실패했습니다.";
+                        "로그아웃 처리 중 오류가 발생했습니다.";
 
                     return;
 
                 }
 
 
-                localStorage.removeItem(
-                    "accessToken"
-                );
+                clearLoginStorage();
 
 
-                localStorage.removeItem(
-                    "refreshToken"
-                );
-
-
-                localStorage.removeItem(
-                    "userId"
-                );
-
-
-                localStorage.removeItem(
-                    "role"
-                );
-
-
-                homeMessage.innerText =
-                    "로그아웃되었습니다.";
-
-
-                setTimeout(
-                    function()
-                    {
-
-                        window.location.href =
-                            "/login";
-
-                    },
-                    500
-                );
+                window.location.href =
+                    loginUrl;
 
             }
             catch (error)
@@ -259,28 +340,12 @@
     );
 
 
-
     // 회원탈퇴 버튼
-
-    const withdrawButton =
-        document.getElementById(
-            "withdrawButton"
-        );
-
-
-    const withdrawConfirm =
-        document.getElementById(
-            "withdrawConfirm"
-        );
-
 
     withdrawButton.addEventListener(
         "click",
         function()
         {
-
-            homeMessage.innerText = "";
-
 
             withdrawConfirm.style.display =
                 "block";
@@ -289,29 +354,33 @@
     );
 
 
+    // 회원탈퇴 확인 취소
 
-    // 회원탈퇴 확인
+    withdrawCancelButton.addEventListener(
+        "click",
+        function()
+        {
 
-    const withdrawConfirmButton =
-        document.getElementById(
-            "withdrawConfirmButton"
-        );
+            withdrawConfirm.style.display =
+                "none";
 
+        }
+    );
+
+
+    // 실제 회원탈퇴 요청
 
     withdrawConfirmButton.addEventListener(
         "click",
         async function()
         {
 
-            homeMessage.innerText = "";
-
-
             try
             {
 
                 const response =
                     await fetch(
-                        "/auth/withdraw",
+                        withdrawUrl,
                         {
 
                             method: "DELETE",
@@ -332,19 +401,19 @@
                 {
 
                     homeMessage.innerText =
-                        "회원탈퇴 요청에 실패했습니다.";
+                        "회원탈퇴 요청 중 오류가 발생했습니다.";
 
                     return;
 
                 }
 
 
-                withdrawConfirm.style.display =
-                    "none";
-
-
                 homeMessage.innerText =
                     "회원탈퇴가 요청되었습니다.";
+
+
+                withdrawConfirm.style.display =
+                    "none";
 
             }
             catch (error)
@@ -357,7 +426,7 @@
 
 
                 homeMessage.innerText =
-                    "회원탈퇴 처리 중 오류가 발생했습니다.";
+                    "회원탈퇴 요청 중 오류가 발생했습니다.";
 
             }
 
@@ -365,54 +434,19 @@
     );
 
 
-
-    // 회원탈퇴 확인창 취소
-
-    const withdrawCancelButton =
-        document.getElementById(
-            "withdrawCancelButton"
-        );
-
-
-    withdrawCancelButton.addEventListener(
-        "click",
-        function()
-        {
-
-            withdrawConfirm.style.display =
-                "none";
-
-
-            homeMessage.innerText =
-                "회원탈퇴 요청을 취소했습니다.";
-
-        }
-    );
-
-
-
     // 회원탈퇴 취소
-
-    const cancelWithdrawalButton =
-        document.getElementById(
-            "cancelWithdrawalButton"
-        );
-
 
     cancelWithdrawalButton.addEventListener(
         "click",
         async function()
         {
 
-            homeMessage.innerText = "";
-
-
             try
             {
 
                 const response =
                     await fetch(
-                        "/auth/withdraw/cancel",
+                        withdrawCancelUrl,
                         {
 
                             method: "POST",
@@ -433,7 +467,7 @@
                 {
 
                     homeMessage.innerText =
-                        "회원탈퇴 취소에 실패했습니다.";
+                        "회원탈퇴 취소 중 오류가 발생했습니다.";
 
                     return;
 
@@ -448,18 +482,23 @@
             {
 
                 console.error(
-                    "회원탈퇴 취소 요청 오류:",
+                    "회원탈퇴 취소 오류:",
                     error
                 );
 
 
                 homeMessage.innerText =
-                    "회원탈퇴 취소 처리 중 오류가 발생했습니다.";
+                    "회원탈퇴 취소 중 오류가 발생했습니다.";
 
             }
 
         }
     );
+
+
+    // 페이지 진입 시 로그인 검사
+
+    checkLogin();
 
 </script>
 

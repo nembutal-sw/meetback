@@ -15,12 +15,12 @@ public interface SocialMapper {
             @Param("providerId") String providerId
     );
 
-    // Social selectByUserIdAndProvider(
-            // 한 사용자가 동일 provider를 중복 연결하는 것 방지
-          //  @Param("userId") Long userId,
-         //   @Param("provider") String provider
-  //  );
+     Social selectByUserIdAndProvider(
+            //한 사용자가 동일 provider를 중복 연결하는 것 방지
+            @Param("userId") Long userId,
+            @Param("provider") String provider
+    );
 
     // 신규 소셜 로그인 정보 저장
-  //  int insertSocial(Social social);
+   int insertSocial(Social social);
 }

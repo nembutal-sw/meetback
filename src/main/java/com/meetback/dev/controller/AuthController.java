@@ -8,6 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/auth")
@@ -142,20 +145,48 @@ public class AuthController {
     }
 
     // 로그인 상태 확인
-
     @GetMapping("/check")
-    public ResponseEntity<Void> checkLogin(
+    public ResponseEntity<Map<String, Object>> checkLogin(
             @RequestHeader("Authorization") String authorization
     ) {
 
-        getUserIdFromAuthorization(
-                authorization
+        Long userId =
+                getUserIdFromAuthorization(
+                        authorization
+                );
+
+
+        String accessToken =
+                authorization.substring(7);
+
+
+        String role =
+                jwtProvider.getRole(
+                        accessToken
+                );
+
+
+        Map<String, Object> response =
+                new HashMap<>();
+
+
+        response.put(
+                "userId",
+                userId
         );
 
-        return ResponseEntity
-                .ok()
-                .build();
+
+        response.put(
+                "role",
+                role
+        );
+
+
+        return ResponseEntity.ok(
+                response
+        );
     }
+
 
     // Authorization Header에서 userId 추출
 
