@@ -13,8 +13,8 @@ public interface MeetingMapper {
 
     int updateMeetingStatus(
             @Param("meetingId") Long meetingId,
-            @Param("status")MeetingStatus status
-            );
+            @Param("status") MeetingStatus status
+    );
 
     Meeting findById(Long meetingId);
 
@@ -23,5 +23,4 @@ public interface MeetingMapper {
             @Param("candidateId") Long candidateId,
             @Param("status") MeetingStatus status
     );
-
 }
