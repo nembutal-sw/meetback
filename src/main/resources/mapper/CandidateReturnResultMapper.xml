@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.CandidateReturnResultMapper">
+
+    <insert id="insert"
+            parameterType="com.meetback.dev.domain.CandidateReturnResult"
+            useGeneratedKeys="true"
+            keyProperty="resultId">
+
+        INSERT INTO candidate_return_results (
+        meeting_id,
+        candidate_id,
+        participant_id,
+        calculation_version,
+        return_minutes,
+        transfer_count,
+        last_train_departure_at,
+        last_train_arrival_at,
+        last_safe_departure_at,
+        can_return
+        )
+        VALUES (
+        #{meetingId},
+        #{candidateId},
+        #{participantId},
+        #{calculationVersion},
+        #{returnMinutes},
+        #{transferCount},
+        #{lastTrainDepartureAt},
+        #{lastTrainArrivalAt},
+        #{lastSafeDepartureAt},
+        #{canReturn}
+        )
+
+    </insert>
+
+    <select id="findByCandidateId"
+            resultType="com.meetback.dev.domain.CandidateReturnResult">
+
+        SELECT *
+        FROM candidate_return_results
+        WHERE candidate_id = #{candidateId}
+        ORDER BY participant_id
+
+    </select>
+
+
+    <select id="findByCandidateIdAndVersion"
+            resultType="com.meetback.dev.domain.CandidateReturnResult">
+
+        SELECT
+        *
+        FROM candidate_return_results
+        WHERE candidate_id = #{candidateId}
+        AND calculation_version = #{calculationVersion}
+        ORDER BY participant_id ASC
+
+    </select>
+
+    <delete id="deleteByCandidateId">
+        DELETE FROM candidate_return_results
+        WHERE candidate_id = #{candidateId}
+    </delete>
+
+</mapper>
