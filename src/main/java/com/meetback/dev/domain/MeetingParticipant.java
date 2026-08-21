@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 public class MeetingParticipant {
 
     private Long participantId;
-
     private Long meetingId;
     private Long userId;
 
@@ -28,5 +27,4 @@ public class MeetingParticipant {
     private LocalDateTime submittedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
 }

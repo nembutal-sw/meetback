@@ -59,7 +59,7 @@
 
     </update>
 
-    <select id="selectMeetingById"
+    <select id="findById"
             parameterType="long"
             resultType="com.meetback.dev.domain.Meeting">
 

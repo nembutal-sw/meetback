@@ -43,7 +43,7 @@ public class VoteService {
 
         // 2. 모임 확인
         Meeting meeting =
-                meetingMapper.selectMeetingById(meetingId);
+                meetingMapper.findById(meetingId);
 
         if (meeting == null) {
             throw new IllegalArgumentException(

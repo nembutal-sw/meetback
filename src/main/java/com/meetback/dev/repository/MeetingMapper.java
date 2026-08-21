@@ -16,7 +16,7 @@ public interface MeetingMapper {
             @Param("status")MeetingStatus status
             );
 
-    Meeting selectMeetingById(Long meetingId);
+    Meeting findById(Long meetingId);
 
     int updateFinalCandidate(
             @Param("meetingId") Long meetingId,

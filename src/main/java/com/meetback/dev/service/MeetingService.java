@@ -123,7 +123,7 @@ public class MeetingService {
 
         // 모임 조회
         Meeting meeting =
-                meetingMapper.selectMeetingById(meetingId);
+                meetingMapper.findById(meetingId);
 
         if (meeting == null) {
             throw new IllegalArgumentException(
@@ -186,7 +186,7 @@ public class MeetingService {
 
         // 1. 모임 존재 확인
         Meeting meeting =
-                meetingMapper.selectMeetingById(meetingId);
+                meetingMapper.findById(meetingId);
 
         if (meeting == null) {
             throw new IllegalArgumentException(
