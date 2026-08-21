@@ -31,9 +31,29 @@
 
     </insert>
 
+
+    <update id="update"
+            parameterType="com.meetback.dev.domain.MeetingCandidate">
+
+        UPDATE meeting_candidates
+
+        SET
+        place_name = #{placeName},
+        address = #{address},
+        latitude = #{latitude},
+        longitude = #{longitude},
+        is_active = TRUE,
+        updated_at = NOW()
+
+        WHERE candidate_id = #{candidateId}
+
+    </update>
+
+
     <select id="findByMeetingId"
             parameterType="long"
             resultType="com.meetback.dev.domain.MeetingCandidate">
+
         SELECT
         candidate_id,
         meeting_id,
@@ -45,15 +65,21 @@
         is_active,
         created_at,
         updated_at
+
         FROM meeting_candidates
+
         WHERE meeting_id = #{meetingId}
         AND is_active = TRUE
+
         ORDER BY candidate_id
+
     </select>
+
 
     <select id="findById"
             parameterType="long"
             resultType="com.meetback.dev.domain.MeetingCandidate">
+
         SELECT
         candidate_id,
         meeting_id,
@@ -65,7 +91,34 @@
         is_active,
         created_at,
         updated_at
+
         FROM meeting_candidates
+
         WHERE candidate_id = #{candidateId}
+
     </select>
+
+
+    <select id="findByMeetingIdAndParticipantId"
+            resultType="com.meetback.dev.domain.MeetingCandidate">
+
+        SELECT
+        candidate_id,
+        meeting_id,
+        proposer_participant_id,
+        place_name,
+        address,
+        latitude,
+        longitude,
+        is_active,
+        created_at,
+        updated_at
+
+        FROM meeting_candidates
+
+        WHERE meeting_id = #{meetingId}
+        AND proposer_participant_id = #{participantId}
+
+    </select>
+
 </mapper>

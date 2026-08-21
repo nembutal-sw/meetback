@@ -37,6 +37,7 @@
 
     </insert>
 
+
     <update id="update"
             parameterType="com.meetback.dev.domain.CandidateEvaluation">
 
@@ -56,12 +57,51 @@
 
     </update>
 
+
     <select id="findByCandidateId"
             resultType="com.meetback.dev.domain.CandidateEvaluation">
 
         SELECT *
         FROM candidate_evaluations
         WHERE candidate_id = #{candidateId}
+
+    </select>
+
+
+    <update id="updateRecommendationRank">
+
+        UPDATE candidate_evaluations
+        SET
+        recommendation_rank = #{recommendationRank},
+        updated_at = CURRENT_TIMESTAMP
+        WHERE candidate_id = #{candidateId}
+
+    </update>
+
+
+    <select id="findTopRankedByMeetingId"
+            resultType="com.meetback.dev.domain.CandidateEvaluation">
+
+        SELECT ce.*
+        FROM candidate_evaluations ce
+        JOIN meeting_candidates mc
+        ON ce.candidate_id = mc.candidate_id
+        WHERE mc.meeting_id = #{meetingId}
+        ORDER BY ce.recommendation_rank ASC
+        LIMIT 1
+
+    </select>
+
+
+    <select id="findRankingByMeetingId"
+            resultType="com.meetback.dev.domain.CandidateEvaluation">
+
+        SELECT ce.*
+        FROM candidate_evaluations ce
+        JOIN meeting_candidates mc
+        ON ce.candidate_id = mc.candidate_id
+        WHERE mc.meeting_id = #{meetingId}
+        ORDER BY ce.recommendation_rank ASC
 
     </select>
 

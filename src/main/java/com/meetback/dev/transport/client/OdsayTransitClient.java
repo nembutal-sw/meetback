@@ -144,6 +144,13 @@ public class OdsayTransitClient {
                     subPath.path("trafficType")
                             .asInt();
 
+            System.out.println(
+                    "[ODsay subPath] trafficType=" + trafficType
+                            + ", startName=" + subPath.path("startName").asString()
+                            + ", endName=" + subPath.path("endName").asString()
+                            + ", startID=" + subPath.path("startID").asString()
+                            + ", endID=" + subPath.path("endID").asString()
+            );
 
             /*
              * trafficType

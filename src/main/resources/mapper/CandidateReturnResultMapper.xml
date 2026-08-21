@@ -47,4 +47,22 @@
 
     </select>
 
+
+    <select id="findByCandidateIdAndVersion"
+            resultType="com.meetback.dev.domain.CandidateReturnResult">
+
+        SELECT
+        *
+        FROM candidate_return_results
+        WHERE candidate_id = #{candidateId}
+        AND calculation_version = #{calculationVersion}
+        ORDER BY participant_id ASC
+
+    </select>
+
+    <delete id="deleteByCandidateId">
+        DELETE FROM candidate_return_results
+        WHERE candidate_id = #{candidateId}
+    </delete>
+
 </mapper>

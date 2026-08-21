@@ -7,15 +7,18 @@ import java.util.List;
 
 @Mapper
 public interface MeetingParticipantMapper {
+
     MeetingParticipant findById(Long participantId);
 
     int updateLocation(MeetingParticipant participant);
 
-    int completeInput(Long participantId);
+    int submitInput(Long participantId);
 
     int countByMeetingId(Long meetingId);
 
-    int countCompleteByMeetingId(Long meetingId);
+    int countSubmittedByMeetingId(Long meetingId);
 
     List<MeetingParticipant> findByMeetingId(Long meetingId);
+
+    int resetInputToDraft(Long participantId);
 }

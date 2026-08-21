@@ -2,6 +2,7 @@ package com.meetback.dev.domain;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -11,8 +12,8 @@ public class MeetingCandidate {
     private Long proposerParticipantId;
     private String placeName;
     private String address;
-    private Double latitude;
-    private Double longitude;
+    private BigDecimal latitude;
+    private BigDecimal longitude;
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

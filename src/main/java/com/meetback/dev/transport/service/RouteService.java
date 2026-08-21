@@ -1,6 +1,5 @@
 package com.meetback.dev.transport.service;
 
-
 import com.meetback.dev.domain.MeetingCandidate;
 import com.meetback.dev.domain.MeetingParticipant;
 import com.meetback.dev.place.dto.PlaceDTO;
@@ -19,16 +18,21 @@ public class RouteService {
     private final MeetingCandidateMapper meetingCandidateMapper;
     private final OdsayTransitClient odsayTransitClient;
 
+
     public TransitRouteDTO testRoute(
             Long participantId,
-            Long candidateId) {
+            Long candidateId
+    ) {
 
         MeetingParticipant participant =
-                meetingParticipantMapper.findById(participantId);
+                meetingParticipantMapper.findById(
+                        participantId
+                );
 
         MeetingCandidate candidate =
-                meetingCandidateMapper.findById(candidateId);
-
+                meetingCandidateMapper.findById(
+                        candidateId
+                );
 
         if (participant == null) {
             throw new IllegalArgumentException(
@@ -52,8 +56,10 @@ public class RouteService {
                         participant.getDepartureName(),
                         participant.getDepartureAddress(),
                         participant.getDepartureAddress(),
-                        participant.getDepartureLongitude(),
-                        participant.getDepartureLatitude(),
+
+                        participant.getDepartureLongitude().doubleValue(),
+                        participant.getDepartureLatitude().doubleValue(),
+
                         null,
                         null
                 );
@@ -68,8 +74,10 @@ public class RouteService {
                         candidate.getPlaceName(),
                         candidate.getAddress(),
                         candidate.getAddress(),
-                        candidate.getLongitude(),
-                        candidate.getLatitude(),
+
+                        candidate.getLongitude().doubleValue(),
+                        candidate.getLatitude().doubleValue(),
+
                         null,
                         null
                 );
@@ -80,46 +88,66 @@ public class RouteService {
                 meetingPlace
         );
     }
+
+
     public TransitRouteDTO searchReturnRoute(
             Long participantId,
             Long candidateId
     ) {
 
         MeetingParticipant participant =
-                meetingParticipantMapper.findById(participantId);
+                meetingParticipantMapper.findById(
+                        participantId
+                );
 
         if (participant == null) {
-            throw new IllegalArgumentException("참가자를 찾을 수 없습니다.");
+            throw new IllegalArgumentException(
+                    "참가자를 찾을 수 없습니다."
+            );
         }
+
 
         MeetingCandidate candidate =
-                meetingCandidateMapper.findById(candidateId);
+                meetingCandidateMapper.findById(
+                        candidateId
+                );
 
         if (candidate == null) {
-            throw new IllegalArgumentException("후보 장소를 찾을 수 없습니다.");
+            throw new IllegalArgumentException(
+                    "후보 장소를 찾을 수 없습니다."
+            );
         }
 
-        PlaceDTO start = new PlaceDTO(
-                null,
-                candidate.getPlaceName(),
-                candidate.getAddress(),
-                candidate.getAddress(),
-                candidate.getLongitude(),
-                candidate.getLatitude(),
-                null,
-                null
-        );
 
-        PlaceDTO end = new PlaceDTO(
-                null,
-                participant.getReturnName(),
-                participant.getReturnAddress(),
-                participant.getReturnAddress(),
-                participant.getReturnLongitude(),
-                participant.getReturnLatitude(),
-                null,
-                null
-        );
+        PlaceDTO start =
+                new PlaceDTO(
+                        null,
+                        candidate.getPlaceName(),
+                        candidate.getAddress(),
+                        candidate.getAddress(),
+
+                        candidate.getLongitude().doubleValue(),
+                        candidate.getLatitude().doubleValue(),
+
+                        null,
+                        null
+                );
+
+
+        PlaceDTO end =
+                new PlaceDTO(
+                        null,
+                        participant.getReturnName(),
+                        participant.getReturnAddress(),
+                        participant.getReturnAddress(),
+
+                        participant.getReturnLongitude().doubleValue(),
+                        participant.getReturnLatitude().doubleValue(),
+
+                        null,
+                        null
+                );
+
 
         return odsayTransitClient.findSubwayRoute(
                 start,

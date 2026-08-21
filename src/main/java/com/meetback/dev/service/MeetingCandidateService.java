@@ -9,6 +9,7 @@ import com.meetback.dev.repository.MeetingParticipantMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -19,12 +20,16 @@ public class MeetingCandidateService {
     private final MeetingParticipantMapper meetingParticipantMapper;
     private final KakaoLocalClient kakaoLocalClient;
 
+
     public void saveCandidate(
             Long participantId,
             String candidateQuery
     ) {
+
         MeetingParticipant participant =
-                meetingParticipantMapper.findById(participantId);
+                meetingParticipantMapper.findById(
+                        participantId
+                );
 
         if (participant == null) {
             throw new IllegalArgumentException(
@@ -32,14 +37,26 @@ public class MeetingCandidateService {
             );
         }
 
+
+        if (candidateQuery == null
+                || candidateQuery.isBlank()) {
+
+            // 희망 장소는 선택사항
+            return;
+        }
+
+
         List<PlaceDTO> results =
-                kakaoLocalClient.search(candidateQuery);
+                kakaoLocalClient.search(
+                        candidateQuery
+                );
 
         if (results.isEmpty()) {
             throw new IllegalArgumentException(
                     "희망 장소를 찾을 수 없습니다."
             );
         }
+
 
         // 검색 결과 중 첫 번째 장소 사용
         PlaceDTO place =
@@ -69,27 +86,66 @@ public class MeetingCandidateService {
         );
 
         candidate.setLatitude(
-                place.latitude()
+                BigDecimal.valueOf(
+                        place.latitude()
+                )
         );
 
         candidate.setLongitude(
-                place.longitude()
+                BigDecimal.valueOf(
+                        place.longitude()
+                )
         );
 
         candidate.setIsActive(
                 true
         );
 
-        meetingCandidateMapper.insert(
-                candidate
-        );
 
-        meetingParticipantMapper.completeInput(
-                participantId
-        );
+        /*
+         * 이 참가자가 기존에 등록한 희망 장소가 있는지 확인
+         */
+        MeetingCandidate existingCandidate =
+                meetingCandidateMapper
+                        .findByMeetingIdAndParticipantId(
+                                participant.getMeetingId(),
+                                participantId
+                        );
+
+
+        /*
+         * 기존 후보가 없으면 새로 등록
+         */
+        if (existingCandidate == null) {
+
+            meetingCandidateMapper.insert(
+                    candidate
+            );
+
+        } else {
+
+            /*
+             * 기존 후보가 있으면
+             * 같은 candidate_id로 수정
+             */
+            candidate.setCandidateId(
+                    existingCandidate.getCandidateId()
+            );
+
+            meetingCandidateMapper.update(
+                    candidate
+            );
+        }
     }
 
-    public List<MeetingCandidate> findByMeetingId(Long meetingId) {
-        return meetingCandidateMapper.findByMeetingId(meetingId);
+
+    public List<MeetingCandidate> findByMeetingId(
+            Long meetingId
+    ) {
+
+        return meetingCandidateMapper
+                .findByMeetingId(
+                        meetingId
+                );
     }
 }
