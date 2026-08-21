@@ -7,10 +7,8 @@ import java.time.LocalDateTime;
 
 @Data
 public class FeedLike {
-
     private Long likeId;
     private Long feedId;
     private Long userId;
     private LocalDateTime createdAt;
-
 }

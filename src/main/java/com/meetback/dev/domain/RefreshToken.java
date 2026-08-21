@@ -6,12 +6,10 @@ import java.time.LocalDateTime;
 
 @Data
 public class RefreshToken {
-
     private Long refreshTokenId;
     private Long userId;
     private String tokenHash;
     private LocalDateTime expiresAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
 }

@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 
 @Data
 public class UserTermAgreement {
-
     private Long agreementId;
     private Long userId;
     private Long termId;

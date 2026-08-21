@@ -4,7 +4,6 @@ import lombok.Data;
 
 @Data
 public class Social {
-
     private Long socialId;
     private Long userId;
     private String provider;

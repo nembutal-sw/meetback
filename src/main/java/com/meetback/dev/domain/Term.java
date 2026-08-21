@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 
 @Data
 public class Term {
-
     private Long termId;
     private String termCode;
     private String termName;
@@ -15,5 +14,4 @@ public class Term {
     private Boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime updateAt;
-
 }

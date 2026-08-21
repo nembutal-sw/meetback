@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 
 @Data
 public class Feed {
-
     private Long feedId;
     private Long userId;
     private String title;

@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 
 @Data
 public class FeedImage {
-
     private Long feedImageId;
     private Long feedId;
     private String imageUrl;

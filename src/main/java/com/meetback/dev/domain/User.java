@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 
 @Data
 public class User {
-
     private Long userId;
     private String email;
     private String nickname;
@@ -15,5 +14,4 @@ public class User {
     private LocalDateTime deletedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
 }

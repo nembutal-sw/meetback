@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 
 @Data
 public class Comment {
-
     private Long commentId;
     private Long feedIdl;
     private Long userId;
@@ -14,5 +13,4 @@ public class Comment {
     private LocalDateTime deletedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updateAt;
-
 }
