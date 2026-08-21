@@ -23,13 +23,13 @@
             resultMap="socialResultMap">
 
         SELECT
-        social_id,
-        user_id,
-        provider,
-        provider_id,
-        email,
-        email_verified,
-        name
+            social_id,
+            user_id,
+            provider,
+            provider_id,
+            email,
+            email_verified,
+            name
         FROM social
         WHERE provider = #{provider}
         AND provider_id = #{providerId}
@@ -41,13 +41,13 @@
             resultMap="socialResultMap">
 
         SELECT
-        social_id,
-        user_id,
-        provider,
-        provider_id,
-        email,
-        email_verified,
-        name
+            social_id,
+            user_id,
+            provider,
+            provider_id,
+            email,
+            email_verified,
+            name
         FROM social
         WHERE user_id = #{userId}
         AND provider = #{provider}
@@ -62,21 +62,21 @@
 
         INSERT INTO social
         (
-        user_id,
-        provider,
-        provider_id,
-        email,
-        email_verified,
-        name
+            user_id,
+            provider,
+            provider_id,
+            email,
+            email_verified,
+            name
         )
         VALUES
         (
-        #{userId},
-        #{provider},
-        #{providerId},
-        #{email},
-        #{emailVerified},
-        #{name}
+            #{userId},
+            #{provider},
+            #{providerId},
+            #{email},
+            #{emailVerified},
+            #{name}
         )
 
     </insert>

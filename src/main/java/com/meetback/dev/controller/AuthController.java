@@ -8,8 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -145,8 +143,10 @@ public class AuthController {
     }
 
     // 로그인 상태 확인
+    // 로그인 상태 및 사용자 정보 확인
+
     @GetMapping("/check")
-    public ResponseEntity<Map<String, Object>> checkLogin(
+    public ResponseEntity<AuthCheckResponse> checkLogin(
             @RequestHeader("Authorization") String authorization
     ) {
 
@@ -156,30 +156,10 @@ public class AuthController {
                 );
 
 
-        String accessToken =
-                authorization.substring(7);
-
-
-        String role =
-                jwtProvider.getRole(
-                        accessToken
+        AuthCheckResponse response =
+                authService.getCurrentUser(
+                        userId
                 );
-
-
-        Map<String, Object> response =
-                new HashMap<>();
-
-
-        response.put(
-                "userId",
-                userId
-        );
-
-
-        response.put(
-                "role",
-                role
-        );
 
 
         return ResponseEntity.ok(

@@ -14,6 +14,7 @@
      th:attr="
         data-login-url=@{/login},
         data-check-url=@{/auth/check},
+        data-refresh-url=@{/auth/refresh},
         data-logout-url=@{/auth/logout},
         data-withdraw-url=@{/auth/withdraw},
         data-withdraw-cancel-url=@{/auth/withdraw/cancel}
@@ -95,6 +96,9 @@
     const checkUrl =
         homeContainer.dataset.checkUrl;
 
+    const refreshUrl =
+        homeContainer.dataset.refreshUrl;
+
     const logoutUrl =
         homeContainer.dataset.logoutUrl;
 
@@ -105,21 +109,11 @@
         homeContainer.dataset.withdrawCancelUrl;
 
 
-    // 로그인 정보
+    // Access Token은 재발급될 수 있기 때문에 let 사용
 
-    const accessToken =
+    let accessToken =
         localStorage.getItem(
             "accessToken"
-        );
-
-    const userId =
-        localStorage.getItem(
-            "userId"
-        );
-
-    const role =
-        localStorage.getItem(
-            "role"
         );
 
 
@@ -170,7 +164,8 @@
         );
 
 
-    // localStorage 로그인 정보 삭제
+    // 로그인 정보 삭제
+    // 로그아웃 또는 Refresh Token까지 사용할 수 없을 때만 호출
 
     function clearLoginStorage()
     {
@@ -194,18 +189,22 @@
     }
 
 
-    // 로그인 상태 확인
+    // Refresh Token으로
+    // 새 Access Token + 새 Refresh Token 발급
 
-    async function checkLogin()
+    async function refreshTokens()
     {
 
-        if (!accessToken)
+        const refreshToken =
+            localStorage.getItem(
+                "refreshToken"
+            );
+
+
+        if (!refreshToken)
         {
 
-            window.location.href =
-                loginUrl;
-
-            return;
+            return false;
 
         }
 
@@ -215,24 +214,126 @@
 
             const response =
                 await fetch(
-                    checkUrl,
+                    refreshUrl,
                     {
 
-                        method: "GET",
+                        method: "POST",
 
                         headers: {
 
-                            "Authorization":
-                                "Bearer "
-                                + accessToken
+                            "Content-Type":
+                                "application/json"
 
-                        }
+                        },
+
+                        body: JSON.stringify(
+                            {
+
+                                refreshToken:
+                                refreshToken
+
+                            }
+                        )
 
                     }
                 );
 
 
             if (!response.ok)
+            {
+
+                return false;
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            // 새 Access Token 저장
+
+            localStorage.setItem(
+                "accessToken",
+                data.accessToken
+            );
+
+
+            // Rotation 방식
+            // 새 Refresh Token으로 기존 값 덮어쓰기
+
+            localStorage.setItem(
+                "refreshToken",
+                data.refreshToken
+            );
+
+
+            // 현재 페이지에서 사용하는 Access Token도 교체
+
+            accessToken =
+                data.accessToken;
+
+
+            return true;
+
+        }
+        catch (error)
+        {
+
+            console.error(
+                "토큰 재발급 오류:",
+                error
+            );
+
+
+            return false;
+
+        }
+
+    }
+
+
+    // Access Token으로 로그인 상태 확인
+
+    async function requestLoginCheck()
+    {
+
+        return await fetch(
+            checkUrl,
+            {
+
+                method: "GET",
+
+                headers: {
+
+                    "Authorization":
+                        "Bearer "
+                        + accessToken
+
+                }
+
+            }
+        );
+
+    }
+
+
+    // 로그인 상태 확인
+
+    async function checkLogin()
+    {
+
+        // Access Token 자체가 없으면
+        // Refresh Token이 있는지 먼저 확인
+
+        if (!accessToken)
+        {
+
+            const refreshed =
+                await refreshTokens();
+
+
+            if (!refreshed)
             {
 
                 clearLoginStorage();
@@ -244,15 +345,79 @@
 
             }
 
+        }
+
+
+        try
+        {
+
+            // 1차 Access Token 검증
+
+            let response =
+                await requestLoginCheck();
+
+
+            // Access Token 만료 또는 검증 실패
+            // Refresh Token으로 재발급 시도
+
+            if (!response.ok)
+            {
+
+                const refreshed =
+                    await refreshTokens();
+
+
+                // Refresh Token까지 실패
+                // 완전히 로그인 풀기
+
+                if (!refreshed)
+                {
+
+                    clearLoginStorage();
+
+                    window.location.href =
+                        loginUrl;
+
+                    return;
+
+                }
+
+
+                // 새 Access Token으로 다시 검증
+
+                response =
+                    await requestLoginCheck();
+
+
+                if (!response.ok)
+                {
+
+                    clearLoginStorage();
+
+                    window.location.href =
+                        loginUrl;
+
+                    return;
+
+                }
+
+            }
+
+
+            // 서버에서 검증된 Access Token 기반 사용자 정보
+
+            const data =
+                await response.json();
+
 
             userIdDiv.innerText =
                 "사용자 ID : "
-                + userId;
+                + data.userId;
 
 
             roleDiv.innerText =
                 "권한 : "
-                + role;
+                + data.role;
 
         }
         catch (error)

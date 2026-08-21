@@ -3,13 +3,7 @@ package com.meetback.dev.service;
 import com.meetback.dev.domain.RefreshToken;
 import com.meetback.dev.domain.Social;
 import com.meetback.dev.domain.User;
-import com.meetback.dev.dto.auth.KakaoLoginRequest;
-import com.meetback.dev.dto.auth.KakaoLoginResponse;
-import com.meetback.dev.dto.auth.LoginRequest;
-import com.meetback.dev.dto.auth.LoginResponse;
-import com.meetback.dev.dto.auth.SignupRequest;
-import com.meetback.dev.dto.auth.TokenRefreshRequest;
-import com.meetback.dev.dto.auth.TokenRefreshResponse;
+import com.meetback.dev.dto.auth.*;
 import com.meetback.dev.repository.RefreshTokenMapper;
 import com.meetback.dev.repository.SocialMapper;
 import com.meetback.dev.repository.UserMapper;
@@ -44,9 +38,7 @@ public class AuthService {
     private final KakaoOAuthProvider kakaoOAuthProvider;
 
 
-    // ============================================================
     // 회원가입
-    // ============================================================
 
     public void signup(SignupRequest request) {
 
@@ -92,10 +84,7 @@ public class AuthService {
         );
     }
 
-
-    // ============================================================
     // 일반 로그인
-    // ============================================================
 
     public LoginResponse login(LoginRequest request) {
 
@@ -132,6 +121,7 @@ public class AuthService {
 
 
         // 비밀번호 확인
+
         if (user.getPasswordHash() == null
                 || !passwordEncoder.matches(
                 request.getPassword(),
@@ -192,9 +182,7 @@ public class AuthService {
     }
 
 
-    // ============================================================
     // 카카오 로그인
-    // ============================================================
 
     public KakaoLoginResponse kakaoLogin(
             KakaoLoginRequest request
@@ -381,10 +369,7 @@ public class AuthService {
         return response;
     }
 
-
-    // ============================================================
     // Refresh Token 재발급
-    // ============================================================
 
     public TokenRefreshResponse refresh(
             TokenRefreshRequest request
@@ -550,10 +535,35 @@ public class AuthService {
         return response;
     }
 
+    // 현재 로그인 사용자 조회
 
-    // ============================================================
+    public AuthCheckResponse getCurrentUser(
+            Long userId
+    ) {
+
+        User user =
+                userMapper.selectById(
+                        userId
+                );
+
+
+        if (user == null) {
+
+            throw new IllegalArgumentException(
+                    "사용자를 찾을 수 없습니다."
+            );
+        }
+
+
+        return new AuthCheckResponse(
+                user.getUserId(),
+                user.getEmail(),
+                user.getNickname(),
+                user.getRole()
+        );
+    }
+
     // 로그아웃
-    // ============================================================
 
     public void logout(Long userId) {
 
@@ -563,9 +573,7 @@ public class AuthService {
     }
 
 
-    // ============================================================
     // 회원탈퇴 요청
-    // ============================================================
 
     public void withdraw(Long userId) {
 
@@ -606,9 +614,7 @@ public class AuthService {
     }
 
 
-    // ============================================================
     // 회원탈퇴 취소
-    // ============================================================
 
     public void cancelWithdrawal(Long userId) {
 
@@ -655,9 +661,7 @@ public class AuthService {
     }
 
 
-    // ============================================================
     // Refresh Token 저장 / 갱신
-    // ============================================================
 
     private void saveRefreshToken(
             User user,
@@ -707,6 +711,7 @@ public class AuthService {
          * Refresh Token의 만료시간이
          * deletedAt + 7일보다 길어지지 않도록 제한
          */
+
         if (user.getDeletedAt() != null) {
 
             LocalDateTime withdrawalDeadline =
@@ -745,10 +750,7 @@ public class AuthService {
         }
     }
 
-
-    // ============================================================
     // Refresh Token SHA-256 Hash
-    // ============================================================
 
     private String hashToken(
             String token
