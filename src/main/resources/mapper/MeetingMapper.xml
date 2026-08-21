@@ -7,11 +7,26 @@
 
     <select id="findById"
             resultType="com.meetback.dev.domain.Meeting">
-
-        SELECT *
+        SELECT
+        meeting_id,
+        host_user_id,
+        title,
+        status,
+        desired_end_at,
+        calculation_version,
+        invite_code,
+        final_candidate_id,
+        created_at,
+        updated_at
         FROM meetings
         WHERE meeting_id = #{meetingId}
-
     </select>
+
+    <update id="updateCalculationVersion">
+        UPDATE meetings
+        SET calculation_version = #{calculationVersion},
+        updated_at = NOW()
+        WHERE meeting_id = #{meetingId}
+    </update>
 
 </mapper>

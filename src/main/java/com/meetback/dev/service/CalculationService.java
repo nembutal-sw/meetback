@@ -1,6 +1,11 @@
 package com.meetback.dev.service;
 
-import com.meetback.dev.domain.*;
+import com.meetback.dev.domain.CandidateEvaluation;
+import com.meetback.dev.domain.CandidateReturnResult;
+import com.meetback.dev.domain.InputStatus;
+import com.meetback.dev.domain.Meeting;
+import com.meetback.dev.domain.MeetingCandidate;
+import com.meetback.dev.domain.MeetingParticipant;
 import com.meetback.dev.repository.CandidateReturnResultMapper;
 import com.meetback.dev.repository.MeetingCandidateMapper;
 import com.meetback.dev.repository.MeetingMapper;
@@ -11,6 +16,7 @@ import com.meetback.dev.transport.dto.TransitRouteDTO;
 import com.meetback.dev.transport.service.RouteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -23,6 +29,7 @@ import java.util.List;
 public class CalculationService {
 
     private static final int SAFE_MARGIN_MINUTES = 10;
+    private static final int WALKING_RETURN_MINUTES = 10;
 
     private final MeetingMapper meetingMapper;
     private final MeetingParticipantMapper participantMapper;
@@ -39,7 +46,9 @@ public class CalculationService {
     ) {
 
         MeetingParticipant participant =
-                participantMapper.findById(participantId);
+                participantMapper.findById(
+                        participantId
+                );
 
         if (participant == null) {
             throw new IllegalArgumentException(
@@ -60,8 +69,71 @@ public class CalculationService {
         }
 
 
+        Integer calculationVersion =
+                meeting.getCalculationVersion();
+
+        if (calculationVersion == null) {
+            calculationVersion = 0;
+        }
+
+
+        return calculateReturn(
+                participantId,
+                candidateId,
+                calculationVersion
+        );
+    }
+
+
+    private CandidateReturnResult calculateReturn(
+            Long participantId,
+            Long candidateId,
+            Integer calculationVersion
+    ) {
+
+        MeetingParticipant participant =
+                participantMapper.findById(
+                        participantId
+                );
+
+
+        if (participant == null) {
+            throw new IllegalArgumentException(
+                    "참가자를 찾을 수 없습니다."
+            );
+        }
+
+
+        validateParticipantLocation(
+                participant
+        );
+
+
+        Meeting meeting =
+                meetingMapper.findById(
+                        participant.getMeetingId()
+                );
+
+
+        if (meeting == null) {
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+
+        if (meeting.getDesiredEndAt() == null) {
+            throw new IllegalStateException(
+                    "모임 희망 종료시간이 설정되어 있지 않습니다."
+            );
+        }
+
+
         MeetingCandidate candidate =
-                candidateMapper.findById(candidateId);
+                candidateMapper.findById(
+                        candidateId
+                );
+
 
         if (candidate == null) {
             throw new IllegalArgumentException(
@@ -70,11 +142,101 @@ public class CalculationService {
         }
 
 
+        if (!participant.getMeetingId()
+                .equals(candidate.getMeetingId())) {
+
+            throw new IllegalArgumentException(
+                    "참가자와 후보 장소의 모임이 일치하지 않습니다."
+            );
+        }
+
+
+        if (routeService.isWithinWalkingDistance(
+                participantId,
+                candidateId
+        )) {
+
+            CandidateReturnResult result =
+                    new CandidateReturnResult();
+
+
+            result.setMeetingId(
+                    participant.getMeetingId()
+            );
+
+
+            result.setCandidateId(
+                    candidate.getCandidateId()
+            );
+
+
+            result.setParticipantId(
+                    participant.getParticipantId()
+            );
+
+
+            result.setCalculationVersion(
+                    calculationVersion
+            );
+
+
+            result.setReturnMinutes(
+                    WALKING_RETURN_MINUTES
+            );
+
+
+            result.setTransferCount(
+                    0
+            );
+
+
+            result.setLastTrainDepartureAt(
+                    null
+            );
+
+
+            result.setLastTrainArrivalAt(
+                    null
+            );
+
+
+            result.setLastSafeDepartureAt(
+                    null
+            );
+
+
+            result.setCanReturn(
+                    true
+            );
+
+
+            returnResultMapper.insert(
+                    result
+            );
+
+
+            System.out.println(
+                    "[도보 처리] candidateId="
+                            + candidateId
+                            + ", participantId="
+                            + participantId
+                            + ", calculationVersion="
+                            + calculationVersion
+                            + ", returnMinutes="
+                            + WALKING_RETURN_MINUTES
+            );
+
+
+            return result;
+        }
+
+
         TransitRouteDTO route =
                 routeService.searchReturnRoute(
                         participantId,
                         candidateId
                 );
+
 
         waitForOdsay();
 
@@ -85,7 +247,9 @@ public class CalculationService {
 
 
         int odsayDay =
-                getOdsayDay(meetingDate);
+                getOdsayDay(
+                        meetingDate
+                );
 
 
         LastTrainDTO lastTrain =
@@ -96,10 +260,18 @@ public class CalculationService {
                 );
 
 
+        if (lastTrain == null) {
+            throw new IllegalStateException(
+                    "막차 정보를 조회할 수 없습니다."
+            );
+        }
+
+
         LocalTime departureTime =
                 LocalTime.parse(
                         lastTrain.departureTime()
                 );
+
 
         LocalTime arrivalTime =
                 LocalTime.parse(
@@ -113,6 +285,7 @@ public class CalculationService {
                         departureTime
                 );
 
+
         LocalDateTime lastTrainArrivalAt =
                 LocalDateTime.of(
                         meetingDate,
@@ -120,15 +293,31 @@ public class CalculationService {
                 );
 
 
-        if (departureTime.isBefore(LocalTime.of(5,0))) {
+        if (departureTime.isBefore(
+                LocalTime.of(
+                        5,
+                        0
+                )
+        )) {
+
             lastTrainDepartureAt =
-                    lastTrainDepartureAt.plusDays(1);
+                    lastTrainDepartureAt.plusDays(
+                            1
+                    );
         }
 
 
-        if (arrivalTime.isBefore(LocalTime.of(5,0))) {
+        if (arrivalTime.isBefore(
+                LocalTime.of(
+                        5,
+                        0
+                )
+        )) {
+
             lastTrainArrivalAt =
-                    lastTrainArrivalAt.plusDays(1);
+                    lastTrainArrivalAt.plusDays(
+                            1
+                    );
         }
 
 
@@ -140,8 +329,9 @@ public class CalculationService {
 
         boolean canReturn =
                 !meeting.getDesiredEndAt()
-                        .isAfter(lastSafeDepartureAt);
-
+                        .isAfter(
+                                lastSafeDepartureAt
+                        );
 
 
         CandidateReturnResult result =
@@ -152,57 +342,70 @@ public class CalculationService {
                 participant.getMeetingId()
         );
 
+
         result.setCandidateId(
                 candidate.getCandidateId()
         );
+
 
         result.setParticipantId(
                 participant.getParticipantId()
         );
 
+
         result.setCalculationVersion(
-                meeting.getCalculationVersion()
+                calculationVersion
         );
+
 
         result.setReturnMinutes(
                 route.totalMinutes()
         );
 
+
         result.setTransferCount(
                 route.transferCount()
         );
+
 
         result.setLastTrainDepartureAt(
                 lastTrainDepartureAt
         );
 
+
         result.setLastTrainArrivalAt(
                 lastTrainArrivalAt
         );
 
+
         result.setLastSafeDepartureAt(
                 lastSafeDepartureAt
         );
+
 
         result.setCanReturn(
                 canReturn
         );
 
 
-        returnResultMapper.insert(result);
+        returnResultMapper.insert(
+                result
+        );
+
 
         return result;
     }
 
 
-
-    // 후보 하나 + 참가자 전원 계산
+    @Transactional
     public List<CandidateReturnResult> calculateCandidate(
             Long candidateId
     ) {
 
         MeetingCandidate candidate =
-                candidateMapper.findById(candidateId);
+                candidateMapper.findById(
+                        candidateId
+                );
 
 
         if (candidate == null) {
@@ -212,7 +415,58 @@ public class CalculationService {
         }
 
 
-        // 재계산 시 기존 결과 삭제
+        Meeting meeting =
+                meetingMapper.findById(
+                        candidate.getMeetingId()
+                );
+
+
+        if (meeting == null) {
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+
+        Integer calculationVersion =
+                meeting.getCalculationVersion();
+
+
+        if (calculationVersion == null) {
+            calculationVersion = 0;
+        }
+
+
+        return calculateCandidate(
+                candidateId,
+                calculationVersion
+        );
+    }
+
+
+    private List<CandidateReturnResult> calculateCandidate(
+            Long candidateId,
+            Integer calculationVersion
+    ) {
+
+        MeetingCandidate candidate =
+                candidateMapper.findById(
+                        candidateId
+                );
+
+
+        if (candidate == null) {
+            throw new IllegalArgumentException(
+                    "후보 장소를 찾을 수 없습니다."
+            );
+        }
+
+
+        validateAllParticipantsSubmitted(
+                candidate.getMeetingId()
+        );
+
+
         returnResultMapper.deleteByCandidateId(
                 candidateId
         );
@@ -224,7 +478,9 @@ public class CalculationService {
                 );
 
 
-        if (participants.isEmpty()) {
+        if (participants == null
+                || participants.isEmpty()) {
+
             throw new IllegalArgumentException(
                     "참가자가 없습니다."
             );
@@ -244,11 +500,14 @@ public class CalculationService {
             CandidateReturnResult result =
                     calculateReturn(
                             participant.getParticipantId(),
-                            candidateId
+                            candidateId,
+                            calculationVersion
                     );
 
 
-            results.add(result);
+            results.add(
+                    result
+            );
 
 
             if (i < participants.size() - 1) {
@@ -260,6 +519,7 @@ public class CalculationService {
         candidateEvaluationService.evaluateAndSave(
                 candidateId,
                 candidate.getMeetingId(),
+                calculationVersion,
                 results
         );
 
@@ -268,43 +528,35 @@ public class CalculationService {
     }
 
 
-
-    private int getOdsayDay(LocalDate date) {
-
-        return switch (date.getDayOfWeek()) {
-
-            case SATURDAY -> 2;
-
-            case SUNDAY -> 3;
-
-            default -> 1;
-        };
-    }
-
-
-
-    private void waitForOdsay() {
-
-        try {
-
-            Thread.sleep(1100);
-
-        } catch (InterruptedException e) {
-
-            Thread.currentThread().interrupt();
-
-            throw new IllegalStateException(
-                    "ODsay 호출 대기 중 오류가 발생했습니다.",
-                    e
-            );
-        }
-    }
-
-
-
+    @Transactional
     public List<CandidateEvaluation> calculateMeeting(
             Long meetingId
     ) {
+
+        validateAllParticipantsSubmitted(
+                meetingId
+        );
+
+
+        Meeting meeting =
+                meetingMapper.findById(
+                        meetingId
+                );
+
+
+        if (meeting == null) {
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+
+        if (meeting.getDesiredEndAt() == null) {
+            throw new IllegalStateException(
+                    "모임 희망 종료시간이 설정되어 있지 않습니다."
+            );
+        }
+
 
         List<MeetingCandidate> candidates =
                 candidateMapper.findByMeetingId(
@@ -312,12 +564,30 @@ public class CalculationService {
                 );
 
 
-        if (candidates.isEmpty()) {
+        if (candidates == null
+                || candidates.isEmpty()) {
 
             throw new IllegalArgumentException(
                     "후보 장소가 없습니다."
             );
         }
+
+
+        Integer currentVersion =
+                meeting.getCalculationVersion();
+
+
+        if (currentVersion == null) {
+            currentVersion = 0;
+        }
+
+        int nextVersion =
+                currentVersion + 1;
+
+        meetingMapper.updateCalculationVersion(
+                meetingId,
+                nextVersion
+        );
 
 
         List<CandidateEvaluation> evaluations =
@@ -326,13 +596,13 @@ public class CalculationService {
 
         for (int i = 0; i < candidates.size(); i++) {
 
-
             MeetingCandidate candidate =
                     candidates.get(i);
 
 
             calculateCandidate(
-                    candidate.getCandidateId()
+                    candidate.getCandidateId(),
+                    nextVersion
             );
 
 
@@ -343,7 +613,16 @@ public class CalculationService {
                             );
 
 
-            evaluations.add(evaluation);
+            if (evaluation == null) {
+                throw new IllegalStateException(
+                        "후보 평가 결과를 찾을 수 없습니다."
+                );
+            }
+
+
+            evaluations.add(
+                    evaluation
+            );
 
 
             if (i < candidates.size() - 1) {
@@ -357,6 +636,129 @@ public class CalculationService {
         );
 
 
+        System.out.println(
+                "[모임 계산 완료] meetingId="
+                        + meetingId
+                        + ", calculationVersion="
+                        + nextVersion
+        );
+
+
         return evaluations;
+    }
+
+
+    private int getOdsayDay(
+            LocalDate date
+    ) {
+
+        return switch (
+                date.getDayOfWeek()
+                ) {
+
+            case SATURDAY -> 2;
+
+            case SUNDAY -> 3;
+
+            default -> 1;
+        };
+    }
+
+
+    private void waitForOdsay() {
+
+        try {
+
+            Thread.sleep(
+                    1100
+            );
+
+        } catch (InterruptedException e) {
+
+            Thread.currentThread()
+                    .interrupt();
+
+
+            throw new IllegalStateException(
+                    "ODsay 호출 대기 중 오류가 발생했습니다.",
+                    e
+            );
+        }
+    }
+
+
+    private void validateAllParticipantsSubmitted(
+            Long meetingId
+    ) {
+
+        Meeting meeting =
+                meetingMapper.findById(
+                        meetingId
+                );
+
+
+        if (meeting == null) {
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+
+        List<MeetingParticipant> participants =
+                participantMapper.findByMeetingId(
+                        meetingId
+                );
+
+
+        if (participants == null
+                || participants.isEmpty()) {
+
+            throw new IllegalArgumentException(
+                    "참가자가 없습니다."
+            );
+        }
+
+
+        boolean allSubmitted =
+                participants.stream()
+                        .allMatch(
+                                participant ->
+                                        participant.getInputStatus()
+                                                == InputStatus.SUBMITTED
+                        );
+
+
+        if (!allSubmitted) {
+
+            throw new IllegalStateException(
+                    "아직 장소 입력을 완료하지 않은 참가자가 있습니다."
+            );
+        }
+
+
+        for (MeetingParticipant participant : participants) {
+
+            validateParticipantLocation(
+                    participant
+            );
+        }
+    }
+
+
+    private void validateParticipantLocation(
+            MeetingParticipant participant
+    ) {
+
+        if (participant.getDepartureLatitude() == null
+                || participant.getDepartureLongitude() == null
+                || participant.getReturnLatitude() == null
+                || participant.getReturnLongitude() == null) {
+
+            throw new IllegalStateException(
+                    "참가자 "
+                            + participant.getParticipantId()
+                            + "의 출발지 또는 귀가지 정보가 없습니다."
+            );
+        }
     }
 }
