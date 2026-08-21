@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 
 @Data
 public class CandidateEvaluation {
-
     private Long evaluationId;
     private Long candidateId;
     private Integer calculationVersion;

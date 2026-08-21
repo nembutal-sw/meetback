@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 
 @Data
 public class CandidateReturnResult {
-
     private Long resultId;
     private Long meetingId;
     private Long candidateId;
