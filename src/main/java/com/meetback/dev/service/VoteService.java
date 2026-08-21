@@ -2,6 +2,7 @@ package com.meetback.dev.service;
 
 import com.meetback.dev.domain.Meeting;
 import com.meetback.dev.domain.MeetingCandidate;
+import com.meetback.dev.domain.MeetingStatus;
 import com.meetback.dev.domain.PlaceVote;
 import com.meetback.dev.dto.CandidateVoteResult;
 import com.meetback.dev.dto.VoteRequest;

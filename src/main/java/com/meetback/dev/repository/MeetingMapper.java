@@ -1,6 +1,7 @@
 package com.meetback.dev.repository;
 
 import com.meetback.dev.domain.Meeting;
+import com.meetback.dev.domain.MeetingStatus;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
