@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.CandidateMapper">
+
+    <select id="countActiveCandidate"
+            parameterType="long"
+            resultType="int">
+
+        SELECT COUNT(*)
+        FROM meeting_candidates
+        WHERE meeting_id = #{meetingId}
+        AND is_active = TRUE
+
+    </select>
+
+    <select id="selectActiveCandidate"
+            resultType="com.meetback.dev.domain.MeetingCandidate">
+
+        SELECT
+            candidate_id,
+            meeting_id,
+            proposer_participant_id,
+            place_name,
+            address,
+            latitude,
+            longitude,
+            is_active,
+            created_at,
+            updated_at
+        FROM meeting_candidates
+        WHERE meeting_id = #{meetingId}
+            AND candidate_id = #{candidateId}
+            AND is_active = TRUE
+
+    </select>
+
+
+
+</mapper>

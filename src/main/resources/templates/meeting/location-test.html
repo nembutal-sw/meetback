@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MeetBack 통합 테스트</title>
+
+    <style>
+        body {
+            width: 800px;
+            margin: 40px auto;
+            font-family: Arial, sans-serif;
+        }
+
+        h2 {
+            margin-bottom: 30px;
+        }
+
+        h3 {
+            margin-top: 30px;
+        }
+
+        .field {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 18px;
+            cursor: pointer;
+            margin-right: 8px;
+            margin-bottom: 10px;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .search-row input {
+            flex: 1;
+        }
+
+        .search-row button {
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .search-results {
+            margin-top: 8px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            display: none;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .search-item {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+        }
+
+        .search-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .search-item-name {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .search-item-address {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .selected-place {
+            margin-top: 8px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .result {
+            margin-top: 15px;
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            white-space: pre-wrap;
+            min-height: 40px;
+        }
+
+        #rankingResult {
+            white-space: normal;
+        }
+
+        .ranking-card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            white-space: normal;
+        }
+
+        .ranking-title {
+            font-size: 19px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .ranking-info {
+            margin-top: 8px;
+            line-height: 1.8;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 9px;
+            border: 1px solid #333;
+            border-radius: 15px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .participant-details {
+            margin-top: 14px;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+
+        .participant-details summary {
+            cursor: pointer;
+            font-weight: bold;
+            padding: 5px 0;
+        }
+
+        .participant-result {
+            margin-top: 10px;
+            padding: 12px;
+            background-color: #f7f7f7;
+            border-radius: 6px;
+            line-height: 1.7;
+        }
+
+        .participant-result strong {
+            font-size: 15px;
+        }
+
+        .return-ok {
+            font-weight: bold;
+        }
+
+        .return-no {
+            font-weight: bold;
+        }
+
+        hr {
+            margin: 35px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>MeetBack 통합 테스트</h2>
+
+
+<h3>테스트 ID</h3>
+
+<div class="field">
+    <label for="meetingId">모임 ID</label>
+    <input
+            type="number"
+            id="meetingId"
+            value="1">
+</div>
+
+<div class="field">
+    <label for="participantId">참가자 ID</label>
+    <input
+            type="number"
+            id="participantId"
+            value="1">
+</div>
+
+<div class="field">
+    <label for="candidateId">후보 ID</label>
+    <input
+            type="number"
+            id="candidateId"
+            value="1">
+</div>
+
+
+<hr>
+
+
+<h3>장소 입력</h3>
+
+
+<div class="field">
+
+    <label for="departureQuery">
+        출발 장소
+    </label>
+
+    <div class="search-row">
+
+        <input
+                type="text"
+                id="departureQuery"
+                placeholder="예: 수원역">
+
+        <button
+                type="button"
+                onclick="searchPlace('departure')">
+            검색
+        </button>
+
+    </div>
+
+    <div
+            id="departureResults"
+            class="search-results">
+    </div>
+
+    <div
+            id="departureSelected"
+            class="selected-place">
+        선택된 장소 없음
+    </div>
+
+</div>
+
+
+<div class="field">
+
+    <label for="returnQuery">
+        귀가 장소
+    </label>
+
+    <div class="search-row">
+
+        <input
+                type="text"
+                id="returnQuery"
+                placeholder="예: 역삼역">
+
+        <button
+                type="button"
+                onclick="searchPlace('return')">
+            검색
+        </button>
+
+    </div>
+
+    <div
+            id="returnResults"
+            class="search-results">
+    </div>
+
+    <div
+            id="returnSelected"
+            class="selected-place">
+        선택된 장소 없음
+    </div>
+
+</div>
+
+
+<div class="field">
+
+    <label for="candidateQuery">
+        희망 장소 (선택)
+    </label>
+
+    <div class="search-row">
+
+        <input
+                type="text"
+                id="candidateQuery"
+                placeholder="예: 건대입구역">
+
+        <button
+                type="button"
+                onclick="searchPlace('candidate')">
+            검색
+        </button>
+
+    </div>
+
+    <div
+            id="candidateResults"
+            class="search-results">
+    </div>
+
+    <div
+            id="candidateSelected"
+            class="selected-place">
+        선택된 장소 없음
+    </div>
+
+</div>
+
+
+<button
+        type="button"
+        onclick="saveAll()">
+    장소 입력 완료
+</button>
+
+<button
+        type="button"
+        onclick="loadParticipant()">
+    참가자 DB 조회
+</button>
+
+<div
+        id="result"
+        class="result">
+    장소 입력 결과
+</div>
+
+
+<hr>
+
+
+<h3>계산 테스트</h3>
+
+
+<button
+        type="button"
+        onclick="calculateReturn()">
+    참가자 1명 귀가 계산
+</button>
+
+<div
+        id="calcResult"
+        class="result">
+    참가자 1명 × 후보 1개 계산 결과
+</div>
+
+
+<button
+        type="button"
+        onclick="calculateCandidate()">
+    후보 1개 전체 계산
+</button>
+
+<div
+        id="candidateCalcResult"
+        class="result">
+    후보 1개 × 참가자 전원 계산 결과
+</div>
+
+
+<button
+        type="button"
+        onclick="calculateMeeting()">
+    모임 전체 후보 계산
+</button>
+
+<div
+        id="meetingCalcResult"
+        class="result">
+    모든 후보 계산 결과
+</div>
+
+
+<hr>
+
+
+<h3>추천 결과</h3>
+
+<button
+        type="button"
+        onclick="loadRanking()">
+    후보 전체 순위 조회
+</button>
+
+<button
+        type="button"
+        onclick="loadTopRecommendation()">
+    추천 1위 조회
+</button>
+
+<div
+        id="rankingResult"
+        class="result">
+    추천 결과
+</div>
+
+
+<script>
+
+    const participantBaseUrl =
+        "/participants";
+
+    const placeSearchUrl =
+        "/places";
+
+
+    let selectedDeparture = null;
+    let selectedReturn = null;
+    let selectedCandidate = null;
+
+
+    async function searchPlace(type) {
+
+        let inputId;
+        let resultId;
+
+        if (type === "departure") {
+
+            inputId = "departureQuery";
+            resultId = "departureResults";
+
+        } else if (type === "return") {
+
+            inputId = "returnQuery";
+            resultId = "returnResults";
+
+        } else {
+
+            inputId = "candidateQuery";
+            resultId = "candidateResults";
+        }
+
+
+        const query =
+            document.getElementById(
+                inputId
+            ).value.trim();
+
+        const resultDiv =
+            document.getElementById(
+                resultId
+            );
+
+
+        if (!query) {
+
+            alert(
+                "검색어를 입력해주세요."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            resultDiv.style.display =
+                "block";
+
+            resultDiv.innerHTML =
+                "검색 중...";
+
+
+            const response =
+                await fetch(
+                    `${placeSearchUrl}?query=${encodeURIComponent(query)}`
+                );
+
+
+            if (!response.ok) {
+
+                const errorText =
+                    await response.text();
+
+                throw new Error(
+                    "장소 검색 실패: "
+                    + errorText
+                );
+            }
+
+
+            const places =
+                await response.json();
+
+
+            if (!places
+                || places.length === 0) {
+
+                resultDiv.innerHTML =
+                    "검색 결과가 없습니다.";
+
+                return;
+            }
+
+
+            resultDiv.innerHTML =
+                "";
+
+
+            places.forEach(place => {
+
+                const item =
+                    document.createElement(
+                        "div"
+                    );
+
+                item.className =
+                    "search-item";
+
+
+                const name =
+                    place.name
+                    ?? place.placeName
+                    ?? "장소명 없음";
+
+
+                const address =
+                    place.roadAddress
+                    || place.address
+                    || "";
+
+
+                item.innerHTML =
+                    `
+                    <div class="search-item-name">
+                        ${escapeHtml(name)}
+                    </div>
+
+                    <div class="search-item-address">
+                        ${escapeHtml(address)}
+                    </div>
+                    `;
+
+
+                item.onclick =
+                    () => selectPlace(
+                        type,
+                        place
+                    );
+
+
+                resultDiv.appendChild(
+                    item
+                );
+            });
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            resultDiv.innerHTML =
+                error.message;
+        }
+    }
+
+
+    function selectPlace(
+        type,
+        place
+    ) {
+
+        if (type === "departure") {
+
+            selectedDeparture =
+                place;
+
+            showSelectedPlace(
+                "departureSelected",
+                place
+            );
+
+            document.getElementById(
+                "departureResults"
+            ).style.display = "none";
+
+
+        } else if (type === "return") {
+
+            selectedReturn =
+                place;
+
+            showSelectedPlace(
+                "returnSelected",
+                place
+            );
+
+            document.getElementById(
+                "returnResults"
+            ).style.display = "none";
+
+
+        } else {
+
+            selectedCandidate =
+                place;
+
+            showSelectedPlace(
+                "candidateSelected",
+                place
+            );
+
+            document.getElementById(
+                "candidateResults"
+            ).style.display = "none";
+        }
+    }
+
+
+    function showSelectedPlace(
+        elementId,
+        place
+    ) {
+
+        const name =
+            place.name
+            ?? place.placeName
+            ?? "";
+
+        const address =
+            place.roadAddress
+            || place.address
+            || "";
+
+        document.getElementById(
+            elementId
+        ).textContent =
+            `${name} / ${address}`;
+    }
+
+
+    async function saveAll() {
+
+        const participantId =
+            document.getElementById(
+                "participantId"
+            ).value;
+
+        const resultDiv =
+            document.getElementById(
+                "result"
+            );
+
+
+        if (!participantId) {
+
+            alert(
+                "참가자 ID를 입력해주세요."
+            );
+
+            return;
+        }
+
+
+        if (!selectedDeparture) {
+
+            alert(
+                "출발 장소를 검색해서 선택해주세요."
+            );
+
+            return;
+        }
+
+
+        if (!selectedReturn) {
+
+            alert(
+                "귀가 장소를 검색해서 선택해주세요."
+            );
+
+            return;
+        }
+
+
+        const departureQuery =
+            selectedDeparture.name
+            ?? selectedDeparture.placeName;
+
+        const returnQuery =
+            selectedReturn.name
+            ?? selectedReturn.placeName;
+
+        const candidateQuery =
+            selectedCandidate
+                ? (
+                    selectedCandidate.name
+                    ?? selectedCandidate.placeName
+                )
+                : null;
+
+
+        try {
+
+            resultDiv.textContent =
+                "출발지 / 귀가지 저장 중...";
+
+
+            const locationResponse =
+                await fetch(
+                    participantBaseUrl
+                    + "/"
+                    + participantId
+                    + "/location",
+                    {
+                        method: "PUT",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            departureQuery:
+                            departureQuery,
+
+                            returnQuery:
+                            returnQuery
+                        })
+                    }
+                );
+
+
+            if (!locationResponse.ok) {
+
+                const errorText =
+                    await locationResponse.text();
+
+                throw new Error(
+                    "위치 저장 실패: "
+                    + errorText
+                );
+            }
+
+
+            /*
+             * 희망 장소는 선택사항
+             *
+             * 선택한 경우에만 후보 장소 저장 / 수정
+             */
+            if (selectedCandidate) {
+
+                resultDiv.textContent =
+                    "희망 장소 저장 중...";
+
+
+                const candidateResponse =
+                    await fetch(
+                        participantBaseUrl
+                        + "/"
+                        + participantId
+                        + "/candidate",
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+                                candidateQuery:
+                                candidateQuery
+                            })
+                        }
+                    );
+
+
+                if (!candidateResponse.ok) {
+
+                    const errorText =
+                        await candidateResponse.text();
+
+                    throw new Error(
+                        "희망 장소 저장 실패: "
+                        + errorText
+                    );
+                }
+            }
+
+
+            await loadParticipant();
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            resultDiv.textContent =
+                error.message;
+        }
+    }
+
+
+    async function loadParticipant() {
+
+        const participantId =
+            document.getElementById(
+                "participantId"
+            ).value;
+
+        const resultDiv =
+            document.getElementById(
+                "result"
+            );
+
+
+        try {
+
+            const response =
+                await fetch(
+                    participantBaseUrl
+                    + "/"
+                    + participantId
+                );
+
+
+            if (!response.ok) {
+
+                const errorText =
+                    await response.text();
+
+                throw new Error(
+                    "참가자 조회 실패: "
+                    + errorText
+                );
+            }
+
+
+            const participant =
+                await response.json();
+
+
+            resultDiv.textContent =
+                JSON.stringify(
+                    participant,
+                    null,
+                    2
+                );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            resultDiv.textContent =
+                error.message;
+        }
+    }
+
+
+    async function calculateReturn() {
+
+        const participantId =
+            document.getElementById(
+                "participantId"
+            ).value;
+
+        const candidateId =
+            document.getElementById(
+                "candidateId"
+            ).value;
+
+        const resultDiv =
+            document.getElementById(
+                "calcResult"
+            );
+
+
+        try {
+
+            resultDiv.textContent =
+                "귀가 경로 / 막차 계산 중...";
+
+
+            const response =
+                await fetch(
+                    `/calculations/return?participantId=${participantId}&candidateId=${candidateId}`,
+                    {
+                        method: "POST"
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                const errorText =
+                    await response.text();
+
+                throw new Error(
+                    "귀가 계산 실패: "
+                    + errorText
+                );
+            }
+
+
+            const data =
+                await response.json();
+
+
+            resultDiv.textContent =
+                JSON.stringify(
+                    data,
+                    null,
+                    2
+                );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            resultDiv.textContent =
+                error.message;
+        }
+    }
+
+
+    async function calculateCandidate() {
+
+        const candidateId =
+            document.getElementById(
+                "candidateId"
+            ).value;
+
+        const resultDiv =
+            document.getElementById(
+                "candidateCalcResult"
+            );
+
+
+        try {
+
+            resultDiv.textContent =
+                "후보 1개에 대해 참가자 전원 계산 중...";
+
+
+            const response =
+                await fetch(
+                    `/calculations/candidate?candidateId=${candidateId}`,
+                    {
+                        method: "POST"
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                const errorText =
+                    await response.text();
+
+                throw new Error(
+                    "후보 계산 실패: "
+                    + errorText
+                );
+            }
+
+
+            const data =
+                await response.json();
+
+
+            resultDiv.textContent =
+                JSON.stringify(
+                    data,
+                    null,
+                    2
+                );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            resultDiv.textContent =
+                error.message;
+        }
+    }
+
+
+    async function calculateMeeting() {
+
+        const meetingId =
+            document.getElementById(
+                "meetingId"
+            ).value;
+
+        const resultDiv =
+            document.getElementById(
+                "meetingCalcResult"
+            );
+
+
+        try {
+
+            resultDiv.textContent =
+                "모임 전체 후보 계산 중...\n"
+                + "ODsay 호출 때문에 시간이 걸릴 수 있습니다.";
+
+
+            const response =
+                await fetch(
+                    `/calculations/meeting?meetingId=${meetingId}`,
+                    {
+                        method: "POST"
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                const errorText =
+                    await response.text();
+
+                throw new Error(
+                    "모임 전체 계산 실패: "
+                    + errorText
+                );
+            }
+
+
+            const data =
+                await response.json();
+
+
+            resultDiv.textContent =
+                JSON.stringify(
+                    data,
+                    null,
+                    2
+                );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            resultDiv.textContent =
+                error.message;
+        }
+    }
+
+
+    async function loadRanking() {
+
+        const meetingId =
+            document.getElementById(
+                "meetingId"
+            ).value;
+
+        const resultDiv =
+            document.getElementById(
+                "rankingResult"
+            );
+
+
+        try {
+
+            resultDiv.innerHTML =
+                "추천 순위 조회 중...";
+
+
+            const response =
+                await fetch(
+                    `/calculations/meeting/ranking?meetingId=${meetingId}`
+                );
+
+
+            if (!response.ok) {
+
+                const errorText =
+                    await response.text();
+
+                throw new Error(
+                    "순위 조회 실패: "
+                    + errorText
+                );
+            }
+
+
+            const data =
+                await response.json();
+
+
+            renderRanking(
+                data
+            );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            resultDiv.textContent =
+                error.message;
+        }
+    }
+
+
+    async function loadTopRecommendation() {
+
+        const meetingId =
+            document.getElementById(
+                "meetingId"
+            ).value;
+
+        const resultDiv =
+            document.getElementById(
+                "rankingResult"
+            );
+
+
+        try {
+
+            resultDiv.innerHTML =
+                "추천 1위 조회 중...";
+
+
+            const response =
+                await fetch(
+                    `/calculations/meeting/recommendation?meetingId=${meetingId}`
+                );
+
+
+            if (!response.ok) {
+
+                const errorText =
+                    await response.text();
+
+                throw new Error(
+                    "추천 조회 실패: "
+                    + errorText
+                );
+            }
+
+
+            const data =
+                await response.json();
+
+
+            renderRanking(
+                [data]
+            );
+
+
+        } catch (error) {
+
+            console.error(error);
+
+            resultDiv.textContent =
+                error.message;
+        }
+    }
+
+
+    function renderRanking(
+        rankings
+    ) {
+
+        const resultDiv =
+            document.getElementById(
+                "rankingResult"
+            );
+
+        resultDiv.innerHTML =
+            "";
+
+
+        if (!rankings
+            || rankings.length === 0) {
+
+            resultDiv.textContent =
+                "추천 결과가 없습니다.";
+
+            return;
+        }
+
+
+        rankings.forEach(item => {
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+            card.className =
+                "ranking-card";
+
+
+            let fairBadge =
+                "";
+
+            if (item.fairPlace === true) {
+
+                fairBadge =
+                    `
+                    <span class="badge">
+                        공정한 장소
+                    </span>
+                    `;
+            }
+
+
+            let participantHtml =
+                "";
+
+            if (
+                item.participantResults
+                && item.participantResults.length > 0
+            ) {
+
+                participantHtml =
+                    item.participantResults
+                        .map(result => {
+
+                            const returnClass =
+                                result.canReturn
+                                    ? "return-ok"
+                                    : "return-no";
+
+                            return `
+                                <div class="participant-result">
+
+                                    <strong>
+                                        참가자 ${result.participantId}
+                                    </strong>
+
+                                    <br>
+
+                                    귀가시간:
+                                    ${result.returnMinutes}분
+
+                                    <br>
+
+                                    환승:
+                                    ${result.transferCount}회
+
+                                    <br>
+
+                                    막차 출발:
+                                    ${formatDateTime(
+                                result.lastTrainDepartureAt
+                            )}
+
+                                    <br>
+
+                                    막차 도착:
+                                    ${formatDateTime(
+                                result.lastTrainArrivalAt
+                            )}
+
+                                    <br>
+
+                                    안전 출발:
+                                    ${formatDateTime(
+                                result.lastSafeDepartureAt
+                            )}
+
+                                    <br>
+
+                                    귀가 가능:
+                                    <span class="${returnClass}">
+                                        ${result.canReturn
+                                ? "가능"
+                                : "불가능"}
+                                    </span>
+
+                                </div>
+                            `;
+                        })
+                        .join("");
+
+            } else {
+
+                participantHtml =
+                    "참가자별 귀가 결과가 없습니다.";
+            }
+
+
+            card.innerHTML =
+                `
+                <div class="ranking-title">
+
+                    ${item.recommendationRank}위
+
+                    ${escapeHtml(
+                    item.placeName
+                    ?? "장소명 없음"
+                )}
+
+                    ${fairBadge}
+
+                </div>
+
+                <div class="ranking-info">
+
+                    주소:
+                    ${escapeHtml(
+                    item.address
+                    ?? ""
+                )}
+
+                    <br>
+
+                    Rule Score:
+                    ${item.ruleScore}점
+
+                    <br>
+
+                    평균 귀가시간:
+                    ${item.averageReturnMinutes}분
+
+                    <br>
+
+                    귀가시간 편차:
+                    ${item.fairnessGapMinutes}분
+
+                    <br>
+
+                    Fairness Score:
+                    ${item.fairnessScore}점
+
+                    <br>
+
+                    Golden Margin:
+                    ${item.goldenMarginMinutes}분
+
+                    <br>
+
+                    Deadline:
+                    ${formatDateTime(
+                    item.deadlineAt
+                )}
+
+                    <br>
+
+                    전원 귀가 가능:
+                    ${item.allReturnable
+                    ? "가능"
+                    : "불가능"}
+
+                </div>
+
+                <details class="participant-details">
+
+                    <summary>
+                        참가자별 귀가 정보 보기
+                    </summary>
+
+                    ${participantHtml}
+
+                </details>
+                `;
+
+
+            resultDiv.appendChild(
+                card
+            );
+        });
+    }
+
+
+    function formatDateTime(value) {
+
+        if (!value) {
+            return "-";
+        }
+
+        const date =
+            new Date(value);
+
+        const hours =
+            String(
+                date.getHours()
+            ).padStart(2, "0");
+
+        const minutes =
+            String(
+                date.getMinutes()
+            ).padStart(2, "0");
+
+        return `${hours}:${minutes}`;
+    }
+
+
+    function escapeHtml(value) {
+
+        if (value == null) {
+            return "";
+        }
+
+        return String(value)
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
+    }
+
+</script>
+
+</body>
+</html>
