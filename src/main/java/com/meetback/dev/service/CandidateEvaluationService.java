@@ -28,6 +28,17 @@ public class CandidateEvaluationService {
     private final CandidateReturnResultMapper returnResultMapper;
 
 
+    /*
+     * 후보 장소의 Deadline 계산
+     *
+     * 막차를 이용하는 참가자들의
+     * lastSafeDepartureAt 중 가장 빠른 시간
+     *
+     * 도보 귀가자는 lastSafeDepartureAt = null 이므로 제외
+     *
+     * 전원이 도보 귀가라면
+     * 막차 제한이 없으므로 null 반환
+     */
     public LocalDateTime calculateDeadline(
             List<CandidateReturnResult> results
     ) {
@@ -42,30 +53,42 @@ public class CandidateEvaluationService {
                 .map(CandidateReturnResult::getLastSafeDepartureAt)
                 .filter(time -> time != null)
                 .min(LocalDateTime::compareTo)
-                .orElseThrow(() ->
-                        new IllegalStateException(
-                                "마지막 안전 출발시간이 없습니다."
-                        )
-                );
+                .orElse(null);
     }
 
 
+    /*
+     * Golden Margin 계산
+     *
+     * Deadline - 희망 종료시간
+     *
+     * 전원이 도보 귀가라 Deadline이 없으면
+     * Golden Margin은 0으로 처리
+     */
     public int calculateGoldenMargin(
             LocalDateTime desiredEndAt,
             LocalDateTime deadlineAt
     ) {
 
-        if (desiredEndAt == null || deadlineAt == null) {
+        if (desiredEndAt == null) {
             throw new IllegalArgumentException(
-                    "종료시간 또는 Deadline이 없습니다."
+                    "희망 종료시간이 없습니다."
             );
         }
 
+        if (deadlineAt == null) {
+            return 0;
+        }
+
         LocalDateTime desired =
-                desiredEndAt.withSecond(0).withNano(0);
+                desiredEndAt
+                        .withSecond(0)
+                        .withNano(0);
 
         LocalDateTime deadline =
-                deadlineAt.withSecond(0).withNano(0);
+                deadlineAt
+                        .withSecond(0)
+                        .withNano(0);
 
         return (int) Duration.between(
                 desired,
@@ -74,6 +97,11 @@ public class CandidateEvaluationService {
     }
 
 
+    /*
+     * 참가자 귀가시간 편차 계산
+     *
+     * 최대 귀가시간 - 최소 귀가시간
+     */
     public int calculateFairnessGap(
             List<CandidateReturnResult> results
     ) {
@@ -106,10 +134,14 @@ public class CandidateEvaluationService {
                                 )
                         );
 
-        return maxReturnMinutes - minReturnMinutes;
+        return maxReturnMinutes
+                - minReturnMinutes;
     }
 
 
+    /*
+     * Fairness Score 계산
+     */
     public int calculateFairnessScore(
             int fairnessGapMinutes
     ) {
@@ -134,6 +166,9 @@ public class CandidateEvaluationService {
     }
 
 
+    /*
+     * 후보 평가 계산 및 저장
+     */
     public CandidateEvaluation evaluateAndSave(
             Long candidateId,
             Long meetingId,
@@ -141,7 +176,9 @@ public class CandidateEvaluationService {
     ) {
 
         Meeting meeting =
-                meetingMapper.findById(meetingId);
+                meetingMapper.findById(
+                        meetingId
+                );
 
         if (meeting == null) {
             throw new IllegalArgumentException(
@@ -149,8 +186,17 @@ public class CandidateEvaluationService {
             );
         }
 
+
+        /*
+         * 도보 귀가자는 Deadline 계산에서 제외
+         *
+         * 전원이 도보라면 deadline = null
+         */
         LocalDateTime deadline =
-                calculateDeadline(results);
+                calculateDeadline(
+                        results
+                );
+
 
         int goldenMargin =
                 calculateGoldenMargin(
@@ -158,11 +204,18 @@ public class CandidateEvaluationService {
                         deadline
                 );
 
+
         int fairnessGap =
-                calculateFairnessGap(results);
+                calculateFairnessGap(
+                        results
+                );
+
 
         int fairnessScore =
-                calculateFairnessScore(fairnessGap);
+                calculateFairnessScore(
+                        fairnessGap
+                );
+
 
         double averageReturnMinutes =
                 results.stream()
@@ -172,6 +225,7 @@ public class CandidateEvaluationService {
                         .average()
                         .orElse(0.0);
 
+
         boolean allReturnable =
                 results.stream()
                         .allMatch(result ->
@@ -179,6 +233,7 @@ public class CandidateEvaluationService {
                                         result.getCanReturn()
                                 )
                         );
+
 
         double ruleScore =
                 ruleEngineService.calculateRuleScore(
@@ -188,46 +243,60 @@ public class CandidateEvaluationService {
                         results
                 );
 
+
         CandidateEvaluation evaluation =
                 new CandidateEvaluation();
+
 
         evaluation.setCandidateId(
                 candidateId
         );
 
+
         evaluation.setCalculationVersion(
                 meeting.getCalculationVersion()
         );
+
 
         evaluation.setAllReturnable(
                 allReturnable
         );
 
+
         evaluation.setDeadlineAt(
                 deadline
         );
+
 
         evaluation.setGoldenMarginMinutes(
                 goldenMargin
         );
 
+
         evaluation.setAverageReturnMinutes(
                 averageReturnMinutes
         );
+
 
         evaluation.setFairnessGapMinutes(
                 fairnessGap
         );
 
+
         evaluation.setFairnessScore(
                 fairnessScore
         );
+
 
         evaluation.setRuleScore(
                 ruleScore
         );
 
-        // 전체 후보 계산 후 순위 결정
+
+        /*
+         * 모임 전체 후보 계산이 끝난 뒤
+         * rankCandidates()에서 순위 결정
+         */
         evaluation.setRecommendationRank(
                 null
         );
@@ -237,6 +306,7 @@ public class CandidateEvaluationService {
                 candidateEvaluationMapper.findByCandidateId(
                         candidateId
                 );
+
 
         if (saved == null) {
 
@@ -250,6 +320,7 @@ public class CandidateEvaluationService {
                     evaluation
             );
         }
+
 
         return evaluation;
     }
@@ -266,20 +337,28 @@ public class CandidateEvaluationService {
     }
 
 
+    /*
+     * 후보 순위 계산
+     */
     public void rankCandidates(
             List<CandidateEvaluation> evaluations
     ) {
 
-        if (evaluations == null || evaluations.isEmpty()) {
+        if (evaluations == null
+                || evaluations.isEmpty()) {
+
             throw new IllegalArgumentException(
                     "후보 평가 결과가 없습니다."
             );
         }
 
+
         evaluations.sort(
                 (a, b) -> {
 
-                    // 1. Rule Score 높은 후보 우선
+                    /*
+                     * 1. Rule Score 높은 후보 우선
+                     */
                     int scoreCompare =
                             Double.compare(
                                     b.getRuleScore(),
@@ -290,7 +369,11 @@ public class CandidateEvaluationService {
                         return scoreCompare;
                     }
 
-                    // 2. 동점이면 Golden Margin 큰 후보 우선
+
+                    /*
+                     * 2. 동점이면
+                     * Golden Margin 큰 후보 우선
+                     */
                     int marginCompare =
                             Integer.compare(
                                     b.getGoldenMarginMinutes(),
@@ -301,7 +384,11 @@ public class CandidateEvaluationService {
                         return marginCompare;
                     }
 
-                    // 3. 그래도 동점이면 평균 귀가시간 짧은 후보 우선
+
+                    /*
+                     * 3. 그래도 동점이면
+                     * 평균 귀가시간 짧은 후보 우선
+                     */
                     return Double.compare(
                             a.getAverageReturnMinutes(),
                             b.getAverageReturnMinutes()
@@ -315,12 +402,15 @@ public class CandidateEvaluationService {
             CandidateEvaluation evaluation =
                     evaluations.get(i);
 
+
             int rank =
                     i + 1;
+
 
             evaluation.setRecommendationRank(
                     rank
             );
+
 
             candidateEvaluationMapper
                     .updateRecommendationRank(
@@ -344,11 +434,13 @@ public class CandidateEvaluationService {
                                 meetingId
                         );
 
+
         if (evaluation == null) {
             throw new IllegalStateException(
                     "추천 결과가 없습니다."
             );
         }
+
 
         return toRankingResponse(
                 evaluation
@@ -369,6 +461,7 @@ public class CandidateEvaluationService {
                                 meetingId
                         );
 
+
         if (evaluations == null
                 || evaluations.isEmpty()) {
 
@@ -376,6 +469,7 @@ public class CandidateEvaluationService {
                     "후보 순위 결과가 없습니다."
             );
         }
+
 
         return evaluations.stream()
                 .map(this::toRankingResponse)
@@ -396,6 +490,7 @@ public class CandidateEvaluationService {
                         evaluation.getCandidateId()
                 );
 
+
         if (candidate == null) {
             throw new IllegalStateException(
                     "후보 장소를 찾을 수 없습니다."
@@ -413,7 +508,9 @@ public class CandidateEvaluationService {
 
 
         /*
-         * 이미 계산되어 DB에 저장된 참가자별 귀가 결과 조회
+         * 이미 계산되어 DB에 저장된
+         * 참가자별 귀가 결과 조회
+         *
          * ODsay 재호출 없음
          */
         List<CandidateReturnResult> returnResults =

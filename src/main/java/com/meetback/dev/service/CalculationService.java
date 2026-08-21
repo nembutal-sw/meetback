@@ -23,6 +23,7 @@ import java.util.List;
 public class CalculationService {
 
     private static final int SAFE_MARGIN_MINUTES = 10;
+    private static final int WALKING_RETURN_MINUTES = 10;
 
     private final MeetingMapper meetingMapper;
     private final MeetingParticipantMapper participantMapper;
@@ -39,7 +40,9 @@ public class CalculationService {
     ) {
 
         MeetingParticipant participant =
-                participantMapper.findById(participantId);
+                participantMapper.findById(
+                        participantId
+                );
 
         if (participant == null) {
             throw new IllegalArgumentException(
@@ -61,7 +64,9 @@ public class CalculationService {
 
 
         MeetingCandidate candidate =
-                candidateMapper.findById(candidateId);
+                candidateMapper.findById(
+                        candidateId
+                );
 
         if (candidate == null) {
             throw new IllegalArgumentException(
@@ -70,11 +75,94 @@ public class CalculationService {
         }
 
 
+        /*
+         * 후보 장소와 귀가 장소가 700m 이내이면
+         * ODsay를 호출하지 않고 도보 10분으로 처리
+         */
+        if (routeService.isWithinWalkingDistance(
+                participantId,
+                candidateId
+        )) {
+
+            CandidateReturnResult result =
+                    new CandidateReturnResult();
+
+            result.setMeetingId(
+                    participant.getMeetingId()
+            );
+
+            result.setCandidateId(
+                    candidate.getCandidateId()
+            );
+
+            result.setParticipantId(
+                    participant.getParticipantId()
+            );
+
+            result.setCalculationVersion(
+                    meeting.getCalculationVersion()
+            );
+
+            result.setReturnMinutes(
+                    WALKING_RETURN_MINUTES
+            );
+
+            result.setTransferCount(
+                    0
+            );
+
+            /*
+             * 도보 귀가이므로
+             * 막차 정보는 없음
+             */
+            result.setLastTrainDepartureAt(
+                    null
+            );
+
+            result.setLastTrainArrivalAt(
+                    null
+            );
+
+            result.setLastSafeDepartureAt(
+                    null
+            );
+
+            /*
+             * 막차 제한이 없으므로 귀가 가능
+             */
+            result.setCanReturn(
+                    true
+            );
+
+
+            returnResultMapper.insert(
+                    result
+            );
+
+
+            System.out.println(
+                    "[도보 처리] candidateId="
+                            + candidateId
+                            + ", participantId="
+                            + participantId
+                            + ", returnMinutes="
+                            + WALKING_RETURN_MINUTES
+            );
+
+
+            return result;
+        }
+
+
+        /*
+         * 700m 초과이면 기존 ODsay 경로 조회
+         */
         TransitRouteDTO route =
                 routeService.searchReturnRoute(
                         participantId,
                         candidateId
                 );
+
 
         waitForOdsay();
 
@@ -85,7 +173,9 @@ public class CalculationService {
 
 
         int odsayDay =
-                getOdsayDay(meetingDate);
+                getOdsayDay(
+                        meetingDate
+                );
 
 
         LastTrainDTO lastTrain =
@@ -101,6 +191,7 @@ public class CalculationService {
                         lastTrain.departureTime()
                 );
 
+
         LocalTime arrivalTime =
                 LocalTime.parse(
                         lastTrain.arrivalTime()
@@ -113,6 +204,7 @@ public class CalculationService {
                         departureTime
                 );
 
+
         LocalDateTime lastTrainArrivalAt =
                 LocalDateTime.of(
                         meetingDate,
@@ -120,15 +212,34 @@ public class CalculationService {
                 );
 
 
-        if (departureTime.isBefore(LocalTime.of(5,0))) {
+        /*
+         * 자정 이후 막차는 다음 날로 처리
+         */
+        if (departureTime.isBefore(
+                LocalTime.of(
+                        5,
+                        0
+                )
+        )) {
+
             lastTrainDepartureAt =
-                    lastTrainDepartureAt.plusDays(1);
+                    lastTrainDepartureAt.plusDays(
+                            1
+                    );
         }
 
 
-        if (arrivalTime.isBefore(LocalTime.of(5,0))) {
+        if (arrivalTime.isBefore(
+                LocalTime.of(
+                        5,
+                        0
+                )
+        )) {
+
             lastTrainArrivalAt =
-                    lastTrainArrivalAt.plusDays(1);
+                    lastTrainArrivalAt.plusDays(
+                            1
+                    );
         }
 
 
@@ -140,8 +251,9 @@ public class CalculationService {
 
         boolean canReturn =
                 !meeting.getDesiredEndAt()
-                        .isAfter(lastSafeDepartureAt);
-
+                        .isAfter(
+                                lastSafeDepartureAt
+                        );
 
 
         CandidateReturnResult result =
@@ -152,57 +264,72 @@ public class CalculationService {
                 participant.getMeetingId()
         );
 
+
         result.setCandidateId(
                 candidate.getCandidateId()
         );
+
 
         result.setParticipantId(
                 participant.getParticipantId()
         );
 
+
         result.setCalculationVersion(
                 meeting.getCalculationVersion()
         );
+
 
         result.setReturnMinutes(
                 route.totalMinutes()
         );
 
+
         result.setTransferCount(
                 route.transferCount()
         );
+
 
         result.setLastTrainDepartureAt(
                 lastTrainDepartureAt
         );
 
+
         result.setLastTrainArrivalAt(
                 lastTrainArrivalAt
         );
 
+
         result.setLastSafeDepartureAt(
                 lastSafeDepartureAt
         );
+
 
         result.setCanReturn(
                 canReturn
         );
 
 
-        returnResultMapper.insert(result);
+        returnResultMapper.insert(
+                result
+        );
+
 
         return result;
     }
 
 
-
-    // 후보 하나 + 참가자 전원 계산
+    /*
+     * 후보 하나 + 참가자 전원 계산
+     */
     public List<CandidateReturnResult> calculateCandidate(
             Long candidateId
     ) {
 
         MeetingCandidate candidate =
-                candidateMapper.findById(candidateId);
+                candidateMapper.findById(
+                        candidateId
+                );
 
 
         if (candidate == null) {
@@ -212,7 +339,9 @@ public class CalculationService {
         }
 
 
-        // 재계산 시 기존 결과 삭제
+        /*
+         * 재계산 시 기존 결과 삭제
+         */
         returnResultMapper.deleteByCandidateId(
                 candidateId
         );
@@ -248,9 +377,16 @@ public class CalculationService {
                     );
 
 
-            results.add(result);
+            results.add(
+                    result
+            );
 
 
+            /*
+             * 도보 처리된 경우에는 ODsay를 호출하지 않았지만
+             * 다음 참가자가 ODsay를 호출할 수도 있으므로
+             * 기존 대기 로직은 유지
+             */
             if (i < participants.size() - 1) {
                 waitForOdsay();
             }
@@ -268,10 +404,20 @@ public class CalculationService {
     }
 
 
+    /*
+     * ODsay DAY
+     *
+     * 1 = 평일
+     * 2 = 토요일
+     * 3 = 일요일
+     */
+    private int getOdsayDay(
+            LocalDate date
+    ) {
 
-    private int getOdsayDay(LocalDate date) {
-
-        return switch (date.getDayOfWeek()) {
+        return switch (
+                date.getDayOfWeek()
+                ) {
 
             case SATURDAY -> 2;
 
@@ -282,16 +428,22 @@ public class CalculationService {
     }
 
 
-
+    /*
+     * ODsay 호출 간 대기
+     */
     private void waitForOdsay() {
 
         try {
 
-            Thread.sleep(1100);
+            Thread.sleep(
+                    1100
+            );
 
         } catch (InterruptedException e) {
 
-            Thread.currentThread().interrupt();
+            Thread.currentThread()
+                    .interrupt();
+
 
             throw new IllegalStateException(
                     "ODsay 호출 대기 중 오류가 발생했습니다.",
@@ -301,7 +453,9 @@ public class CalculationService {
     }
 
 
-
+    /*
+     * 모임 전체 후보 계산
+     */
     public List<CandidateEvaluation> calculateMeeting(
             Long meetingId
     ) {
@@ -331,6 +485,9 @@ public class CalculationService {
                     candidates.get(i);
 
 
+            /*
+             * 후보 하나 × 참가자 전원 계산
+             */
             calculateCandidate(
                     candidate.getCandidateId()
             );
@@ -343,7 +500,9 @@ public class CalculationService {
                             );
 
 
-            evaluations.add(evaluation);
+            evaluations.add(
+                    evaluation
+            );
 
 
             if (i < candidates.size() - 1) {
