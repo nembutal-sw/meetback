@@ -5,6 +5,7 @@ import com.meetback.dev.security.JwtProvider;
 import com.meetback.dev.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,6 +59,27 @@ public class AuthController {
                 );
 
         return  ResponseEntity.ok(
+                response
+        );
+    }
+
+    // 구글 로그인 / 간편 회원가입
+
+    // JSON 요청만 허용해 다른 사이트의 단순 HTML 폼을 이용한 로그인 요청을 차단한다.
+    @PostMapping(
+            value = "/google",
+            consumes = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<LoginResponse> googleLogin(
+            @RequestBody GoogleLoginRequest request
+    ) {
+
+        LoginResponse response =
+                authService.googleLogin(
+                        request
+                );
+
+        return ResponseEntity.ok(
                 response
         );
     }
