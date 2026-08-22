@@ -21,14 +21,14 @@ Google 로그인은 Google ID Token의 서명, 발급자, 만료시간과 MeetBa
 
 ### 모임 관리
 
-- 모임 생성 및 초대 코드 발급
+- 주최자가 모임 제목과 희망 종료시간을 입력하여 모임 생성 및 초대 코드 발급
 - 초대 코드를 이용한 모임 참여
 - 모임 참가자와 입력 상태 관리
 - 투표 시작 및 주최자의 최종 후보 확정
 
 ```mermaid
 stateDiagram-v2
-    [*] --> INPUT_OPEN: 모임 생성
+    [*] --> INPUT_OPEN: 주최자가 희망 종료시간 입력 후 모임 생성
     INPUT_OPEN --> VOTING: 후보 및 참가자 입력 완료
     VOTING --> CONFIRMED: 주최자가 최종 장소 확정
 ```
@@ -58,7 +58,7 @@ stateDiagram-v2
 
 ```mermaid
 flowchart LR
-    A[회원가입 또는 소셜 로그인] --> B[모임 생성]
+    A[회원가입 또는 소셜 로그인] --> B[주최자가 희망 종료시간 입력 후 모임 생성]
     B --> C[초대 코드 공유]
     C --> D[참가자 입장]
     D --> E[출발지·귀가지 입력]
@@ -334,10 +334,24 @@ Authorization: Bearer {accessToken}
 
 | Method | Endpoint | 설명 |
 |---|---|---|
-| `POST` | `/meetings?hostUserId={id}` | 모임 생성 및 초대 코드 발급 |
+| `POST` | `/meetings?hostUserId={id}` | 주최자가 제목·희망 종료시간으로 모임 생성 및 초대 코드 발급 |
 | `POST` | `/meetings/join?userId={id}` | 초대 코드로 모임 참여 |
 | `PUT` | `/meetings/{meetingId}/voting?hostUserId={id}` | 투표 시작 |
 | `PUT` | `/meetings/{meetingId}/final-candidate?hostUserId={id}` | 최종 후보 확정 |
+
+모임 생성 시 주최자의 사용자 ID는 Query Parameter로 전달하고, 모임 제목과 희망 종료시간은 JSON 요청 본문으로 전달합니다.
+
+```http
+POST /meetings?hostUserId=1
+Content-Type: application/json
+```
+
+```json
+{
+  "title": "프로젝트 회식",
+  "desiredEndAt": "2026-08-30T22:00:00"
+}
+```
 
 ### 참가자 및 후보 장소
 
