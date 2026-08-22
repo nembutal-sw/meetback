@@ -13,8 +13,8 @@ MeetBack은 장소 검색 결과만 보여주는 것이 아니라 참가자별 �
 - 이메일 기반 회원가입·로그인
 - Kakao OAuth 간편 로그인·회원가입
 - Google Identity Services 간편 로그인·회원가입
-- MeetBack Access Token 및 Refresh Token 발급
-- Refresh Token SHA-256 해시 저장 및 만료 토큰 정리
+- HMAC 기반으로 서명된 MeetBack Access/Refresh JWT 발급
+- Refresh Token 원문 대신 별도의 SHA-256 해시 저장 및 만료 토큰 정리
 - 로그인 상태 확인, 로그아웃, 회원 탈퇴 및 탈퇴 취소
 
 Google 로그인은 Google ID Token의 서명, 발급자, 만료시간과 MeetBack Client ID 대상 여부를 서버에서 검증합니다. 신규 Google 사용자의 프로필 이름은 `users.nickname`으로 저장하며 이름과 생년월일은 별도로 저장하지 않습니다.
@@ -78,7 +78,7 @@ flowchart LR
 | View | Thymeleaf, HTML, JavaScript |
 | Persistence | MyBatis 4.0.1 |
 | Database | MySQL |
-| Authentication | JJWT 0.13.0, BCrypt, Google Identity Services, Kakao OAuth |
+| Authentication | JJWT 0.13.0(HMAC JWT 서명), BCrypt, Google Identity Services, Kakao OAuth |
 | External API | Kakao Local API, ODsay API |
 | Build | Maven Wrapper |
 | Test | JUnit 5, Mockito, AssertJ, Spring Boot Test |
@@ -239,7 +239,7 @@ ODSAY_BASE_URL=your-odsay-base-url
 | `DB_NAME` | 사용할 데이터베이스 이름 |
 | `DB_USERNAME` | MySQL 사용자 |
 | `DB_PASSWORD` | MySQL 비밀번호 |
-| `JWT_SECRET` | MeetBack JWT 서명용 Base64 키 |
+| `JWT_SECRET` | MeetBack JWT의 HMAC 서명에 사용하는 Base64 Secret Key |
 | `JWT_ACCESS_TOKEN_EXPIRATION` | Access Token 유효시간(ms) |
 | `JWT_REFRESH_TOKEN_EXPIRATION` | Refresh Token 유효시간(ms) |
 | `KAKAO_CLIENT_ID` | Kakao OAuth Client ID |
@@ -250,7 +250,7 @@ ODSAY_BASE_URL=your-odsay-base-url
 | `ODSAY_API_KEY` | ODsay API Key |
 | `ODSAY_BASE_URL` | ODsay API Base URL |
 
-`JWT_SECRET`은 충분한 길이의 임의 바이트를 Base64로 인코딩한 값을 사용합니다. 실제 비밀번호, API Key, Client Secret과 JWT Secret은 README나 `.env.example`에 입력하거나 Git에 커밋하지 않습니다.
+`JWT_SECRET`은 최소 256bit(32바이트) 이상의 안전한 임의 바이트를 Base64로 인코딩하여 사용합니다. Base64는 암호화가 아니므로 실제 비밀번호, API Key, Client Secret과 JWT Secret은 README나 `.env.example`에 입력하거나 Git에 커밋하지 않습니다.
 
 ### Google 로그인 설정
 
@@ -424,10 +424,24 @@ Google 공식 버튼
 
 Google 이메일만 같다는 이유로 기존 계정과 자동 연결하지 않습니다. 계정 소유 확인이 없는 자동 연결을 막기 위해 `409 Conflict`로 처리합니다.
 
+### MeetBack JWT 서명
+
+- Access Token과 Refresh Token은 단순 SHA-256 해시가 아니라 Secret Key를 이용한 **HMAC 기반 JWT 서명**으로 생성됩니다.
+- 현재 코드는 JJWT의 `.signWith(secretKey)`를 사용하며, Base64 디코딩 후의 키 길이에 따라 서명 알고리즘이 자동 선택됩니다.
+
+| Secret Key 길이 | JJWT 자동 선택 알고리즘 |
+|---:|---|
+| 32~47바이트 | HS256(HMAC-SHA-256) |
+| 48~63바이트 | HS384(HMAC-SHA-384) |
+| 64바이트 이상 | HS512(HMAC-SHA-512) |
+
+JWT 서명은 Payload를 암호화하는 기능이 아닙니다. Payload는 디코딩할 수 있지만, Secret Key 없이는 유효한 서명을 위조하거나 내용을 정상적으로 변조할 수 없게 합니다. 자세한 키 길이와 알고리즘 선택 규칙은 [JJWT 공식 문서](https://github.com/jwtk/jjwt/blob/main/README.adoc)를 참고합니다.
+
 ### Refresh Token
 
-- 브라우저에는 Refresh Token 원문을 반환합니다.
-- DB에는 SHA-256 해시만 저장합니다.
+- HMAC으로 서명된 Refresh JWT 원문은 브라우저에 반환합니다.
+- DB에는 Refresh JWT 원문을 다시 SHA-256으로 해시한 값만 저장합니다.
+- 이 SHA-256 처리는 JWT 서명과 별개인 DB 보관·조회용 단순 해시입니다.
 - 사용자별 기존 토큰이 있으면 새 값으로 갱신합니다.
 - 만료된 Refresh Token은 매분 Scheduler가 삭제합니다.
 
