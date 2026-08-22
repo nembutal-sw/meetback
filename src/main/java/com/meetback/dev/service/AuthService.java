@@ -7,6 +7,8 @@ import com.meetback.dev.dto.auth.*;
 import com.meetback.dev.repository.RefreshTokenMapper;
 import com.meetback.dev.repository.SocialMapper;
 import com.meetback.dev.repository.UserMapper;
+import com.meetback.dev.oauth.GoogleIdentityProvider;
+import com.meetback.dev.oauth.GoogleUserInfo;
 import com.meetback.dev.oauth.KakaoOAuthProvider;
 import com.meetback.dev.oauth.KakaoUserInfo;
 import com.meetback.dev.security.JwtProvider;
@@ -36,6 +38,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final KakaoOAuthProvider kakaoOAuthProvider;
+    private final GoogleIdentityProvider googleIdentityProvider;
 
 
     // 회원가입
@@ -367,6 +370,286 @@ public class AuthService {
 
 
         return response;
+    }
+
+    // 구글 로그인 / 간편 회원가입
+
+    public LoginResponse googleLogin(
+            GoogleLoginRequest request
+    ) {
+
+        if (request == null) {
+
+            throw new IllegalArgumentException(
+                    "Google 로그인 요청이 없습니다."
+            );
+        }
+
+        // 브라우저가 전달한 프로필 JSON을 신뢰하지 않고,
+        // Google 서명이 검증된 ID Token에서만 사용자 정보를 가져온다.
+        GoogleUserInfo googleUserInfo =
+                googleIdentityProvider.verifyIdToken(
+                        request.getCredential()
+                );
+
+
+        Social social =
+                socialMapper.selectByProviderAndProviderId(
+                        "GOOGLE",
+                        googleUserInfo.getProviderId()
+                );
+
+
+        User user;
+
+
+        // 기존 Google 소셜 사용자
+        if (social != null) {
+
+            user =
+                    userMapper.selectById(
+                            social.getUserId()
+                    );
+
+
+            if (user == null) {
+
+                throw new IllegalArgumentException(
+                        "사용자 정보를 찾을 수 없습니다."
+                );
+            }
+
+        } else {
+
+            // 이메일 일치만으로 기존 계정과 Google 계정을 연결하면 계정 탈취로 이어질 수 있다.
+            // 기존 계정 소유 확인 기능이 추가되기 전까지는 명시적으로 충돌 처리한다.
+            User existingUser =
+                    userMapper.selectByEmail(
+                            googleUserInfo.getEmail()
+                    );
+
+
+            if (existingUser != null) {
+
+                throw new IllegalStateException(
+                        "같은 이메일의 기존 계정이 있습니다. 기존 계정으로 로그인한 뒤 Google 계정을 연결해주세요."
+                );
+            }
+
+
+            // 신규 Google 회원 생성
+            user = new User();
+
+
+            user.setEmail(
+                    googleUserInfo.getEmail()
+            );
+
+
+            user.setNickname(
+                    createGoogleNickname(
+                            googleUserInfo
+                    )
+            );
+
+
+            // INSERT 쿼리는 DB 기본값을 사용하지만,
+            // 같은 요청에서 JWT를 만들 수 있도록 객체에도 역할을 설정한다.
+            user.setRole(
+                    "user"
+            );
+
+
+            userMapper.insertUser(
+                    user
+            );
+
+
+            Social newSocial =
+                    new Social();
+
+
+            newSocial.setUserId(
+                    user.getUserId()
+            );
+
+
+            newSocial.setProvider(
+                    "GOOGLE"
+            );
+
+
+            newSocial.setProviderId(
+                    googleUserInfo.getProviderId()
+            );
+
+
+            newSocial.setEmail(
+                    googleUserInfo.getEmail()
+            );
+
+
+            newSocial.setEmailVerified(
+                    googleUserInfo.getEmailVerified()
+            );
+
+
+            // Google 프로필 이름은 별도 name 필드에 저장하지 않고
+            // users.nickname에만 저장한다.
+            socialMapper.insertSocial(
+                    newSocial
+            );
+        }
+
+
+        // 탈퇴 요청 후 7일이 지난 회원만 로그인 차단
+        if (user.getDeletedAt() != null) {
+
+            LocalDateTime withdrawalDeadline =
+                    user.getDeletedAt()
+                            .plusDays(7);
+
+
+            if (LocalDateTime.now()
+                    .isAfter(withdrawalDeadline)) {
+
+                throw new IllegalArgumentException(
+                        "탈퇴 처리된 계정입니다."
+                );
+            }
+        }
+
+
+        String accessToken =
+                jwtProvider.createAccessToken(
+                        user.getUserId(),
+                        user.getRole()
+                );
+
+
+        String refreshToken =
+                jwtProvider.createRefreshToken(
+                        user.getUserId(),
+                        user.getRole()
+                );
+
+
+        saveRefreshToken(
+                user,
+                refreshToken
+        );
+
+
+        LoginResponse response =
+                new LoginResponse();
+
+
+        response.setAccessToken(
+                accessToken
+        );
+
+
+        response.setRefreshToken(
+                refreshToken
+        );
+
+
+        response.setUserId(
+                user.getUserId()
+        );
+
+
+        response.setRole(
+                user.getRole()
+        );
+
+
+        return response;
+    }
+
+    private String createGoogleNickname(
+            GoogleUserInfo googleUserInfo
+    ) {
+
+        String baseNickname =
+                googleUserInfo.getNickname();
+
+
+        if (baseNickname == null
+                || baseNickname.isBlank()) {
+
+            // Google 프로필 이름이 없는 예외 계정도 가입할 수 있도록 기본값을 둔다.
+            baseNickname =
+                    "GoogleUser";
+        }
+
+
+        baseNickname =
+                baseNickname.trim();
+
+
+        if (baseNickname.length() > 255) {
+
+            baseNickname =
+                    baseNickname.substring(
+                            0,
+                            255
+                    );
+        }
+
+
+        if (userMapper.existByNickname(
+                baseNickname
+        ) == 0) {
+
+            return baseNickname;
+        }
+
+        // 같은 Google 프로필 이름이 이미 닉네임으로 사용 중이면
+        // Google sub의 마지막 8자를 붙여 사용자에게 안정적으로 고유한 닉네임을 만든다.
+        String providerId =
+                googleUserInfo.getProviderId();
+
+
+        String idSuffix =
+                providerId.substring(
+                        Math.max(
+                                0,
+                                providerId.length() - 8
+                        )
+                );
+
+
+        String suffix =
+                "_g" + idSuffix;
+
+
+        int maxBaseLength =
+                255 - suffix.length();
+
+
+        String uniqueNickname =
+                baseNickname.substring(
+                        0,
+                        Math.min(
+                                baseNickname.length(),
+                                maxBaseLength
+                        )
+                )
+                        + suffix;
+
+
+        if (userMapper.existByNickname(
+                uniqueNickname
+        ) > 0) {
+
+            throw new IllegalStateException(
+                    "Google 프로필 이름으로 닉네임을 생성할 수 없습니다."
+            );
+        }
+
+
+        return uniqueNickname;
     }
 
     // Refresh Token 재발급
