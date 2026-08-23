@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
@@ -78,6 +78,13 @@
         WHERE meeting_id = #{meetingId}
 
     </select>
+
+    <update id="updateCalculationVersion">
+        UPDATE meetings
+        SET calculation_version = #{calculationVersion},
+        updated_at = NOW()
+        WHERE meeting_id = #{meetingId}
+    </update>
 
     <update id="updateFinalCandidate">
 

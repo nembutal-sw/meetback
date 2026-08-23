@@ -175,10 +175,72 @@
         hr {
             margin: 35px 0;
         }
+
+
+        /* =========================
+           Toast Message
+           ========================= */
+
+        .toast-container {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            z-index: 9999;
+            width: 360px;
+        }
+
+        .toast {
+            display: none;
+            padding: 15px 18px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            line-height: 1.5;
+            word-break: keep-all;
+            background-color: white;
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        .toast-error {
+            border-color: #e57373;
+            background-color: #ffebee;
+            color: #b71c1c;
+        }
+
+        .toast-success {
+            border-color: #81c784;
+            background-color: #e8f5e9;
+            color: #1b5e20;
+        }
+
+        .toast-info {
+            border-color: #90a4ae;
+            background-color: #f5f7f8;
+            color: #37474f;
+        }
     </style>
 </head>
 
 <body>
+
+
+<!-- =========================
+     공통 토스트 메시지
+     ========================= -->
+
+<div class="toast-container">
+
+    <div
+            id="toastMessage"
+            class="toast">
+    </div>
+
+</div>
+
 
 <h2>MeetBack 통합 테스트</h2>
 
@@ -187,22 +249,27 @@
 
 <div class="field">
     <label for="meetingId">모임 ID</label>
+
     <input
             type="number"
             id="meetingId"
             value="1">
 </div>
 
+
 <div class="field">
     <label for="participantId">참가자 ID</label>
+
     <input
             type="number"
             id="participantId"
             value="1">
 </div>
 
+
 <div class="field">
     <label for="candidateId">후보 ID</label>
+
     <input
             type="number"
             id="candidateId"
@@ -215,6 +282,10 @@
 
 <h3>장소 입력</h3>
 
+
+<!-- =========================
+     출발 장소
+     ========================= -->
 
 <div class="field">
 
@@ -251,6 +322,10 @@
 </div>
 
 
+<!-- =========================
+     귀가 장소
+     ========================= -->
+
 <div class="field">
 
     <label for="returnQuery">
@@ -285,6 +360,10 @@
 
 </div>
 
+
+<!-- =========================
+     희망 장소
+     ========================= -->
 
 <div class="field">
 
@@ -333,6 +412,7 @@
     참가자 DB 조회
 </button>
 
+
 <div
         id="result"
         class="result">
@@ -345,6 +425,10 @@
 
 <h3>계산 테스트</h3>
 
+
+<!-- =========================
+     참가자 1명 계산
+     ========================= -->
 
 <button
         type="button"
@@ -359,6 +443,10 @@
 </div>
 
 
+<!-- =========================
+     후보 하나 계산
+     ========================= -->
+
 <button
         type="button"
         onclick="calculateCandidate()">
@@ -371,6 +459,10 @@
     후보 1개 × 참가자 전원 계산 결과
 </div>
 
+
+<!-- =========================
+     모임 전체 계산
+     ========================= -->
 
 <button
         type="button"
@@ -390,17 +482,20 @@
 
 <h3>추천 결과</h3>
 
+
 <button
         type="button"
         onclick="loadRanking()">
     후보 전체 순위 조회
 </button>
 
+
 <button
         type="button"
         onclick="loadTopRecommendation()">
     추천 1위 조회
 </button>
+
 
 <div
         id="rankingResult"
@@ -422,26 +517,113 @@
     let selectedReturn = null;
     let selectedCandidate = null;
 
+    let toastTimer = null;
+
+
+    /*
+     * =====================================================
+     * 공통 Toast
+     * =====================================================
+     */
+
+    function showToast(
+        message,
+        type = "info"
+    ) {
+
+        const toast =
+            document.getElementById(
+                "toastMessage"
+            );
+
+
+        if (toastTimer) {
+
+            clearTimeout(
+                toastTimer
+            );
+        }
+
+
+        toast.textContent =
+            message;
+
+
+        toast.className =
+            "toast show";
+
+
+        if (type === "error") {
+
+            toast.classList.add(
+                "toast-error"
+            );
+
+        } else if (type === "success") {
+
+            toast.classList.add(
+                "toast-success"
+            );
+
+        } else {
+
+            toast.classList.add(
+                "toast-info"
+            );
+        }
+
+
+        toastTimer =
+            setTimeout(
+                () => {
+
+                    toast.classList.remove(
+                        "show"
+                    );
+
+                },
+                4000
+            );
+    }
+
+
+    /*
+     * =====================================================
+     * 장소 검색
+     * =====================================================
+     */
 
     async function searchPlace(type) {
 
         let inputId;
         let resultId;
 
+
         if (type === "departure") {
 
-            inputId = "departureQuery";
-            resultId = "departureResults";
+            inputId =
+                "departureQuery";
+
+            resultId =
+                "departureResults";
+
 
         } else if (type === "return") {
 
-            inputId = "returnQuery";
-            resultId = "returnResults";
+            inputId =
+                "returnQuery";
+
+            resultId =
+                "returnResults";
+
 
         } else {
 
-            inputId = "candidateQuery";
-            resultId = "candidateResults";
+            inputId =
+                "candidateQuery";
+
+            resultId =
+                "candidateResults";
         }
 
 
@@ -449,6 +631,7 @@
             document.getElementById(
                 inputId
             ).value.trim();
+
 
         const resultDiv =
             document.getElementById(
@@ -458,8 +641,9 @@
 
         if (!query) {
 
-            alert(
-                "검색어를 입력해주세요."
+            showToast(
+                "검색어를 입력해주세요.",
+                "error"
             );
 
             return;
@@ -470,6 +654,7 @@
 
             resultDiv.style.display =
                 "block";
+
 
             resultDiv.innerHTML =
                 "검색 중...";
@@ -485,6 +670,7 @@
 
                 const errorText =
                     await response.text();
+
 
                 throw new Error(
                     "장소 검색 실패: "
@@ -503,6 +689,13 @@
                 resultDiv.innerHTML =
                     "검색 결과가 없습니다.";
 
+
+                showToast(
+                    "검색 결과가 없습니다.",
+                    "info"
+                );
+
+
                 return;
             }
 
@@ -517,6 +710,7 @@
                     document.createElement(
                         "div"
                     );
+
 
                 item.className =
                     "search-item";
@@ -561,13 +755,28 @@
 
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                error
+            );
+
 
             resultDiv.innerHTML =
                 error.message;
+
+
+            showToast(
+                error.message,
+                "error"
+            );
         }
     }
 
+
+    /*
+     * =====================================================
+     * 검색 장소 선택
+     * =====================================================
+     */
 
     function selectPlace(
         type,
@@ -579,14 +788,23 @@
             selectedDeparture =
                 place;
 
+
             showSelectedPlace(
                 "departureSelected",
                 place
             );
 
+
             document.getElementById(
                 "departureResults"
-            ).style.display = "none";
+            ).style.display =
+                "none";
+
+
+            showToast(
+                "출발 장소를 선택했습니다.",
+                "success"
+            );
 
 
         } else if (type === "return") {
@@ -594,14 +812,23 @@
             selectedReturn =
                 place;
 
+
             showSelectedPlace(
                 "returnSelected",
                 place
             );
 
+
             document.getElementById(
                 "returnResults"
-            ).style.display = "none";
+            ).style.display =
+                "none";
+
+
+            showToast(
+                "귀가 장소를 선택했습니다.",
+                "success"
+            );
 
 
         } else {
@@ -609,14 +836,23 @@
             selectedCandidate =
                 place;
 
+
             showSelectedPlace(
                 "candidateSelected",
                 place
             );
 
+
             document.getElementById(
                 "candidateResults"
-            ).style.display = "none";
+            ).style.display =
+                "none";
+
+
+            showToast(
+                "희망 장소를 선택했습니다.",
+                "success"
+            );
         }
     }
 
@@ -631,10 +867,12 @@
             ?? place.placeName
             ?? "";
 
+
         const address =
             place.roadAddress
             || place.address
             || "";
+
 
         document.getElementById(
             elementId
@@ -643,12 +881,19 @@
     }
 
 
+    /*
+     * =====================================================
+     * 장소 전체 저장
+     * =====================================================
+     */
+
     async function saveAll() {
 
         const participantId =
             document.getElementById(
                 "participantId"
             ).value;
+
 
         const resultDiv =
             document.getElementById(
@@ -658,8 +903,9 @@
 
         if (!participantId) {
 
-            alert(
-                "참가자 ID를 입력해주세요."
+            showToast(
+                "참가자 ID를 입력해주세요.",
+                "error"
             );
 
             return;
@@ -668,8 +914,9 @@
 
         if (!selectedDeparture) {
 
-            alert(
-                "출발 장소를 검색해서 선택해주세요."
+            showToast(
+                "출발 장소를 검색해서 선택해주세요.",
+                "error"
             );
 
             return;
@@ -678,8 +925,9 @@
 
         if (!selectedReturn) {
 
-            alert(
-                "귀가 장소를 검색해서 선택해주세요."
+            showToast(
+                "귀가 장소를 검색해서 선택해주세요.",
+                "error"
             );
 
             return;
@@ -690,9 +938,11 @@
             selectedDeparture.name
             ?? selectedDeparture.placeName;
 
+
         const returnQuery =
             selectedReturn.name
             ?? selectedReturn.placeName;
+
 
         const candidateQuery =
             selectedCandidate
@@ -716,7 +966,8 @@
                     + participantId
                     + "/location",
                     {
-                        method: "PUT",
+                        method:
+                            "PUT",
 
                         headers: {
                             "Content-Type":
@@ -724,6 +975,7 @@
                         },
 
                         body: JSON.stringify({
+
                             departureQuery:
                             departureQuery,
 
@@ -739,6 +991,7 @@
                 const errorText =
                     await locationResponse.text();
 
+
                 throw new Error(
                     "위치 저장 실패: "
                     + errorText
@@ -749,7 +1002,7 @@
             /*
              * 희망 장소는 선택사항
              *
-             * 선택한 경우에만 후보 장소 저장 / 수정
+             * 선택한 경우에만 후보 저장 / 수정
              */
             if (selectedCandidate) {
 
@@ -764,7 +1017,8 @@
                         + participantId
                         + "/candidate",
                         {
-                            method: "POST",
+                            method:
+                                "POST",
 
                             headers: {
                                 "Content-Type":
@@ -772,6 +1026,7 @@
                             },
 
                             body: JSON.stringify({
+
                                 candidateQuery:
                                 candidateQuery
                             })
@@ -784,6 +1039,7 @@
                     const errorText =
                         await candidateResponse.text();
 
+
                     throw new Error(
                         "희망 장소 저장 실패: "
                         + errorText
@@ -795,15 +1051,36 @@
             await loadParticipant();
 
 
+            showToast(
+                "장소 입력이 완료되었습니다.",
+                "success"
+            );
+
+
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                error
+            );
+
 
             resultDiv.textContent =
                 error.message;
+
+
+            showToast(
+                error.message,
+                "error"
+            );
         }
     }
 
+
+    /*
+     * =====================================================
+     * 참가자 DB 조회
+     * =====================================================
+     */
 
     async function loadParticipant() {
 
@@ -812,10 +1089,22 @@
                 "participantId"
             ).value;
 
+
         const resultDiv =
             document.getElementById(
                 "result"
             );
+
+
+        if (!participantId) {
+
+            showToast(
+                "참가자 ID를 입력해주세요.",
+                "error"
+            );
+
+            return;
+        }
 
 
         try {
@@ -832,6 +1121,7 @@
 
                 const errorText =
                     await response.text();
+
 
                 throw new Error(
                     "참가자 조회 실패: "
@@ -852,15 +1142,36 @@
                 );
 
 
+            showToast(
+                "참가자 정보를 조회했습니다.",
+                "success"
+            );
+
+
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                error
+            );
+
 
             resultDiv.textContent =
                 error.message;
+
+
+            showToast(
+                error.message,
+                "error"
+            );
         }
     }
 
+
+    /*
+     * =====================================================
+     * 참가자 1명 귀가 계산
+     * =====================================================
+     */
 
     async function calculateReturn() {
 
@@ -869,15 +1180,29 @@
                 "participantId"
             ).value;
 
+
         const candidateId =
             document.getElementById(
                 "candidateId"
             ).value;
 
+
         const resultDiv =
             document.getElementById(
                 "calcResult"
             );
+
+
+        if (!participantId
+            || !candidateId) {
+
+            showToast(
+                "참가자 ID와 후보 ID를 확인해주세요.",
+                "error"
+            );
+
+            return;
+        }
 
 
         try {
@@ -886,11 +1211,18 @@
                 "귀가 경로 / 막차 계산 중...";
 
 
+            showToast(
+                "귀가 정보를 계산하고 있습니다.",
+                "info"
+            );
+
+
             const response =
                 await fetch(
                     `/calculations/return?participantId=${participantId}&candidateId=${candidateId}`,
                     {
-                        method: "POST"
+                        method:
+                            "POST"
                     }
                 );
 
@@ -900,9 +1232,9 @@
                 const errorText =
                     await response.text();
 
+
                 throw new Error(
-                    "귀가 계산 실패: "
-                    + errorText
+                    errorText
                 );
             }
 
@@ -919,15 +1251,37 @@
                 );
 
 
+            showToast(
+                "귀가 계산이 완료되었습니다.",
+                "success"
+            );
+
+
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                error
+            );
+
 
             resultDiv.textContent =
-                error.message;
+                "귀가 계산 실패: "
+                + error.message;
+
+
+            showToast(
+                error.message,
+                "error"
+            );
         }
     }
 
+
+    /*
+     * =====================================================
+     * 후보 하나 × 참가자 전원 계산
+     * =====================================================
+     */
 
     async function calculateCandidate() {
 
@@ -936,10 +1290,22 @@
                 "candidateId"
             ).value;
 
+
         const resultDiv =
             document.getElementById(
                 "candidateCalcResult"
             );
+
+
+        if (!candidateId) {
+
+            showToast(
+                "후보 ID를 입력해주세요.",
+                "error"
+            );
+
+            return;
+        }
 
 
         try {
@@ -948,11 +1314,18 @@
                 "후보 1개에 대해 참가자 전원 계산 중...";
 
 
+            showToast(
+                "후보 장소를 계산하고 있습니다.",
+                "info"
+            );
+
+
             const response =
                 await fetch(
                     `/calculations/candidate?candidateId=${candidateId}`,
                     {
-                        method: "POST"
+                        method:
+                            "POST"
                     }
                 );
 
@@ -962,9 +1335,9 @@
                 const errorText =
                     await response.text();
 
+
                 throw new Error(
-                    "후보 계산 실패: "
-                    + errorText
+                    errorText
                 );
             }
 
@@ -981,15 +1354,37 @@
                 );
 
 
+            showToast(
+                "후보 계산이 완료되었습니다.",
+                "success"
+            );
+
+
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                error
+            );
+
 
             resultDiv.textContent =
-                error.message;
+                "후보 계산 실패: "
+                + error.message;
+
+
+            showToast(
+                error.message,
+                "error"
+            );
         }
     }
 
+
+    /*
+     * =====================================================
+     * 모임 전체 후보 계산
+     * =====================================================
+     */
 
     async function calculateMeeting() {
 
@@ -998,10 +1393,22 @@
                 "meetingId"
             ).value;
 
+
         const resultDiv =
             document.getElementById(
                 "meetingCalcResult"
             );
+
+
+        if (!meetingId) {
+
+            showToast(
+                "모임 ID를 입력해주세요.",
+                "error"
+            );
+
+            return;
+        }
 
 
         try {
@@ -1011,23 +1418,34 @@
                 + "ODsay 호출 때문에 시간이 걸릴 수 있습니다.";
 
 
+            showToast(
+                "모임 전체 후보를 계산하고 있습니다.",
+                "info"
+            );
+
+
             const response =
                 await fetch(
                     `/calculations/meeting?meetingId=${meetingId}`,
                     {
-                        method: "POST"
+                        method:
+                            "POST"
                     }
                 );
 
 
             if (!response.ok) {
 
+                /*
+                 * GlobalExceptionHandler의
+                 * 사용자용 메시지가 그대로 들어옴
+                 */
                 const errorText =
                     await response.text();
 
+
                 throw new Error(
-                    "모임 전체 계산 실패: "
-                    + errorText
+                    errorText
                 );
             }
 
@@ -1044,15 +1462,37 @@
                 );
 
 
+            showToast(
+                "모임 전체 계산이 완료되었습니다.",
+                "success"
+            );
+
+
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                error
+            );
+
 
             resultDiv.textContent =
-                error.message;
+                "모임 전체 계산 실패: "
+                + error.message;
+
+
+            showToast(
+                error.message,
+                "error"
+            );
         }
     }
 
+
+    /*
+     * =====================================================
+     * 후보 전체 순위 조회
+     * =====================================================
+     */
 
     async function loadRanking() {
 
@@ -1061,10 +1501,22 @@
                 "meetingId"
             ).value;
 
+
         const resultDiv =
             document.getElementById(
                 "rankingResult"
             );
+
+
+        if (!meetingId) {
+
+            showToast(
+                "모임 ID를 입력해주세요.",
+                "error"
+            );
+
+            return;
+        }
 
 
         try {
@@ -1084,9 +1536,9 @@
                 const errorText =
                     await response.text();
 
+
                 throw new Error(
-                    "순위 조회 실패: "
-                    + errorText
+                    errorText
                 );
             }
 
@@ -1100,15 +1552,37 @@
             );
 
 
+            showToast(
+                "추천 순위를 조회했습니다.",
+                "success"
+            );
+
+
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                error
+            );
+
 
             resultDiv.textContent =
-                error.message;
+                "순위 조회 실패: "
+                + error.message;
+
+
+            showToast(
+                error.message,
+                "error"
+            );
         }
     }
 
+
+    /*
+     * =====================================================
+     * 추천 1위 조회
+     * =====================================================
+     */
 
     async function loadTopRecommendation() {
 
@@ -1117,10 +1591,22 @@
                 "meetingId"
             ).value;
 
+
         const resultDiv =
             document.getElementById(
                 "rankingResult"
             );
+
+
+        if (!meetingId) {
+
+            showToast(
+                "모임 ID를 입력해주세요.",
+                "error"
+            );
+
+            return;
+        }
 
 
         try {
@@ -1140,9 +1626,9 @@
                 const errorText =
                     await response.text();
 
+
                 throw new Error(
-                    "추천 조회 실패: "
-                    + errorText
+                    errorText
                 );
             }
 
@@ -1156,15 +1642,37 @@
             );
 
 
+            showToast(
+                "추천 1위를 조회했습니다.",
+                "success"
+            );
+
+
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                error
+            );
+
 
             resultDiv.textContent =
-                error.message;
+                "추천 조회 실패: "
+                + error.message;
+
+
+            showToast(
+                error.message,
+                "error"
+            );
         }
     }
 
+
+    /*
+     * =====================================================
+     * 추천 결과 렌더링
+     * =====================================================
+     */
 
     function renderRanking(
         rankings
@@ -1174,6 +1682,7 @@
             document.getElementById(
                 "rankingResult"
             );
+
 
         resultDiv.innerHTML =
             "";
@@ -1196,12 +1705,14 @@
                     "div"
                 );
 
+
             card.className =
                 "ranking-card";
 
 
             let fairBadge =
                 "";
+
 
             if (item.fairPlace === true) {
 
@@ -1217,6 +1728,7 @@
             let participantHtml =
                 "";
 
+
             if (
                 item.participantResults
                 && item.participantResults.length > 0
@@ -1230,6 +1742,7 @@
                                 result.canReturn
                                     ? "return-ok"
                                     : "return-no";
+
 
                             return `
                                 <div class="participant-result">
@@ -1273,15 +1786,18 @@
 
                                     귀가 가능:
                                     <span class="${returnClass}">
-                                        ${result.canReturn
-                                ? "가능"
-                                : "불가능"}
+                                        ${
+                                result.canReturn
+                                    ? "가능"
+                                    : "불가능"
+                            }
                                     </span>
 
                                 </div>
                             `;
                         })
                         .join("");
+
 
             } else {
 
@@ -1290,11 +1806,17 @@
             }
 
 
+            const rankText =
+                item.recommendationRank == null
+                    ? "순위 미정"
+                    : `${item.recommendationRank}위`;
+
+
             card.innerHTML =
                 `
                 <div class="ranking-title">
 
-                    ${item.recommendationRank}위
+                    ${rankText}
 
                     ${escapeHtml(
                     item.placeName
@@ -1348,9 +1870,11 @@
                     <br>
 
                     전원 귀가 가능:
-                    ${item.allReturnable
-                    ? "가능"
-                    : "불가능"}
+                    ${
+                    item.allReturnable
+                        ? "가능"
+                        : "불가능"
+                }
 
                 </div>
 
@@ -1373,41 +1897,85 @@
     }
 
 
-    function formatDateTime(value) {
+    /*
+     * =====================================================
+     * 날짜 표시
+     * =====================================================
+     */
+
+    function formatDateTime(
+        value
+    ) {
 
         if (!value) {
             return "-";
         }
 
+
         const date =
-            new Date(value);
+            new Date(
+                value
+            );
+
 
         const hours =
             String(
                 date.getHours()
-            ).padStart(2, "0");
+            ).padStart(
+                2,
+                "0"
+            );
+
 
         const minutes =
             String(
                 date.getMinutes()
-            ).padStart(2, "0");
+            ).padStart(
+                2,
+                "0"
+            );
+
 
         return `${hours}:${minutes}`;
     }
 
 
-    function escapeHtml(value) {
+    /*
+     * =====================================================
+     * HTML Escape
+     * =====================================================
+     */
+
+    function escapeHtml(
+        value
+    ) {
 
         if (value == null) {
             return "";
         }
 
+
         return String(value)
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
     }
 
 </script>
