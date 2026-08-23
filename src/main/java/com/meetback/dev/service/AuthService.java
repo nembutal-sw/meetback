@@ -4,17 +4,15 @@ import com.meetback.dev.domain.RefreshToken;
 import com.meetback.dev.domain.Social;
 import com.meetback.dev.domain.User;
 import com.meetback.dev.dto.auth.*;
-import com.meetback.dev.repository.RefreshTokenMapper;
-import com.meetback.dev.repository.SocialMapper;
-import com.meetback.dev.repository.UserMapper;
 import com.meetback.dev.oauth.GoogleIdentityProvider;
 import com.meetback.dev.oauth.GoogleUserInfo;
 import com.meetback.dev.oauth.KakaoOAuthProvider;
 import com.meetback.dev.oauth.KakaoUserInfo;
+import com.meetback.dev.repository.RefreshTokenMapper;
+import com.meetback.dev.repository.SocialMapper;
+import com.meetback.dev.repository.UserMapper;
 import com.meetback.dev.security.JwtProvider;
-
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +22,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
-
 
 @Service
 @RequiredArgsConstructor
@@ -43,10 +40,50 @@ public class AuthService {
 
     // 회원가입
 
-    public void signup(SignupRequest request) {
+    public void signup(
+            SignupRequest request
+    ) {
+
+        if (request == null) {
+
+            throw new IllegalArgumentException(
+                    "회원가입 요청이 없습니다."
+            );
+        }
+
+
+        if (request.getEmail() == null
+                || request.getEmail().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "이메일을 입력해주세요."
+            );
+        }
+
+
+        if (request.getNickname() == null
+                || request.getNickname().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "닉네임을 입력해주세요."
+            );
+        }
+
+
+        if (request.getPassword() == null
+                || request.getPassword().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "비밀번호를 입력해주세요."
+            );
+        }
+
 
         // 이메일 중복 검사
-        if (userMapper.existByEmail(request.getEmail()) > 0) {
+
+        if (userMapper.existByEmail(
+                request.getEmail()
+        ) > 0) {
 
             throw new IllegalArgumentException(
                     "이미 사용 중인 이메일입니다."
@@ -55,7 +92,10 @@ public class AuthService {
 
 
         // 닉네임 중복 검사
-        if (userMapper.existByNickname(request.getNickname()) > 0) {
+
+        if (userMapper.existByNickname(
+                request.getNickname()
+        ) > 0) {
 
             throw new IllegalArgumentException(
                     "이미 사용 중인 닉네임입니다."
@@ -63,11 +103,14 @@ public class AuthService {
         }
 
 
-        User user = new User();
+        User user =
+                new User();
+
 
         user.setEmail(
                 request.getEmail()
         );
+
 
         user.setNickname(
                 request.getNickname()
@@ -75,10 +118,16 @@ public class AuthService {
 
 
         // 비밀번호 BCrypt 해시
+
         user.setPasswordHash(
                 passwordEncoder.encode(
                         request.getPassword()
                 )
+        );
+
+
+        user.setRole(
+                "user"
         );
 
 
@@ -87,9 +136,31 @@ public class AuthService {
         );
     }
 
+
     // 일반 로그인
 
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse login(
+            LoginRequest request
+    ) {
+
+        if (request == null) {
+
+            throw new IllegalArgumentException(
+                    "로그인 요청이 없습니다."
+            );
+        }
+
+
+        if (request.getEmail() == null
+                || request.getEmail().isBlank()
+                || request.getPassword() == null
+                || request.getPassword().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "이메일 또는 비밀번호가 일치하지 않습니다."
+            );
+        }
+
 
         User user =
                 userMapper.selectByEmail(
@@ -105,22 +176,9 @@ public class AuthService {
         }
 
 
-        // 탈퇴 요청 후 7일이 지난 회원만 로그인 차단
-        if (user.getDeletedAt() != null) {
-
-            LocalDateTime withdrawalDeadline =
-                    user.getDeletedAt()
-                            .plusDays(7);
-
-
-            if (LocalDateTime.now()
-                    .isAfter(withdrawalDeadline)) {
-
-                throw new IllegalArgumentException(
-                        "탈퇴 처리된 계정입니다."
-                );
-            }
-        }
+        validateWithdrawalStatus(
+                user
+        );
 
 
         // 비밀번호 확인
@@ -137,27 +195,10 @@ public class AuthService {
         }
 
 
-        // Access Token 발급
-        String accessToken =
-                jwtProvider.createAccessToken(
-                        user.getUserId(),
-                        user.getRole()
+        LoginToken loginToken =
+                issueLoginToken(
+                        user
                 );
-
-
-        // Refresh Token 발급
-        String refreshToken =
-                jwtProvider.createRefreshToken(
-                        user.getUserId(),
-                        user.getRole()
-                );
-
-
-        // Refresh Token DB 저장
-        saveRefreshToken(
-                user,
-                refreshToken
-        );
 
 
         LoginResponse response =
@@ -165,16 +206,19 @@ public class AuthService {
 
 
         response.setAccessToken(
-                accessToken
+                loginToken.accessToken()
         );
 
+
         response.setRefreshToken(
-                refreshToken
+                loginToken.refreshToken()
         );
+
 
         response.setUserId(
                 user.getUserId()
         );
+
 
         response.setRole(
                 user.getRole()
@@ -191,7 +235,18 @@ public class AuthService {
             KakaoLoginRequest request
     ) {
 
+        if (request == null
+                || request.getCode() == null
+                || request.getCode().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "카카오 로그인 인가 코드가 없습니다."
+            );
+        }
+
+
         // 카카오 인가 코드 → 카카오 Access Token
+
         String kakaoAccessToken =
                 kakaoOAuthProvider.requestAccessToken(
                         request.getCode()
@@ -199,13 +254,25 @@ public class AuthService {
 
 
         // 카카오 사용자 정보 조회
+
         KakaoUserInfo kakaoUserInfo =
                 kakaoOAuthProvider.getUserInfo(
                         kakaoAccessToken
                 );
 
 
+        if (kakaoUserInfo == null
+                || kakaoUserInfo.getProviderId() == null
+                || kakaoUserInfo.getProviderId().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "카카오 사용자 정보를 확인할 수 없습니다."
+            );
+        }
+
+
         // 기존 카카오 계정 조회
+
         Social social =
                 socialMapper.selectByProviderAndProviderId(
                         "KAKAO",
@@ -217,6 +284,7 @@ public class AuthService {
 
 
         // 기존 카카오 사용자
+
         if (social != null) {
 
             user =
@@ -235,6 +303,7 @@ public class AuthService {
         } else {
 
             // 같은 이메일의 기존 회원 조회
+
             user =
                     userMapper.selectByEmail(
                             kakaoUserInfo.getEmail()
@@ -242,9 +311,11 @@ public class AuthService {
 
 
             // users에도 없는 신규 회원
+
             if (user == null) {
 
-                user = new User();
+                user =
+                        new User();
 
 
                 user.setEmail(
@@ -257,6 +328,11 @@ public class AuthService {
                 );
 
 
+                user.setRole(
+                        "user"
+                );
+
+
                 userMapper.insertUser(
                         user
                 );
@@ -264,6 +340,7 @@ public class AuthService {
 
 
             // social 테이블 저장
+
             Social newSocial =
                     new Social();
 
@@ -304,45 +381,15 @@ public class AuthService {
         }
 
 
-        // 탈퇴 요청 후 7일 경과 확인
-        if (user.getDeletedAt() != null) {
-
-            LocalDateTime withdrawalDeadline =
-                    user.getDeletedAt()
-                            .plusDays(7);
-
-
-            if (LocalDateTime.now()
-                    .isAfter(withdrawalDeadline)) {
-
-                throw new IllegalArgumentException(
-                        "탈퇴 처리된 계정입니다."
-                );
-            }
-        }
-
-
-        // MeetBack 사설 Access Token 발급
-        String accessToken =
-                jwtProvider.createAccessToken(
-                        user.getUserId(),
-                        user.getRole()
-                );
-
-
-        // MeetBack 사설 Refresh Token 발급
-        String refreshToken =
-                jwtProvider.createRefreshToken(
-                        user.getUserId(),
-                        user.getRole()
-                );
-
-
-        // Refresh Token DB 저장
-        saveRefreshToken(
-                user,
-                refreshToken
+        validateWithdrawalStatus(
+                user
         );
+
+
+        LoginToken loginToken =
+                issueLoginToken(
+                        user
+                );
 
 
         KakaoLoginResponse response =
@@ -350,12 +397,12 @@ public class AuthService {
 
 
         response.setAccessToken(
-                accessToken
+                loginToken.accessToken()
         );
 
 
         response.setRefreshToken(
-                refreshToken
+                loginToken.refreshToken()
         );
 
 
@@ -372,6 +419,7 @@ public class AuthService {
         return response;
     }
 
+
     // 구글 로그인 / 간편 회원가입
 
     public LoginResponse googleLogin(
@@ -385,12 +433,33 @@ public class AuthService {
             );
         }
 
+
+        if (request.getCredential() == null
+                || request.getCredential().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Google 인증 정보가 없습니다."
+            );
+        }
+
+
         // 브라우저가 전달한 프로필 JSON을 신뢰하지 않고,
         // Google 서명이 검증된 ID Token에서만 사용자 정보를 가져온다.
+
         GoogleUserInfo googleUserInfo =
                 googleIdentityProvider.verifyIdToken(
                         request.getCredential()
                 );
+
+
+        if (googleUserInfo == null
+                || googleUserInfo.getProviderId() == null
+                || googleUserInfo.getProviderId().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Google 사용자 정보를 확인할 수 없습니다."
+            );
+        }
 
 
         Social social =
@@ -404,6 +473,7 @@ public class AuthService {
 
 
         // 기존 Google 소셜 사용자
+
         if (social != null) {
 
             user =
@@ -423,6 +493,7 @@ public class AuthService {
 
             // 이메일 일치만으로 기존 계정과 Google 계정을 연결하면 계정 탈취로 이어질 수 있다.
             // 기존 계정 소유 확인 기능이 추가되기 전까지는 명시적으로 충돌 처리한다.
+
             User existingUser =
                     userMapper.selectByEmail(
                             googleUserInfo.getEmail()
@@ -438,7 +509,9 @@ public class AuthService {
 
 
             // 신규 Google 회원 생성
-            user = new User();
+
+            user =
+                    new User();
 
 
             user.setEmail(
@@ -453,8 +526,6 @@ public class AuthService {
             );
 
 
-            // INSERT 쿼리는 DB 기본값을 사용하지만,
-            // 같은 요청에서 JWT를 만들 수 있도록 객체에도 역할을 설정한다.
             user.setRole(
                     "user"
             );
@@ -494,50 +565,21 @@ public class AuthService {
             );
 
 
-            // Google 프로필 이름은 별도 name 필드에 저장하지 않고
-            // users.nickname에만 저장한다.
             socialMapper.insertSocial(
                     newSocial
             );
         }
 
 
-        // 탈퇴 요청 후 7일이 지난 회원만 로그인 차단
-        if (user.getDeletedAt() != null) {
-
-            LocalDateTime withdrawalDeadline =
-                    user.getDeletedAt()
-                            .plusDays(7);
-
-
-            if (LocalDateTime.now()
-                    .isAfter(withdrawalDeadline)) {
-
-                throw new IllegalArgumentException(
-                        "탈퇴 처리된 계정입니다."
-                );
-            }
-        }
-
-
-        String accessToken =
-                jwtProvider.createAccessToken(
-                        user.getUserId(),
-                        user.getRole()
-                );
-
-
-        String refreshToken =
-                jwtProvider.createRefreshToken(
-                        user.getUserId(),
-                        user.getRole()
-                );
-
-
-        saveRefreshToken(
-                user,
-                refreshToken
+        validateWithdrawalStatus(
+                user
         );
+
+
+        LoginToken loginToken =
+                issueLoginToken(
+                        user
+                );
 
 
         LoginResponse response =
@@ -545,12 +587,12 @@ public class AuthService {
 
 
         response.setAccessToken(
-                accessToken
+                loginToken.accessToken()
         );
 
 
         response.setRefreshToken(
-                refreshToken
+                loginToken.refreshToken()
         );
 
 
@@ -567,6 +609,9 @@ public class AuthService {
         return response;
     }
 
+
+    // Google 닉네임 생성
+
     private String createGoogleNickname(
             GoogleUserInfo googleUserInfo
     ) {
@@ -578,7 +623,6 @@ public class AuthService {
         if (baseNickname == null
                 || baseNickname.isBlank()) {
 
-            // Google 프로필 이름이 없는 예외 계정도 가입할 수 있도록 기본값을 둔다.
             baseNickname =
                     "GoogleUser";
         }
@@ -605,8 +649,7 @@ public class AuthService {
             return baseNickname;
         }
 
-        // 같은 Google 프로필 이름이 이미 닉네임으로 사용 중이면
-        // Google sub의 마지막 8자를 붙여 사용자에게 안정적으로 고유한 닉네임을 만든다.
+
         String providerId =
                 googleUserInfo.getProviderId();
 
@@ -652,17 +695,29 @@ public class AuthService {
         return uniqueNickname;
     }
 
+
     // Refresh Token 재발급
 
     public TokenRefreshResponse refresh(
             TokenRefreshRequest request
     ) {
 
+        if (request == null
+                || request.getRefreshToken() == null
+                || request.getRefreshToken().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "Refresh Token이 필요합니다."
+            );
+        }
+
+
         String requestRefreshToken =
                 request.getRefreshToken();
 
 
         // JWT 자체 유효성 검사
+
         if (!jwtProvider.validateToken(
                 requestRefreshToken
         )) {
@@ -674,6 +729,7 @@ public class AuthService {
 
 
         // Refresh Token인지 확인
+
         if (!"REFRESH".equals(
                 jwtProvider.getTokenType(
                         requestRefreshToken
@@ -687,6 +743,7 @@ public class AuthService {
 
 
         // JWT에서 userId 추출
+
         Long userId =
                 jwtProvider.getUserId(
                         requestRefreshToken
@@ -694,6 +751,7 @@ public class AuthService {
 
 
         // 요청 Refresh Token 해시
+
         String tokenHash =
                 hashToken(
                         requestRefreshToken
@@ -701,6 +759,7 @@ public class AuthService {
 
 
         // DB Refresh Token 조회
+
         RefreshToken savedToken =
                 refreshTokenMapper.selectByTokenHash(
                         tokenHash
@@ -716,8 +775,11 @@ public class AuthService {
 
 
         // Token 사용자 일치 확인
-        if (!savedToken.getUserId()
-                .equals(userId)) {
+
+        if (savedToken.getUserId() == null
+                || !savedToken.getUserId().equals(
+                userId
+        )) {
 
             throw new IllegalArgumentException(
                     "Refresh Token 사용자 정보가 일치하지 않습니다."
@@ -726,9 +788,12 @@ public class AuthService {
 
 
         // DB에 저장된 만료시간 확인
+
         if (savedToken.getExpiresAt() == null
-                || savedToken.getExpiresAt()
-                .isBefore(LocalDateTime.now())) {
+                || !savedToken.getExpiresAt()
+                .isAfter(
+                        LocalDateTime.now()
+                )) {
 
             refreshTokenMapper.deleteByUserId(
                     userId
@@ -749,6 +814,11 @@ public class AuthService {
 
         if (user == null) {
 
+            refreshTokenMapper.deleteByUserId(
+                    userId
+            );
+
+
             throw new IllegalArgumentException(
                     "사용자를 찾을 수 없습니다."
             );
@@ -756,49 +826,26 @@ public class AuthService {
 
 
         // 탈퇴 요청 후 7일 경과 여부 확인
-        if (user.getDeletedAt() != null) {
 
-            LocalDateTime withdrawalDeadline =
-                    user.getDeletedAt()
-                            .plusDays(7);
+        if (isWithdrawalExpired(
+                user
+        )) {
 
-
-            if (LocalDateTime.now()
-                    .isAfter(withdrawalDeadline)) {
-
-                refreshTokenMapper.deleteByUserId(
-                        user.getUserId()
-                );
+            refreshTokenMapper.deleteByUserId(
+                    user.getUserId()
+            );
 
 
-                throw new IllegalArgumentException(
-                        "회원탈퇴 유예기간이 만료되었습니다."
-                );
-            }
+            throw new IllegalArgumentException(
+                    "회원탈퇴 유예기간이 만료되었습니다."
+            );
         }
 
 
-        // 새로운 Access Token 발급
-        String newAccessToken =
-                jwtProvider.createAccessToken(
-                        user.getUserId(),
-                        user.getRole()
+        LoginToken loginToken =
+                issueLoginToken(
+                        user
                 );
-
-
-        // 새로운 Refresh Token 발급
-        String newRefreshToken =
-                jwtProvider.createRefreshToken(
-                        user.getUserId(),
-                        user.getRole()
-                );
-
-
-        // DB Refresh Token 갱신
-        saveRefreshToken(
-                user,
-                newRefreshToken
-        );
 
 
         TokenRefreshResponse response =
@@ -806,23 +853,32 @@ public class AuthService {
 
 
         response.setAccessToken(
-                newAccessToken
+                loginToken.accessToken()
         );
 
 
         response.setRefreshToken(
-                newRefreshToken
+                loginToken.refreshToken()
         );
 
 
         return response;
     }
 
+
     // 현재 로그인 사용자 조회
 
     public AuthCheckResponse getCurrentUser(
             Long userId
     ) {
+
+        if (userId == null) {
+
+            throw new IllegalArgumentException(
+                    "사용자 정보가 없습니다."
+            );
+        }
+
 
         User user =
                 userMapper.selectById(
@@ -846,9 +902,20 @@ public class AuthService {
         );
     }
 
+
     // 로그아웃
 
-    public void logout(Long userId) {
+    public void logout(
+            Long userId
+    ) {
+
+        if (userId == null) {
+
+            throw new IllegalArgumentException(
+                    "사용자 정보가 없습니다."
+            );
+        }
+
 
         refreshTokenMapper.deleteByUserId(
                 userId
@@ -858,7 +925,17 @@ public class AuthService {
 
     // 회원탈퇴 요청
 
-    public void withdraw(Long userId) {
+    public void withdraw(
+            Long userId
+    ) {
+
+        if (userId == null) {
+
+            throw new IllegalArgumentException(
+                    "사용자 정보가 없습니다."
+            );
+        }
+
 
         User user =
                 userMapper.selectById(
@@ -899,7 +976,17 @@ public class AuthService {
 
     // 회원탈퇴 취소
 
-    public void cancelWithdrawal(Long userId) {
+    public void cancelWithdrawal(
+            Long userId
+    ) {
+
+        if (userId == null) {
+
+            throw new IllegalArgumentException(
+                    "사용자 정보가 없습니다."
+            );
+        }
+
 
         User user =
                 userMapper.selectById(
@@ -929,8 +1016,11 @@ public class AuthService {
 
 
         // 7일이 지난 경우 탈퇴취소 불가능
-        if (LocalDateTime.now()
-                .isAfter(withdrawalDeadline)) {
+
+        if (!LocalDateTime.now()
+                .isBefore(
+                        withdrawalDeadline
+                )) {
 
             throw new IllegalArgumentException(
                     "회원탈퇴 취소 기간이 만료되었습니다."
@@ -944,6 +1034,111 @@ public class AuthService {
     }
 
 
+    // Access / Refresh Token 발급
+
+    private LoginToken issueLoginToken(
+            User user
+    ) {
+
+        validateTokenUser(
+                user
+        );
+
+
+        String accessToken =
+                jwtProvider.createAccessToken(
+                        user.getUserId(),
+                        user.getRole()
+                );
+
+
+        String refreshToken =
+                jwtProvider.createRefreshToken(
+                        user.getUserId(),
+                        user.getRole()
+                );
+
+
+        saveRefreshToken(
+                user,
+                refreshToken
+        );
+
+
+        return new LoginToken(
+                accessToken,
+                refreshToken
+        );
+    }
+
+
+    // Token 발급 사용자 확인
+
+    private void validateTokenUser(
+            User user
+    ) {
+
+        if (user == null
+                || user.getUserId() == null) {
+
+            throw new IllegalArgumentException(
+                    "사용자 정보를 확인할 수 없습니다."
+            );
+        }
+
+
+        if (user.getRole() == null
+                || user.getRole().isBlank()) {
+
+            throw new IllegalStateException(
+                    "사용자 권한 정보가 없습니다."
+            );
+        }
+    }
+
+
+    // 탈퇴 상태 확인
+
+    private void validateWithdrawalStatus(
+            User user
+    ) {
+
+        if (isWithdrawalExpired(
+                user
+        )) {
+
+            throw new IllegalArgumentException(
+                    "탈퇴 처리된 계정입니다."
+            );
+        }
+    }
+
+
+    // 탈퇴 유예기간 만료 여부
+
+    private boolean isWithdrawalExpired(
+            User user
+    ) {
+
+        if (user == null
+                || user.getDeletedAt() == null) {
+
+            return false;
+        }
+
+
+        LocalDateTime withdrawalDeadline =
+                user.getDeletedAt()
+                        .plusDays(7);
+
+
+        return !LocalDateTime.now()
+                .isBefore(
+                        withdrawalDeadline
+                );
+    }
+
+
     // Refresh Token 저장 / 갱신
 
     private void saveRefreshToken(
@@ -951,14 +1146,12 @@ public class AuthService {
             String refreshToken
     ) {
 
-        // DB에는 Refresh Token 원본이 아닌 SHA-256 Hash 저장
         String tokenHash =
                 hashToken(
                         refreshToken
                 );
 
 
-        // 기존 Refresh Token 조회
         RefreshToken existingToken =
                 refreshTokenMapper.selectByUserId(
                         user.getUserId()
@@ -979,7 +1172,6 @@ public class AuthService {
         );
 
 
-        // 기본 Refresh Token 만료시간
         LocalDateTime expiresAt =
                 LocalDateTime.now()
                         .plusSeconds(
@@ -1017,7 +1209,6 @@ public class AuthService {
         );
 
 
-        // 기존 Refresh Token이 없는 경우
         if (existingToken == null) {
 
             refreshTokenMapper.insertRefreshToken(
@@ -1026,12 +1217,12 @@ public class AuthService {
 
         } else {
 
-            // 기존 Refresh Token 갱신
             refreshTokenMapper.updateRefreshToken(
                     token
             );
         }
     }
+
 
     // Refresh Token SHA-256 Hash
 
@@ -1068,5 +1259,12 @@ public class AuthService {
                     e
             );
         }
+    }
+
+
+    private record LoginToken(
+            String accessToken,
+            String refreshToken
+    ) {
     }
 }
