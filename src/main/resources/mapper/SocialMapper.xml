@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.SocialMapper">
+
+    <resultMap id="socialResultMap"
+               type="com.meetback.dev.domain.Social">
+
+        <id property="socialId" column="social_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="provider" column="provider"/>
+        <result property="providerId" column="provider_id"/>
+        <result property="email" column="email"/>
+        <result property="emailVerified" column="email_verified"/>
+        <result property="name" column="name"/>
+
+    </resultMap>
+
+
+    <select id="selectByProviderAndProviderId"
+            resultMap="socialResultMap">
+
+        SELECT
+            social_id,
+            user_id,
+            provider,
+            provider_id,
+            email,
+            email_verified,
+            name
+        FROM social
+        WHERE provider = #{provider}
+        AND provider_id = #{providerId}
+
+    </select>
+
+
+    <select id="selectByUserIdAndProvider"
+            resultMap="socialResultMap">
+
+        SELECT
+            social_id,
+            user_id,
+            provider,
+            provider_id,
+            email,
+            email_verified,
+            name
+        FROM social
+        WHERE user_id = #{userId}
+        AND provider = #{provider}
+
+    </select>
+
+
+    <insert id="insertSocial"
+            parameterType="com.meetback.dev.domain.Social"
+            useGeneratedKeys="true"
+            keyProperty="socialId">
+
+        INSERT INTO social
+        (
+            user_id,
+            provider,
+            provider_id,
+            email,
+            email_verified,
+            name
+        )
+        VALUES
+        (
+            #{userId},
+            #{provider},
+            #{providerId},
+            #{email},
+            #{emailVerified},
+            #{name}
+        )
+
+    </insert>
+
+</mapper>

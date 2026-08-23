@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.CandidateEvaluationMapper">
+
+    <insert id="insert"
+            parameterType="com.meetback.dev.domain.CandidateEvaluation"
+            useGeneratedKeys="true"
+            keyProperty="evaluationId">
+
+        INSERT INTO candidate_evaluations (
+        candidate_id,
+        calculation_version,
+        all_returnable,
+        deadline_at,
+        golden_margin_minutes,
+        average_return_minutes,
+        fairness_gap_minutes,
+        fairness_score,
+        rule_score,
+        recommendation_rank
+        )
+        VALUES (
+        #{candidateId},
+        #{calculationVersion},
+        #{allReturnable},
+        #{deadlineAt},
+        #{goldenMarginMinutes},
+        #{averageReturnMinutes},
+        #{fairnessGapMinutes},
+        #{fairnessScore},
+        #{ruleScore},
+        #{recommendationRank}
+        )
+
+    </insert>
+
+
+    <update id="update"
+            parameterType="com.meetback.dev.domain.CandidateEvaluation">
+
+        UPDATE candidate_evaluations
+        SET
+        calculation_version = #{calculationVersion},
+        all_returnable = #{allReturnable},
+        deadline_at = #{deadlineAt},
+        golden_margin_minutes = #{goldenMarginMinutes},
+        average_return_minutes = #{averageReturnMinutes},
+        fairness_gap_minutes = #{fairnessGapMinutes},
+        fairness_score = #{fairnessScore},
+        rule_score = #{ruleScore},
+        recommendation_rank = #{recommendationRank},
+        updated_at = CURRENT_TIMESTAMP
+        WHERE candidate_id = #{candidateId}
+
+    </update>
+
+
+    <select id="findByCandidateId"
+            resultType="com.meetback.dev.domain.CandidateEvaluation">
+
+        SELECT *
+        FROM candidate_evaluations
+        WHERE candidate_id = #{candidateId}
+
+    </select>
+
+
+    <update id="updateRecommendationRank">
+
+        UPDATE candidate_evaluations
+        SET
+        recommendation_rank = #{recommendationRank},
+        updated_at = CURRENT_TIMESTAMP
+        WHERE candidate_id = #{candidateId}
+
+    </update>
+
+
+    <select id="findTopRankedByMeetingId"
+            resultType="com.meetback.dev.domain.CandidateEvaluation">
+
+        SELECT ce.*
+        FROM candidate_evaluations ce
+        JOIN meeting_candidates mc
+        ON ce.candidate_id = mc.candidate_id
+        WHERE mc.meeting_id = #{meetingId}
+        ORDER BY ce.recommendation_rank ASC
+        LIMIT 1
+
+    </select>
+
+
+    <select id="findRankingByMeetingId"
+            resultType="com.meetback.dev.domain.CandidateEvaluation">
+
+        SELECT ce.*
+        FROM candidate_evaluations ce
+        JOIN meeting_candidates mc
+        ON ce.candidate_id = mc.candidate_id
+        WHERE mc.meeting_id = #{meetingId}
+        ORDER BY ce.recommendation_rank ASC
+
+    </select>
+
+</mapper>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MeetBack 카카오 로그인</title>
+</head>
+
+<body>
+
+<div class="kakao-login-container">
+
+    <div id="kakaoLoginMessage">
+        카카오 로그인 처리 중입니다.
+    </div>
+
+
+    <div
+            id="kakaoLoginData"
+            th:data-access-token="${accessToken}"
+            th:data-refresh-token="${refreshToken}"
+            th:data-user-id="${userId}"
+            th:data-role="${role}"
+            style="display: none;"
+    >
+    </div>
+
+</div>
+
+
+<script>
+
+    const kakaoLoginData =
+        document.getElementById(
+            "kakaoLoginData"
+        );
+
+
+    const kakaoLoginMessage =
+        document.getElementById(
+            "kakaoLoginMessage"
+        );
+
+
+    const accessToken =
+        kakaoLoginData.dataset.accessToken;
+
+
+    const refreshToken =
+        kakaoLoginData.dataset.refreshToken;
+
+
+    const userId =
+        kakaoLoginData.dataset.userId;
+
+
+    const role =
+        kakaoLoginData.dataset.role;
+
+
+    if (
+        accessToken
+        &&
+        refreshToken
+        &&
+        userId
+    )
+    {
+
+        localStorage.setItem(
+            "accessToken",
+            accessToken
+        );
+
+
+        localStorage.setItem(
+            "refreshToken",
+            refreshToken
+        );
+
+
+        localStorage.setItem(
+            "userId",
+            userId
+        );
+
+
+        localStorage.setItem(
+            "role",
+            role
+        );
+
+
+        kakaoLoginMessage.innerText =
+            "카카오 로그인에 성공했습니다.";
+
+
+        window.location.href =
+            "/home";
+
+    }
+    else
+    {
+
+        kakaoLoginMessage.innerText =
+            "카카오 로그인에 실패했습니다.";
+
+    }
+
+</script>
+
+</body>
+
+</html>
