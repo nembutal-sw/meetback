@@ -5,6 +5,11 @@
 <head>
     <meta charset="UTF-8">
     <title>MeetBack 로그인</title>
+    <script
+            src="https://accounts.google.com/gsi/client"
+            async
+            defer
+    ></script>
 </head>
 
 <body>
@@ -105,15 +110,30 @@
 
 
         <!-- 구글 로그인 -->
-        <div>
+        <div th:if="${googleLoginEnabled}">
 
-            <button
-                    type="button"
-                    id="googleLoginButton"
+            <div
+                    id="g_id_onload"
+                    th:attr="data-client_id=${googleClientId}"
+                    data-callback="handleGoogleCredentialResponse"
+                    data-auto_prompt="false"
             >
-                구글 로그인
-            </button>
+            </div>
 
+            <div
+                    class="g_id_signin"
+                    data-type="standard"
+                    data-shape="rectangular"
+                    data-theme="outline"
+                    data-text="continue_with"
+                    data-size="large"
+                    data-logo_alignment="left"
+            ></div>
+
+        </div>
+
+        <div th:unless="${googleLoginEnabled}">
+            Google 로그인을 사용하려면 GOOGLE_CLIENT_ID 설정이 필요합니다.
         </div>
 
 
@@ -144,12 +164,6 @@
     const socialMessage =
         document.getElementById(
             "socialMessage"
-        );
-
-
-    const googleLoginButton =
-        document.getElementById(
-            "googleLoginButton"
         );
 
 
@@ -272,16 +286,126 @@
     );
 
 
-    googleLoginButton.addEventListener(
-        "click",
-        function()
+    async function handleGoogleCredentialResponse(
+        googleResponse
+    )
+    {
+
+        // credential은 브라우저에서 디코딩해 신뢰하지 않고 서버로 그대로 전달한다.
+        // 서버가 Google 공개키와 MeetBack Client ID를 기준으로 유효성을 검증한다.
+        socialMessage.innerText =
+            "Google 로그인 처리 중입니다.";
+
+
+        if (
+            !googleResponse
+            ||
+            !googleResponse.credential
+        )
         {
 
             socialMessage.innerText =
-                "구글 로그인은 연결 준비 중입니다.";
+                "Google 인증 정보를 받지 못했습니다.";
+
+            return;
 
         }
-    );
+
+
+        try
+        {
+
+            const response =
+                await fetch(
+                    "/auth/google",
+                    {
+
+                        method: "POST",
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/json"
+
+                        },
+
+                        body: JSON.stringify(
+                            {
+
+                                credential:
+                                    googleResponse.credential
+
+                            }
+                        )
+
+                    }
+                );
+
+
+            const data =
+                await response.json();
+
+
+            if (!response.ok)
+            {
+
+                socialMessage.innerText =
+                    data.message
+                    ||
+                    "Google 로그인에 실패했습니다.";
+
+                return;
+
+            }
+
+
+            localStorage.setItem(
+                "accessToken",
+                data.accessToken
+            );
+
+
+            localStorage.setItem(
+                "refreshToken",
+                data.refreshToken
+            );
+
+
+            localStorage.setItem(
+                "userId",
+                data.userId
+            );
+
+
+            localStorage.setItem(
+                "role",
+                data.role
+            );
+
+
+            socialMessage.innerText =
+                "Google 로그인에 성공했습니다.";
+
+
+            window.location.href =
+                "/home";
+
+        }
+        catch (error)
+        {
+
+            console.error(
+                "Google 로그인 요청 오류:",
+                error
+            );
+
+
+            socialMessage.innerText =
+                "Google 로그인 처리 중 오류가 발생했습니다.";
+
+        }
+
+    }
 
 </script>
 
