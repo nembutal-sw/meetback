@@ -18,6 +18,11 @@ public interface MeetingMapper {
 
     Meeting findById(Long meetingId);
 
+    int updateCalculationVersion(
+            @Param("meetingId") Long meetingId,
+            @Param("calculationVersion") Integer calculationVersion
+    );
+
     int updateFinalCandidate(
             @Param("meetingId") Long meetingId,
             @Param("candidateId") Long candidateId,
