@@ -51,7 +51,6 @@
         fairness_gap_minutes = #{fairnessGapMinutes},
         fairness_score = #{fairnessScore},
         rule_score = #{ruleScore},
-        recommendation_rank = #{recommendationRank},
         updated_at = CURRENT_TIMESTAMP
         WHERE candidate_id = #{candidateId}
 
@@ -61,9 +60,14 @@
     <select id="findByCandidateId"
             resultType="com.meetback.dev.domain.CandidateEvaluation">
 
-        SELECT *
-        FROM candidate_evaluations
-        WHERE candidate_id = #{candidateId}
+        SELECT ce.*
+        FROM candidate_evaluations ce
+        JOIN meeting_candidates mc
+        ON ce.candidate_id = mc.candidate_id
+        JOIN meetings m
+        ON mc.meeting_id = m.meeting_id
+        WHERE ce.candidate_id = #{candidateId}
+        AND ce.calculation_version = m.calculation_version
 
     </select>
 
@@ -86,8 +90,12 @@
         FROM candidate_evaluations ce
         JOIN meeting_candidates mc
         ON ce.candidate_id = mc.candidate_id
+        JOIN meetings m
+        ON mc.meeting_id = m.meeting_id
         WHERE mc.meeting_id = #{meetingId}
-        ORDER BY ce.recommendation_rank ASC
+        AND ce.calculation_version = m.calculation_version
+        AND mc.is_active = 1
+        AND ce.recommendation_rank = 1
         LIMIT 1
 
     </select>
@@ -100,7 +108,11 @@
         FROM candidate_evaluations ce
         JOIN meeting_candidates mc
         ON ce.candidate_id = mc.candidate_id
+        JOIN meetings m
+        ON mc.meeting_id = m.meeting_id
         WHERE mc.meeting_id = #{meetingId}
+        AND ce.calculation_version = m.calculation_version
+        AND mc.is_active = 1
         ORDER BY ce.recommendation_rank ASC
 
     </select>
