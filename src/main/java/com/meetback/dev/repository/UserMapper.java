@@ -42,4 +42,10 @@ public interface UserMapper {
     int cancelWithdrawal(
             @Param("userId") Long userId
     );
+
+    int increaseTokenVersion(
+            @Param("userId") Long userId
+    );
+
+    User findById(Long userId);
 }

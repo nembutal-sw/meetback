@@ -11,6 +11,7 @@ public class User {
     private String nickname;
     private String passwordHash;
     private String role;
+    private Integer tokenVersion;
     private LocalDateTime deletedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

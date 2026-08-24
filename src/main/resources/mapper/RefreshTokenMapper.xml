@@ -22,12 +22,12 @@
             resultMap="refreshTokenResultMap">
 
         SELECT
-        refresh_token_id,
-        user_id,
-        token_hash,
-        expires_at,
-        created_at,
-        updated_at
+            refresh_token_id,
+            user_id,
+            token_hash,
+            expires_at,
+            created_at,
+            updated_at
         FROM refresh_tokens
         WHERE user_id = #{userId}
 
@@ -57,14 +57,14 @@
 
         INSERT INTO refresh_tokens
         (
-        user_id,
+            user_id,
             token_hash,
             expires_at,
             created_at,
             updated_at
-            )
-            VALUES
-            (
+        )
+        VALUES
+        (
             #{userId},
             #{tokenHash},
             #{expiresAt},
@@ -87,6 +87,21 @@
 
     </update>
 
+
+    <!-- Refresh Token Rotation -->
+    <update id="rotateRefreshToken">
+
+        UPDATE refresh_tokens
+        SET
+            token_hash = #{newTokenHash},
+            expires_at = #{expiresAt},
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+        AND token_hash = #{oldTokenHash}
+
+    </update>
+
+
     <!-- 로그아웃 / 사용자 Refresh Token 삭제 -->
     <delete id="deleteByUserId">
 
@@ -95,8 +110,10 @@
 
     </delete>
 
+
     <!-- 유효기간이 지난 Refresh Token 전체 삭제 -->
     <delete id="deleteExpiredTokens">
+
         DELETE FROM refresh_tokens
         WHERE expires_at &lt;= NOW()
 
