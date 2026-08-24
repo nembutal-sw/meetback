@@ -4,7 +4,7 @@ import com.meetback.dev.dto.FinalCandidateRequest;
 import com.meetback.dev.dto.MeetingCreateRequest;
 import com.meetback.dev.dto.MeetingCreateResponse;
 import com.meetback.dev.dto.MeetingJoinRequest;
-import com.meetback.dev.security.dev.DevAuthenticatedUser;
+import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.MeetingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 // [TEMP-BKW-AUTH]
 // WebSocket/JWT 개발용 임시 인증 Principal.
 // 범석 Security 최종 코드 병합 시
-// DevAuthenticatedUser → 범석의 최종 인증 Principal 타입으로 교체.
+// AuthenticatedUser → 범석의 최종 인증 Principal 타입으로 교체.
 // Service 계층은 Long userId를 사용하므로 수정할 필요 없음.
 // ============================================================
 @RestController
@@ -35,7 +35,7 @@ public class MeetingController {
 
     @PostMapping
     public MeetingCreateResponse createMeeting(
-            @AuthenticationPrincipal DevAuthenticatedUser user,
+            @AuthenticationPrincipal AuthenticatedUser user,
             @RequestBody MeetingCreateRequest request
             ){
 
@@ -60,7 +60,7 @@ public class MeetingController {
 
     @PostMapping("/join")
     public Long joinMeeting(
-            @AuthenticationPrincipal DevAuthenticatedUser user,
+            @AuthenticationPrincipal AuthenticatedUser user,
             @RequestBody MeetingJoinRequest request
             )
     {
@@ -84,7 +84,7 @@ public class MeetingController {
 
             // [TEMP-BKW-AUTH]
             // 범석 Security 코드 병합 시 최종 Principal 타입으로 교체
-            @AuthenticationPrincipal DevAuthenticatedUser user,
+            @AuthenticationPrincipal AuthenticatedUser user,
             @RequestBody FinalCandidateRequest request
             )
     {
@@ -105,8 +105,8 @@ public class MeetingController {
     @PutMapping("/{meetingId}/voting")
     public void startVoting(
             @PathVariable Long meetingId,
-            @AuthenticationPrincipal DevAuthenticatedUser user
-    ) {
+            @AuthenticationPrincipal AuthenticatedUser user
+            ) {
 
         meetingService.startVoting(
                 meetingId,

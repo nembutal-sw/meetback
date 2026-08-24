@@ -3,7 +3,7 @@ package com.meetback.dev.controller;
 import com.meetback.dev.domain.ChatMessage;
 import com.meetback.dev.dto.ChatMessageResponse;
 import com.meetback.dev.dto.ChatSendRequest;
-import com.meetback.dev.security.dev.DevAuthenticatedUser;
+import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -46,7 +46,7 @@ public class ChatMessageController {
 
         Object principalObject = authentication.getPrincipal();
 
-        if(!(principalObject instanceof DevAuthenticatedUser user)){
+        if(!(principalObject instanceof AuthenticatedUser user)){
             throw new IllegalStateException(
                     "인증 사용자 정보를 확인할 수 없습니다."
             );
