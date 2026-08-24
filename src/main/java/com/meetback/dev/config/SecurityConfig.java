@@ -16,51 +16,54 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
+
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http
     ) {
 
         return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(
-                                SessionCreationPolicy.STATELESS
-                        )
+                .csrf(
+                        AbstractHttpConfigurer::disable
                 )
-                .authorizeHttpRequests(auth ->
-                        auth
-                                .requestMatchers(
-                                        "/",
-                                        "/login",
-                                        "/signup",
-                                        "/home",
-
-                                        "/auth/login",
-                                        "/auth/signup",
-                                        "/auth/kakao",
-                                        "/auth/refresh",
-
-                                        "/oauth/**",
-
-                                        "/ws",
-                                        "/ws/**",
-                                        "/stomp-test.html",
-
-                                        "/css/**",
-                                        "/js/**",
-                                        "/images/**"
+                .sessionManagement(
+                        session ->
+                                session.sessionCreationPolicy(
+                                        SessionCreationPolicy.STATELESS
                                 )
-                                .permitAll()
-                                .requestMatchers(
-                                        "/auth/check",
-                                        "/auth/logout",
-                                        "/auth/withdraw",
-                                        "/auth/withdraw/cancel"
-                                )
-                                .authenticated()
-                                .anyRequest()
-                                .authenticated()
+                )
+                .authorizeHttpRequests(
+                        auth ->
+                                auth
+                                        .requestMatchers(
+                                                "/",
+                                                "/login",
+                                                "/signup",
+                                                "/home",
+                                                "/auth/login",
+                                                "/auth/signup",
+                                                "/auth/kakao",
+                                                "/auth/google",
+                                                "/auth/refresh",
+                                                "/oauth/**",
+                                                "/ws",
+                                                "/ws/**",
+                                                "/css/**",
+                                                "/js/**",
+                                                "/images/**"
+                                        )
+                                        .permitAll()
+
+                                        .requestMatchers(
+                                                "/auth/check",
+                                                "/auth/logout",
+                                                "/auth/withdraw",
+                                                "/auth/withdraw/cancel"
+                                        )
+                                        .authenticated()
+
+                                        .anyRequest()
+                                        .authenticated()
                 )
                 .addFilterBefore(
                         jwtAuthenticationFilter,

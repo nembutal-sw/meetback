@@ -15,10 +15,8 @@ import java.util.Date;
 public class JwtProvider {
 
     private final SecretKey secretKey;
-
     private final long accessTokenExpiration;
     private final long refreshTokenExpiration;
-
 
     public JwtProvider(
             @Value("${jwt.secret}") String secret,
@@ -27,10 +25,14 @@ public class JwtProvider {
     ) {
 
         byte[] keyBytes =
-                Decoders.BASE64.decode(secret);
+                Decoders.BASE64.decode(
+                        secret
+                );
 
         this.secretKey =
-                Keys.hmacShaKeyFor(keyBytes);
+                Keys.hmacShaKeyFor(
+                        keyBytes
+                );
 
         this.accessTokenExpiration =
                 accessTokenExpiration;
@@ -43,7 +45,8 @@ public class JwtProvider {
     // Access Token 생성
     public String createAccessToken(
             Long userId,
-            String role
+            String role,
+            Integer tokenVersion
     ) {
 
         Date now =
@@ -55,9 +58,12 @@ public class JwtProvider {
                                 + accessTokenExpiration
                 );
 
+
         return Jwts.builder()
                 .subject(
-                        String.valueOf(userId)
+                        String.valueOf(
+                                userId
+                        )
                 )
                 .claim(
                         "role",
@@ -67,9 +73,19 @@ public class JwtProvider {
                         "tokenType",
                         "ACCESS"
                 )
-                .issuedAt(now)
-                .expiration(expiration)
-                .signWith(secretKey)
+                .claim(
+                        "tokenVersion",
+                        tokenVersion
+                )
+                .issuedAt(
+                        now
+                )
+                .expiration(
+                        expiration
+                )
+                .signWith(
+                        secretKey
+                )
                 .compact();
     }
 
@@ -77,7 +93,8 @@ public class JwtProvider {
     // Refresh Token 생성
     public String createRefreshToken(
             Long userId,
-            String role
+            String role,
+            Integer tokenVersion
     ) {
 
         Date now =
@@ -89,9 +106,12 @@ public class JwtProvider {
                                 + refreshTokenExpiration
                 );
 
+
         return Jwts.builder()
                 .subject(
-                        String.valueOf(userId)
+                        String.valueOf(
+                                userId
+                        )
                 )
                 .claim(
                         "role",
@@ -101,9 +121,19 @@ public class JwtProvider {
                         "tokenType",
                         "REFRESH"
                 )
-                .issuedAt(now)
-                .expiration(expiration)
-                .signWith(secretKey)
+                .claim(
+                        "tokenVersion",
+                        tokenVersion
+                )
+                .issuedAt(
+                        now
+                )
+                .expiration(
+                        expiration
+                )
+                .signWith(
+                        secretKey
+                )
                 .compact();
     }
 
@@ -116,41 +146,68 @@ public class JwtProvider {
         try {
 
             Jwts.parser()
-                    .verifyWith(secretKey)
+                    .verifyWith(
+                            secretKey
+                    )
                     .build()
-                    .parseSignedClaims(token);
+                    .parseSignedClaims(
+                            token
+                    );
 
             return true;
 
-        } catch (JwtException
-                 | IllegalArgumentException e) {
+        } catch (JwtException | IllegalArgumentException e) {
 
             return false;
         }
     }
 
 
-    // userId 추출
+    // UserId 조회
     public Long getUserId(
             String token
     ) {
 
         Claims claims =
-                getClaims(token);
+                getClaims(
+                        token
+                );
 
-        return Long.valueOf(
-                claims.getSubject()
-        );
+
+        String subject =
+                claims.getSubject();
+
+
+        if (subject == null
+                || subject.isBlank()) {
+
+            return null;
+        }
+
+
+        try {
+
+            return Long.valueOf(
+                    subject
+            );
+
+        } catch (NumberFormatException e) {
+
+            return null;
+        }
     }
 
 
-    // role 추출
+    // Role 조회
     public String getRole(
             String token
     ) {
 
         Claims claims =
-                getClaims(token);
+                getClaims(
+                        token
+                );
+
 
         return claims.get(
                 "role",
@@ -159,13 +216,16 @@ public class JwtProvider {
     }
 
 
-    // Access / Refresh 구분
+    // Token Type 조회
     public String getTokenType(
             String token
     ) {
 
         Claims claims =
-                getClaims(token);
+                getClaims(
+                        token
+                );
+
 
         return claims.get(
                 "tokenType",
@@ -174,10 +234,37 @@ public class JwtProvider {
     }
 
 
-    // Refresh Token 만료시간 초 단위 반환
+    // Token Version 조회
+    public Integer getTokenVersion(
+            String token
+    ) {
+
+        Claims claims =
+                getClaims(
+                        token
+                );
+
+
+        Object tokenVersion =
+                claims.get(
+                        "tokenVersion"
+                );
+
+
+        if (!(tokenVersion instanceof Number number)) {
+
+            return null;
+        }
+
+
+        return number.intValue();
+    }
+
+
     public long getRefreshTokenExpirationSeconds() {
 
-        return refreshTokenExpiration / 1000;
+        return refreshTokenExpiration
+                / 1000;
     }
 
 
@@ -186,9 +273,13 @@ public class JwtProvider {
     ) {
 
         return Jwts.parser()
-                .verifyWith(secretKey)
+                .verifyWith(
+                        secretKey
+                )
                 .build()
-                .parseSignedClaims(token)
+                .parseSignedClaims(
+                        token
+                )
                 .getPayload();
     }
 }

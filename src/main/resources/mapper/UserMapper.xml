@@ -18,6 +18,8 @@
 
         <result property="role" column="role"/>
 
+        <result property="tokenVersion" column="token_version"/>
+
         <result property="deletedAt" column="deleted_at"/>
 
         <result property="createdAt" column="created_at"/>
@@ -25,6 +27,7 @@
         <result property="updatedAt" column="updated_at"/>
 
     </resultMap>
+
 
     <!-- 회원가입 -->
     <insert id="insertUser"
@@ -34,19 +37,19 @@
 
         INSERT INTO users
         (
-            email,
-            nickname,
-            password_hash,
-            created_at,
-            updated_at
+        email,
+        nickname,
+        password_hash,
+        created_at,
+        updated_at
         )
         VALUES
         (
-            #{email},
-            #{nickname},
-            #{passwordHash},
-            NOW(),
-            NOW()
+        #{email},
+        #{nickname},
+        #{passwordHash},
+        NOW(),
+        NOW()
         )
 
     </insert>
@@ -79,18 +82,20 @@
             resultMap="userResultMap">
 
         SELECT
-            user_id,
-            email,
-            nickname,
-            password_hash,
-            role,
-            deleted_at,
-            created_at,
-            updated_at
+        user_id,
+        email,
+        nickname,
+        password_hash,
+        role,
+        token_version,
+        deleted_at,
+        created_at,
+        updated_at
         FROM users
         WHERE email = #{email}
 
     </select>
+
 
     <!-- 회원탈퇴 요청 -->
     <update id="withdrawUser">
@@ -113,21 +118,35 @@
 
     </update>
 
+
+    <!-- UserId로 회원 조회 -->
     <select id="selectById"
             resultMap="userResultMap">
 
         SELECT
-            user_id,
-            email,
-            nickname,
-            password_hash,
-            role,
-            deleted_at,
-            created_at,
-            updated_at
+        user_id,
+        email,
+        nickname,
+        password_hash,
+        role,
+        token_version,
+        deleted_at,
+        created_at,
+        updated_at
         FROM users
         WHERE user_id = #{userId}
 
     </select>
+
+
+    <!-- Token Version 증가 -->
+    <update id="increaseTokenVersion">
+
+        UPDATE users
+        SET token_version = token_version + 1,
+        updated_at = NOW()
+        WHERE user_id = #{userId}
+
+    </update>
 
 </mapper>
