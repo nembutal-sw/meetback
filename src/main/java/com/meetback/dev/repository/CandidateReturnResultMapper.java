@@ -22,4 +22,15 @@ public interface CandidateReturnResultMapper {
 
 
     void deleteByCandidateId(Long candidateId);
+
+
+    CandidateReturnResult findByCandidateAndParticipantAndVersion(
+            @Param("candidateId") Long candidateId,
+            @Param("participantId") Long participantId,
+            @Param("calculationVersion") Integer calculationVersion
+    );
+
+    void deleteByParticipantId(Long participantId);
+
+
 }
