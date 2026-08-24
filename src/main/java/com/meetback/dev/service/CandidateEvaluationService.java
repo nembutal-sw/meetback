@@ -255,7 +255,7 @@ public class CandidateEvaluationService {
 
 
         evaluation.setCalculationVersion(
-                meeting.getCalculationVersion()
+                calculationVersion
         );
 
 

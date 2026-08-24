@@ -65,4 +65,35 @@
         WHERE candidate_id = #{candidateId}
     </delete>
 
+
+    <select id="findByCandidateAndParticipantAndVersion"
+            resultType="com.meetback.dev.domain.CandidateReturnResult">
+
+        SELECT
+        result_id,
+        meeting_id,
+        candidate_id,
+        participant_id,
+        calculation_version,
+        return_minutes,
+        transfer_count,
+        last_train_departure_at,
+        last_train_arrival_at,
+        last_safe_departure_at,
+        can_return,
+        calculated_at
+        FROM candidate_return_results
+        WHERE candidate_id = #{candidateId}
+        AND participant_id = #{participantId}
+        AND calculation_version = #{calculationVersion}
+        LIMIT 1
+
+    </select>
+
+    <delete id="deleteByParticipantId">
+
+        DELETE FROM candidate_return_results
+        WHERE participant_id = #{participantId}
+
+    </delete>
 </mapper>

@@ -4,18 +4,22 @@ import com.meetback.dev.domain.MeetingParticipant;
 import com.meetback.dev.dto.ParticipantLocationRequestDTO;
 import com.meetback.dev.place.client.KakaoLocalClient;
 import com.meetback.dev.place.dto.PlaceDTO;
+import com.meetback.dev.repository.CandidateReturnResultMapper;
 import com.meetback.dev.repository.MeetingParticipantMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class MeetingParticipantService {
 
     private final MeetingParticipantMapper meetingParticipantMapper;
+    private final CandidateReturnResultMapper returnResultMapper;
     private final KakaoLocalClient kakaoLocalClient;
 
 
@@ -29,6 +33,7 @@ public class MeetingParticipantService {
     }
 
 
+    @Transactional
     public void updateLocation(
             Long participantId,
             ParticipantLocationRequestDTO request
@@ -79,53 +84,107 @@ public class MeetingParticipantService {
         }
 
 
-        // 출발 장소
-        participant.setDepartureName(
-                departurePlace.name()
-        );
+        /*
+         * 새 출발 장소 데이터
+         */
+        String newDepartureName =
+                departurePlace.name();
 
-        participant.setDepartureAddress(
+        String newDepartureAddress =
                 departurePlace.roadAddress() == null
                         || departurePlace.roadAddress().isBlank()
                         ? departurePlace.address()
-                        : departurePlace.roadAddress()
+                        : departurePlace.roadAddress();
+
+        BigDecimal newDepartureLatitude =
+                BigDecimal.valueOf(
+                        departurePlace.latitude()
+                );
+
+        BigDecimal newDepartureLongitude =
+                BigDecimal.valueOf(
+                        departurePlace.longitude()
+                );
+
+
+        /*
+         * 새 귀가 장소 데이터
+         */
+        String newReturnName =
+                returnPlace.name();
+
+        String newReturnAddress =
+                returnPlace.roadAddress() == null
+                        || returnPlace.roadAddress().isBlank()
+                        ? returnPlace.address()
+                        : returnPlace.roadAddress();
+
+        BigDecimal newReturnLatitude =
+                BigDecimal.valueOf(
+                        returnPlace.latitude()
+                );
+
+        BigDecimal newReturnLongitude =
+                BigDecimal.valueOf(
+                        returnPlace.longitude()
+                );
+
+
+        /*
+         * 기존 값과 실제로 달라졌는지 확인
+         */
+        boolean returnChanged =
+                !Objects.equals(
+                        participant.getReturnName(),
+                        newReturnName
+                )
+                        || !Objects.equals(
+                        participant.getReturnAddress(),
+                        newReturnAddress
+                )
+                        || !sameBigDecimal(
+                        participant.getReturnLatitude(),
+                        newReturnLatitude
+                )
+                        || !sameBigDecimal(
+                        participant.getReturnLongitude(),
+                        newReturnLongitude
+                );
+
+
+        // 출발 장소
+        participant.setDepartureName(
+                newDepartureName
+        );
+
+        participant.setDepartureAddress(
+                newDepartureAddress
         );
 
         participant.setDepartureLatitude(
-                BigDecimal.valueOf(
-                        departurePlace.latitude()
-                )
+                newDepartureLatitude
         );
 
         participant.setDepartureLongitude(
-                BigDecimal.valueOf(
-                        departurePlace.longitude()
-                )
+                newDepartureLongitude
         );
 
 
         // 귀가 장소
         participant.setReturnName(
-                returnPlace.name()
+                newReturnName
         );
 
         participant.setReturnAddress(
-                returnPlace.roadAddress() == null
-                        || returnPlace.roadAddress().isBlank()
-                        ? returnPlace.address()
-                        : returnPlace.roadAddress()
+                newReturnAddress
         );
 
         participant.setReturnLatitude(
-                BigDecimal.valueOf(
-                        returnPlace.latitude()
-                )
+                newReturnLatitude
         );
 
         participant.setReturnLongitude(
-                BigDecimal.valueOf(
-                        returnPlace.longitude()
-                )
+                newReturnLongitude
         );
 
 
@@ -133,6 +192,20 @@ public class MeetingParticipantService {
         meetingParticipantMapper.updateLocation(
                 participant
         );
+
+
+        /*
+         * 귀가지가 실제로 바뀌었다면(출발지 제외)
+         * 이 참가자의 기존 귀가 계산 결과만 삭제
+         *
+         * 다른 참가자 계산 결과는 그대로 재사용
+         */
+        if (returnChanged) {
+
+            returnResultMapper.deleteByParticipantId(
+                    participantId
+            );
+        }
 
 
         /*
@@ -146,6 +219,31 @@ public class MeetingParticipantService {
         meetingParticipantMapper.submitInput(
                 participantId
         );
+    }
+
+
+    private boolean sameBigDecimal(
+            BigDecimal first,
+            BigDecimal second
+    ) {
+
+        if (first == null && second == null) {
+            return true;
+        }
+
+        if (first == null || second == null) {
+            return false;
+        }
+
+        return first.setScale(
+                7,
+                java.math.RoundingMode.HALF_UP
+        ).compareTo(
+                second.setScale(
+                        7,
+                        java.math.RoundingMode.HALF_UP
+                )
+        ) == 0;
     }
 
 
