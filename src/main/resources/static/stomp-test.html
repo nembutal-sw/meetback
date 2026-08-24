@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+
+    <title>MeetBack STOMP JWT Test</title>
+
+    <!-- STOMP JS 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+</head>
+
+<body>
+
+<h1>MeetBack STOMP + JWT Test</h1>
+
+<hr>
+
+<h3>Access Token</h3>
+
+<textarea
+        id="token"
+        rows="10"
+        cols="100"
+        placeholder="Access Token 전체를 붙여넣으세요. Bearer는 붙이지 마세요."
+></textarea>
+
+<br><br>
+
+<button onclick="connect()">
+    STOMP 연결
+</button>
+
+<button onclick="disconnect()">
+    연결 종료
+</button>
+
+<hr>
+
+<h3>현재 상태</h3>
+
+<div id="status">
+    연결 안 됨
+</div>
+
+<hr>
+
+<h3>로그</h3>
+
+<pre id="log"></pre>
+
+
+<script>
+
+    // 현재 STOMP Client를 저장할 변수
+    let client = null;
+
+
+    /*
+     * 화면 + 개발자도구 Console에
+     * 동시에 로그를 남기기 위한 함수
+     */
+    function addLog(message) {
+
+        console.log(message);
+
+        const log =
+            document.getElementById("log");
+
+        log.textContent +=
+            message + "\n";
+    }
+
+
+    /*
+     * STOMP 연결
+     */
+    function connect() {
+
+        // textarea에서 Access Token 가져오기
+        const token =
+            document
+                .getElementById("token")
+                .value
+                .trim();
+
+
+        /*
+         * Token 입력 확인
+         */
+        if (!token) {
+
+            alert(
+                "Access Token을 입력해주세요."
+            );
+
+            return;
+        }
+
+
+        /*
+         * 혹시 사용자가 실수로
+         *
+         * Bearer eyJ...
+         *
+         * 형태로 붙여넣었는지 확인
+         */
+        if (token.startsWith("Bearer ")) {
+
+            alert(
+                "Bearer는 빼고 Access Token만 넣어주세요."
+            );
+
+            return;
+        }
+
+
+        /*
+         * 기존 연결이 이미 있다면
+         * 중복 연결 방지
+         */
+        if (client && client.active) {
+
+            addLog(
+                "⚠️ 이미 STOMP 연결이 활성화되어 있습니다."
+            );
+
+            return;
+        }
+
+
+        /*
+         * 디버깅용
+         *
+         * 실제 JWT 전체를 Console에 출력하지 않고
+         * 길이만 확인한다.
+         */
+        addLog(
+            "================================="
+        );
+
+        addLog(
+            "STOMP 연결 시작"
+        );
+
+        addLog(
+            "Token length = " + token.length
+        );
+
+        addLog(
+            "Authorization 헤더 생성 완료"
+        );
+
+
+        /*
+         * STOMP Client 생성
+         */
+        client =
+            new StompJs.Client({
+
+                /*
+                 * WebSocket 연결 주소
+                 */
+                brokerURL:
+                    "ws://localhost:8080/ws",
+
+
+                /*
+                 * 아주 중요
+                 *
+                 * 이 값이 STOMP CONNECT Frame의
+                 * Native Header로 전송된다.
+                 */
+                connectHeaders: {
+
+                    Authorization:
+                        "Bearer " + token
+
+                },
+
+
+                /*
+                 * 테스트 중 자동 재접속을 꺼둔다.
+                 *
+                 * 실패할 때 계속 연결을 반복하면
+                 * 디버깅이 헷갈릴 수 있기 때문.
+                 */
+                reconnectDelay: 0,
+
+
+                /*
+                 * 연결 제한 시간
+                 */
+                connectionTimeout: 5000,
+
+
+                /*
+                 * STOMP 내부 동작 로그
+                 */
+                debug: function (message) {
+
+                    console.log(
+                        "[STOMP]",
+                        message
+                    );
+
+                }
+
+            });
+
+
+        /*
+         * STOMP CONNECT 성공
+         */
+        client.onConnect =
+            function (frame) {
+
+                addLog(
+                    "✅ STOMP CONNECT 성공"
+                );
+
+                console.log(
+                    "CONNECTED FRAME =",
+                    frame
+                );
+
+                document
+                    .getElementById("status")
+                    .innerText =
+                    "✅ STOMP + JWT 연결 성공";
+
+            };
+
+
+        /*
+         * Spring에서 STOMP ERROR Frame을
+         * 내려보낸 경우
+         */
+        client.onStompError =
+            function (frame) {
+
+                addLog(
+                    "❌ STOMP ERROR 발생"
+                );
+
+                console.error(
+                    "STOMP ERROR FRAME =",
+                    frame
+                );
+
+
+                /*
+                 * ERROR Frame에 message Header가 있다면 출력
+                 */
+                if (frame.headers) {
+
+                    addLog(
+                        "message = "
+                        + frame.headers["message"]
+                    );
+
+                }
+
+
+                /*
+                 * ERROR Body가 있다면 출력
+                 */
+                if (frame.body) {
+
+                    addLog(
+                        "body = "
+                        + frame.body
+                    );
+
+                }
+
+
+                document
+                    .getElementById("status")
+                    .innerText =
+                    "❌ STOMP 인증/처리 실패";
+
+            };
+
+
+        /*
+         * WebSocket 자체 오류
+         */
+        client.onWebSocketError =
+            function (error) {
+
+                addLog(
+                    "❌ WebSocket 오류 발생"
+                );
+
+                console.error(
+                    "WebSocket Error =",
+                    error
+                );
+
+
+                document
+                    .getElementById("status")
+                    .innerText =
+                    "❌ WebSocket 오류";
+
+            };
+
+
+        /*
+         * WebSocket 연결 종료
+         */
+        client.onWebSocketClose =
+            function (event) {
+
+                addLog(
+                    "🔌 WebSocket 종료"
+                );
+
+                addLog(
+                    "close code = "
+                    + event.code
+                );
+
+                addLog(
+                    "close reason = "
+                    + event.reason
+                );
+
+
+                console.log(
+                    "WebSocket Close Event =",
+                    event
+                );
+
+            };
+
+
+        /*
+         * STOMP Client 활성화
+         *
+         * 여기서 실제
+         *
+         * WebSocket OPEN
+         * →
+         * STOMP CONNECT
+         *
+         * 가 시작된다.
+         */
+        client.activate();
+    }
+
+
+    /*
+     * 연결 종료
+     */
+    async function disconnect() {
+
+        if (!client) {
+
+            addLog(
+                "⚠️ 생성된 STOMP Client가 없습니다."
+            );
+
+            return;
+        }
+
+
+        if (!client.active) {
+
+            addLog(
+                "⚠️ 현재 연결되어 있지 않습니다."
+            );
+
+            return;
+        }
+
+
+        await client.deactivate();
+
+
+        addLog(
+            "✅ STOMP 연결 종료 완료"
+        );
+
+
+        document
+            .getElementById("status")
+            .innerText =
+            "연결 종료";
+
+    }
+
+</script>
+
+</body>
+</html>

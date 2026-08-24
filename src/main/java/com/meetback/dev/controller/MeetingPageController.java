@@ -11,4 +11,10 @@ public class MeetingPageController {
         return "meeting/location-test";
     }
 
+    @GetMapping("/meeting")
+    public String meeting()
+    {
+        return "meeting/location-test";
+    }
+
 }

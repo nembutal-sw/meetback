@@ -1,28 +1,42 @@
 package com.meetback.dev.controller;
 
-import com.meetback.dev.domain.ChatMessage;
+import com.meetback.dev.dto.ChatMessageResponse;
+import com.meetback.dev.security.dev.DevAuthenticatedUser;
 import com.meetback.dev.service.ChatService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/meetings")
 @RequiredArgsConstructor
 public class ChatController {
 
     private final ChatService chatService;
 
-    @GetMapping("/{meetingId}/messages")
-    public List<ChatMessage> getMessages(
-            @PathVariable Long meetingId
+
+    @GetMapping("/meetings/{meetingId}/messages")
+    public List<ChatMessageResponse> getMessages(
+            @PathVariable Long meetingId,
+
+            // =====================================================
+            // [TEMP-BKW-AUTH]
+            //
+            // 범석 Security 병합 시
+            // Principal 타입만 변경하면 됨.
+            //
+            // ChatService에는 Long userId만 전달
+            // =====================================================
+            @AuthenticationPrincipal
+            DevAuthenticatedUser user
     ) {
 
-        return chatService.getMessages(meetingId);
+        return chatService.getMessages(
+                meetingId,
+                user.userId()
+        );
     }
-
 }
