@@ -4,6 +4,8 @@ import com.meetback.dev.domain.RefreshToken;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
+
 @Mapper
 public interface RefreshTokenMapper {
 
@@ -27,6 +29,14 @@ public interface RefreshTokenMapper {
             RefreshToken refreshToken
     );
 
+    // Refresh Token Rotation
+    int rotateRefreshToken(
+            @Param("userId") Long userId,
+            @Param("oldTokenHash") String oldTokenHash,
+            @Param("newTokenHash") String newTokenHash,
+            @Param("expiresAt") LocalDateTime expiresAt
+    );
+
     // 로그아웃 / 사용자 Refresh Token 삭제
     int deleteByUserId(
             @Param("userId") Long userId
@@ -34,5 +44,4 @@ public interface RefreshTokenMapper {
 
     // 유효기간이 지난 Refresh Token 전체 삭제
     int deleteExpiredTokens();
-
 }
