@@ -1,6 +1,6 @@
 package com.meetback.dev.security;
 
-import com.meetback.dev.security.dev.DevAuthenticatedUser;
+import com.meetback.dev.security.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -76,7 +76,7 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
 
             String role = jwtProvider.getRole(token);
 
-            DevAuthenticatedUser user = new DevAuthenticatedUser(
+            AuthenticatedUser user = new AuthenticatedUser(
                     userId,
                     role
             );

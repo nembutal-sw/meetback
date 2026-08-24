@@ -3,7 +3,7 @@ package com.meetback.dev.controller;
 import com.meetback.dev.domain.MeetingParticipant;
 import com.meetback.dev.dto.CurrentParticipantResponse;
 import com.meetback.dev.dto.ParticipantLocationRequestDTO;
-import com.meetback.dev.security.dev.DevAuthenticatedUser;
+import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.MeetingParticipantService;
 import com.meetback.dev.service.ParticipantService;
 import lombok.RequiredArgsConstructor;
@@ -105,7 +105,7 @@ public class MeetingParticipantController {
             @PathVariable Long meetingId,
 
             @AuthenticationPrincipal
-            DevAuthenticatedUser user
+            AuthenticatedUser user
 
     ) {
 
