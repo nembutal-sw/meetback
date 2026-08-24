@@ -1084,7 +1084,7 @@
             <div class="participant-status">
 
                 <span class="participant-name">
-                    참가자 정보 조회 API 연결 예정
+                    참가자 정보를 불러오는 중...
                 </span>
 
 
@@ -1338,6 +1338,15 @@
 
 
     let currentMeetingStatus =
+        null;
+
+
+
+    // ============================================================
+    // 현재 로그인 사용자의 참가자 정보
+    // ============================================================
+
+    let currentParticipant =
         null;
 
 
@@ -1782,6 +1791,78 @@
 
 
     // ============================================================
+    // 현재 로그인 사용자의 participant 조회
+    //
+    // JWT의 userId를 프론트에서 participantId처럼 사용하지 않는다.
+    //
+    // GET
+    // /participants/meetings/{meetingId}/participants/me
+    //
+    // 백엔드:
+    // meetingId + JWT userId
+    // → participantId 조회
+    // ============================================================
+
+    async function getCurrentParticipant()
+    {
+
+        if (!currentMeetingId)
+        {
+
+            throw new Error(
+                "모임 ID를 확인할 수 없습니다."
+            );
+
+        }
+
+
+        const response =
+            await authenticatedFetch(
+                "/participants/meetings/"
+                + currentMeetingId
+                + "/participants/me"
+            );
+
+
+        if (!response.ok)
+        {
+
+            const text =
+                await response.text();
+
+
+            console.error(
+                "[CURRENT PARTICIPANT FAILED]",
+                response.status,
+                text
+            );
+
+
+            throw new Error(
+                text
+                || "현재 참가자 정보를 조회할 수 없습니다."
+            );
+
+        }
+
+
+        currentParticipant =
+            await response.json();
+
+
+        console.log(
+            "[CURRENT PARTICIPANT]",
+            currentParticipant
+        );
+
+
+        return currentParticipant;
+
+    }
+
+
+
+    // ============================================================
     // ★ 페이지 초기화
     // ============================================================
 
@@ -1810,8 +1891,6 @@
 
         // --------------------------------------------------------
         // 2. URL에서 meetingId 읽기
-        //
-        // /meeting?meetingId=7
         // --------------------------------------------------------
 
         const params =
@@ -1906,22 +1985,6 @@
 
 
 
-        /*
-         * ★ 중요
-         *
-         * 예전에는:
-         *
-         * document.getElementById("meetingId").value =
-         *     currentMeetingId;
-         *
-         * 가 있었음.
-         *
-         * 지금 HTML에는 id="meetingId" input이 없으므로
-         * 절대로 접근하지 않는다.
-         */
-
-
-
         // --------------------------------------------------------
         // 4. 화면의 모임 ID 표시
         // --------------------------------------------------------
@@ -1953,10 +2016,29 @@
 
 
         // --------------------------------------------------------
-        // 6. 모임 상세정보 조회
-        //
-        // API가 아직 없다면 실패해도
-        // WebSocket 연결에는 영향 없음.
+        // 6. 현재 사용자 participant 확인
+        // --------------------------------------------------------
+
+        try
+        {
+
+            await getCurrentParticipant();
+
+        }
+        catch (error)
+        {
+
+            console.warn(
+                "[CURRENT PARTICIPANT INIT ERROR]",
+                error
+            );
+
+        }
+
+
+
+        // --------------------------------------------------------
+        // 7. 모임 상세정보 조회
         // --------------------------------------------------------
 
         await loadMeetingInfo();
@@ -1964,7 +2046,7 @@
 
 
         // --------------------------------------------------------
-        // 7. WebSocket 연결
+        // 8. WebSocket 연결
         // --------------------------------------------------------
 
         await connectWebSocket();
@@ -1972,9 +2054,7 @@
 
 
         // --------------------------------------------------------
-        // 8. 참가자 현황
-        //
-        // API가 아직 없다면 조용히 무시.
+        // 9. 참가자 현황
         // --------------------------------------------------------
 
         await loadParticipantStatus();
@@ -2012,10 +2092,6 @@
                 );
 
 
-            /*
-             * 아직 GET /meetings/{meetingId}가 없다면
-             * 채팅 기능까지 막으면 안 되므로 return
-             */
             if (!response.ok)
             {
 
@@ -2134,10 +2210,6 @@
         catch (error)
         {
 
-            /*
-             * 모임 상세 조회 실패가
-             * WebSocket 채팅까지 막아서는 안 됨.
-             */
             console.warn(
                 "[MEETING INFO ERROR]",
                 error
@@ -2203,7 +2275,9 @@
     // ============================================================
     // 참가자 현황
     //
-    // 추후 GET /meetings/{meetingId}/participants 연결
+    // 실제 MeetingParticipantController:
+    //
+    // GET /participants/meeting/{meetingId}
     // ============================================================
 
     async function loadParticipantStatus()
@@ -2230,21 +2304,16 @@
 
             const response =
                 await authenticatedFetch(
-                    "/meetings/"
+                    "/participants/meeting/"
                     + currentMeetingId
-                    + "/participants"
                 );
 
 
-            /*
-             * 현재 API가 없더라도
-             * WebSocket에는 영향 없음.
-             */
             if (!response.ok)
             {
 
                 console.warn(
-                    "[PARTICIPANT] 참가자 조회 API 미연결:",
+                    "[PARTICIPANT] 참가자 조회 실패:",
                     response.status
                 );
 
@@ -2342,20 +2411,18 @@
                                       <span class="participant-me">
                                           나
                                       </span>
-                                      `
+                                  `
                                 : ""
                         }
 
                         </div>
 
                         <span
-                            class="
-                                ${
+                            class="${
                             completed
                                 ? "status-complete"
                                 : "status-waiting"
-                        }
-                            ">
+                        }">
 
                             ${
                             completed
@@ -2849,14 +2916,20 @@
     // ============================================================
     // 장소 저장
     //
-    // ★ participantId를 프론트에서 사용하지 않는다.
+    // 1. JWT + meetingId로 현재 participant 조회
     //
-    // meetingId
-    // +
-    // JWT userId
+    // GET
+    // /participants/meetings/{meetingId}/participants/me
     //
-    // 를 이용하여 Spring 백엔드 애플리케이션에서
-    // participantId를 찾는 최종 구조.
+    // 2. participantId로 위치 저장
+    //
+    // PUT
+    // /participants/{participantId}/location
+    //
+    // 3. 희망 장소가 있으면
+    //
+    // POST
+    // /participants/{participantId}/candidate
     // ============================================================
 
     async function saveAll()
@@ -2918,21 +2991,44 @@
         try
         {
 
-            /*
-             * 최종 통합 URL
-             *
-             * JWT userId
-             * +
-             * meetingId
-             *
-             * → Spring 백엔드에서 participantId 자동 조회
-             */
+            // ----------------------------------------------------
+            // 1. 현재 로그인 사용자의 participant 조회
+            // ----------------------------------------------------
+
+            const participant =
+                await getCurrentParticipant();
+
+
+            const participantId =
+                participant.participantId;
+
+
+            if (!participantId)
+            {
+
+                throw new Error(
+                    "참가자 ID를 확인할 수 없습니다."
+                );
+
+            }
+
+
+            console.log(
+                "[PLACE SAVE] participantId =",
+                participantId
+            );
+
+
+
+            // ----------------------------------------------------
+            // 2. 출발 / 귀가 장소 저장
+            // ----------------------------------------------------
 
             const locationResponse =
                 await authenticatedFetch(
-                    "/meetings/"
-                    + currentMeetingId
-                    + "/participants/me/location",
+                    "/participants/"
+                    + participantId
+                    + "/location",
                     {
 
                         method:
@@ -2971,14 +3067,31 @@
                     await locationResponse.text();
 
 
+                console.error(
+                    "[LOCATION SAVE FAILED]",
+                    "status =",
+                    locationResponse.status,
+                    "response =",
+                    text
+                );
+
+
                 throw new Error(
                     text
-                    || "위치 저장 API가 아직 연결되지 않았습니다."
+                    || (
+                        "위치 저장에 실패했습니다. ("
+                        + locationResponse.status
+                        + ")"
+                    )
                 );
 
             }
 
 
+
+            // ----------------------------------------------------
+            // 3. 희망 장소 저장
+            // ----------------------------------------------------
 
             if (selectedCandidate)
             {
@@ -2990,9 +3103,9 @@
 
                 const candidateResponse =
                     await authenticatedFetch(
-                        "/meetings/"
-                        + currentMeetingId
-                        + "/participants/me/candidate",
+                        "/participants/"
+                        + participantId
+                        + "/candidate",
                         {
 
                             method:
@@ -3028,14 +3141,28 @@
                         await candidateResponse.text();
 
 
+                    console.error(
+                        "[CANDIDATE SAVE FAILED]",
+                        "status =",
+                        candidateResponse.status,
+                        "response =",
+                        text
+                    );
+
+
                     throw new Error(
                         text
-                        || "희망 장소 저장 API가 아직 연결되지 않았습니다."
+                        || (
+                            "희망 장소 저장에 실패했습니다. ("
+                            + candidateResponse.status
+                            + ")"
+                        )
                     );
 
                 }
 
             }
+
 
 
             showToast(
@@ -3044,6 +3171,11 @@
             );
 
 
+            // 현재 participant 정보 다시 갱신
+            await getCurrentParticipant();
+
+
+            // 참가자 현황 다시 조회
             await loadParticipantStatus();
 
         }
@@ -3145,9 +3277,6 @@
                     brokerUrl,
 
 
-                    /*
-                     * 재연결할 때도 최신 Access Token 사용
-                     */
                     beforeConnect:
                         async function()
                         {
@@ -3187,9 +3316,6 @@
                     },
 
 
-                    /*
-                     * 연결이 끊어지면 5초 뒤 재연결
-                     */
                     reconnectDelay:
                         5000,
 
@@ -3289,9 +3415,6 @@
 
 
 
-                            /*
-                             * DB에 저장된 기존 채팅 복원
-                             */
                             await loadChatHistory();
 
                         },
@@ -3592,24 +3715,6 @@
 
 
 
-        /*
-         * 중요
-         *
-         * 프론트에서는:
-         *
-         * userId X
-         * participantId X
-         *
-         * content만 전송.
-         *
-         * 사용자:
-         * JWT
-         *
-         * participantId:
-         * Spring 백엔드에서
-         * meetingId + JWT userId로 조회.
-         */
-
         stompClient.publish(
             {
 
@@ -3792,15 +3897,15 @@
                 "none";
 
 
+            // --------------------------------------------------------
+            // 1. 모임 전체 후보 계산
+            // --------------------------------------------------------
 
             const calculationResponse =
                 await authenticatedFetch(
                     `/calculations/meeting?meetingId=${currentMeetingId}`,
                     {
-
-                        method:
-                            "POST"
-
+                        method: "POST"
                     }
                 );
 
@@ -3820,6 +3925,9 @@
             }
 
 
+            // --------------------------------------------------------
+            // 2. 추천 순위 조회
+            // --------------------------------------------------------
 
             const rankingResponse =
                 await authenticatedFetch(
@@ -3842,9 +3950,14 @@
             }
 
 
-
             const rankings =
                 await rankingResponse.json();
+
+
+            console.log(
+                "[RANKING RESULT]",
+                rankings
+            );
 
 
             loading.style.display =
@@ -3855,28 +3968,50 @@
                 "block";
 
 
-            result.textContent =
-                "추천 결과 "
-                + rankings.length
-                + "건 조회 완료";
+            // --------------------------------------------------------
+            // 3. 추천 카드 출력
+            // --------------------------------------------------------
 
-
-            /*
-             * 래원 코드 병합 후:
-             *
-             * renderRanking(rankings);
-             */
+            renderRanking(
+                rankings
+            );
 
         }
         catch (error)
         {
 
+            console.error(
+                "[RANKING ERROR]",
+                error
+            );
+
+
             loading.style.display =
                 "none";
 
 
             result.style.display =
                 "block";
+
+
+            result.style.padding =
+                "40px";
+
+
+            result.style.border =
+                "1px solid #ddd";
+
+
+            result.style.borderRadius =
+                "12px";
+
+
+            result.style.textAlign =
+                "center";
+
+
+            result.style.color =
+                "#b71c1c";
 
 
             result.textContent =
@@ -3892,6 +4027,773 @@
 
     }
 
+
+
+    // ============================================================
+    // 추천 결과 렌더링
+    //
+    // - recommendationRank 1위 = 최종 추천
+    // - fairnessGapMinutes가 가장 작은 장소 딱 1개 = 공정성 BEST
+    // - 동점이면 recommendationRank가 높은 장소 우선
+    // ============================================================
+
+    function renderRanking(
+        rankings
+    )
+    {
+
+        const resultDiv =
+            document.getElementById(
+                "rankingResult"
+            );
+
+
+        if (!resultDiv)
+        {
+            return;
+        }
+
+
+        // --------------------------------------------------------
+        // 결과 없음
+        // --------------------------------------------------------
+
+        if (
+            !rankings
+            ||
+            rankings.length === 0
+        )
+        {
+
+            resultDiv.style.padding =
+                "40px";
+
+
+            resultDiv.style.border =
+                "1px solid #ddd";
+
+
+            resultDiv.style.borderRadius =
+                "12px";
+
+
+            resultDiv.style.textAlign =
+                "center";
+
+
+            resultDiv.style.color =
+                "#777";
+
+
+            resultDiv.innerHTML =
+                "추천 가능한 장소가 없습니다.";
+
+
+            return;
+
+        }
+
+
+        // --------------------------------------------------------
+        // 순위 정렬
+        // --------------------------------------------------------
+
+        const sortedRankings =
+            [...rankings]
+                .sort(
+                    (a, b) =>
+                    {
+
+                        const rankA =
+                            a.recommendationRank
+                            ?? Number.MAX_SAFE_INTEGER;
+
+
+                        const rankB =
+                            b.recommendationRank
+                            ?? Number.MAX_SAFE_INTEGER;
+
+
+                        return rankA - rankB;
+
+                    }
+                );
+
+
+        // --------------------------------------------------------
+        // 공정성 BEST 딱 1곳 결정
+        //
+        // fairnessGapMinutes 최소
+        // → 동점이면 추천 순위 높은 장소
+        // --------------------------------------------------------
+
+        const fairnessCandidates =
+            sortedRankings
+                .filter(
+                    item =>
+                        item.fairnessGapMinutes
+                        != null
+                );
+
+
+        let fairnessBestCandidateId =
+            null;
+
+
+        if (fairnessCandidates.length > 0)
+        {
+
+            const fairnessBest =
+                [...fairnessCandidates]
+                    .sort(
+                        (a, b) =>
+                        {
+
+                            const gapDifference =
+                                a.fairnessGapMinutes
+                                - b.fairnessGapMinutes;
+
+
+                            if (gapDifference !== 0)
+                            {
+                                return gapDifference;
+                            }
+
+
+                            const rankA =
+                                a.recommendationRank
+                                ?? Number.MAX_SAFE_INTEGER;
+
+
+                            const rankB =
+                                b.recommendationRank
+                                ?? Number.MAX_SAFE_INTEGER;
+
+
+                            if (rankA !== rankB)
+                            {
+                                return rankA - rankB;
+                            }
+
+
+                            return (
+                                (a.candidateId ?? 0)
+                                -
+                                (b.candidateId ?? 0)
+                            );
+
+                        }
+                    )[0];
+
+
+            fairnessBestCandidateId =
+                fairnessBest.candidateId;
+
+        }
+
+
+        // --------------------------------------------------------
+        // 기존 placeholder 스타일 제거
+        // --------------------------------------------------------
+
+        resultDiv.innerHTML =
+            "";
+
+
+        resultDiv.style.padding =
+            "0";
+
+
+        resultDiv.style.border =
+            "none";
+
+
+        resultDiv.style.borderRadius =
+            "0";
+
+
+        resultDiv.style.textAlign =
+            "left";
+
+
+        resultDiv.style.color =
+            "#222";
+
+
+        // --------------------------------------------------------
+        // 후보별 카드
+        // --------------------------------------------------------
+
+        sortedRankings.forEach(
+            item =>
+            {
+
+                const isTopRecommendation =
+                    item.recommendationRank === 1;
+
+
+                const isFairnessBest =
+                    item.candidateId
+                    === fairnessBestCandidateId;
+
+
+                const card =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                card.style.border =
+                    isTopRecommendation
+                        ? "2px solid #222"
+                        : "1px solid #ddd";
+
+
+                card.style.borderRadius =
+                    "12px";
+
+
+                card.style.padding =
+                    "22px";
+
+
+                card.style.marginBottom =
+                    "16px";
+
+
+                card.style.background =
+                    isTopRecommendation
+                        ? "#fafafa"
+                        : "#fff";
+
+
+                // ----------------------------------------------------
+                // 배지
+                // ----------------------------------------------------
+
+                let badges =
+                    "";
+
+
+                if (isTopRecommendation)
+                {
+
+                    badges +=
+                        `
+                    <span style="
+                        display:inline-block;
+                        padding:5px 10px;
+                        margin-left:8px;
+                        border-radius:15px;
+                        background:#222;
+                        color:white;
+                        font-size:12px;
+                        font-weight:bold;
+                    ">
+                        최종 추천
+                    </span>
+                    `;
+
+                }
+
+
+                if (isFairnessBest)
+                {
+
+                    badges +=
+                        `
+                    <span style="
+                        display:inline-block;
+                        padding:5px 10px;
+                        margin-left:8px;
+                        border:1px solid #555;
+                        border-radius:15px;
+                        background:white;
+                        color:#333;
+                        font-size:12px;
+                        font-weight:bold;
+                    ">
+                        공정성 BEST
+                    </span>
+                    `;
+
+                }
+
+
+                if (item.allReturnable === true)
+                {
+
+                    badges +=
+                        `
+                    <span style="
+                        display:inline-block;
+                        padding:5px 10px;
+                        margin-left:8px;
+                        border-radius:15px;
+                        background:#e8f5e9;
+                        color:#1b5e20;
+                        font-size:12px;
+                        font-weight:bold;
+                    ">
+                        전원 귀가 가능
+                    </span>
+                    `;
+
+                }
+
+
+                // ----------------------------------------------------
+                // 참가자 결과
+                // ----------------------------------------------------
+
+                let participantHtml =
+                    "";
+
+
+                const participantResults =
+                    item.participantResults
+                    || [];
+
+
+                if (participantResults.length > 0)
+                {
+
+                    participantHtml +=
+                        `
+                    <details
+                        style="
+                            margin-top:18px;
+                            padding-top:15px;
+                            border-top:1px solid #eee;
+                        "
+                    >
+
+                        <summary
+                            style="
+                                cursor:pointer;
+                                font-weight:bold;
+                                padding:5px 0;
+                            "
+                        >
+                            참가자별 귀가 결과
+                            (${participantResults.length}명)
+                        </summary>
+                    `;
+
+
+                    participantResults.forEach(
+                        participant =>
+                        {
+
+                            const returnStatus =
+                                participant.canReturn
+                                    ? `
+                                    <span
+                                        style="
+                                            color:#18864b;
+                                            font-weight:bold;
+                                        "
+                                    >
+                                        귀가 가능
+                                    </span>
+                                  `
+                                    : `
+                                    <span
+                                        style="
+                                            color:#b71c1c;
+                                            font-weight:bold;
+                                        "
+                                    >
+                                        귀가 불가
+                                    </span>
+                                  `;
+
+
+                            participantHtml +=
+                                `
+                            <div
+                                style="
+                                    margin-top:12px;
+                                    padding:14px;
+                                    background:#f7f7f7;
+                                    border-radius:8px;
+                                    line-height:1.8;
+                                "
+                            >
+
+                                <strong>
+                                    참가자 ${escapeHtml(
+                                    participant.participantId
+                                )}
+                                </strong>
+
+                                &nbsp;
+
+                                ${returnStatus}
+
+                                <br>
+
+                                귀가시간 :
+                                ${displayValue(
+                                    participant.returnMinutes,
+                                    "분"
+                                )}
+
+                                <br>
+
+                                환승 횟수 :
+                                ${displayValue(
+                                    participant.transferCount,
+                                    "회"
+                                )}
+
+                                <br>
+
+                                안전 출발 마감 :
+                                ${displayDateTime(
+                                    participant.lastSafeDepartureAt
+                                )}
+
+                                <br>
+
+                                막차 출발 :
+                                ${displayDateTime(
+                                    participant.lastTrainDepartureAt
+                                )}
+
+                                <br>
+
+                                막차 도착 :
+                                ${displayDateTime(
+                                    participant.lastTrainArrivalAt
+                                )}
+
+                            </div>
+                            `;
+
+                        }
+                    );
+
+
+                    participantHtml +=
+                        `
+                    </details>
+                    `;
+
+                }
+                else
+                {
+
+                    participantHtml =
+                        `
+                    <div
+                        style="
+                            margin-top:18px;
+                            padding-top:15px;
+                            border-top:1px solid #eee;
+                            color:#888;
+                        "
+                    >
+                        참가자별 귀가 결과가 없습니다.
+                    </div>
+                    `;
+
+                }
+
+
+                // ----------------------------------------------------
+                // 카드 본문
+                // ----------------------------------------------------
+
+                card.innerHTML =
+                    `
+                <div
+                    style="
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:flex-start;
+                        gap:15px;
+                        margin-bottom:15px;
+                    "
+                >
+
+                    <div>
+
+                        <div
+                            style="
+                                font-size:20px;
+                                font-weight:bold;
+                                margin-bottom:6px;
+                            "
+                        >
+                            ${escapeHtml(
+                        item.recommendationRank
+                        ?? "-"
+                    )}위
+
+                            ${escapeHtml(
+                        item.placeName
+                        ?? "장소명 없음"
+                    )}
+
+                            ${badges}
+                        </div>
+
+
+                        <div
+                            style="
+                                color:#777;
+                                font-size:14px;
+                            "
+                        >
+                            ${escapeHtml(
+                        item.address
+                        ?? ""
+                    )}
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    style="
+                        display:grid;
+                        grid-template-columns:
+                            repeat(2, 1fr);
+                        gap:10px;
+                        margin-top:15px;
+                    "
+                >
+
+                    <div
+                        style="
+                            padding:14px;
+                            background:#f7f7f7;
+                            border-radius:8px;
+                        "
+                    >
+                        <div
+                            style="
+                                color:#777;
+                                font-size:12px;
+                                margin-bottom:5px;
+                            "
+                        >
+                            Deadline
+                        </div>
+
+                        <strong>
+                            ${displayDateTime(
+                        item.deadlineAt
+                    )}
+                        </strong>
+                    </div>
+
+
+                    <div
+                        style="
+                            padding:14px;
+                            background:#f7f7f7;
+                            border-radius:8px;
+                        "
+                    >
+                        <div
+                            style="
+                                color:#777;
+                                font-size:12px;
+                                margin-bottom:5px;
+                            "
+                        >
+                            Golden Margin
+                        </div>
+
+                        <strong>
+                            ${displayValue(
+                        item.goldenMarginMinutes,
+                        "분"
+                    )}
+                        </strong>
+                    </div>
+
+
+                    <div
+                        style="
+                            padding:14px;
+                            background:#f7f7f7;
+                            border-radius:8px;
+                        "
+                    >
+                        <div
+                            style="
+                                color:#777;
+                                font-size:12px;
+                                margin-bottom:5px;
+                            "
+                        >
+                            평균 귀가시간
+                        </div>
+
+                        <strong>
+                            ${
+                        item.averageReturnMinutes == null
+                            ? "-"
+                            : (
+                                Math.round(
+                                    item.averageReturnMinutes
+                                )
+                                + "분"
+                            )
+                    }
+                        </strong>
+                    </div>
+
+
+                    <div
+                        style="
+                            padding:14px;
+                            background:#f7f7f7;
+                            border-radius:8px;
+                        "
+                    >
+                        <div
+                            style="
+                                color:#777;
+                                font-size:12px;
+                                margin-bottom:5px;
+                            "
+                        >
+                            귀가시간 편차
+                        </div>
+
+                        <strong>
+                            ${displayValue(
+                        item.fairnessGapMinutes,
+                        "분"
+                    )}
+                        </strong>
+                    </div>
+
+
+                    <div
+                        style="
+                            padding:14px;
+                            background:#f7f7f7;
+                            border-radius:8px;
+                        "
+                    >
+                        <div
+                            style="
+                                color:#777;
+                                font-size:12px;
+                                margin-bottom:5px;
+                            "
+                        >
+                            Fairness Score
+                        </div>
+
+                        <strong>
+                            ${displayValue(
+                        item.fairnessScore,
+                        "점"
+                    )}
+                        </strong>
+                    </div>
+
+
+                    <div
+                        style="
+                            padding:14px;
+                            background:#f7f7f7;
+                            border-radius:8px;
+                        "
+                    >
+                        <div
+                            style="
+                                color:#777;
+                                font-size:12px;
+                                margin-bottom:5px;
+                            "
+                        >
+                            Rule Score
+                        </div>
+
+                        <strong>
+                            ${
+                        item.ruleScore == null
+                            ? "-"
+                            : Number(
+                                item.ruleScore
+                            ).toFixed(1)
+                    }
+                        </strong>
+                    </div>
+
+                </div>
+
+
+                ${participantHtml}
+                `;
+
+
+                resultDiv.appendChild(
+                    card
+                );
+
+            }
+        );
+
+    }
+
+
+
+    // ============================================================
+    // 추천 화면 표시용 Util
+    // ============================================================
+
+    function displayValue(
+        value,
+        suffix = ""
+    )
+    {
+
+        if (
+            value === null
+            ||
+            value === undefined
+        )
+        {
+            return "-";
+        }
+
+
+        return (
+            escapeHtml(value)
+            + suffix
+        );
+
+    }
+
+
+    function displayDateTime(
+        value
+    )
+    {
+
+        if (!value)
+        {
+            return "-";
+        }
+
+
+        return escapeHtml(
+            formatDateTime(
+                value
+            )
+        );
+
+    }
 
 
     // ============================================================
@@ -3927,7 +4829,7 @@
             )
 
             .replaceAll(
-                "\"",
+                '"',
                 "&quot;"
             )
 
