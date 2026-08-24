@@ -207,6 +207,16 @@ public class OdsayTransitClient {
             }
         }
 
+        /*
+         * 지하철 구간이 없으면
+         * 철도/고속버스 등 현재 MVP 미지원 경로
+         */
+        if (startStationId == null || endStationId == null) {
+            throw new IllegalStateException(
+                    "현재 서비스는 버스·지하철 기반 귀가 경로만 지원합니다."
+            );
+        }
+
 
         /*
          * 지하철 구간이
