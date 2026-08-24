@@ -55,7 +55,7 @@ public class KakaoOAuthController {
                         .build()
                         .toUriString();
 
-
+        System.out.println("카카오 로그인 URL = " + kakaoLoginUrl);
         return "redirect:"
                 + kakaoLoginUrl;
     }

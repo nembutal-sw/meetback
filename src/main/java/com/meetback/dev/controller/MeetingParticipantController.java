@@ -1,10 +1,14 @@
 package com.meetback.dev.controller;
 
 import com.meetback.dev.domain.MeetingParticipant;
+import com.meetback.dev.dto.CurrentParticipantResponse;
 import com.meetback.dev.dto.ParticipantLocationRequestDTO;
+import com.meetback.dev.security.dev.DevAuthenticatedUser;
 import com.meetback.dev.service.MeetingParticipantService;
+import com.meetback.dev.service.ParticipantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +19,7 @@ import java.util.List;
 public class MeetingParticipantController {
 
     private final MeetingParticipantService meetingParticipantService;
+    private final ParticipantService participantService;
 
 
     @GetMapping("/{participantId}")
@@ -81,7 +86,6 @@ public class MeetingParticipantController {
         );
     }
 
-
     /*
      * 모임 참가자 전체 조회
      */
@@ -92,6 +96,22 @@ public class MeetingParticipantController {
 
         return meetingParticipantService.findByMeetingId(
                 meetingId
+        );
+    }
+
+    @GetMapping("/meetings/{meetingId}/participants/me")
+    public CurrentParticipantResponse getCurrentParticipant(
+
+            @PathVariable Long meetingId,
+
+            @AuthenticationPrincipal
+            DevAuthenticatedUser user
+
+    ) {
+
+        return participantService.getCurrentParticipant(
+                meetingId,
+                user.userId()
         );
     }
 }

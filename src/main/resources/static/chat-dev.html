@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MeetBack 채팅 테스트</title>
+
+    <!-- STOMP Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+</head>
+
+<body>
+
+<h1>MeetBack WebSocket 채팅 테스트</h1>
+
+<hr>
+
+<div>
+    <h3>현재 로그인 정보</h3>
+    <div id="userInfo"></div>
+</div>
+
+<hr>
+
+<div>
+    <label for="meetingId">
+        Meeting ID
+    </label>
+
+    <input
+            type="number"
+            id="meetingId"
+            value="3"
+    >
+
+    <button
+            type="button"
+            id="connectButton"
+    >
+        WebSocket 연결
+    </button>
+
+    <button
+            type="button"
+            id="disconnectButton"
+    >
+        연결 종료
+    </button>
+</div>
+
+<br>
+
+<div>
+    연결 상태 :
+    <strong id="connectionStatus">
+        DISCONNECTED
+    </strong>
+</div>
+
+<hr>
+
+<div>
+    <input
+            type="text"
+            id="messageInput"
+            placeholder="메시지를 입력하세요"
+    >
+
+    <button
+            type="button"
+            id="sendButton"
+    >
+        전송
+    </button>
+</div>
+
+<hr>
+
+<h3>채팅 메시지</h3>
+
+<div
+        id="messageList"
+        style="
+            border: 1px solid #aaa;
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 10px;
+        "
+>
+</div>
+
+
+<script>
+
+    // ============================================================
+    // [TEMP-BKW-WEBSOCKET-TEST]
+    //
+    // 실제 로그인 JWT를 이용한
+    // WebSocket + STOMP + DB 채팅 테스트 페이지.
+    //
+    // 범석 Security 최종 코드 및 실제 프론트엔드 병합 후
+    // 삭제 가능한 테스트 페이지.
+    // ============================================================
+
+
+    // ------------------------------------------------------------
+    // WebSocket / STOMP 관련 변수
+    // ------------------------------------------------------------
+
+    let stompClient = null;
+
+    let subscription = null;
+
+
+    // ------------------------------------------------------------
+    // 로그인 시 localStorage에 저장했던 정보
+    // ------------------------------------------------------------
+
+    const accessToken =
+        localStorage.getItem(
+            "accessToken"
+        );
+
+    const userId =
+        localStorage.getItem(
+            "userId"
+        );
+
+    const role =
+        localStorage.getItem(
+            "role"
+        );
+
+
+    // ------------------------------------------------------------
+    // HTML 요소
+    // ------------------------------------------------------------
+
+    const userInfo =
+        document.getElementById(
+            "userInfo"
+        );
+
+    const meetingIdInput =
+        document.getElementById(
+            "meetingId"
+        );
+
+    const connectButton =
+        document.getElementById(
+            "connectButton"
+        );
+
+    const disconnectButton =
+        document.getElementById(
+            "disconnectButton"
+        );
+
+    const connectionStatus =
+        document.getElementById(
+            "connectionStatus"
+        );
+
+    const messageInput =
+        document.getElementById(
+            "messageInput"
+        );
+
+    const sendButton =
+        document.getElementById(
+            "sendButton"
+        );
+
+    const messageList =
+        document.getElementById(
+            "messageList"
+        );
+
+
+    // ============================================================
+    // 로그인 정보 확인
+    // ============================================================
+
+    if (!accessToken)
+    {
+        alert(
+            "Access Token이 없습니다. 먼저 로그인해주세요."
+        );
+
+        window.location.href =
+            "/login";
+    }
+    else
+    {
+        userInfo.innerText =
+            "userId = "
+            + userId
+            + " / role = "
+            + role;
+    }
+
+
+    // ============================================================
+    // 이전에 사용한 Meeting ID 복구
+    //
+    // 새로고침해도 3 같은 meetingId를 다시 사용하도록 저장
+    // ============================================================
+
+    const savedMeetingId =
+        localStorage.getItem(
+            "chatMeetingId"
+        );
+
+    if (savedMeetingId)
+    {
+        meetingIdInput.value =
+            savedMeetingId;
+    }
+
+
+    // ============================================================
+    // 이전 채팅 내역 조회
+    //
+    // WebSocket이 아니라 일반 HTTP REST 요청
+    // ============================================================
+
+    async function loadHistory()
+    {
+        const meetingId =
+            meetingIdInput.value;
+
+
+        if (!meetingId)
+        {
+            return;
+        }
+
+
+        try
+        {
+            console.log(
+                "[HISTORY] 이전 채팅 조회 시작"
+            );
+
+
+            const response =
+                await fetch(
+                    "/meetings/"
+                    + meetingId
+                    + "/messages",
+                    {
+                        method: "GET",
+
+                        headers: {
+                            "Authorization":
+                                "Bearer "
+                                + accessToken
+                        }
+                    }
+                );
+
+
+            if (!response.ok)
+            {
+                console.error(
+                    "[HISTORY] 조회 실패 : ",
+                    response.status
+                );
+
+                return;
+            }
+
+
+            const messages =
+                await response.json();
+
+
+            console.log(
+                "[HISTORY] 조회 결과",
+                messages
+            );
+
+
+            // 기존 화면 초기화
+            messageList.innerHTML =
+                "";
+
+
+            // DB에서 조회한 채팅 메시지들을 화면에 출력
+            messages.forEach(
+                function(message)
+                {
+                    addMessage(
+                        message
+                    );
+                }
+            );
+
+
+            console.log(
+                "[HISTORY] "
+                + messages.length
+                + "건 불러오기 완료"
+            );
+        }
+        catch (error)
+        {
+            console.error(
+                "[HISTORY] 조회 오류",
+                error
+            );
+        }
+    }
+
+
+    // ============================================================
+    // WebSocket 연결
+    //
+    // 기존에는 연결 버튼 안에 코드가 있었지만
+    // 새로고침 후에도 자동 연결하기 위해 함수로 분리
+    // ============================================================
+
+    function connectWebSocket()
+    {
+        const meetingId =
+            meetingIdInput.value;
+
+
+        if (!meetingId)
+        {
+            alert(
+                "Meeting ID를 입력해주세요."
+            );
+
+            return;
+        }
+
+
+        // 현재 meetingId 저장
+        // F5 이후에도 같은 모임으로 다시 연결하기 위함
+        localStorage.setItem(
+            "chatMeetingId",
+            meetingId
+        );
+
+
+        // 이미 연결되어 있거나 연결 시도 중이면 중복 연결 차단
+        if (
+            stompClient
+            &&
+            stompClient.active
+        )
+        {
+            console.log(
+                "[STOMP] 이미 연결되어 있습니다."
+            );
+
+            return;
+        }
+
+
+        // HTTP → ws
+        // HTTPS → wss
+        const protocol =
+            location.protocol === "https:"
+                ? "wss"
+                : "ws";
+
+
+        // ========================================================
+        // STOMP Client 생성
+        // ========================================================
+
+        stompClient =
+            new StompJs.Client(
+                {
+
+                    // WebSocketConfig의 /ws Endpoint
+                    brokerURL:
+                        protocol
+                        + "://"
+                        + location.host
+                        + "/ws",
+
+
+                    // STOMP CONNECT할 때 JWT 전달
+                    //
+                    // JwtChannelInterceptor가
+                    // 이 Authorization Header를 검사함
+                    connectHeaders:
+                        {
+                            "Authorization":
+                                "Bearer "
+                                + accessToken
+                        },
+
+
+                    // 네트워크가 끊긴 경우
+                    // 5초 후 자동 재접속
+                    reconnectDelay:
+                        5000,
+
+
+                    debug:
+                        function(message)
+                        {
+                            console.log(
+                                "[STOMP]",
+                                message
+                            );
+                        },
+
+
+                    // =================================================
+                    // STOMP CONNECT 성공
+                    // =================================================
+
+                    onConnect:
+                        async function(frame)
+                        {
+                            console.log(
+                                "[STOMP] CONNECT 성공",
+                                frame
+                            );
+
+
+                            connectionStatus.innerText =
+                                "CONNECTED";
+
+
+                            const topic =
+                                "/topic/meetings/"
+                                + meetingId
+                                + "/chat";
+
+
+                            console.log(
+                                "[STOMP] 구독 시작 : ",
+                                topic
+                            );
+
+
+                            // =========================================
+                            // 1. 실시간 메시지 구독
+                            // =========================================
+
+                            subscription =
+                                stompClient.subscribe(
+                                    topic,
+                                    function(message)
+                                    {
+                                        console.log(
+                                            "[STOMP] 메시지 수신",
+                                            message.body
+                                        );
+
+
+                                        const data =
+                                            JSON.parse(
+                                                message.body
+                                            );
+
+
+                                        addMessage(
+                                            data
+                                        );
+                                    }
+                                );
+
+
+                            // =========================================
+                            // 2. DB에 저장된 이전 메시지 조회
+                            // =========================================
+
+                            await loadHistory();
+                        },
+
+
+                    // =================================================
+                    // STOMP ERROR
+                    // =================================================
+
+                    onStompError:
+                        function(frame)
+                        {
+                            console.error(
+                                "[STOMP] ERROR",
+                                frame
+                            );
+
+
+                            connectionStatus.innerText =
+                                "STOMP ERROR";
+                        },
+
+
+                    // =================================================
+                    // WebSocket ERROR
+                    // =================================================
+
+                    onWebSocketError:
+                        function(error)
+                        {
+                            console.error(
+                                "[WebSocket] ERROR",
+                                error
+                            );
+
+
+                            connectionStatus.innerText =
+                                "WEBSOCKET ERROR";
+                        },
+
+
+                    // =================================================
+                    // WebSocket 연결 자체가 닫힘
+                    // =================================================
+
+                    onWebSocketClose:
+                        function()
+                        {
+                            console.log(
+                                "[WebSocket] 연결 종료"
+                            );
+
+
+                            connectionStatus.innerText =
+                                "DISCONNECTED";
+                        }
+
+                }
+            );
+
+
+        // 실제 WebSocket / STOMP 연결 시작
+        stompClient.activate();
+    }
+
+
+    // ============================================================
+    // 연결 버튼
+    // ============================================================
+
+    connectButton.addEventListener(
+        "click",
+        function()
+        {
+            connectWebSocket();
+        }
+    );
+
+
+    // ============================================================
+    // 메시지 전송
+    // ============================================================
+
+    function sendMessage()
+    {
+        if (
+            !stompClient
+            ||
+            !stompClient.connected
+        )
+        {
+            alert(
+                "먼저 WebSocket에 연결해주세요."
+            );
+
+            return;
+        }
+
+
+        const meetingId =
+            meetingIdInput.value;
+
+
+        const content =
+            messageInput.value.trim();
+
+
+        if (!content)
+        {
+            return;
+        }
+
+
+        // /app
+        //
+        // 클라이언트 → Spring
+        //
+        // ChatMessageController의
+        //
+        // @MessageMapping(
+        //     "/meetings/{meetingId}/chat"
+        // )
+        //
+        // 으로 연결됨
+        const destination =
+            "/app/meetings/"
+            + meetingId
+            + "/chat";
+
+
+        console.log(
+            "[STOMP] 메시지 전송",
+            destination,
+            content
+        );
+
+
+        stompClient.publish(
+            {
+                destination:
+                destination,
+
+
+                // 중요
+                //
+                // userId      보내지 않음
+                // participantId 보내지 않음
+                //
+                // userId는 JWT에서 찾고
+                // participantId는 서버 DB에서 찾음
+                body:
+                    JSON.stringify(
+                        {
+                            content:
+                            content
+                        }
+                    )
+            }
+        );
+
+
+        messageInput.value =
+            "";
+
+
+        messageInput.focus();
+    }
+
+
+    // ============================================================
+    // 전송 버튼
+    // ============================================================
+
+    sendButton.addEventListener(
+        "click",
+        sendMessage
+    );
+
+
+    // ============================================================
+    // Enter 키 입력 시 전송
+    // ============================================================
+
+    messageInput.addEventListener(
+        "keydown",
+        function(event)
+        {
+            if (event.key === "Enter")
+            {
+                sendMessage();
+            }
+        }
+    );
+
+
+    // ============================================================
+    // 연결 종료
+    // ============================================================
+
+    disconnectButton.addEventListener(
+        "click",
+        async function()
+        {
+            if (!stompClient)
+            {
+                return;
+            }
+
+
+            if (subscription)
+            {
+                subscription.unsubscribe();
+
+                subscription =
+                    null;
+            }
+
+
+            // reconnectDelay가 설정되어 있으므로
+            // 수동 종료 시 deactivate하여 재접속까지 중지
+            await stompClient.deactivate();
+
+
+            stompClient =
+                null;
+
+
+            connectionStatus.innerText =
+                "DISCONNECTED";
+
+
+            console.log(
+                "[STOMP] 사용자가 연결을 종료했습니다."
+            );
+        }
+    );
+
+
+    // ============================================================
+    // 화면에 메시지 출력
+    // ============================================================
+
+    function addMessage(
+        message
+    )
+    {
+        const div =
+            document.createElement(
+                "div"
+            );
+
+
+        div.style.marginBottom =
+            "8px";
+
+
+        div.innerText =
+            "[participant "
+            + message.participantId
+            + "] "
+            + message.content;
+
+
+        messageList.appendChild(
+            div
+        );
+
+
+        messageList.scrollTop =
+            messageList.scrollHeight;
+    }
+
+
+    // ============================================================
+    // ★ 핵심 추가 부분
+    //
+    // 페이지 최초 접속 또는 F5 새로고침 시
+    // Access Token이 존재하면 WebSocket 자동 연결
+    //
+    // localStorage는 F5에도 살아 있으므로
+    // 기존 JWT를 다시 사용할 수 있음
+    // ============================================================
+
+    if (accessToken)
+    {
+        console.log(
+            "[AUTO CONNECT] WebSocket 자동 연결 시작"
+        );
+
+
+        connectWebSocket();
+    }
+
+</script>
+
+</body>
+
+</html>

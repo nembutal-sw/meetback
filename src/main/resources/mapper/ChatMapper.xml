@@ -15,34 +15,87 @@
         participant_id,
         message_type,
         event_type,
-        content
+        content,
+        created_at
         )
         VALUES (
         #{meetingId},
         #{participantId},
         #{messageType},
         #{eventType},
-        #{content}
+        #{content},
+        #{createdAt}
         )
 
     </insert>
 
 
+    <!-- ===================================================== -->
+    <!-- 모임의 전체 채팅 내역 -->
+    <!-- ===================================================== -->
+
     <select id="selectMessages"
-            parameterType="long"
-            resultType="com.meetback.dev.domain.ChatMessage">
+            resultType="com.meetback.dev.dto.ChatMessageResponse">
 
         SELECT
-        message_id,
-        meeting_id,
-        participant_id,
-        message_type,
-        event_type,
-        content,
-        created_at
-        FROM chat_messages
-        WHERE meeting_id = #{meetingId}
-        ORDER BY message_id ASC
+        cm.message_id AS messageId,
+        cm.meeting_id AS meetingId,
+        cm.participant_id AS participantId,
+
+        mp.user_id AS userId,
+
+        u.nickname AS nickname,
+
+        cm.message_type AS messageType,
+        cm.event_type AS eventType,
+        cm.content AS content,
+        cm.created_at AS createdAt
+
+        FROM chat_messages cm
+
+        JOIN meeting_participants mp
+        ON cm.participant_id = mp.participant_id
+
+        JOIN users u
+        ON mp.user_id = u.user_id
+
+        WHERE cm.meeting_id = #{meetingId}
+
+        ORDER BY cm.message_id ASC
+
+    </select>
+
+    <!-- ===================================================== -->
+    <!-- 방금 저장한 메시지 1개 조회 -->
+    <!-- participant -> user JOIN 해서 nickname까지 조회 -->
+    <!-- ===================================================== -->
+
+    <select id="selectMessageById"
+            resultType="com.meetback.dev.dto.ChatMessageResponse">
+
+        SELECT
+            cm.message_id AS messageId,
+            cm.meeting_id AS meetingId,
+            cm.participant_id AS participantId,
+
+            mp.user_id AS userId,
+
+            u.nickname AS nickname,
+
+            cm.message_type AS messageType,
+            cm.event_type AS eventType,
+            cm.content AS content,
+            cm.created_at AS createdAt
+
+        FROM chat_messages cm
+
+        JOIN meeting_participants mp
+        ON cm.participant_id = mp.participant_id
+
+        JOIN users u
+        ON mp.user_id = u.user_id
+
+        WHERE cm.message_id = #{messageId}
 
     </select>
 
