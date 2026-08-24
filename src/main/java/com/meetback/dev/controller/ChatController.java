@@ -1,7 +1,7 @@
 package com.meetback.dev.controller;
 
 import com.meetback.dev.dto.ChatMessageResponse;
-import com.meetback.dev.security.dev.DevAuthenticatedUser;
+import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -31,7 +31,7 @@ public class ChatController {
             // ChatService에는 Long userId만 전달
             // =====================================================
             @AuthenticationPrincipal
-            DevAuthenticatedUser user
+            AuthenticatedUser user
     ) {
 
         return chatService.getMessages(

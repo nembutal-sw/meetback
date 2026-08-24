@@ -50,7 +50,12 @@ public class SecurityConfig {
                                                 "/ws/**",
                                                 "/css/**",
                                                 "/js/**",
-                                                "/images/**"
+                                                "/images/**",
+
+                                                // WebSocket 허가
+                                                "/meeting",
+                                                "/meeting/location-test",
+                                                "/meeting/location-test/**"
                                         )
                                         .permitAll()
 
