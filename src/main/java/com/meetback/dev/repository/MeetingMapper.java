@@ -28,4 +28,6 @@ public interface MeetingMapper {
             @Param("candidateId") Long candidateId,
             @Param("status") MeetingStatus status
     );
+
+    int increaseCalculationVersion(Long meetingId);
 }

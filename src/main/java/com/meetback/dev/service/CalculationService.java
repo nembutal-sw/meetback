@@ -151,6 +151,36 @@ public class CalculationService {
         }
 
 
+        /*
+         * 같은 후보 + 같은 참가자 + 같은 계산 버전이면
+         * 기존 계산 결과 재사용
+         */
+        CandidateReturnResult existingResult =
+                returnResultMapper.findByCandidateAndParticipantAndVersion(
+                        candidateId,
+                        participantId,
+                        calculationVersion
+                );
+
+
+        if (existingResult != null) {
+
+            System.out.println(
+                    "[기존 계산 결과 재사용] candidateId="
+                            + candidateId
+                            + ", participantId="
+                            + participantId
+                            + ", calculationVersion="
+                            + calculationVersion
+            );
+
+            return existingResult;
+        }
+
+
+        /*
+         * 도보 거리 확인
+         */
         if (routeService.isWithinWalkingDistance(
                 participantId,
                 candidateId
@@ -231,6 +261,9 @@ public class CalculationService {
         }
 
 
+        /*
+         * ODsay 일반 귀가 경로 조회
+         */
         TransitRouteDTO route =
                 routeService.searchReturnRoute(
                         participantId,
@@ -238,6 +271,9 @@ public class CalculationService {
                 );
 
 
+        /*
+         * 실제 ODsay 호출 사이 간격은 유지
+         */
         waitForOdsay();
 
 
@@ -252,6 +288,9 @@ public class CalculationService {
                 );
 
 
+        /*
+         * ODsay 막차 조회
+         */
         LastTrainDTO lastTrain =
                 odsaySubwayClient.findLastTrain(
                         route.startStationId(),
@@ -467,11 +506,6 @@ public class CalculationService {
         );
 
 
-        returnResultMapper.deleteByCandidateId(
-                candidateId
-        );
-
-
         List<MeetingParticipant> participants =
                 participantMapper.findByMeetingId(
                         candidate.getMeetingId()
@@ -508,11 +542,6 @@ public class CalculationService {
             results.add(
                     result
             );
-
-
-            if (i < participants.size() - 1) {
-                waitForOdsay();
-            }
         }
 
 
@@ -581,14 +610,6 @@ public class CalculationService {
             currentVersion = 0;
         }
 
-        int nextVersion =
-                currentVersion + 1;
-
-        meetingMapper.updateCalculationVersion(
-                meetingId,
-                nextVersion
-        );
-
 
         List<CandidateEvaluation> evaluations =
                 new ArrayList<>();
@@ -602,7 +623,7 @@ public class CalculationService {
 
             calculateCandidate(
                     candidate.getCandidateId(),
-                    nextVersion
+                    currentVersion
             );
 
 
@@ -623,11 +644,6 @@ public class CalculationService {
             evaluations.add(
                     evaluation
             );
-
-
-            if (i < candidates.size() - 1) {
-                waitForOdsay();
-            }
         }
 
 
@@ -640,7 +656,7 @@ public class CalculationService {
                 "[모임 계산 완료] meetingId="
                         + meetingId
                         + ", calculationVersion="
-                        + nextVersion
+                        + currentVersion
         );
 
 
