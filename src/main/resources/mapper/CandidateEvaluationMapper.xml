@@ -60,14 +60,9 @@
     <select id="findByCandidateId"
             resultType="com.meetback.dev.domain.CandidateEvaluation">
 
-        SELECT ce.*
-        FROM candidate_evaluations ce
-        JOIN meeting_candidates mc
-        ON ce.candidate_id = mc.candidate_id
-        JOIN meetings m
-        ON mc.meeting_id = m.meeting_id
-        WHERE ce.candidate_id = #{candidateId}
-        AND ce.calculation_version = m.calculation_version
+        SELECT *
+        FROM candidate_evaluations
+        WHERE candidate_id = #{candidateId}
 
     </select>
 
