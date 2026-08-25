@@ -1,12 +1,16 @@
 package com.meetback.dev.service;
 
+import com.meetback.dev.domain.Meeting;
 import com.meetback.dev.domain.MeetingParticipant;
+import com.meetback.dev.domain.MeetingStatus;
 import com.meetback.dev.dto.ParticipantLocationRequestDTO;
 import com.meetback.dev.place.client.KakaoLocalClient;
 import com.meetback.dev.place.dto.PlaceDTO;
 import com.meetback.dev.repository.CandidateReturnResultMapper;
+import com.meetback.dev.repository.MeetingMapper;
 import com.meetback.dev.repository.MeetingParticipantMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +25,7 @@ public class MeetingParticipantService {
     private final MeetingParticipantMapper meetingParticipantMapper;
     private final CandidateReturnResultMapper returnResultMapper;
     private final KakaoLocalClient kakaoLocalClient;
+    private final MeetingMapper meetingMapper;
 
 
     public MeetingParticipant findById(
@@ -36,8 +41,53 @@ public class MeetingParticipantService {
     @Transactional
     public void updateLocation(
             Long participantId,
+            Long userId,
             ParticipantLocationRequestDTO request
     ) {
+        // =====================================================
+        // 1. 참가자 확인
+        // =====================================================
+
+        MeetingParticipant participant = getOwnedParticipant(
+                participantId,
+                userId
+        );
+
+        // =====================================================
+        // 2. 모임 상태 확인
+        // =====================================================
+
+        Meeting meeting =
+                meetingMapper.findById(
+                        participant.getMeetingId()
+                );
+
+
+        if (meeting == null) {
+
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+
+        // 투표 시작 후에는 장소 수정 금지
+        if (
+                meeting.getStatus()
+                        != MeetingStatus.INPUT_OPEN
+        ) {
+
+            throw new IllegalStateException(
+                    "투표가 시작된 이후에는 장소를 수정할 수 없습니다."
+            );
+        }
+
+
+        // =====================================================
+        // 3. 여기부터 기존 장소 검색 코드
+        // =====================================================
+
+
 
         List<PlaceDTO> departureResults =
                 kakaoLocalClient.search(
@@ -69,20 +119,6 @@ public class MeetingParticipantService {
 
         PlaceDTO returnPlace =
                 returnResults.get(0);
-
-
-        MeetingParticipant participant =
-                meetingParticipantMapper.findById(
-                        participantId
-                );
-
-
-        if (participant == null) {
-            throw new IllegalArgumentException(
-                    "참가자를 찾을 수 없습니다."
-            );
-        }
-
 
         /*
          * 새 출발 장소 데이터
@@ -283,23 +319,127 @@ public class MeetingParticipantService {
     }
 
 
+    @Transactional
     public void startEdit(
-            Long participantId
+            Long participantId,
+            Long userId
     ) {
 
         MeetingParticipant participant =
-                meetingParticipantMapper.findById(
-                        participantId
+                getOwnedParticipant(
+                        participantId,
+                        userId
                 );
 
-        if (participant == null) {
+
+        Meeting meeting =
+                meetingMapper.findById(
+                        participant.getMeetingId()
+                );
+
+
+        if (meeting == null) {
+
             throw new IllegalArgumentException(
-                    "참가자를 찾을 수 없습니다."
+                    "모임을 찾을 수 없습니다."
             );
         }
+
+
+        if (
+                meeting.getStatus()
+                        != MeetingStatus.INPUT_OPEN
+        ) {
+
+            throw new IllegalStateException(
+                    "투표가 시작된 이후에는 장소를 수정할 수 없습니다."
+            );
+        }
+
 
         meetingParticipantMapper.resetInputToDraft(
                 participantId
         );
     }
+
+    @Transactional
+    public void cancelEdit(
+            Long participantId,
+            Long userId
+    )
+    {
+        getOwnedParticipant(
+                participantId,
+                userId
+        );
+
+
+        meetingParticipantMapper.submitInput(
+                participantId
+        );
+    }
+
+    @Transactional
+    public void submitInput(
+            Long participantId,
+            Long userId
+    )
+    {
+        getOwnedParticipant(
+                participantId,
+                userId
+        );
+
+
+        meetingParticipantMapper.submitInput(
+                participantId
+        );
+    }
+
+    private MeetingParticipant getOwnedParticipant(
+            Long participantId,
+            Long userId
+    )
+    {
+        MeetingParticipant participant =
+                meetingParticipantMapper.findById(
+                        participantId
+                );
+
+
+        if (participant == null)
+        {
+            throw new IllegalArgumentException(
+                    "참가자를 찾을 수 없습니다."
+            );
+        }
+
+
+        if (
+                !Objects.equals(
+                        participant.getUserId(),
+                        userId
+                )
+        )
+        {
+            throw new AccessDeniedException(
+                    "본인의 참가자 정보만 사용할 수 있습니다."
+            );
+        }
+
+
+        return participant;
+    }
+
+    public MeetingParticipant findOwnedById(
+            Long participantId,
+            Long userId
+    )
+    {
+        return getOwnedParticipant(
+                participantId,
+                userId
+        );
+    }
+
 }

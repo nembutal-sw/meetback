@@ -233,4 +233,77 @@ public class MeetingService {
         );
     }
 
+    public MeetingRoomResponse getMeetingRoom(
+            Long meetingId,
+            Long userId
+    )
+    {
+        Meeting meeting = meetingMapper.findById(
+                meetingId
+        );
+
+        if(meeting == null)
+        {
+            throw new IllegalArgumentException(
+                    "존재하지 않는 모임입니다."
+            );
+        }
+
+        int participantCount = participantMapper.countParticipantByMeetingAndUser(
+                meetingId,
+                userId
+        );
+
+        if(participantCount == 0)
+        {
+            throw new IllegalArgumentException(
+                    "해당 모임의 참가자가 아닙니다."
+            );
+        }
+
+        return new MeetingRoomResponse(
+                meeting.getMeetingId(),
+                meeting.getHostUserId(),
+                meeting.getTitle(),
+                meeting.getInviteCode(),
+                meeting.getDesiredEndAt(),
+                meeting.getStatus()
+        );
+    }
+
+    public Meeting getMeeting(
+            Long meetingId,
+            Long userId
+    ) {
+
+        Meeting meeting =
+                meetingMapper.findById(
+                        meetingId
+                );
+
+        if (meeting == null) {
+            throw new IllegalArgumentException(
+                    "존재하지 않는 모임입니다."
+            );
+        }
+
+
+        int participantCount =
+                participantMapper
+                        .countParticipantByMeetingAndUser(
+                                meetingId,
+                                userId
+                        );
+
+
+        if (participantCount == 0) {
+            throw new IllegalStateException(
+                    "해당 모임의 참가자가 아닙니다."
+            );
+        }
+
+
+        return meeting;
+    }
+
 }
