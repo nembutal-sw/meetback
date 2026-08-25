@@ -455,7 +455,7 @@ public class AuthService {
             );
 
             user.setRole(
-                    "USER"
+                    "user"
             );
 
             user.setTokenVersion(
@@ -999,10 +999,6 @@ public class AuthService {
         );
 
         // 기존 user 객체에도 최신 버전 반영
-        user.setRole(
-                updatedUser.getRole()
-        );
-
         user.setTokenVersion(
                 updatedUser.getTokenVersion()
         );
