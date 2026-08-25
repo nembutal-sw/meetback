@@ -91,4 +91,10 @@ public class PageController {
     {
         return "auth/home";
     }
+
+    @GetMapping("/meeting/result")
+    public String meetingResult()
+    {
+        return "meeting/result";
+    }
 }

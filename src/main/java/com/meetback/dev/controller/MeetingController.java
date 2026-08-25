@@ -1,14 +1,16 @@
 package com.meetback.dev.controller;
 
-import com.meetback.dev.dto.FinalCandidateRequest;
-import com.meetback.dev.dto.MeetingCreateRequest;
-import com.meetback.dev.dto.MeetingCreateResponse;
-import com.meetback.dev.dto.MeetingJoinRequest;
+import com.meetback.dev.domain.MeetingRoomResponse;
+import com.meetback.dev.dto.*;
 import com.meetback.dev.security.AuthenticatedUser;
+import com.meetback.dev.service.ChatService;
 import com.meetback.dev.service.MeetingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 
 // ============================================================
@@ -24,6 +26,8 @@ import org.springframework.web.bind.annotation.*;
 public class MeetingController {
 
     private final MeetingService meetingService;
+    private final SimpMessagingTemplate messagingTemplate;
+    private final ChatService chatService;
 
     /*
      * ============================================================
@@ -59,15 +63,44 @@ public class MeetingController {
      */
 
     @PostMapping("/join")
-    public Long joinMeeting(
+    public MeetingJoinResponse joinMeeting(
             @AuthenticationPrincipal AuthenticatedUser user,
             @RequestBody MeetingJoinRequest request
             )
     {
-        return meetingService.joinMeeting(
+
+        MeetingJoinResponse response = meetingService.joinMeeting(
                 user.userId(),
                 request
         );
+
+        /*
+         * 진짜 새 참가자일 때만
+         * 입장 이벤트 발생
+         */
+
+        if(response.newlyJoined())
+        {
+            ChatMessageResponse event =
+                    chatService.saveSystemMessage(
+                            response.meetingId(),
+                            user.userId(),
+                            "PARTICIPANT_JOINED",
+                            "모임에 참가했습니다."
+                    );
+
+
+            messagingTemplate.convertAndSend(
+                    "/topic/meetings/"
+                    + response.meetingId()
+                    + "/chat",
+
+                    event
+            );
+        }
+
+        return response;
+
     }
 
     /*
@@ -108,7 +141,38 @@ public class MeetingController {
             @AuthenticationPrincipal AuthenticatedUser user
             ) {
 
+        // DB 상태
+        // INPUT_OPEN -> VOTING
         meetingService.startVoting(
+                meetingId,
+                user.userId()
+        );
+
+        ChatMessageResponse event =
+                chatService.saveSystemMessage(
+                        meetingId,
+                        user.userId(),
+                        "VOTING_STARTED",
+                        "장소 투표를 시작합니다."
+                );
+
+        messagingTemplate.convertAndSend(
+                "/topic/meetings/"
+                        + meetingId
+                        + "/chat",
+
+                event
+        );
+    }
+
+    @GetMapping("/{meetingId}")
+    public MeetingRoomResponse getMeeting(
+            @PathVariable Long meetingId,
+            @AuthenticationPrincipal
+            AuthenticatedUser user
+    )
+    {
+        return meetingService.getMeetingRoom(
                 meetingId,
                 user.userId()
         );
