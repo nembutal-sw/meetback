@@ -154,7 +154,7 @@ class AuthServiceGoogleLoginTest {
                 .isEqualTo("meetback-refresh-token");
 
         assertThat(response.getRole())
-                .isEqualTo("user");
+                .isEqualTo("USER");
     }
 
     @Test
@@ -173,13 +173,6 @@ class AuthServiceGoogleLoginTest {
         social.setUserId(20L);
 
 
-        User user =
-                new User();
-
-        user.setUserId(20L);
-        user.setRole("user");
-
-
         when(googleIdentityProvider.verifyIdToken("google-id-token"))
                 .thenReturn(googleUserInfo);
 
@@ -187,9 +180,6 @@ class AuthServiceGoogleLoginTest {
                 "GOOGLE",
                 googleUserInfo.getProviderId()
         )).thenReturn(social);
-
-        when(userMapper.selectById(20L))
-                .thenReturn(user);
 
         stubTokenIssue(20L);
 
@@ -343,14 +333,29 @@ class AuthServiceGoogleLoginTest {
             Long userId
     ) {
 
+        User updatedUser =
+                new User();
+
+        updatedUser.setUserId(userId);
+        updatedUser.setRole("USER");
+        updatedUser.setTokenVersion(1);
+
+        when(userMapper.increaseTokenVersion(userId))
+                .thenReturn(1);
+
+        when(userMapper.selectById(userId))
+                .thenReturn(updatedUser);
+
         when(jwtProvider.createAccessToken(
                 userId,
-                "user"
+                "USER",
+                1
         )).thenReturn("meetback-access-token");
 
         when(jwtProvider.createRefreshToken(
                 userId,
-                "user"
+                "USER",
+                1
         )).thenReturn("meetback-refresh-token");
 
         when(jwtProvider.getRefreshTokenExpirationSeconds())
