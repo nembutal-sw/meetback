@@ -1352,18 +1352,30 @@
 
                 }
 
-
                 /*
-                 * 현재 joinMeeting() Controller가
-                 * Long meetingId를 반환하는 구조 기준.
+                 * MeetingJoinResponse
+                 *
+                 * {
+                 *     meetingId: 19,
+                 *     newlyJoined: true
+                 * }
                  */
-                const meetingId =
+
+                const data =
                     await response.json();
+
+
+                const meetingId =
+                    data.meetingId;
+
+
+                const newlyJoined =
+                    data.newlyJoined;
 
 
                 console.log(
                     "[MEETING JOIN]",
-                    meetingId
+                    data
                 );
 
 
@@ -1390,10 +1402,24 @@
                     meetingId;
 
 
-                showHomeMessage(
-                    "모임에 참가했습니다.",
-                    "success"
-                );
+                /*
+                 * 새 참가자인지,
+                 * 이미 참가 중이던 사용자인지 구분
+                 */
+                if (newlyJoined)
+                {
+                    showHomeMessage(
+                        "모임에 참가했습니다.",
+                        "success"
+                    );
+                }
+                else
+                {
+                    showHomeMessage(
+                        "이미 참가 중인 모임입니다.",
+                        "info"
+                    );
+                }
 
             }
             catch (error)

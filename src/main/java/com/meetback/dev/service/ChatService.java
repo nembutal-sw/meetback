@@ -123,4 +123,55 @@ public class ChatService {
                 meetingId
         );
     }
+
+    @Transactional
+    public ChatMessageResponse saveSystemMessage(
+            Long meetingId,
+            Long userId,
+            String eventType,
+            String content
+    )
+    {
+        /*
+         * 이벤트를 발생시킨 사용자의
+         * participantId 조회
+         */
+        MeetingParticipant participant =
+                participantMapper.findByMeetingAndUser(
+                        meetingId,
+                        userId
+                );
+
+        if(participant == null)
+        {
+            throw new IllegalArgumentException(
+                    "해당 모임의 참가자가 아닙니다."
+            );
+        }
+
+        ChatMessage message = new ChatMessage();
+
+        message.setMeetingId(meetingId);
+        message.setParticipantId(participant.getParticipantId());
+        message.setMessageType("SYSTEM");
+        message.setEventType(eventType);
+        message.setContent(content);
+        message.setCreatedAt(LocalDateTime.now());
+
+        /*
+         * SYSTEM 메시지도 일반 채팅과 같은
+         * chat_messages 테이블에 저장
+         */
+
+        chatMapper.insertMessage(message);
+
+        /*
+         * participant + users JOIN
+         *
+         * nickname까지 포함해서 반환
+         */
+        return chatMapper.selectMessageById(
+                message.getMessageId()
+        );
+    }
 }

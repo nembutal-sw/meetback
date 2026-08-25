@@ -1,16 +1,15 @@
 package com.meetback.dev.service;
 
 import com.meetback.dev.domain.*;
-import com.meetback.dev.dto.FinalCandidateRequest;
-import com.meetback.dev.dto.MeetingJoinRequest;
+import com.meetback.dev.dto.*;
 import com.meetback.dev.repository.CandidateMapper;
 import com.meetback.dev.repository.MeetingMapper;
-import com.meetback.dev.dto.MeetingCreateRequest;
-import com.meetback.dev.dto.MeetingCreateResponse;
 import com.meetback.dev.repository.ParticipantMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.UUID;
 
@@ -65,7 +64,7 @@ public class MeetingService {
     }
 
     @Transactional
-    public Long joinMeeting(
+    public MeetingJoinResponse joinMeeting(
             Long userId,
             MeetingJoinRequest request
     )
@@ -89,7 +88,10 @@ public class MeetingService {
                 ) > 0
         ) {
 
-            return meeting.getMeetingId();
+            return new MeetingJoinResponse(
+                    meeting.getMeetingId(),
+                    false
+            );
         }
 
         // 4. 참가자 등록
@@ -102,7 +104,10 @@ public class MeetingService {
 
         participantMapper.insertParticipant(participant);
 
-        return meeting.getMeetingId();
+        return new MeetingJoinResponse(
+                meeting.getMeetingId(),
+                true
+        );
     }
 
     @Transactional
