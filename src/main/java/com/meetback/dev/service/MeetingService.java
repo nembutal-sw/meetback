@@ -82,16 +82,14 @@ public class MeetingService {
         }
 
         // 3. 이미 참가 중인지 확인
-        int count = participantMapper.countParticipantByMeetingAndUser(
-                meeting.getMeetingId(),
-                userId
-        );
+        if (
+                participantMapper.countParticipantByMeetingAndUser(
+                        meeting.getMeetingId(),
+                        userId
+                ) > 0
+        ) {
 
-        if(count>0)
-        {
-            throw new IllegalStateException(
-                    "이미 참여한 모임입니다."
-            );
+            return meeting.getMeetingId();
         }
 
         // 4. 참가자 등록

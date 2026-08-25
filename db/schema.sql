@@ -12,7 +12,9 @@ CREATE TABLE users (
                        email VARCHAR(255),
                        nickname VARCHAR(255),
                        password_hash VARCHAR(255),
-                       role VARCHAR(255) DEFAULT "user",
+    -- JWT 로그아웃 시 기존 Access / Refresh Token 무효화용
+                       token_version BIGINT NOT NULL DEFAULT 0,
+                       role VARCHAR(255) DEFAULT "USER",
                        deleted_at DATETIME,
                        created_at DATETIME,
                        updated_at DATETIME,

@@ -3,452 +3,2660 @@
       xmlns:th="http://www.thymeleaf.org">
 
 <head>
+
     <meta charset="UTF-8">
-    <title>MeetBack 통합 테스트</title>
+
+    <title>MeetBack 모임방</title>
+
+
+    <!-- STOMP Client -->
+    <script
+            src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js">
+    </script>
+
 
     <style>
-        body {
-            width: 800px;
-            margin: 40px auto;
-            font-family: Arial, sans-serif;
-        }
 
-        h2 {
-            margin-bottom: 30px;
-        }
-
-        h3 {
-            margin-top: 30px;
-        }
-
-        .field {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 7px;
-            font-weight: bold;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
+        * {
             box-sizing: border-box;
         }
 
+
+        body {
+            width: 900px;
+            margin: 40px auto;
+
+            font-family: Arial, sans-serif;
+            color: #222;
+        }
+
+
+        h1,
+        h2,
+        h3 {
+            margin-top: 0;
+        }
+
+
         button {
             padding: 10px 18px;
+
             cursor: pointer;
-            margin-right: 8px;
-            margin-bottom: 10px;
+
+            border: 1px solid #ccc;
+            border-radius: 8px;
+
+            background: white;
         }
+
+
+        button:hover {
+            background: #f5f5f5;
+        }
+
+
+        button:disabled {
+            cursor: default;
+            opacity: 0.6;
+        }
+
+
+        input {
+            width: 100%;
+
+            padding: 11px;
+
+            border: 1px solid #ccc;
+            border-radius: 7px;
+        }
+
+
+        label {
+            display: block;
+
+            margin-bottom: 7px;
+
+            font-weight: bold;
+        }
+
+
+
+        /* =====================================================
+           화면
+           ===================================================== */
+
+        .screen {
+            display: none;
+        }
+
+
+        .screen.active {
+            display: block;
+        }
+
+
+
+        /* =====================================================
+           공통
+           ===================================================== */
+
+        .primary-button {
+            background: #222;
+            color: white;
+
+            border-color: #222;
+
+            font-weight: bold;
+        }
+
+
+        .primary-button:hover {
+            background: #444;
+        }
+
+
+        .secondary-button {
+            background: white;
+        }
+
+
+        .page-description {
+            margin-top: 0;
+
+            color: #666;
+
+            line-height: 1.6;
+        }
+
+
+        .optional-text {
+            color: #888;
+
+            font-size: 13px;
+            font-weight: normal;
+        }
+
+
+
+        /* =====================================================
+           로딩
+           ===================================================== */
+
+        .loading-screen {
+            padding: 80px 20px;
+
+            text-align: center;
+
+            border: 1px solid #ddd;
+            border-radius: 12px;
+        }
+
+
+
+        /* =====================================================
+           모임방 상단
+           ===================================================== */
+
+        .room-header {
+            display: flex;
+
+            justify-content: space-between;
+            align-items: flex-start;
+
+            margin-bottom: 30px;
+        }
+
+
+        .room-title {
+            margin-bottom: 7px;
+        }
+
+
+        .room-header-description {
+            margin: 0;
+
+            color: #666;
+        }
+
+
+        .room-header-right {
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+        }
+
+
+        .waiting-badge {
+            padding: 8px 13px;
+
+            background: #f1f3f5;
+
+            border-radius: 20px;
+
+            font-size: 13px;
+        }
+
+
+        .login-info {
+            margin-top: 8px;
+
+            color: #888;
+
+            font-size: 13px;
+        }
+
+
+
+        /* =====================================================
+           카드
+           ===================================================== */
+
+        .room-card {
+            padding: 22px;
+
+            margin-bottom: 20px;
+
+            border: 1px solid #ddd;
+            border-radius: 12px;
+
+            background: white;
+        }
+
+
+        .card-header {
+            display: flex;
+
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 20px;
+        }
+
+
+        .card-header h3 {
+            margin: 0;
+        }
+
+
+        .card-description {
+            margin-top: 6px;
+            margin-bottom: 0;
+
+            color: #777;
+
+            font-size: 13px;
+        }
+
+
+
+        /* =====================================================
+           모임 정보
+           ===================================================== */
+
+        .meeting-info-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 12px;
+        }
+
+
+        .meeting-info {
+            padding: 15px;
+
+            background: #f7f7f7;
+
+            border-radius: 8px;
+        }
+
+
+        .summary-label {
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: #777;
+
+            font-size: 13px;
+        }
+
+
+
+        /* =====================================================
+           장소 입력
+           ===================================================== */
+
+        .place-input-grid {
+            display: grid;
+
+            grid-template-columns: 1fr;
+
+            gap: 20px;
+        }
+
+
+        .field {
+            margin-bottom: 5px;
+        }
+
 
         .search-row {
             display: flex;
+
             gap: 8px;
         }
+
 
         .search-row input {
             flex: 1;
         }
 
+
         .search-row button {
-            margin: 0;
             white-space: nowrap;
         }
 
+
         .search-results {
-            margin-top: 8px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
             display: none;
+
             max-height: 220px;
+
             overflow-y: auto;
+
+            margin-top: 8px;
+
+            border: 1px solid #ccc;
+            border-radius: 8px;
         }
+
 
         .search-item {
             padding: 12px;
-            border-bottom: 1px solid #eee;
+
             cursor: pointer;
+
+            border-bottom: 1px solid #eee;
         }
+
 
         .search-item:last-child {
             border-bottom: none;
         }
 
+
         .search-item:hover {
-            background-color: #f5f5f5;
+            background: #f5f5f5;
         }
+
 
         .search-item-name {
-            font-weight: bold;
             margin-bottom: 4px;
+
+            font-weight: bold;
         }
+
 
         .search-item-address {
-            font-size: 13px;
             color: #666;
+
+            font-size: 13px;
         }
 
+
         .selected-place {
+            padding: 12px;
+
             margin-top: 8px;
-            padding: 10px;
-            background-color: #f5f5f5;
-            border-radius: 6px;
+
+            background: #f5f5f5;
+
+            border-radius: 8px;
+
             font-size: 14px;
         }
 
-        .result {
-            margin-top: 15px;
-            margin-bottom: 20px;
-            padding: 20px;
-            border: 1px solid #ccc;
-            white-space: pre-wrap;
-            min-height: 40px;
+
+        .place-save-button {
+            width: 100%;
+
+            margin-top: 22px;
+
+            padding: 14px;
         }
 
-        #rankingResult {
-            white-space: normal;
+
+
+        /* =====================================================
+           참가자 현황
+           ===================================================== */
+
+        .participant-status-list {
+            border-top: 1px solid #eee;
         }
 
-        .ranking-card {
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 12px;
-            white-space: normal;
+
+        .participant-status {
+            display: flex;
+
+            justify-content: space-between;
+            align-items: center;
+
+            padding: 14px 5px;
+
+            border-bottom: 1px solid #eee;
         }
 
-        .ranking-title {
-            font-size: 19px;
+
+        .participant-name {
             font-weight: bold;
-            margin-bottom: 10px;
         }
 
-        .ranking-info {
-            margin-top: 8px;
-            line-height: 1.8;
-        }
 
-        .badge {
-            display: inline-block;
-            padding: 4px 9px;
-            border: 1px solid #333;
-            border-radius: 15px;
+        .participant-me {
+            margin-left: 6px;
+
+            color: #777;
+
             font-size: 12px;
-            margin-left: 8px;
         }
 
-        .participant-details {
-            margin-top: 14px;
-            border-top: 1px solid #ddd;
-            padding-top: 10px;
-        }
 
-        .participant-details summary {
-            cursor: pointer;
-            font-weight: bold;
-            padding: 5px 0;
-        }
+        .status-complete {
+            color: #18864b;
 
-        .participant-result {
-            margin-top: 10px;
-            padding: 12px;
-            background-color: #f7f7f7;
-            border-radius: 6px;
-            line-height: 1.7;
-        }
-
-        .participant-result strong {
-            font-size: 15px;
-        }
-
-        .return-ok {
             font-weight: bold;
         }
 
-        .return-no {
+
+        .status-waiting {
+            color: #888;
+        }
+
+
+
+        /* =====================================================
+           채팅
+           ===================================================== */
+
+        .chat-status {
+            margin-bottom: 12px;
+
+            color: #666;
+
+            font-size: 13px;
+        }
+
+
+        .chat-connected {
+            color: #18864b;
+
             font-weight: bold;
         }
 
-        hr {
-            margin: 35px 0;
+
+        .chat-disconnected {
+            color: #888;
+
+            font-weight: bold;
         }
+
+
+        .chat-messages {
+            height: 300px;
+
+            overflow-y: auto;
+
+            padding: 15px;
+
+            margin-bottom: 12px;
+
+            background: #fafafa;
+
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+
+        .chat-message {
+            margin-bottom: 11px;
+
+            line-height: 1.5;
+        }
+
+
+        .chat-name {
+            margin-right: 5px;
+
+            font-weight: bold;
+        }
+
+
+        .chat-time {
+            margin-left: 7px;
+
+            color: #999;
+
+            font-size: 11px;
+        }
+
+
+        .system-message {
+            padding: 6px;
+
+            text-align: center;
+
+            color: #999;
+
+            font-size: 12px;
+        }
+
+
+        .chat-input-row {
+            display: flex;
+
+            gap: 8px;
+        }
+
+
+        .chat-input-row input {
+            flex: 1;
+        }
+
+
+
+        /* =====================================================
+           방장 / 추천
+           ===================================================== */
+
+        .host-area {
+            display: flex;
+
+            justify-content: space-between;
+            align-items: center;
+        }
+
+
+        .host-description {
+            color: #777;
+
+            font-size: 13px;
+        }
+
+
+
+        /* =====================================================
+           추천 결과
+           ===================================================== */
+
+        .ranking-loading {
+            padding: 45px;
+
+            text-align: center;
+
+            border: 1px solid #ddd;
+            border-radius: 12px;
+        }
+
+
+        .ranking-placeholder {
+            padding: 40px;
+
+            text-align: center;
+
+            color: #777;
+
+            border: 1px solid #ddd;
+            border-radius: 12px;
+        }
+
+
+
+        /* =====================================================
+           Toast
+           ===================================================== */
+
+        .toast-container {
+            position: fixed;
+
+            top: 25px;
+            right: 25px;
+
+            width: 360px;
+
+            z-index: 9999;
+        }
+
+
+        .toast {
+            display: none;
+
+            padding: 15px 18px;
+
+            border: 1px solid;
+            border-radius: 8px;
+
+            background: white;
+
+            box-shadow:
+                    0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+
+        .toast.show {
+            display: block;
+        }
+
+
+        .toast-error {
+            color: #b71c1c;
+
+            background: #ffebee;
+
+            border-color: #e57373;
+        }
+
+
+        .toast-success {
+            color: #1b5e20;
+
+            background: #e8f5e9;
+
+            border-color: #81c784;
+        }
+
+
+        .toast-info {
+            color: #37474f;
+
+            background: #f5f7f8;
+
+            border-color: #90a4ae;
+        }
+
+
+
+        /* =====================================================
+           모바일
+           ===================================================== */
+
+        @media (max-width: 750px) {
+
+            body {
+                width: auto;
+
+                margin: 20px;
+            }
+
+
+            .meeting-info-grid {
+                grid-template-columns:
+                    1fr 1fr;
+            }
+
+
+            .room-header,
+            .host-area {
+                flex-direction: column;
+
+                align-items: stretch;
+
+                gap: 15px;
+            }
+
+        }
+
     </style>
+
 </head>
+
 
 <body>
 
-<h2>MeetBack 통합 테스트</h2>
 
 
-<h3>테스트 ID</h3>
+<!-- =========================================================
+     Toast
+     ========================================================= -->
 
-<div class="field">
-    <label for="meetingId">모임 ID</label>
-    <input
-            type="number"
-            id="meetingId"
-            value="1">
-</div>
+<div class="toast-container">
 
-<div class="field">
-    <label for="participantId">참가자 ID</label>
-    <input
-            type="number"
-            id="participantId"
-            value="1">
-</div>
+    <div
+            id="toastMessage"
+            class="toast">
+    </div>
 
-<div class="field">
-    <label for="candidateId">후보 ID</label>
-    <input
-            type="number"
-            id="candidateId"
-            value="1">
 </div>
 
 
-<hr>
+
+<!-- =========================================================
+     로딩 화면
+     ========================================================= -->
+
+<section
+        id="loadingScreen"
+        class="screen active">
+
+    <div class="loading-screen">
+
+        <h2>
+            MeetBack
+        </h2>
+
+        <p>
+            로그인 정보와 모임 정보를 확인하고 있습니다.
+        </p>
+
+    </div>
+
+</section>
 
 
-<h3>장소 입력</h3>
+
+<!-- =========================================================
+     모임방
+     ========================================================= -->
+
+<section
+        id="roomScreen"
+        class="screen">
 
 
-<div class="field">
+    <!-- 상단 -->
 
-    <label for="departureQuery">
-        출발 장소
-    </label>
+    <div class="room-header">
 
-    <div class="search-row">
+        <div>
 
-        <input
-                type="text"
-                id="departureQuery"
-                placeholder="예: 수원역">
+            <h1
+                    id="roomMeetingTitle"
+                    class="room-title">
+
+                MeetBack 모임방
+
+            </h1>
+
+
+            <p class="room-header-description">
+
+                장소를 입력하면서
+                참가자들과 실시간으로 대화할 수 있습니다.
+
+            </p>
+
+
+            <div
+                    id="loginUserInfo"
+                    class="login-info">
+            </div>
+
+        </div>
+
+
+        <div class="room-header-right">
+
+            <span
+                    id="meetingStatusBadge"
+                    class="waiting-badge">
+
+                장소 입력 중
+
+            </span>
+
+
+            <button
+                    type="button"
+                    class="secondary-button"
+                    onclick="goHome()">
+
+                홈으로
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         1. 모임 정보
+         ===================================================== -->
+
+    <div class="room-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h3>
+                    모임 정보
+                </h3>
+
+                <p class="card-description">
+                    현재 참가 중인 모임의 기본 정보입니다.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="meeting-info-grid">
+
+
+            <div class="meeting-info">
+
+                <span class="summary-label">
+                    모임 ID
+                </span>
+
+                <strong id="roomMeetingId">
+                    -
+                </strong>
+
+            </div>
+
+
+            <div class="meeting-info">
+
+                <span class="summary-label">
+                    초대 코드
+                </span>
+
+                <strong id="roomInviteCode">
+                    -
+                </strong>
+
+            </div>
+
+
+            <div class="meeting-info">
+
+                <span class="summary-label">
+                    희망 종료시간
+                </span>
+
+                <strong id="roomDesiredEndAt">
+                    -
+                </strong>
+
+            </div>
+
+
+            <div class="meeting-info">
+
+                <span class="summary-label">
+                    상태
+                </span>
+
+                <strong id="roomMeetingStatus">
+                    -
+                </strong>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         2. 내 장소 입력 / 수정
+         ===================================================== -->
+
+    <div class="room-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h3>
+                    내 장소 입력 / 수정
+                </h3>
+
+                <p class="card-description">
+
+                    출발 장소와 귀가 장소를 입력해주세요.
+                    희망 장소는 선택사항입니다.
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="place-input-grid">
+
+
+            <!-- 출발 장소 -->
+
+            <div class="field">
+
+                <label for="departureQuery">
+                    출발 장소
+                </label>
+
+
+                <div class="search-row">
+
+                    <input
+                            type="text"
+                            id="departureQuery"
+                            placeholder="예: 수원역">
+
+
+                    <button
+                            type="button"
+                            onclick="searchPlace('departure')">
+
+                        검색
+
+                    </button>
+
+                </div>
+
+
+                <div
+                        id="departureResults"
+                        class="search-results">
+                </div>
+
+
+                <div
+                        id="departureSelected"
+                        class="selected-place">
+
+                    선택된 장소 없음
+
+                </div>
+
+            </div>
+
+
+
+            <!-- 귀가 장소 -->
+
+            <div class="field">
+
+                <label for="returnQuery">
+                    귀가 장소
+                </label>
+
+
+                <div class="search-row">
+
+                    <input
+                            type="text"
+                            id="returnQuery"
+                            placeholder="예: 역삼역">
+
+
+                    <button
+                            type="button"
+                            onclick="searchPlace('return')">
+
+                        검색
+
+                    </button>
+
+                </div>
+
+
+                <div
+                        id="returnResults"
+                        class="search-results">
+                </div>
+
+
+                <div
+                        id="returnSelected"
+                        class="selected-place">
+
+                    선택된 장소 없음
+
+                </div>
+
+            </div>
+
+
+
+            <!-- 희망 장소 -->
+
+            <div class="field">
+
+                <label for="candidateQuery">
+
+                    희망 장소
+
+                    <span class="optional-text">
+                        (선택)
+                    </span>
+
+                </label>
+
+
+                <div class="search-row">
+
+                    <input
+                            type="text"
+                            id="candidateQuery"
+                            placeholder="예: 건대입구역">
+
+
+                    <button
+                            type="button"
+                            onclick="searchPlace('candidate')">
+
+                        검색
+
+                    </button>
+
+                </div>
+
+
+                <div
+                        id="candidateResults"
+                        class="search-results">
+                </div>
+
+
+                <div
+                        id="candidateSelected"
+                        class="selected-place">
+
+                    선택된 장소 없음
+
+                </div>
+
+            </div>
+
+        </div>
+
 
         <button
                 type="button"
-                onclick="searchPlace('departure')">
-            검색
+                class="primary-button place-save-button"
+                onclick="saveAll()">
+
+            장소 입력 저장
+
         </button>
 
     </div>
 
-    <div
-            id="departureResults"
-            class="search-results">
+
+
+    <!-- =====================================================
+         3. 참가자 현황
+         ===================================================== -->
+
+    <div class="room-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h3>
+                    참가자 현황
+                </h3>
+
+                <p class="card-description">
+                    참가자별 장소 입력 상태를 확인할 수 있습니다.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div
+                id="participantStatusList"
+                class="participant-status-list">
+
+            <div class="participant-status">
+
+                <span class="participant-name">
+                    참가자 정보를 불러오는 중...
+                </span>
+
+
+                <span class="status-waiting">
+                    -
+                </span>
+
+            </div>
+
+        </div>
+
     </div>
 
-    <div
-            id="departureSelected"
-            class="selected-place">
-        선택된 장소 없음
+
+
+    <!-- =====================================================
+         4. 채팅
+         ===================================================== -->
+
+    <div class="room-card">
+
+        <div class="card-header">
+
+            <div>
+
+                <h3>
+                    모임 채팅
+                </h3>
+
+                <p class="card-description">
+
+                    장소 입력 여부와 관계없이
+                    모임 참가자끼리 실시간으로 대화할 수 있습니다.
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="chat-status">
+
+            연결 상태 :
+
+            <span
+                    id="chatConnectionStatus"
+                    class="chat-disconnected">
+
+                DISCONNECTED
+
+            </span>
+
+        </div>
+
+
+        <div
+                id="chatMessages"
+                class="chat-messages">
+
+            <div class="system-message">
+                채팅 연결 중...
+            </div>
+
+        </div>
+
+
+        <div class="chat-input-row">
+
+            <input
+                    type="text"
+                    id="chatInput"
+                    placeholder="메시지를 입력하세요"
+                    onkeydown="handleChatKey(event)">
+
+
+            <button
+                    type="button"
+                    class="primary-button"
+                    onclick="sendChatMessage()">
+
+                전송
+
+            </button>
+
+        </div>
+
     </div>
 
-</div>
 
 
-<div class="field">
+    <!-- =====================================================
+         5. 장소 추천
+         ===================================================== -->
 
-    <label for="returnQuery">
-        귀가 장소
-    </label>
+    <div class="room-card">
 
-    <div class="search-row">
+        <div class="host-area">
 
-        <input
-                type="text"
-                id="returnQuery"
-                placeholder="예: 역삼역">
+            <div>
+
+                <h3>
+                    장소 추천
+                </h3>
+
+
+                <div class="host-description">
+
+                    모든 참가자의 장소 입력이 완료되면
+                    후보 장소별 귀가 정보를 계산할 수 있습니다.
+
+                </div>
+
+            </div>
+
+
+            <button
+                    type="button"
+                    id="confirmMeetingButton"
+                    class="primary-button"
+                    onclick="confirmMeeting()">
+
+                장소 확정 및 추천 보기
+
+            </button>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =========================================================
+     추천 결과 화면
+     ========================================================= -->
+
+<section
+        id="rankingScreen"
+        class="screen">
+
+    <div class="room-header">
+
+        <div>
+
+            <h2>
+                추천 장소
+            </h2>
+
+            <p class="page-description">
+
+                참가자들의 귀가 가능 여부와 이동시간을
+                종합한 결과입니다.
+
+            </p>
+
+        </div>
+
 
         <button
                 type="button"
-                onclick="searchPlace('return')">
-            검색
+                class="secondary-button"
+                onclick="showScreen('roomScreen')">
+
+            모임방으로
+
         </button>
 
     </div>
 
-    <div
-            id="returnResults"
-            class="search-results">
-    </div>
 
     <div
-            id="returnSelected"
-            class="selected-place">
-        선택된 장소 없음
-    </div>
+            id="rankingLoading"
+            class="ranking-loading"
+            style="display:none;">
 
-</div>
-
-
-<div class="field">
-
-    <label for="candidateQuery">
-        희망 장소 (선택)
-    </label>
-
-    <div class="search-row">
-
-        <input
-                type="text"
-                id="candidateQuery"
-                placeholder="예: 건대입구역">
-
-        <button
-                type="button"
-                onclick="searchPlace('candidate')">
-            검색
-        </button>
+        최적의 장소를 계산하고 있습니다.
 
     </div>
+
 
     <div
-            id="candidateResults"
-            class="search-results">
+            id="rankingResult"
+            class="ranking-placeholder">
+
+        추천 결과
+
     </div>
 
-    <div
-            id="candidateSelected"
-            class="selected-place">
-        선택된 장소 없음
-    </div>
+</section>
 
-</div>
-
-
-<button
-        type="button"
-        onclick="saveAll()">
-    장소 입력 완료
-</button>
-
-<button
-        type="button"
-        onclick="loadParticipant()">
-    참가자 DB 조회
-</button>
-
-<div
-        id="result"
-        class="result">
-    장소 입력 결과
-</div>
-
-
-<hr>
-
-
-<h3>계산 테스트</h3>
-
-
-<button
-        type="button"
-        onclick="calculateReturn()">
-    참가자 1명 귀가 계산
-</button>
-
-<div
-        id="calcResult"
-        class="result">
-    참가자 1명 × 후보 1개 계산 결과
-</div>
-
-
-<button
-        type="button"
-        onclick="calculateCandidate()">
-    후보 1개 전체 계산
-</button>
-
-<div
-        id="candidateCalcResult"
-        class="result">
-    후보 1개 × 참가자 전원 계산 결과
-</div>
-
-
-<button
-        type="button"
-        onclick="calculateMeeting()">
-    모임 전체 후보 계산
-</button>
-
-<div
-        id="meetingCalcResult"
-        class="result">
-    모든 후보 계산 결과
-</div>
-
-
-<hr>
-
-
-<h3>추천 결과</h3>
-
-<button
-        type="button"
-        onclick="loadRanking()">
-    후보 전체 순위 조회
-</button>
-
-<button
-        type="button"
-        onclick="loadTopRecommendation()">
-    추천 1위 조회
-</button>
-
-<div
-        id="rankingResult"
-        class="result">
-    추천 결과
-</div>
 
 
 <script>
 
-    const participantBaseUrl =
-        "/participants";
+    // ============================================================
+    // URL
+    // ============================================================
 
     const placeSearchUrl =
         "/places";
 
 
-    let selectedDeparture = null;
-    let selectedReturn = null;
-    let selectedCandidate = null;
+    const checkUrl =
+        "/auth/check";
 
 
-    async function searchPlace(type) {
+    const refreshUrl =
+        "/auth/refresh";
+
+
+    const loginUrl =
+        "/login";
+
+
+    const homeUrl =
+        "/home";
+
+
+
+    // ============================================================
+    // JWT
+    // ============================================================
+
+    let accessToken =
+        localStorage.getItem(
+            "accessToken"
+        );
+
+
+
+    // ============================================================
+    // 현재 모임
+    // ============================================================
+
+    let currentMeetingId =
+        null;
+
+
+    let currentInviteCode =
+        null;
+
+
+    let currentMeetingTitle =
+        null;
+
+
+    let currentDesiredEndAt =
+        null;
+
+
+    let currentMeetingStatus =
+        null;
+
+
+
+    // ============================================================
+    // 현재 로그인 사용자의 참가자 정보
+    // ============================================================
+
+    let currentParticipant =
+        null;
+
+
+
+    // ============================================================
+    // 장소
+    // ============================================================
+
+    let selectedDeparture =
+        null;
+
+
+    let selectedReturn =
+        null;
+
+
+    let selectedCandidate =
+        null;
+
+
+
+    // ============================================================
+    // WebSocket
+    // ============================================================
+
+    let stompClient =
+        null;
+
+
+    let chatSubscription =
+        null;
+
+
+
+    // ============================================================
+    // 기타
+    // ============================================================
+
+    let toastTimer =
+        null;
+
+
+
+    // ============================================================
+    // Refresh Token
+    // ============================================================
+
+    async function refreshTokens()
+    {
+
+        const refreshToken =
+            localStorage.getItem(
+                "refreshToken"
+            );
+
+
+        if (!refreshToken)
+        {
+            return false;
+        }
+
+
+        try
+        {
+
+            const response =
+                await fetch(
+                    refreshUrl,
+                    {
+
+                        method:
+                            "POST",
+
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/json"
+
+                        },
+
+
+                        body:
+                            JSON.stringify(
+                                {
+
+                                    refreshToken:
+                                    refreshToken
+
+                                }
+                            )
+
+                    }
+                );
+
+
+            if (!response.ok)
+            {
+                return false;
+            }
+
+
+            const data =
+                await response.json();
+
+
+            localStorage.setItem(
+                "accessToken",
+                data.accessToken
+            );
+
+
+            localStorage.setItem(
+                "refreshToken",
+                data.refreshToken
+            );
+
+
+            accessToken =
+                data.accessToken;
+
+
+            console.log(
+                "[JWT] 토큰 재발급 완료"
+            );
+
+
+            return true;
+
+        }
+        catch (error)
+        {
+
+            console.error(
+                "[JWT] Refresh 실패",
+                error
+            );
+
+
+            return false;
+
+        }
+
+    }
+
+
+
+    // ============================================================
+    // 로그인 확인
+    // ============================================================
+
+    async function requestLoginCheck()
+    {
+
+        if (!accessToken)
+        {
+            return null;
+        }
+
+
+        return await fetch(
+            checkUrl,
+            {
+
+                method:
+                    "GET",
+
+
+                headers: {
+
+                    "Authorization":
+                        "Bearer "
+                        + accessToken
+
+                }
+
+            }
+        );
+
+    }
+
+
+
+    async function checkLogin()
+    {
+
+        if (!accessToken)
+        {
+
+            const refreshed =
+                await refreshTokens();
+
+
+            if (!refreshed)
+            {
+
+                clearLoginStorage();
+
+
+                window.location.href =
+                    loginUrl;
+
+
+                return false;
+
+            }
+
+        }
+
+
+        try
+        {
+
+            let response =
+                await requestLoginCheck();
+
+
+            if (
+                !response
+                ||
+                !response.ok
+            )
+            {
+
+                const refreshed =
+                    await refreshTokens();
+
+
+                if (!refreshed)
+                {
+
+                    clearLoginStorage();
+
+
+                    window.location.href =
+                        loginUrl;
+
+
+                    return false;
+
+                }
+
+
+                response =
+                    await requestLoginCheck();
+
+
+                if (
+                    !response
+                    ||
+                    !response.ok
+                )
+                {
+
+                    clearLoginStorage();
+
+
+                    window.location.href =
+                        loginUrl;
+
+
+                    return false;
+
+                }
+
+            }
+
+
+            const user =
+                await response.json();
+
+
+            localStorage.setItem(
+                "userId",
+                user.userId
+            );
+
+
+            localStorage.setItem(
+                "role",
+                user.role
+            );
+
+
+            const loginUserInfo =
+                document.getElementById(
+                    "loginUserInfo"
+                );
+
+
+            if (loginUserInfo)
+            {
+
+                loginUserInfo.textContent =
+                    "userId = "
+                    + user.userId
+                    + " / role = "
+                    + user.role;
+
+            }
+
+
+            console.log(
+                "[JWT] 로그인 확인 성공",
+                user
+            );
+
+
+            return true;
+
+        }
+        catch (error)
+        {
+
+            console.error(
+                "[JWT CHECK ERROR]",
+                error
+            );
+
+
+            clearLoginStorage();
+
+
+            window.location.href =
+                loginUrl;
+
+
+            return false;
+
+        }
+
+    }
+
+
+
+    function clearLoginStorage()
+    {
+
+        localStorage.removeItem(
+            "accessToken"
+        );
+
+
+        localStorage.removeItem(
+            "refreshToken"
+        );
+
+
+        localStorage.removeItem(
+            "userId"
+        );
+
+
+        localStorage.removeItem(
+            "role"
+        );
+
+
+        localStorage.removeItem(
+            "chatMeetingId"
+        );
+
+    }
+
+
+
+    // ============================================================
+    // JWT REST 요청
+    // ============================================================
+
+    async function authenticatedFetch(
+        url,
+        options = {}
+    )
+    {
+
+        options.headers =
+            options.headers
+            || {};
+
+
+        options.headers[
+            "Authorization"
+            ] =
+            "Bearer "
+            + accessToken;
+
+
+        let response =
+            await fetch(
+                url,
+                options
+            );
+
+
+        if (
+            response.status === 401
+            ||
+            response.status === 403
+        )
+        {
+
+            const refreshed =
+                await refreshTokens();
+
+
+            if (!refreshed)
+            {
+
+                clearLoginStorage();
+
+
+                window.location.href =
+                    loginUrl;
+
+
+                return response;
+
+            }
+
+
+            options.headers[
+                "Authorization"
+                ] =
+                "Bearer "
+                + accessToken;
+
+
+            response =
+                await fetch(
+                    url,
+                    options
+                );
+
+        }
+
+
+        return response;
+
+    }
+
+
+
+    // ============================================================
+    // 현재 로그인 사용자의 participant 조회
+    //
+    // JWT의 userId를 프론트에서 participantId처럼 사용하지 않는다.
+    //
+    // GET
+    // /participants/meetings/{meetingId}/participants/me
+    //
+    // 백엔드:
+    // meetingId + JWT userId
+    // → participantId 조회
+    // ============================================================
+
+    async function getCurrentParticipant()
+    {
+
+        if (!currentMeetingId)
+        {
+
+            throw new Error(
+                "모임 ID를 확인할 수 없습니다."
+            );
+
+        }
+
+
+        const response =
+            await authenticatedFetch(
+                "/participants/meetings/"
+                + currentMeetingId
+                + "/participants/me"
+            );
+
+
+        if (!response.ok)
+        {
+
+            const text =
+                await response.text();
+
+
+            console.error(
+                "[CURRENT PARTICIPANT FAILED]",
+                response.status,
+                text
+            );
+
+
+            throw new Error(
+                text
+                || "현재 참가자 정보를 조회할 수 없습니다."
+            );
+
+        }
+
+
+        currentParticipant =
+            await response.json();
+
+
+        console.log(
+            "[CURRENT PARTICIPANT]",
+            currentParticipant
+        );
+
+
+        return currentParticipant;
+
+    }
+
+
+
+    // ============================================================
+    // ★ 페이지 초기화
+    // ============================================================
+
+    async function initializePage()
+    {
+
+        console.log(
+            "[MEETING] 페이지 초기화 시작"
+        );
+
+
+        // --------------------------------------------------------
+        // 1. JWT 확인
+        // --------------------------------------------------------
+
+        const authenticated =
+            await checkLogin();
+
+
+        if (!authenticated)
+        {
+            return;
+        }
+
+
+
+        // --------------------------------------------------------
+        // 2. URL에서 meetingId 읽기
+        // --------------------------------------------------------
+
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+
+        const meetingIdParam =
+            params.get(
+                "meetingId"
+            );
+
+
+        const savedMeetingId =
+            localStorage.getItem(
+                "chatMeetingId"
+            );
+
+
+        const meetingId =
+            meetingIdParam
+            || savedMeetingId;
+
+
+        if (!meetingId)
+        {
+
+            alert(
+                "모임 ID가 없습니다."
+            );
+
+
+            window.location.href =
+                homeUrl;
+
+
+            return;
+
+        }
+
+
+
+        const parsedMeetingId =
+            Number(
+                meetingId
+            );
+
+
+        if (
+            Number.isNaN(
+                parsedMeetingId
+            )
+            ||
+            parsedMeetingId <= 0
+        )
+        {
+
+            alert(
+                "잘못된 모임 ID입니다."
+            );
+
+
+            window.location.href =
+                homeUrl;
+
+
+            return;
+
+        }
+
+
+
+        // --------------------------------------------------------
+        // 3. 현재 meetingId 저장
+        // --------------------------------------------------------
+
+        currentMeetingId =
+            parsedMeetingId;
+
+
+        localStorage.setItem(
+            "chatMeetingId",
+            currentMeetingId
+        );
+
+
+        console.log(
+            "[MEETING] 현재 meetingId =",
+            currentMeetingId
+        );
+
+
+
+        // --------------------------------------------------------
+        // 4. 화면의 모임 ID 표시
+        // --------------------------------------------------------
+
+        const roomMeetingId =
+            document.getElementById(
+                "roomMeetingId"
+            );
+
+
+        if (roomMeetingId)
+        {
+
+            roomMeetingId.textContent =
+                currentMeetingId;
+
+        }
+
+
+
+        // --------------------------------------------------------
+        // 5. 모임방 먼저 표시
+        // --------------------------------------------------------
+
+        showScreen(
+            "roomScreen"
+        );
+
+
+
+        // --------------------------------------------------------
+        // 6. 현재 사용자 participant 확인
+        // --------------------------------------------------------
+
+        try
+        {
+
+            await getCurrentParticipant();
+
+        }
+        catch (error)
+        {
+
+            console.warn(
+                "[CURRENT PARTICIPANT INIT ERROR]",
+                error
+            );
+
+        }
+
+
+
+        // --------------------------------------------------------
+        // 7. 모임 상세정보 조회
+        // --------------------------------------------------------
+
+        await loadMeetingInfo();
+
+
+
+        // --------------------------------------------------------
+        // 8. WebSocket 연결
+        // --------------------------------------------------------
+
+        await connectWebSocket();
+
+
+
+        // --------------------------------------------------------
+        // 9. 참가자 현황
+        // --------------------------------------------------------
+
+        await loadParticipantStatus();
+
+
+
+        console.log(
+            "[MEETING] 모임방 초기화 완료"
+        );
+
+    }
+
+
+
+    // ============================================================
+    // 모임 상세 조회
+    // ============================================================
+
+    async function loadMeetingInfo()
+    {
+
+        if (!currentMeetingId)
+        {
+            return;
+        }
+
+
+        try
+        {
+
+            const response =
+                await authenticatedFetch(
+                    "/meetings/"
+                    + currentMeetingId
+                );
+
+
+            if (!response.ok)
+            {
+
+                console.warn(
+                    "[MEETING INFO] 상세 조회 API 미연결:",
+                    response.status
+                );
+
+
+                return;
+
+            }
+
+
+            const meeting =
+                await response.json();
+
+
+            console.log(
+                "[MEETING INFO]",
+                meeting
+            );
+
+
+            currentMeetingTitle =
+                meeting.title;
+
+
+            currentInviteCode =
+                meeting.inviteCode;
+
+
+            currentDesiredEndAt =
+                meeting.desiredEndAt;
+
+
+            currentMeetingStatus =
+                meeting.status;
+
+
+
+            const title =
+                document.getElementById(
+                    "roomMeetingTitle"
+                );
+
+
+            if (title)
+            {
+
+                title.textContent =
+                    currentMeetingTitle
+                    || "MeetBack 모임방";
+
+            }
+
+
+
+            const invite =
+                document.getElementById(
+                    "roomInviteCode"
+                );
+
+
+            if (invite)
+            {
+
+                invite.textContent =
+                    currentInviteCode
+                    || "-";
+
+            }
+
+
+
+            const desiredEnd =
+                document.getElementById(
+                    "roomDesiredEndAt"
+                );
+
+
+            if (desiredEnd)
+            {
+
+                desiredEnd.textContent =
+                    formatDateTime(
+                        currentDesiredEndAt
+                    );
+
+            }
+
+
+
+            const status =
+                document.getElementById(
+                    "roomMeetingStatus"
+                );
+
+
+            if (status)
+            {
+
+                status.textContent =
+                    currentMeetingStatus
+                    || "-";
+
+            }
+
+
+
+            updateMeetingStatusBadge(
+                currentMeetingStatus
+            );
+
+        }
+        catch (error)
+        {
+
+            console.warn(
+                "[MEETING INFO ERROR]",
+                error
+            );
+
+        }
+
+    }
+
+
+
+    function updateMeetingStatusBadge(
+        status
+    )
+    {
+
+        const badge =
+            document.getElementById(
+                "meetingStatusBadge"
+            );
+
+
+        if (!badge)
+        {
+            return;
+        }
+
+
+        if (status === "INPUT_OPEN")
+        {
+
+            badge.textContent =
+                "장소 입력 중";
+
+        }
+        else if (status === "VOTING")
+        {
+
+            badge.textContent =
+                "투표 중";
+
+        }
+        else if (status === "CONFIRMED")
+        {
+
+            badge.textContent =
+                "장소 확정";
+
+        }
+        else
+        {
+
+            badge.textContent =
+                status
+                || "모임 진행 중";
+
+        }
+
+    }
+
+
+
+    // ============================================================
+    // 참가자 현황
+    //
+    // 실제 MeetingParticipantController:
+    //
+    // GET /participants/meeting/{meetingId}
+    // ============================================================
+
+    async function loadParticipantStatus()
+    {
+
+        const list =
+            document.getElementById(
+                "participantStatusList"
+            );
+
+
+        if (
+            !list
+            ||
+            !currentMeetingId
+        )
+        {
+            return;
+        }
+
+
+        try
+        {
+
+            const response =
+                await authenticatedFetch(
+                    "/participants/meeting/"
+                    + currentMeetingId
+                );
+
+
+            if (!response.ok)
+            {
+
+                console.warn(
+                    "[PARTICIPANT] 참가자 조회 실패:",
+                    response.status
+                );
+
+
+                return;
+
+            }
+
+
+            const participants =
+                await response.json();
+
+
+            list.innerHTML =
+                "";
+
+
+            if (
+                !participants
+                ||
+                participants.length === 0
+            )
+            {
+
+                list.innerHTML =
+                    `
+                    <div class="participant-status">
+
+                        <span class="participant-name">
+                            참가자가 없습니다.
+                        </span>
+
+                    </div>
+                    `;
+
+
+                return;
+
+            }
+
+
+            const currentUserId =
+                Number(
+                    localStorage.getItem(
+                        "userId"
+                    )
+                );
+
+
+            participants.forEach(
+                participant =>
+                {
+
+                    const row =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    row.className =
+                        "participant-status";
+
+
+                    const nickname =
+                        participant.nickname
+                        || (
+                            "참가자 "
+                            + participant.participantId
+                        );
+
+
+                    const isMe =
+                        Number(
+                            participant.userId
+                        )
+                        === currentUserId;
+
+
+                    const completed =
+                        participant.inputStatus
+                        === "SUBMITTED";
+
+
+                    row.innerHTML =
+                        `
+                        <div>
+
+                            <span class="participant-name">
+                                ${escapeHtml(nickname)}
+                            </span>
+
+                            ${
+                            isMe
+                                ? `
+                                      <span class="participant-me">
+                                          나
+                                      </span>
+                                  `
+                                : ""
+                        }
+
+                        </div>
+
+                        <span
+                            class="${
+                            completed
+                                ? "status-complete"
+                                : "status-waiting"
+                        }">
+
+                            ${
+                            completed
+                                ? "입력 완료"
+                                : "입력 대기"
+                        }
+
+                        </span>
+                        `;
+
+
+                    list.appendChild(
+                        row
+                    );
+
+                }
+            );
+
+        }
+        catch (error)
+        {
+
+            console.warn(
+                "[PARTICIPANT ERROR]",
+                error
+            );
+
+        }
+
+    }
+
+
+
+    // ============================================================
+    // 화면 전환
+    // ============================================================
+
+    function showScreen(
+        screenId
+    )
+    {
+
+        document
+            .querySelectorAll(
+                ".screen"
+            )
+            .forEach(
+                screen =>
+                {
+
+                    screen
+                        .classList
+                        .remove(
+                            "active"
+                        );
+
+                }
+            );
+
+
+        const target =
+            document.getElementById(
+                screenId
+            );
+
+
+        if (target)
+        {
+
+            target
+                .classList
+                .add(
+                    "active"
+                );
+
+        }
+
+
+        window.scrollTo(
+            {
+                top: 0,
+                behavior: "smooth"
+            }
+        );
+
+    }
+
+
+
+    // ============================================================
+    // 홈
+    // ============================================================
+
+    function goHome()
+    {
+
+        window.location.href =
+            homeUrl;
+
+    }
+
+
+
+    // ============================================================
+    // Toast
+    // ============================================================
+
+    function showToast(
+        message,
+        type = "info"
+    )
+    {
+
+        const toast =
+            document.getElementById(
+                "toastMessage"
+            );
+
+
+        if (toastTimer)
+        {
+
+            clearTimeout(
+                toastTimer
+            );
+
+        }
+
+
+        toast.textContent =
+            message;
+
+
+        toast.className =
+            "toast show";
+
+
+        if (type === "error")
+        {
+
+            toast.classList.add(
+                "toast-error"
+            );
+
+        }
+        else if (type === "success")
+        {
+
+            toast.classList.add(
+                "toast-success"
+            );
+
+        }
+        else
+        {
+
+            toast.classList.add(
+                "toast-info"
+            );
+
+        }
+
+
+        toastTimer =
+            setTimeout(
+                () =>
+                {
+
+                    toast.classList.remove(
+                        "show"
+                    );
+
+                },
+                4000
+            );
+
+    }
+
+
+
+    // ============================================================
+    // 장소 검색
+    // ============================================================
+
+    async function searchPlace(
+        type
+    )
+    {
 
         let inputId;
         let resultId;
 
-        if (type === "departure") {
 
-            inputId = "departureQuery";
-            resultId = "departureResults";
+        if (type === "departure")
+        {
 
-        } else if (type === "return") {
+            inputId =
+                "departureQuery";
 
-            inputId = "returnQuery";
-            resultId = "returnResults";
+            resultId =
+                "departureResults";
 
-        } else {
+        }
+        else if (type === "return")
+        {
 
-            inputId = "candidateQuery";
-            resultId = "candidateResults";
+            inputId =
+                "returnQuery";
+
+            resultId =
+                "returnResults";
+
+        }
+        else
+        {
+
+            inputId =
+                "candidateQuery";
+
+            resultId =
+                "candidateResults";
+
         }
 
 
+
         const query =
-            document.getElementById(
-                inputId
-            ).value.trim();
+            document
+                .getElementById(
+                    inputId
+                )
+                .value
+                .trim();
+
 
         const resultDiv =
             document.getElementById(
@@ -456,40 +2664,49 @@
             );
 
 
-        if (!query) {
+        if (!query)
+        {
 
-            alert(
-                "검색어를 입력해주세요."
+            showToast(
+                "검색어를 입력해주세요.",
+                "error"
             );
 
+
             return;
+
         }
 
 
-        try {
+        try
+        {
 
             resultDiv.style.display =
                 "block";
 
-            resultDiv.innerHTML =
+
+            resultDiv.textContent =
                 "검색 중...";
 
 
             const response =
-                await fetch(
+                await authenticatedFetch(
                     `${placeSearchUrl}?query=${encodeURIComponent(query)}`
                 );
 
 
-            if (!response.ok) {
+            if (!response.ok)
+            {
 
-                const errorText =
+                const text =
                     await response.text();
 
+
                 throw new Error(
-                    "장소 검색 실패: "
-                    + errorText
+                    text
+                    || "장소 검색에 실패했습니다."
                 );
+
             }
 
 
@@ -497,920 +2714,2216 @@
                 await response.json();
 
 
-            if (!places
-                || places.length === 0) {
-
-                resultDiv.innerHTML =
-                    "검색 결과가 없습니다.";
-
-                return;
-            }
-
-
             resultDiv.innerHTML =
                 "";
 
 
-            places.forEach(place => {
+            if (
+                !places
+                ||
+                places.length === 0
+            )
+            {
 
-                const item =
-                    document.createElement(
-                        "div"
+                resultDiv.textContent =
+                    "검색 결과가 없습니다.";
+
+
+                return;
+
+            }
+
+
+            places.forEach(
+                place =>
+                {
+
+                    const item =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    item.className =
+                        "search-item";
+
+
+                    const name =
+                        place.name
+                        ?? place.placeName
+                        ?? "장소명 없음";
+
+
+                    const address =
+                        place.roadAddress
+                        || place.address
+                        || "";
+
+
+                    item.innerHTML =
+                        `
+                        <div class="search-item-name">
+                            ${escapeHtml(name)}
+                        </div>
+
+                        <div class="search-item-address">
+                            ${escapeHtml(address)}
+                        </div>
+                        `;
+
+
+                    item.onclick =
+                        () =>
+                            selectPlace(
+                                type,
+                                place
+                            );
+
+
+                    resultDiv.appendChild(
+                        item
                     );
 
-                item.className =
-                    "search-item";
+                }
+            );
 
-
-                const name =
-                    place.name
-                    ?? place.placeName
-                    ?? "장소명 없음";
-
-
-                const address =
-                    place.roadAddress
-                    || place.address
-                    || "";
-
-
-                item.innerHTML =
-                    `
-                    <div class="search-item-name">
-                        ${escapeHtml(name)}
-                    </div>
-
-                    <div class="search-item-address">
-                        ${escapeHtml(address)}
-                    </div>
-                    `;
-
-
-                item.onclick =
-                    () => selectPlace(
-                        type,
-                        place
-                    );
-
-
-                resultDiv.appendChild(
-                    item
-                );
-            });
-
-
-        } catch (error) {
-
-            console.error(error);
-
-            resultDiv.innerHTML =
-                error.message;
         }
+        catch (error)
+        {
+
+            console.error(
+                "[PLACE SEARCH ERROR]",
+                error
+            );
+
+
+            resultDiv.textContent =
+                error.message;
+
+
+            showToast(
+                error.message,
+                "error"
+            );
+
+        }
+
     }
 
+
+
+    // ============================================================
+    // 장소 선택
+    // ============================================================
 
     function selectPlace(
         type,
         place
-    ) {
+    )
+    {
 
-        if (type === "departure") {
+        if (type === "departure")
+        {
 
             selectedDeparture =
                 place;
+
 
             showSelectedPlace(
                 "departureSelected",
                 place
             );
 
+
             document.getElementById(
                 "departureResults"
-            ).style.display = "none";
+            ).style.display =
+                "none";
 
-
-        } else if (type === "return") {
+        }
+        else if (type === "return")
+        {
 
             selectedReturn =
                 place;
+
 
             showSelectedPlace(
                 "returnSelected",
                 place
             );
 
+
             document.getElementById(
                 "returnResults"
-            ).style.display = "none";
+            ).style.display =
+                "none";
 
-
-        } else {
+        }
+        else
+        {
 
             selectedCandidate =
                 place;
+
 
             showSelectedPlace(
                 "candidateSelected",
                 place
             );
 
+
             document.getElementById(
                 "candidateResults"
-            ).style.display = "none";
+            ).style.display =
+                "none";
+
         }
+
     }
+
 
 
     function showSelectedPlace(
         elementId,
         place
-    ) {
+    )
+    {
 
         const name =
             place.name
             ?? place.placeName
             ?? "";
 
+
         const address =
             place.roadAddress
             || place.address
             || "";
 
+
         document.getElementById(
             elementId
         ).textContent =
-            `${name} / ${address}`;
+            address
+                ? `${name} / ${address}`
+                : name;
+
     }
 
 
-    async function saveAll() {
 
-        const participantId =
-            document.getElementById(
-                "participantId"
-            ).value;
+    // ============================================================
+    // 장소 저장
+    //
+    // 1. JWT + meetingId로 현재 participant 조회
+    //
+    // GET
+    // /participants/meetings/{meetingId}/participants/me
+    //
+    // 2. participantId로 위치 저장
+    //
+    // PUT
+    // /participants/{participantId}/location
+    //
+    // 3. 희망 장소가 있으면
+    //
+    // POST
+    // /participants/{participantId}/candidate
+    // ============================================================
 
-        const resultDiv =
-            document.getElementById(
-                "result"
+    async function saveAll()
+    {
+
+        if (!currentMeetingId)
+        {
+
+            showToast(
+                "모임 정보를 확인할 수 없습니다.",
+                "error"
             );
 
-
-        if (!participantId) {
-
-            alert(
-                "참가자 ID를 입력해주세요."
-            );
 
             return;
+
         }
 
 
-        if (!selectedDeparture) {
+        if (!selectedDeparture)
+        {
 
-            alert(
-                "출발 장소를 검색해서 선택해주세요."
+            showToast(
+                "출발 장소를 선택해주세요.",
+                "error"
             );
 
+
             return;
+
         }
 
 
-        if (!selectedReturn) {
+        if (!selectedReturn)
+        {
 
-            alert(
-                "귀가 장소를 검색해서 선택해주세요."
+            showToast(
+                "귀가 장소를 선택해주세요.",
+                "error"
             );
 
+
             return;
+
         }
+
 
 
         const departureQuery =
             selectedDeparture.name
             ?? selectedDeparture.placeName;
 
+
         const returnQuery =
             selectedReturn.name
             ?? selectedReturn.placeName;
 
-        const candidateQuery =
-            selectedCandidate
-                ? (
-                    selectedCandidate.name
-                    ?? selectedCandidate.placeName
-                )
-                : null;
+
+        try
+        {
+
+            // ----------------------------------------------------
+            // 1. 현재 로그인 사용자의 participant 조회
+            // ----------------------------------------------------
+
+            const participant =
+                await getCurrentParticipant();
 
 
-        try {
+            const participantId =
+                participant.participantId;
 
-            resultDiv.textContent =
-                "출발지 / 귀가지 저장 중...";
 
+            if (!participantId)
+            {
+
+                throw new Error(
+                    "참가자 ID를 확인할 수 없습니다."
+                );
+
+            }
+
+
+            console.log(
+                "[PLACE SAVE] participantId =",
+                participantId
+            );
+
+
+
+            // ----------------------------------------------------
+            // 2. 출발 / 귀가 장소 저장
+            // ----------------------------------------------------
 
             const locationResponse =
-                await fetch(
-                    participantBaseUrl
-                    + "/"
+                await authenticatedFetch(
+                    "/participants/"
                     + participantId
                     + "/location",
                     {
-                        method: "PUT",
+
+                        method:
+                            "PUT",
+
 
                         headers: {
+
                             "Content-Type":
                                 "application/json"
+
                         },
 
-                        body: JSON.stringify({
-                            departureQuery:
-                            departureQuery,
 
-                            returnQuery:
-                            returnQuery
-                        })
+                        body:
+                            JSON.stringify(
+                                {
+
+                                    departureQuery:
+                                    departureQuery,
+
+                                    returnQuery:
+                                    returnQuery
+
+                                }
+                            )
+
                     }
                 );
 
 
-            if (!locationResponse.ok) {
+            if (!locationResponse.ok)
+            {
 
-                const errorText =
+                const text =
                     await locationResponse.text();
 
-                throw new Error(
-                    "위치 저장 실패: "
-                    + errorText
+
+                console.error(
+                    "[LOCATION SAVE FAILED]",
+                    "status =",
+                    locationResponse.status,
+                    "response =",
+                    text
                 );
+
+
+                throw new Error(
+                    text
+                    || (
+                        "위치 저장에 실패했습니다. ("
+                        + locationResponse.status
+                        + ")"
+                    )
+                );
+
             }
 
 
-            /*
-             * 희망 장소는 선택사항
-             *
-             * 선택한 경우에만 후보 장소 저장 / 수정
-             */
-            if (selectedCandidate) {
 
-                resultDiv.textContent =
-                    "희망 장소 저장 중...";
+            // ----------------------------------------------------
+            // 3. 희망 장소 저장
+            // ----------------------------------------------------
+
+            if (selectedCandidate)
+            {
+
+                const candidateQuery =
+                    selectedCandidate.name
+                    ?? selectedCandidate.placeName;
 
 
                 const candidateResponse =
-                    await fetch(
-                        participantBaseUrl
-                        + "/"
+                    await authenticatedFetch(
+                        "/participants/"
                         + participantId
                         + "/candidate",
                         {
-                            method: "POST",
+
+                            method:
+                                "POST",
+
 
                             headers: {
+
                                 "Content-Type":
                                     "application/json"
+
                             },
 
-                            body: JSON.stringify({
-                                candidateQuery:
-                                candidateQuery
-                            })
+
+                            body:
+                                JSON.stringify(
+                                    {
+
+                                        candidateQuery:
+                                        candidateQuery
+
+                                    }
+                                )
+
                         }
                     );
 
 
-                if (!candidateResponse.ok) {
+                if (!candidateResponse.ok)
+                {
 
-                    const errorText =
+                    const text =
                         await candidateResponse.text();
 
-                    throw new Error(
-                        "희망 장소 저장 실패: "
-                        + errorText
+
+                    console.error(
+                        "[CANDIDATE SAVE FAILED]",
+                        "status =",
+                        candidateResponse.status,
+                        "response =",
+                        text
                     );
+
+
+                    throw new Error(
+                        text
+                        || (
+                            "희망 장소 저장에 실패했습니다. ("
+                            + candidateResponse.status
+                            + ")"
+                        )
+                    );
+
                 }
+
             }
 
 
-            await loadParticipant();
 
-
-        } catch (error) {
-
-            console.error(error);
-
-            resultDiv.textContent =
-                error.message;
-        }
-    }
-
-
-    async function loadParticipant() {
-
-        const participantId =
-            document.getElementById(
-                "participantId"
-            ).value;
-
-        const resultDiv =
-            document.getElementById(
-                "result"
+            showToast(
+                "장소 정보가 저장되었습니다.",
+                "success"
             );
 
 
-        try {
-
-            const response =
-                await fetch(
-                    participantBaseUrl
-                    + "/"
-                    + participantId
-                );
+            // 현재 participant 정보 다시 갱신
+            await getCurrentParticipant();
 
 
-            if (!response.ok) {
+            // 참가자 현황 다시 조회
+            await loadParticipantStatus();
 
-                const errorText =
-                    await response.text();
-
-                throw new Error(
-                    "참가자 조회 실패: "
-                    + errorText
-                );
-            }
-
-
-            const participant =
-                await response.json();
-
-
-            resultDiv.textContent =
-                JSON.stringify(
-                    participant,
-                    null,
-                    2
-                );
-
-
-        } catch (error) {
-
-            console.error(error);
-
-            resultDiv.textContent =
-                error.message;
         }
-    }
+        catch (error)
+        {
 
-
-    async function calculateReturn() {
-
-        const participantId =
-            document.getElementById(
-                "participantId"
-            ).value;
-
-        const candidateId =
-            document.getElementById(
-                "candidateId"
-            ).value;
-
-        const resultDiv =
-            document.getElementById(
-                "calcResult"
+            console.error(
+                "[PLACE SAVE ERROR]",
+                error
             );
 
 
-        try {
+            showToast(
+                error.message,
+                "error"
+            );
 
-            resultDiv.textContent =
-                "귀가 경로 / 막차 계산 중...";
+        }
 
+    }
+
+
+
+    // ============================================================
+    // WebSocket
+    // ============================================================
+
+    async function connectWebSocket()
+    {
+
+        if (!currentMeetingId)
+        {
+
+            console.warn(
+                "[STOMP] meetingId가 없습니다."
+            );
+
+
+            return;
+
+        }
+
+
+
+        const authenticated =
+            await checkLogin();
+
+
+        if (!authenticated)
+        {
+            return;
+        }
+
+
+
+        if (
+            stompClient
+            &&
+            stompClient.active
+        )
+        {
+
+            console.log(
+                "[STOMP] 이미 연결 또는 연결 시도 중"
+            );
+
+
+            return;
+
+        }
+
+
+
+        const protocol =
+            location.protocol === "https:"
+                ? "wss"
+                : "ws";
+
+
+        const brokerUrl =
+            protocol
+            + "://"
+            + location.host
+            + "/ws";
+
+
+        console.log(
+            "[STOMP] 연결 주소 =",
+            brokerUrl
+        );
+
+
+
+        stompClient =
+            new StompJs.Client(
+                {
+
+                    brokerURL:
+                    brokerUrl,
+
+
+                    beforeConnect:
+                        async function()
+                        {
+
+                            const loginOk =
+                                await checkLogin();
+
+
+                            if (!loginOk)
+                            {
+
+                                throw new Error(
+                                    "WebSocket 인증에 실패했습니다."
+                                );
+
+                            }
+
+
+                            stompClient.connectHeaders =
+                                {
+
+                                    "Authorization":
+                                        "Bearer "
+                                        + accessToken
+
+                                };
+
+                        },
+
+
+                    connectHeaders: {
+
+                        "Authorization":
+                            "Bearer "
+                            + accessToken
+
+                    },
+
+
+                    reconnectDelay:
+                        5000,
+
+
+                    debug:
+                        function(message)
+                        {
+
+                            console.log(
+                                "[STOMP]",
+                                message
+                            );
+
+                        },
+
+
+                    onConnect:
+                        async function(frame)
+                        {
+
+                            console.log(
+                                "[STOMP] CONNECT 성공",
+                                frame
+                            );
+
+
+                            setChatConnectionStatus(
+                                true
+                            );
+
+
+
+                            const topic =
+                                "/topic/meetings/"
+                                + currentMeetingId
+                                + "/chat";
+
+
+                            console.log(
+                                "[STOMP] SUBSCRIBE =",
+                                topic
+                            );
+
+
+
+                            if (chatSubscription)
+                            {
+
+                                chatSubscription.unsubscribe();
+
+
+                                chatSubscription =
+                                    null;
+
+                            }
+
+
+
+                            chatSubscription =
+                                stompClient.subscribe(
+                                    topic,
+                                    function(message)
+                                    {
+
+                                        try
+                                        {
+
+                                            const data =
+                                                JSON.parse(
+                                                    message.body
+                                                );
+
+
+                                            console.log(
+                                                "[STOMP] 메시지 수신",
+                                                data
+                                            );
+
+
+                                            addChatMessage(
+                                                data
+                                            );
+
+                                        }
+                                        catch (error)
+                                        {
+
+                                            console.error(
+                                                "[STOMP MESSAGE ERROR]",
+                                                error
+                                            );
+
+                                        }
+
+                                    }
+                                );
+
+
+
+                            await loadChatHistory();
+
+                        },
+
+
+                    onWebSocketClose:
+                        function(event)
+                        {
+
+                            console.warn(
+                                "[STOMP] WebSocket 종료",
+                                event
+                            );
+
+
+                            setChatConnectionStatus(
+                                false
+                            );
+
+                        },
+
+
+                    onWebSocketError:
+                        function(error)
+                        {
+
+                            console.error(
+                                "[STOMP] WebSocket ERROR",
+                                error
+                            );
+
+
+                            setChatConnectionStatus(
+                                false
+                            );
+
+                        },
+
+
+                    onStompError:
+                        function(frame)
+                        {
+
+                            console.error(
+                                "[STOMP ERROR]",
+                                frame
+                            );
+
+
+                            setChatConnectionStatus(
+                                false
+                            );
+
+                        }
+
+                }
+            );
+
+
+        stompClient.activate();
+
+    }
+
+
+
+    function setChatConnectionStatus(
+        connected
+    )
+    {
+
+        const status =
+            document.getElementById(
+                "chatConnectionStatus"
+            );
+
+
+        if (!status)
+        {
+            return;
+        }
+
+
+        if (connected)
+        {
+
+            status.textContent =
+                "CONNECTED";
+
+
+            status.className =
+                "chat-connected";
+
+        }
+        else
+        {
+
+            status.textContent =
+                "DISCONNECTED";
+
+
+            status.className =
+                "chat-disconnected";
+
+        }
+
+    }
+
+
+
+    // ============================================================
+    // 이전 채팅
+    // ============================================================
+
+    async function loadChatHistory()
+    {
+
+        if (!currentMeetingId)
+        {
+            return;
+        }
+
+
+        try
+        {
 
             const response =
-                await fetch(
-                    `/calculations/return?participantId=${participantId}&candidateId=${candidateId}`,
+                await authenticatedFetch(
+                    "/meetings/"
+                    + currentMeetingId
+                    + "/messages",
                     {
-                        method: "POST"
+
+                        method:
+                            "GET"
+
                     }
                 );
 
 
-            if (!response.ok) {
+            if (!response.ok)
+            {
 
-                const errorText =
+                const text =
                     await response.text();
 
+
                 throw new Error(
-                    "귀가 계산 실패: "
-                    + errorText
+                    text
+                    || "채팅 내역 조회 실패"
                 );
+
             }
 
 
-            const data =
+            const messages =
                 await response.json();
 
 
-            resultDiv.textContent =
-                JSON.stringify(
-                    data,
-                    null,
-                    2
-                );
-
-
-        } catch (error) {
-
-            console.error(error);
-
-            resultDiv.textContent =
-                error.message;
-        }
-    }
-
-
-    async function calculateCandidate() {
-
-        const candidateId =
-            document.getElementById(
-                "candidateId"
-            ).value;
-
-        const resultDiv =
-            document.getElementById(
-                "candidateCalcResult"
+            console.log(
+                "[CHAT HISTORY]",
+                messages.length,
+                "건"
             );
 
 
-        try {
-
-            resultDiv.textContent =
-                "후보 1개에 대해 참가자 전원 계산 중...";
-
-
-            const response =
-                await fetch(
-                    `/calculations/candidate?candidateId=${candidateId}`,
-                    {
-                        method: "POST"
-                    }
+            const area =
+                document.getElementById(
+                    "chatMessages"
                 );
 
 
-            if (!response.ok) {
-
-                const errorText =
-                    await response.text();
-
-                throw new Error(
-                    "후보 계산 실패: "
-                    + errorText
-                );
+            if (!area)
+            {
+                return;
             }
 
 
-            const data =
-                await response.json();
+            area.innerHTML =
+                "";
 
 
-            resultDiv.textContent =
-                JSON.stringify(
-                    data,
-                    null,
-                    2
-                );
+            if (messages.length === 0)
+            {
+
+                area.innerHTML =
+                    `
+                    <div class="system-message">
+                        아직 채팅 메시지가 없습니다.
+                    </div>
+                    `;
 
 
-        } catch (error) {
+                return;
 
-            console.error(error);
+            }
 
-            resultDiv.textContent =
-                error.message;
+
+            messages.forEach(
+                message =>
+                    addChatMessage(
+                        message
+                    )
+            );
+
         }
-    }
+        catch (error)
+        {
 
-
-    async function calculateMeeting() {
-
-        const meetingId =
-            document.getElementById(
-                "meetingId"
-            ).value;
-
-        const resultDiv =
-            document.getElementById(
-                "meetingCalcResult"
+            console.error(
+                "[CHAT HISTORY ERROR]",
+                error
             );
 
 
-        try {
-
-            resultDiv.textContent =
-                "모임 전체 후보 계산 중...\n"
-                + "ODsay 호출 때문에 시간이 걸릴 수 있습니다.";
-
-
-            const response =
-                await fetch(
-                    `/calculations/meeting?meetingId=${meetingId}`,
-                    {
-                        method: "POST"
-                    }
+            const area =
+                document.getElementById(
+                    "chatMessages"
                 );
 
 
-            if (!response.ok) {
+            if (area)
+            {
 
-                const errorText =
-                    await response.text();
+                area.innerHTML =
+                    `
+                    <div class="system-message">
+                        이전 채팅을 불러오지 못했습니다.
+                    </div>
+                    `;
 
-                throw new Error(
-                    "모임 전체 계산 실패: "
-                    + errorText
-                );
             }
 
-
-            const data =
-                await response.json();
-
-
-            resultDiv.textContent =
-                JSON.stringify(
-                    data,
-                    null,
-                    2
-                );
-
-
-        } catch (error) {
-
-            console.error(error);
-
-            resultDiv.textContent =
-                error.message;
         }
+
     }
 
 
-    async function loadRanking() {
 
-        const meetingId =
+    // ============================================================
+    // 채팅 전송
+    // ============================================================
+
+    function sendChatMessage()
+    {
+
+        const input =
             document.getElementById(
-                "meetingId"
-            ).value;
+                "chatInput"
+            );
 
-        const resultDiv =
+
+        if (!input)
+        {
+            return;
+        }
+
+
+        const content =
+            input.value.trim();
+
+
+        if (!content)
+        {
+            return;
+        }
+
+
+        if (
+            !stompClient
+            ||
+            !stompClient.connected
+        )
+        {
+
+            showToast(
+                "채팅 서버에 아직 연결되지 않았습니다.",
+                "error"
+            );
+
+
+            return;
+
+        }
+
+
+
+        const destination =
+            "/app/meetings/"
+            + currentMeetingId
+            + "/chat";
+
+
+        console.log(
+            "[STOMP] SEND =",
+            destination,
+            content
+        );
+
+
+
+        stompClient.publish(
+            {
+
+                destination:
+                destination,
+
+
+                body:
+                    JSON.stringify(
+                        {
+
+                            content:
+                            content
+
+                        }
+                    )
+
+            }
+        );
+
+
+        input.value =
+            "";
+
+
+        input.focus();
+
+    }
+
+
+
+    function handleChatKey(
+        event
+    )
+    {
+
+        if (event.key === "Enter")
+        {
+
+            event.preventDefault();
+
+
+            sendChatMessage();
+
+        }
+
+    }
+
+
+
+    // ============================================================
+    // 채팅 출력
+    // ============================================================
+
+    function addChatMessage(
+        message
+    )
+    {
+
+        const area =
+            document.getElementById(
+                "chatMessages"
+            );
+
+
+        if (!area)
+        {
+            return;
+        }
+
+
+
+        const systemMessage =
+            area.querySelector(
+                ".system-message"
+            );
+
+
+        if (systemMessage)
+        {
+            systemMessage.remove();
+        }
+
+
+
+        const div =
+            document.createElement(
+                "div"
+            );
+
+
+        div.className =
+            "chat-message";
+
+
+
+        const name =
+            message.nickname
+            || (
+                "participant "
+                + message.participantId
+            );
+
+
+        const time =
+            message.createdAt
+                ? formatChatTime(
+                    message.createdAt
+                )
+                : "";
+
+
+        div.innerHTML =
+            `
+            <span class="chat-name">
+                ${escapeHtml(name)}
+            </span>
+
+            ${escapeHtml(
+                message.content
+                ?? ""
+            )}
+
+            <span class="chat-time">
+                ${escapeHtml(time)}
+            </span>
+            `;
+
+
+        area.appendChild(
+            div
+        );
+
+
+        area.scrollTop =
+            area.scrollHeight;
+
+    }
+
+
+
+    // ============================================================
+    // 추천 계산
+    // ============================================================
+
+    async function confirmMeeting()
+    {
+
+        if (!currentMeetingId)
+        {
+            return;
+        }
+
+
+        const loading =
+            document.getElementById(
+                "rankingLoading"
+            );
+
+
+        const result =
             document.getElementById(
                 "rankingResult"
             );
 
 
-        try {
+        try
+        {
 
-            resultDiv.innerHTML =
-                "추천 순위 조회 중...";
+            showScreen(
+                "rankingScreen"
+            );
 
 
-            const response =
-                await fetch(
-                    `/calculations/meeting/ranking?meetingId=${meetingId}`
+            loading.style.display =
+                "block";
+
+
+            result.style.display =
+                "none";
+
+
+            // --------------------------------------------------------
+            // 1. 모임 전체 후보 계산
+            // --------------------------------------------------------
+
+            const calculationResponse =
+                await authenticatedFetch(
+                    `/calculations/meeting?meetingId=${currentMeetingId}`,
+                    {
+                        method: "POST"
+                    }
                 );
 
 
-            if (!response.ok) {
+            if (!calculationResponse.ok)
+            {
 
-                const errorText =
-                    await response.text();
+                const text =
+                    await calculationResponse.text();
+
 
                 throw new Error(
-                    "순위 조회 실패: "
-                    + errorText
+                    text
+                    || "추천 계산에 실패했습니다."
                 );
+
             }
 
 
-            const data =
-                await response.json();
+            // --------------------------------------------------------
+            // 2. 추천 순위 조회
+            // --------------------------------------------------------
 
-
-            renderRanking(
-                data
-            );
-
-
-        } catch (error) {
-
-            console.error(error);
-
-            resultDiv.textContent =
-                error.message;
-        }
-    }
-
-
-    async function loadTopRecommendation() {
-
-        const meetingId =
-            document.getElementById(
-                "meetingId"
-            ).value;
-
-        const resultDiv =
-            document.getElementById(
-                "rankingResult"
-            );
-
-
-        try {
-
-            resultDiv.innerHTML =
-                "추천 1위 조회 중...";
-
-
-            const response =
-                await fetch(
-                    `/calculations/meeting/recommendation?meetingId=${meetingId}`
+            const rankingResponse =
+                await authenticatedFetch(
+                    `/calculations/meeting/ranking?meetingId=${currentMeetingId}`
                 );
 
 
-            if (!response.ok) {
+            if (!rankingResponse.ok)
+            {
 
-                const errorText =
-                    await response.text();
+                const text =
+                    await rankingResponse.text();
+
 
                 throw new Error(
-                    "추천 조회 실패: "
-                    + errorText
+                    text
+                    || "추천 결과 조회에 실패했습니다."
                 );
+
             }
 
 
-            const data =
-                await response.json();
+            const rankings =
+                await rankingResponse.json();
 
 
-            renderRanking(
-                [data]
+            console.log(
+                "[RANKING RESULT]",
+                rankings
             );
 
 
-        } catch (error) {
+            loading.style.display =
+                "none";
 
-            console.error(error);
 
-            resultDiv.textContent =
-                error.message;
+            result.style.display =
+                "block";
+
+
+            // --------------------------------------------------------
+            // 3. 추천 카드 출력
+            // --------------------------------------------------------
+
+            renderRanking(
+                rankings
+            );
+
         }
+        catch (error)
+        {
+
+            console.error(
+                "[RANKING ERROR]",
+                error
+            );
+
+
+            loading.style.display =
+                "none";
+
+
+            result.style.display =
+                "block";
+
+
+            result.style.padding =
+                "40px";
+
+
+            result.style.border =
+                "1px solid #ddd";
+
+
+            result.style.borderRadius =
+                "12px";
+
+
+            result.style.textAlign =
+                "center";
+
+
+            result.style.color =
+                "#b71c1c";
+
+
+            result.textContent =
+                error.message;
+
+
+            showToast(
+                error.message,
+                "error"
+            );
+
+        }
+
     }
 
+
+
+    // ============================================================
+    // 추천 결과 렌더링
+    //
+    // - recommendationRank 1위 = 최종 추천
+    // - fairnessGapMinutes가 가장 작은 장소 딱 1개 = 공정성 BEST
+    // - 동점이면 recommendationRank가 높은 장소 우선
+    // ============================================================
 
     function renderRanking(
         rankings
-    ) {
+    )
+    {
 
         const resultDiv =
             document.getElementById(
                 "rankingResult"
             );
+
+
+        if (!resultDiv)
+        {
+            return;
+        }
+
+
+        // --------------------------------------------------------
+        // 결과 없음
+        // --------------------------------------------------------
+
+        if (
+            !rankings
+            ||
+            rankings.length === 0
+        )
+        {
+
+            resultDiv.style.padding =
+                "40px";
+
+
+            resultDiv.style.border =
+                "1px solid #ddd";
+
+
+            resultDiv.style.borderRadius =
+                "12px";
+
+
+            resultDiv.style.textAlign =
+                "center";
+
+
+            resultDiv.style.color =
+                "#777";
+
+
+            resultDiv.innerHTML =
+                "추천 가능한 장소가 없습니다.";
+
+
+            return;
+
+        }
+
+
+        // --------------------------------------------------------
+        // 순위 정렬
+        // --------------------------------------------------------
+
+        const sortedRankings =
+            [...rankings]
+                .sort(
+                    (a, b) =>
+                    {
+
+                        const rankA =
+                            a.recommendationRank
+                            ?? Number.MAX_SAFE_INTEGER;
+
+
+                        const rankB =
+                            b.recommendationRank
+                            ?? Number.MAX_SAFE_INTEGER;
+
+
+                        return rankA - rankB;
+
+                    }
+                );
+
+
+        // --------------------------------------------------------
+        // 공정성 BEST 딱 1곳 결정
+        //
+        // fairnessGapMinutes 최소
+        // → 동점이면 추천 순위 높은 장소
+        // --------------------------------------------------------
+
+        const fairnessCandidates =
+            sortedRankings
+                .filter(
+                    item =>
+                        item.fairnessGapMinutes
+                        != null
+                );
+
+
+        let fairnessBestCandidateId =
+            null;
+
+
+        if (fairnessCandidates.length > 0)
+        {
+
+            const fairnessBest =
+                [...fairnessCandidates]
+                    .sort(
+                        (a, b) =>
+                        {
+
+                            const gapDifference =
+                                a.fairnessGapMinutes
+                                - b.fairnessGapMinutes;
+
+
+                            if (gapDifference !== 0)
+                            {
+                                return gapDifference;
+                            }
+
+
+                            const rankA =
+                                a.recommendationRank
+                                ?? Number.MAX_SAFE_INTEGER;
+
+
+                            const rankB =
+                                b.recommendationRank
+                                ?? Number.MAX_SAFE_INTEGER;
+
+
+                            if (rankA !== rankB)
+                            {
+                                return rankA - rankB;
+                            }
+
+
+                            return (
+                                (a.candidateId ?? 0)
+                                -
+                                (b.candidateId ?? 0)
+                            );
+
+                        }
+                    )[0];
+
+
+            fairnessBestCandidateId =
+                fairnessBest.candidateId;
+
+        }
+
+
+        // --------------------------------------------------------
+        // 기존 placeholder 스타일 제거
+        // --------------------------------------------------------
 
         resultDiv.innerHTML =
             "";
 
 
-        if (!rankings
-            || rankings.length === 0) {
-
-            resultDiv.textContent =
-                "추천 결과가 없습니다.";
-
-            return;
-        }
+        resultDiv.style.padding =
+            "0";
 
 
-        rankings.forEach(item => {
-
-            const card =
-                document.createElement(
-                    "div"
-                );
-
-            card.className =
-                "ranking-card";
+        resultDiv.style.border =
+            "none";
 
 
-            let fairBadge =
-                "";
+        resultDiv.style.borderRadius =
+            "0";
 
-            if (item.fairPlace === true) {
 
-                fairBadge =
-                    `
-                    <span class="badge">
-                        공정한 장소
+        resultDiv.style.textAlign =
+            "left";
+
+
+        resultDiv.style.color =
+            "#222";
+
+
+        // --------------------------------------------------------
+        // 후보별 카드
+        // --------------------------------------------------------
+
+        sortedRankings.forEach(
+            item =>
+            {
+
+                const isTopRecommendation =
+                    item.recommendationRank === 1;
+
+
+                const isFairnessBest =
+                    item.candidateId
+                    === fairnessBestCandidateId;
+
+
+                const card =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                card.style.border =
+                    isTopRecommendation
+                        ? "2px solid #222"
+                        : "1px solid #ddd";
+
+
+                card.style.borderRadius =
+                    "12px";
+
+
+                card.style.padding =
+                    "22px";
+
+
+                card.style.marginBottom =
+                    "16px";
+
+
+                card.style.background =
+                    isTopRecommendation
+                        ? "#fafafa"
+                        : "#fff";
+
+
+                // ----------------------------------------------------
+                // 배지
+                // ----------------------------------------------------
+
+                let badges =
+                    "";
+
+
+                if (isTopRecommendation)
+                {
+
+                    badges +=
+                        `
+                    <span style="
+                        display:inline-block;
+                        padding:5px 10px;
+                        margin-left:8px;
+                        border-radius:15px;
+                        background:#222;
+                        color:white;
+                        font-size:12px;
+                        font-weight:bold;
+                    ">
+                        최종 추천
                     </span>
                     `;
-            }
+
+                }
 
 
-            let participantHtml =
-                "";
+                if (isFairnessBest)
+                {
 
-            if (
-                item.participantResults
-                && item.participantResults.length > 0
-            ) {
+                    badges +=
+                        `
+                    <span style="
+                        display:inline-block;
+                        padding:5px 10px;
+                        margin-left:8px;
+                        border:1px solid #555;
+                        border-radius:15px;
+                        background:white;
+                        color:#333;
+                        font-size:12px;
+                        font-weight:bold;
+                    ">
+                        공정성 BEST
+                    </span>
+                    `;
 
-                participantHtml =
+                }
+
+
+                if (item.allReturnable === true)
+                {
+
+                    badges +=
+                        `
+                    <span style="
+                        display:inline-block;
+                        padding:5px 10px;
+                        margin-left:8px;
+                        border-radius:15px;
+                        background:#e8f5e9;
+                        color:#1b5e20;
+                        font-size:12px;
+                        font-weight:bold;
+                    ">
+                        전원 귀가 가능
+                    </span>
+                    `;
+
+                }
+
+
+                // ----------------------------------------------------
+                // 참가자 결과
+                // ----------------------------------------------------
+
+                let participantHtml =
+                    "";
+
+
+                const participantResults =
                     item.participantResults
-                        .map(result => {
+                    || [];
 
-                            const returnClass =
-                                result.canReturn
-                                    ? "return-ok"
-                                    : "return-no";
 
-                            return `
-                                <div class="participant-result">
+                if (participantResults.length > 0)
+                {
 
-                                    <strong>
-                                        참가자 ${result.participantId}
-                                    </strong>
+                    participantHtml +=
+                        `
+                    <details
+                        style="
+                            margin-top:18px;
+                            padding-top:15px;
+                            border-top:1px solid #eee;
+                        "
+                    >
 
-                                    <br>
+                        <summary
+                            style="
+                                cursor:pointer;
+                                font-weight:bold;
+                                padding:5px 0;
+                            "
+                        >
+                            참가자별 귀가 결과
+                            (${participantResults.length}명)
+                        </summary>
+                    `;
 
-                                    귀가시간:
-                                    ${result.returnMinutes}분
 
-                                    <br>
+                    participantResults.forEach(
+                        participant =>
+                        {
 
-                                    환승:
-                                    ${result.transferCount}회
-
-                                    <br>
-
-                                    막차 출발:
-                                    ${formatDateTime(
-                                result.lastTrainDepartureAt
-                            )}
-
-                                    <br>
-
-                                    막차 도착:
-                                    ${formatDateTime(
-                                result.lastTrainArrivalAt
-                            )}
-
-                                    <br>
-
-                                    안전 출발:
-                                    ${formatDateTime(
-                                result.lastSafeDepartureAt
-                            )}
-
-                                    <br>
-
-                                    귀가 가능:
-                                    <span class="${returnClass}">
-                                        ${result.canReturn
-                                ? "가능"
-                                : "불가능"}
+                            const returnStatus =
+                                participant.canReturn
+                                    ? `
+                                    <span
+                                        style="
+                                            color:#18864b;
+                                            font-weight:bold;
+                                        "
+                                    >
+                                        귀가 가능
                                     </span>
+                                  `
+                                    : `
+                                    <span
+                                        style="
+                                            color:#b71c1c;
+                                            font-weight:bold;
+                                        "
+                                    >
+                                        귀가 불가
+                                    </span>
+                                  `;
 
-                                </div>
+
+                            participantHtml +=
+                                `
+                            <div
+                                style="
+                                    margin-top:12px;
+                                    padding:14px;
+                                    background:#f7f7f7;
+                                    border-radius:8px;
+                                    line-height:1.8;
+                                "
+                            >
+
+                                <strong>
+                                    참가자 ${escapeHtml(
+                                    participant.participantId
+                                )}
+                                </strong>
+
+                                &nbsp;
+
+                                ${returnStatus}
+
+                                <br>
+
+                                귀가시간 :
+                                ${displayValue(
+                                    participant.returnMinutes,
+                                    "분"
+                                )}
+
+                                <br>
+
+                                환승 횟수 :
+                                ${displayValue(
+                                    participant.transferCount,
+                                    "회"
+                                )}
+
+                                <br>
+
+                                안전 출발 마감 :
+                                ${displayDateTime(
+                                    participant.lastSafeDepartureAt
+                                )}
+
+                                <br>
+
+                                막차 출발 :
+                                ${displayDateTime(
+                                    participant.lastTrainDepartureAt
+                                )}
+
+                                <br>
+
+                                막차 도착 :
+                                ${displayDateTime(
+                                    participant.lastTrainArrivalAt
+                                )}
+
+                            </div>
                             `;
-                        })
-                        .join("");
 
-            } else {
-
-                participantHtml =
-                    "참가자별 귀가 결과가 없습니다.";
-            }
+                        }
+                    );
 
 
-            card.innerHTML =
-                `
-                <div class="ranking-title">
+                    participantHtml +=
+                        `
+                    </details>
+                    `;
 
-                    ${item.recommendationRank}위
+                }
+                else
+                {
 
-                    ${escapeHtml(
-                    item.placeName
-                    ?? "장소명 없음"
-                )}
+                    participantHtml =
+                        `
+                    <div
+                        style="
+                            margin-top:18px;
+                            padding-top:15px;
+                            border-top:1px solid #eee;
+                            color:#888;
+                        "
+                    >
+                        참가자별 귀가 결과가 없습니다.
+                    </div>
+                    `;
 
-                    ${fairBadge}
+                }
+
+
+                // ----------------------------------------------------
+                // 카드 본문
+                // ----------------------------------------------------
+
+                card.innerHTML =
+                    `
+                <div
+                    style="
+                        display:flex;
+                        justify-content:space-between;
+                        align-items:flex-start;
+                        gap:15px;
+                        margin-bottom:15px;
+                    "
+                >
+
+                    <div>
+
+                        <div
+                            style="
+                                font-size:20px;
+                                font-weight:bold;
+                                margin-bottom:6px;
+                            "
+                        >
+                            ${escapeHtml(
+                        item.recommendationRank
+                        ?? "-"
+                    )}위
+
+                            ${escapeHtml(
+                        item.placeName
+                        ?? "장소명 없음"
+                    )}
+
+                            ${badges}
+                        </div>
+
+
+                        <div
+                            style="
+                                color:#777;
+                                font-size:14px;
+                            "
+                        >
+                            ${escapeHtml(
+                        item.address
+                        ?? ""
+                    )}
+                        </div>
+
+                    </div>
 
                 </div>
 
-                <div class="ranking-info">
 
-                    주소:
-                    ${escapeHtml(
-                    item.address
-                    ?? ""
-                )}
+                <div
+                    style="
+                        display:grid;
+                        grid-template-columns:
+                            repeat(2, 1fr);
+                        gap:10px;
+                        margin-top:15px;
+                    "
+                >
 
-                    <br>
+                    <div
+                        style="
+                            padding:14px;
+                            background:#f7f7f7;
+                            border-radius:8px;
+                        "
+                    >
+                        <div
+                            style="
+                                color:#777;
+                                font-size:12px;
+                                margin-bottom:5px;
+                            "
+                        >
+                            Deadline
+                        </div>
 
-                    Rule Score:
-                    ${item.ruleScore}점
+                        <strong>
+                            ${displayDateTime(
+                        item.deadlineAt
+                    )}
+                        </strong>
+                    </div>
 
-                    <br>
 
-                    평균 귀가시간:
-                    ${item.averageReturnMinutes}분
+                    <div
+                        style="
+                            padding:14px;
+                            background:#f7f7f7;
+                            border-radius:8px;
+                        "
+                    >
+                        <div
+                            style="
+                                color:#777;
+                                font-size:12px;
+                                margin-bottom:5px;
+                            "
+                        >
+                            Golden Margin
+                        </div>
 
-                    <br>
+                        <strong>
+                            ${displayValue(
+                        item.goldenMarginMinutes,
+                        "분"
+                    )}
+                        </strong>
+                    </div>
 
-                    귀가시간 편차:
-                    ${item.fairnessGapMinutes}분
 
-                    <br>
+                    <div
+                        style="
+                            padding:14px;
+                            background:#f7f7f7;
+                            border-radius:8px;
+                        "
+                    >
+                        <div
+                            style="
+                                color:#777;
+                                font-size:12px;
+                                margin-bottom:5px;
+                            "
+                        >
+                            평균 귀가시간
+                        </div>
 
-                    Fairness Score:
-                    ${item.fairnessScore}점
+                        <strong>
+                            ${
+                        item.averageReturnMinutes == null
+                            ? "-"
+                            : (
+                                Math.round(
+                                    item.averageReturnMinutes
+                                )
+                                + "분"
+                            )
+                    }
+                        </strong>
+                    </div>
 
-                    <br>
 
-                    Golden Margin:
-                    ${item.goldenMarginMinutes}분
+                    <div
+                        style="
+                            padding:14px;
+                            background:#f7f7f7;
+                            border-radius:8px;
+                        "
+                    >
+                        <div
+                            style="
+                                color:#777;
+                                font-size:12px;
+                                margin-bottom:5px;
+                            "
+                        >
+                            귀가시간 편차
+                        </div>
 
-                    <br>
+                        <strong>
+                            ${displayValue(
+                        item.fairnessGapMinutes,
+                        "분"
+                    )}
+                        </strong>
+                    </div>
 
-                    Deadline:
-                    ${formatDateTime(
-                    item.deadlineAt
-                )}
 
-                    <br>
+                    <div
+                        style="
+                            padding:14px;
+                            background:#f7f7f7;
+                            border-radius:8px;
+                        "
+                    >
+                        <div
+                            style="
+                                color:#777;
+                                font-size:12px;
+                                margin-bottom:5px;
+                            "
+                        >
+                            Fairness Score
+                        </div>
 
-                    전원 귀가 가능:
-                    ${item.allReturnable
-                    ? "가능"
-                    : "불가능"}
+                        <strong>
+                            ${displayValue(
+                        item.fairnessScore,
+                        "점"
+                    )}
+                        </strong>
+                    </div>
+
+
+                    <div
+                        style="
+                            padding:14px;
+                            background:#f7f7f7;
+                            border-radius:8px;
+                        "
+                    >
+                        <div
+                            style="
+                                color:#777;
+                                font-size:12px;
+                                margin-bottom:5px;
+                            "
+                        >
+                            Rule Score
+                        </div>
+
+                        <strong>
+                            ${
+                        item.ruleScore == null
+                            ? "-"
+                            : Number(
+                                item.ruleScore
+                            ).toFixed(1)
+                    }
+                        </strong>
+                    </div>
 
                 </div>
 
-                <details class="participant-details">
 
-                    <summary>
-                        참가자별 귀가 정보 보기
-                    </summary>
-
-                    ${participantHtml}
-
-                </details>
+                ${participantHtml}
                 `;
 
 
-            resultDiv.appendChild(
-                card
-            );
-        });
+                resultDiv.appendChild(
+                    card
+                );
+
+            }
+        );
+
     }
 
 
-    function formatDateTime(value) {
 
-        if (!value) {
+    // ============================================================
+    // 추천 화면 표시용 Util
+    // ============================================================
+
+    function displayValue(
+        value,
+        suffix = ""
+    )
+    {
+
+        if (
+            value === null
+            ||
+            value === undefined
+        )
+        {
             return "-";
         }
 
-        const date =
-            new Date(value);
 
-        const hours =
-            String(
-                date.getHours()
-            ).padStart(2, "0");
+        return (
+            escapeHtml(value)
+            + suffix
+        );
 
-        const minutes =
-            String(
-                date.getMinutes()
-            ).padStart(2, "0");
-
-        return `${hours}:${minutes}`;
     }
 
 
-    function escapeHtml(value) {
+    function displayDateTime(
+        value
+    )
+    {
 
-        if (value == null) {
+        if (!value)
+        {
+            return "-";
+        }
+
+
+        return escapeHtml(
+            formatDateTime(
+                value
+            )
+        );
+
+    }
+
+
+    // ============================================================
+    // Util
+    // ============================================================
+
+    function escapeHtml(
+        value
+    )
+    {
+
+        if (value == null)
+        {
             return "";
         }
 
+
         return String(value)
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
+
     }
+
+
+
+    function formatDateTime(
+        value
+    )
+    {
+
+        if (!value)
+        {
+            return "-";
+        }
+
+
+        const date =
+            new Date(
+                value
+            );
+
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        )
+        {
+            return value;
+        }
+
+
+        return date.toLocaleString(
+            "ko-KR"
+        );
+
+    }
+
+
+
+    function formatChatTime(
+        value
+    )
+    {
+
+        const date =
+            new Date(
+                value
+            );
+
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        )
+        {
+            return "";
+        }
+
+
+        return date.toLocaleTimeString(
+            "ko-KR",
+            {
+
+                hour:
+                    "2-digit",
+
+                minute:
+                    "2-digit"
+
+            }
+        );
+
+    }
+
+
+
+    // ============================================================
+    // 페이지 실행
+    // ============================================================
+
+    initializePage();
 
 </script>
 
+
 </body>
+
 </html>

@@ -172,6 +172,7 @@ public class CandidateEvaluationService {
     public CandidateEvaluation evaluateAndSave(
             Long candidateId,
             Long meetingId,
+            Integer calculationVersion,
             List<CandidateReturnResult> results
     ) {
 
@@ -254,7 +255,7 @@ public class CandidateEvaluationService {
 
 
         evaluation.setCalculationVersion(
-                meeting.getCalculationVersion()
+                calculationVersion
         );
 
 
@@ -292,14 +293,6 @@ public class CandidateEvaluationService {
                 ruleScore
         );
 
-
-        /*
-         * 모임 전체 후보 계산이 끝난 뒤
-         * rankCandidates()에서 순위 결정
-         */
-        evaluation.setRecommendationRank(
-                null
-        );
 
 
         CandidateEvaluation saved =

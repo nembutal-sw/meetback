@@ -14,7 +14,6 @@ public class GlobalExceptionHandler {
     handleIllegalArgument(
             IllegalArgumentException e
     ) {
-
         return ResponseEntity
                 .badRequest()
                 .body(
@@ -31,13 +30,28 @@ public class GlobalExceptionHandler {
     handleIllegalState(
             IllegalStateException e
     ) {
+        String message = e.getMessage();
+        if (message != null
+                && message.contains(
+                "PROXY_DAILY_LIMIT_EXHAUSTED"
+        )) {
+            return ResponseEntity
+                    .status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(
+                            Map.of(
+                                    "message",
+                                    "오늘 사용할 수 있는 대중교통 조회 횟수를 모두 사용했습니다. "
+                                            + "다음 날 다시 시도해주세요."
+                            )
+                    );
+        }
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(
                         Map.of(
                                 "message",
-                                e.getMessage()
+                                message
                         )
                 );
     }

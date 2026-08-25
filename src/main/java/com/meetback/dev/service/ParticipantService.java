@@ -1,5 +1,6 @@
 package com.meetback.dev.service;
 
+import com.meetback.dev.dto.CurrentParticipantResponse;
 import com.meetback.dev.repository.ParticipantMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,24 @@ public class ParticipantService {
 
         return totalCount > 0
                 && totalCount == submittedCount;
+    }
+
+    public CurrentParticipantResponse getCurrentParticipant(
+            Long meetingId,
+            Long userId
+    ) {
+        CurrentParticipantResponse participant =
+                participantMapper.findCurrentParticipant(
+                        meetingId,
+                        userId
+                );
+        if (participant == null) {
+
+            throw new IllegalArgumentException(
+                    "해당 모임의 참가자가 아닙니다."
+            );
+        }
+        return participant;
     }
 
 }
