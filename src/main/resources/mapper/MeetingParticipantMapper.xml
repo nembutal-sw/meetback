@@ -108,30 +108,36 @@
             resultType="com.meetback.dev.domain.MeetingParticipant">
 
         SELECT
-        participant_id,
-        meeting_id,
-        user_id,
-        input_status,
+        mp.participant_id,
+        mp.meeting_id,
+        mp.user_id,
 
-        departure_name,
-        departure_address,
-        departure_latitude,
-        departure_longitude,
+        u.nickname AS nickname,
 
-        return_name,
-        return_address,
-        return_latitude,
-        return_longitude,
+        mp.input_status,
 
-        submitted_at,
-        created_at,
-        updated_at
+        mp.departure_name,
+        mp.departure_address,
+        mp.departure_latitude,
+        mp.departure_longitude,
 
-        FROM meeting_participants
+        mp.return_name,
+        mp.return_address,
+        mp.return_latitude,
+        mp.return_longitude,
 
-        WHERE meeting_id = #{meetingId}
+        mp.submitted_at,
+        mp.created_at,
+        mp.updated_at
 
-        ORDER BY participant_id
+        FROM meeting_participants mp
+
+        JOIN users u
+        ON mp.user_id = u.user_id
+
+        WHERE mp.meeting_id = #{meetingId}
+
+        ORDER BY mp.participant_id
 
     </select>
 
