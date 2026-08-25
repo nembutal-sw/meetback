@@ -1008,7 +1008,8 @@
                     <input
                             type="text"
                             id="candidateQuery"
-                            placeholder="예: 건대입구역">
+                            placeholder="예: 건대입구역"
+                            oninput="handleCandidateInputChange()">
 
 
                     <button
@@ -1016,6 +1017,16 @@
                             onclick="searchPlace('candidate')">
 
                         검색
+
+                    </button>
+
+
+                    <button
+                            type="button"
+                            class="secondary-button"
+                            onclick="resetCandidate()">
+
+                        초기화
 
                     </button>
 
@@ -2883,6 +2894,108 @@
     }
 
 
+    // ============================================================
+    // 희망 장소 입력 변경
+    //
+    // 검색 결과에서 장소를 선택한 뒤
+    // 사용자가 검색어를 직접 수정하면
+    // 기존 선택값을 해제한다.
+    // ============================================================
+
+    function handleCandidateInputChange()
+    {
+
+        selectedCandidate =
+            null;
+
+
+        const selectedDiv =
+            document.getElementById(
+                "candidateSelected"
+            );
+
+
+        if (selectedDiv)
+        {
+
+            selectedDiv.textContent =
+                "선택된 장소 없음";
+
+        }
+
+    }
+
+
+
+    // ============================================================
+    // 희망 장소 초기화
+    //
+    // 저장 시 candidateQuery = ""
+    // → 백엔드에서 기존 후보 is_active = false
+    // ============================================================
+
+    function resetCandidate()
+    {
+
+        selectedCandidate =
+            null;
+
+
+        const input =
+            document.getElementById(
+                "candidateQuery"
+            );
+
+
+        if (input)
+        {
+
+            input.value =
+                "";
+
+        }
+
+
+        const selectedDiv =
+            document.getElementById(
+                "candidateSelected"
+            );
+
+
+        if (selectedDiv)
+        {
+
+            selectedDiv.textContent =
+                "선택된 장소 없음";
+
+        }
+
+
+        const resultDiv =
+            document.getElementById(
+                "candidateResults"
+            );
+
+
+        if (resultDiv)
+        {
+
+            resultDiv.innerHTML =
+                "";
+
+            resultDiv.style.display =
+                "none";
+
+        }
+
+
+        showToast(
+            "희망 장소가 초기화되었습니다. 저장 버튼을 눌러주세요.",
+            "info"
+        );
+
+    }
+
 
     function showSelectedPlace(
         elementId,
@@ -3090,76 +3203,102 @@
 
 
             // ----------------------------------------------------
-            // 3. 희망 장소 저장
-            // ----------------------------------------------------
+// 3. 희망 장소 저장 / 삭제
+// ----------------------------------------------------
 
-            if (selectedCandidate)
+            const candidateInput =
+                document.getElementById(
+                    "candidateQuery"
+                ).value.trim();
+
+
+            let candidateQuery = "";
+
+
+// 입력칸이 비어있지 않다면
+// 검색 결과에서 선택된 장소를 사용
+            if (candidateInput)
             {
 
-                const candidateQuery =
-                    selectedCandidate.name
-                    ?? selectedCandidate.placeName;
-
-
-                const candidateResponse =
-                    await authenticatedFetch(
-                        "/participants/"
-                        + participantId
-                        + "/candidate",
-                        {
-
-                            method:
-                                "POST",
-
-
-                            headers: {
-
-                                "Content-Type":
-                                    "application/json"
-
-                            },
-
-
-                            body:
-                                JSON.stringify(
-                                    {
-
-                                        candidateQuery:
-                                        candidateQuery
-
-                                    }
-                                )
-
-                        }
-                    );
-
-
-                if (!candidateResponse.ok)
+                if (!selectedCandidate)
                 {
 
-                    const text =
-                        await candidateResponse.text();
-
-
-                    console.error(
-                        "[CANDIDATE SAVE FAILED]",
-                        "status =",
-                        candidateResponse.status,
-                        "response =",
-                        text
-                    );
-
-
                     throw new Error(
-                        text
-                        || (
-                            "희망 장소 저장에 실패했습니다. ("
-                            + candidateResponse.status
-                            + ")"
-                        )
+                        "희망 장소는 검색 후 선택해주세요."
                     );
 
                 }
+
+
+                candidateQuery =
+                    selectedCandidate.name
+                    ?? selectedCandidate.placeName
+                    ?? "";
+
+            }
+
+
+// 희망 장소가 비어있어도 항상 요청
+//
+// candidateQuery = ""
+// → 백엔드에서 기존 후보 is_active = false
+            const candidateResponse =
+                await authenticatedFetch(
+                    "/participants/"
+                    + participantId
+                    + "/candidate",
+                    {
+
+                        method:
+                            "POST",
+
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/json"
+
+                        },
+
+
+                        body:
+                            JSON.stringify(
+                                {
+
+                                    candidateQuery:
+                                    candidateQuery
+
+                                }
+                            )
+
+                    }
+                );
+
+
+            if (!candidateResponse.ok)
+            {
+
+                const text =
+                    await candidateResponse.text();
+
+
+                console.error(
+                    "[CANDIDATE SAVE FAILED]",
+                    "status =",
+                    candidateResponse.status,
+                    "response =",
+                    text
+                );
+
+
+                throw new Error(
+                    text
+                    || (
+                        "희망 장소 저장에 실패했습니다. ("
+                        + candidateResponse.status
+                        + ")"
+                    )
+                );
 
             }
 

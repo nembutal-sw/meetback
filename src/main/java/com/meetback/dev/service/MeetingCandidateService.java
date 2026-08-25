@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Objects;
 
@@ -36,31 +37,70 @@ public class MeetingCandidateService {
                         participantId
                 );
 
+
         if (participant == null) {
+
             throw new IllegalArgumentException(
                     "참가자를 찾을 수 없습니다."
             );
         }
 
 
+        MeetingCandidate existingCandidate =
+                meetingCandidateMapper
+                        .findByMeetingIdAndParticipantId(
+                                participant.getMeetingId(),
+                                participantId
+                        );
+
+
         if (candidateQuery == null
                 || candidateQuery.isBlank()) {
 
-            // 희망 장소는 선택사항
+            if (existingCandidate == null) {
+                return;
+            }
+
+
+            if (Boolean.FALSE.equals(
+                    existingCandidate.getIsActive()
+            )) {
+                return;
+            }
+
+
+            existingCandidate.setIsActive(
+                    false
+            );
+
+
+            meetingCandidateMapper.update(
+                    existingCandidate
+            );
+
+
+            returnResultMapper.deleteByCandidateId(
+                    existingCandidate.getCandidateId()
+            );
+
+
             return;
         }
 
 
         List<PlaceDTO> results =
                 kakaoLocalClient.search(
-                        candidateQuery
+                        candidateQuery.trim()
                 );
 
+
         if (results.isEmpty()) {
+
             throw new IllegalArgumentException(
                     "희망 장소를 찾을 수 없습니다."
             );
         }
+
 
 
         PlaceDTO place =
@@ -70,17 +110,21 @@ public class MeetingCandidateService {
         MeetingCandidate candidate =
                 new MeetingCandidate();
 
+
         candidate.setMeetingId(
                 participant.getMeetingId()
         );
+
 
         candidate.setProposerParticipantId(
                 participantId
         );
 
+
         candidate.setPlaceName(
                 place.name()
         );
+
 
         candidate.setAddress(
                 place.roadAddress() == null
@@ -89,11 +133,13 @@ public class MeetingCandidateService {
                         : place.roadAddress()
         );
 
+
         candidate.setLatitude(
                 BigDecimal.valueOf(
                         place.latitude()
                 )
         );
+
 
         candidate.setLongitude(
                 BigDecimal.valueOf(
@@ -101,25 +147,13 @@ public class MeetingCandidateService {
                 )
         );
 
+
         candidate.setIsActive(
                 true
         );
 
 
-        /*
-         * 기존 희망 장소 조회
-         */
-        MeetingCandidate existingCandidate =
-                meetingCandidateMapper
-                        .findByMeetingIdAndParticipantId(
-                                participant.getMeetingId(),
-                                participantId
-                        );
 
-
-        /*
-         * 기존 후보가 없으면 새로 등록
-         */
         if (existingCandidate == null) {
 
             meetingCandidateMapper.insert(
@@ -130,40 +164,53 @@ public class MeetingCandidateService {
         }
 
 
-        /*
-         * 기존 후보와 새 후보가 실제로 같은지 확인
-         */
+
         boolean sameCandidate =
+
                 Objects.equals(
                         existingCandidate.getPlaceName(),
                         candidate.getPlaceName()
                 )
+
                         && Objects.equals(
                         existingCandidate.getAddress(),
                         candidate.getAddress()
                 )
+
                         && sameBigDecimal(
                         existingCandidate.getLatitude(),
                         candidate.getLatitude()
                 )
+
                         && sameBigDecimal(
                         existingCandidate.getLongitude(),
                         candidate.getLongitude()
                 );
 
 
-        /*
-         * 같은 장소면 아무것도 안 함
-         */
+
         if (sameCandidate) {
+
+
+            if (Boolean.FALSE.equals(
+                    existingCandidate.getIsActive()
+            )) {
+
+                existingCandidate.setIsActive(
+                        true
+                );
+
+
+                meetingCandidateMapper.update(
+                        existingCandidate
+                );
+            }
+
+
             return;
         }
 
 
-        /*
-         * 실제 후보 장소가 변경된 경우
-         * candidate_id는 유지하고 장소 정보만 수정
-         */
         candidate.setCandidateId(
                 existingCandidate.getCandidateId()
         );
@@ -174,11 +221,6 @@ public class MeetingCandidateService {
         );
 
 
-        /*
-         * 이 후보에 대한 기존 귀가 계산 결과만 삭제
-         *
-         * 다른 후보의 결과는 그대로 유지해서 재사용
-         */
         returnResultMapper.deleteByCandidateId(
                 existingCandidate.getCandidateId()
         );
@@ -190,23 +232,31 @@ public class MeetingCandidateService {
             BigDecimal second
     ) {
 
-        if (first == null && second == null) {
+        if (first == null
+                && second == null) {
+
             return true;
         }
 
-        if (first == null || second == null) {
+
+        if (first == null
+                || second == null) {
+
             return false;
         }
 
-        return first.setScale(
-                7,
-                java.math.RoundingMode.HALF_UP
-        ).compareTo(
-                second.setScale(
+
+        return first
+                .setScale(
                         7,
-                        java.math.RoundingMode.HALF_UP
+                        RoundingMode.HALF_UP
                 )
-        ) == 0;
+                .compareTo(
+                        second.setScale(
+                                7,
+                                RoundingMode.HALF_UP
+                        )
+                ) == 0;
     }
 
 
