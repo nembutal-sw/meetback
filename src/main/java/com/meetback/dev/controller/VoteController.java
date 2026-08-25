@@ -2,8 +2,10 @@ package com.meetback.dev.controller;
 
 import com.meetback.dev.dto.CandidateVoteResult;
 import com.meetback.dev.dto.VoteRequest;
+import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.VoteService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,12 +21,12 @@ public class VoteController {
     @PutMapping("/{meetingId}/votes")
     public void vote(
             @PathVariable Long meetingId,
-            @RequestParam Long participantId,
+            @AuthenticationPrincipal AuthenticatedUser user,
             @RequestBody VoteRequest request
     ) {
         voteService.vote(
                 meetingId,
-                participantId,
+                user.userId(),
                 request
         );
     }

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>MeetBack 장소 입력</title>
+
+    <script src="/js/meeting-common.js"></script>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 800px;
+            margin: 40px auto;
+
+            font-family: Arial, sans-serif;
+        }
+
+        .card {
+            padding: 25px;
+
+            border: 1px solid #ddd;
+            border-radius: 12px;
+        }
+
+        .field {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+
+            margin-bottom: 8px;
+
+            font-weight: bold;
+        }
+
+        .search-row {
+            display: flex;
+
+            gap: 8px;
+        }
+
+        input {
+            flex: 1;
+
+            padding: 12px;
+
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        button {
+            padding: 11px 18px;
+
+            cursor: pointer;
+
+            border: 1px solid #ccc;
+            border-radius: 8px;
+
+            background: white;
+        }
+
+        .primary {
+            width: 100%;
+
+            padding: 14px;
+
+            background: #222;
+            color: white;
+        }
+
+        .results {
+            display: none;
+
+            margin-top: 8px;
+
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .result {
+            padding: 12px;
+
+            cursor: pointer;
+
+            border-bottom: 1px solid #eee;
+        }
+
+        .selected {
+            padding: 12px;
+
+            margin-top: 8px;
+
+            background: #f7f7f7;
+
+            border-radius: 8px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+
+<h1>내 장소 입력</h1>
+
+<p>
+    출발 장소와 귀가 장소를 입력해주세요.
+    희망 장소는 선택사항입니다.
+</p>
+
+
+<div class="card">
+
+
+    <div class="field">
+
+        <label>
+            출발 장소
+        </label>
+
+        <div class="search-row">
+
+            <input
+                    id="departureQuery"
+                    placeholder="예: 수원역">
+
+            <button
+                    onclick="searchPlace('departure')">
+                검색
+            </button>
+
+        </div>
+
+        <div
+                id="departureResults"
+                class="results">
+        </div>
+
+        <div
+                id="departureSelected"
+                class="selected">
+
+            선택된 장소 없음
+
+        </div>
+
+    </div>
+
+
+
+    <div class="field">
+
+        <label>
+            귀가 장소
+        </label>
+
+        <div class="search-row">
+
+            <input
+                    id="returnQuery"
+                    placeholder="예: 역삼역">
+
+            <button
+                    onclick="searchPlace('return')">
+                검색
+            </button>
+
+        </div>
+
+        <div
+                id="returnResults"
+                class="results">
+        </div>
+
+        <div
+                id="returnSelected"
+                class="selected">
+
+            선택된 장소 없음
+
+        </div>
+
+    </div>
+
+
+
+    <div class="field">
+
+        <label>
+            희망 장소 (선택)
+        </label>
+
+        <div class="search-row">
+
+            <input
+                    id="candidateQuery"
+                    placeholder="예: 건대입구역">
+
+            <button
+                    onclick="searchPlace('candidate')">
+                검색
+            </button>
+
+        </div>
+
+        <div
+                id="candidateResults"
+                class="results">
+        </div>
+
+        <div
+                id="candidateSelected"
+                class="selected">
+
+            선택된 장소 없음
+
+        </div>
+
+    </div>
+
+
+    <button
+            class="primary"
+            onclick="saveLocation()">
+
+        장소 입력 완료
+
+    </button>
+
+
+    <br><br>
+
+
+    <button
+            id="backToRoomButton"
+            onclick="goRoom()">
+
+        모임방으로 돌아가기
+
+    </button>
+
+</div>
+
+
+
+<script>
+
+    let meetingId = null;
+
+    let participant = null;
+
+    let pageMode = "create";
+
+    let selectedDeparture = null;
+    let selectedReturn = null;
+    let selectedCandidate = null;
+
+    async function initialize() {
+
+        const user =
+            await MeetBack.checkLogin();
+
+        if (!user) {
+            return;
+        }
+
+        meetingId =
+            MeetBack.getMeetingId();
+
+        if (!meetingId) {
+
+            location.href =
+                "/home";
+
+            return;
+        }
+
+        // create / edit 구분
+        const params =
+            new URLSearchParams(
+                location.search
+            );
+
+        pageMode =
+            params.get("mode")
+            || "create";
+
+        if (pageMode === "edit") {
+
+            document.getElementById(
+                "backToRoomButton"
+            ).textContent =
+                "수정 취소하고 모임방으로";
+        }
+
+        console.log(
+            "[LOCATION MODE]",
+            pageMode
+        );
+
+        const response =
+            await MeetBack.authenticatedFetch(
+                "/participants/meetings/"
+                + meetingId
+                + "/participants/me"
+            );
+
+        if (!response.ok) {
+            alert(
+                "참가자 정보를 찾을 수 없습니다."
+            );
+            return;
+        }
+
+        participant = await response.json();
+
+        await loadSavedLocation();
+    }
+
+
+
+    async function loadSavedLocation() {
+
+        const response =
+            await MeetBack.authenticatedFetch(
+                "/participants/"
+                + participant.participantId
+            );
+
+
+        if (!response.ok) {
+            return;
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (data.departureName) {
+
+            document.getElementById(
+                "departureQuery"
+            ).value =
+                data.departureName;
+
+
+            document.getElementById(
+                "departureSelected"
+            ).textContent =
+                data.departureName
+                + " / "
+                + (data.departureAddress || "");
+
+
+            selectedDeparture = {
+                name: data.departureName
+            };
+        }
+
+
+        if (data.returnName) {
+
+            document.getElementById(
+                "returnQuery"
+            ).value =
+                data.returnName;
+
+
+            document.getElementById(
+                "returnSelected"
+            ).textContent =
+                data.returnName
+                + " / "
+                + (data.returnAddress || "");
+
+
+            selectedReturn = {
+                name: data.returnName
+            };
+        }
+    }
+
+
+
+    async function searchPlace(type) {
+
+        const input =
+            document.getElementById(
+                type + "Query"
+            );
+
+
+        const resultArea =
+            document.getElementById(
+                type + "Results"
+            );
+
+
+        const query =
+            input.value.trim();
+
+
+        if (!query) {
+
+            alert(
+                "검색어를 입력해주세요."
+            );
+
+            return;
+        }
+
+
+        const response =
+            await MeetBack.authenticatedFetch(
+                "/places?query="
+                + encodeURIComponent(query)
+            );
+
+
+        if (!response.ok) {
+
+            alert(
+                "장소 검색 실패"
+            );
+
+            return;
+        }
+
+
+        const places =
+            await response.json();
+
+
+        resultArea.innerHTML =
+            "";
+
+
+        resultArea.style.display =
+            "block";
+
+
+        places.forEach(
+            place => {
+
+                const div =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                div.className =
+                    "result";
+
+
+                div.innerHTML =
+                    `
+                    <strong>
+                        ${MeetBack.escapeHtml(
+                        place.name
+                        || place.placeName
+                    )}
+                    </strong>
+
+                    <br>
+
+                    ${MeetBack.escapeHtml(
+                        place.roadAddress
+                        || place.address
+                        || ""
+                    )}
+                    `;
+
+
+                div.onclick =
+                    () => selectPlace(
+                        type,
+                        place
+                    );
+
+
+                resultArea.appendChild(
+                    div
+                );
+            }
+        );
+    }
+
+
+
+    function selectPlace(
+        type,
+        place
+    ) {
+
+        const name =
+            place.name
+            || place.placeName;
+
+
+        const address =
+            place.roadAddress
+            || place.address
+            || "";
+
+
+        if (type === "departure") {
+
+            selectedDeparture =
+                place;
+
+        }
+
+        else if (type === "return") {
+
+            selectedReturn =
+                place;
+
+        }
+
+        else {
+
+            selectedCandidate =
+                place;
+        }
+
+
+        document.getElementById(
+            type + "Selected"
+        ).textContent =
+            name
+            + (
+                address
+                    ? " / " + address
+                    : ""
+            );
+
+
+        document.getElementById(
+            type + "Results"
+        ).style.display =
+            "none";
+    }
+
+
+
+    async function saveLocation() {
+
+        if (
+            !selectedDeparture
+            ||
+            !selectedReturn
+        ) {
+
+            alert(
+                "출발 장소와 귀가 장소를 입력해주세요."
+            );
+
+            return;
+        }
+
+
+        /*
+         * 현재 DTO는 정확히
+         *
+         * departureQuery
+         * returnQuery
+         *
+         * 두 개를 받는다.
+         */
+        const locationResponse =
+            await MeetBack.authenticatedFetch(
+                "/participants/"
+                + participant.participantId
+                + "/location",
+                {
+                    method: "PUT",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+
+                            departureQuery:
+                                selectedDeparture.name
+                                || selectedDeparture.placeName,
+
+                            returnQuery:
+                                selectedReturn.name
+                                || selectedReturn.placeName
+                        })
+                }
+            );
+
+
+        if (!locationResponse.ok) {
+
+            alert(
+                await locationResponse.text()
+                || "장소 저장 실패"
+            );
+
+            return;
+        }
+
+
+        /*
+         * 희망 장소는 선택사항.
+         */
+        if (selectedCandidate) {
+
+            const candidateResponse =
+                await MeetBack.authenticatedFetch(
+                    "/participants/"
+                    + participant.participantId
+                    + "/candidate",
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+
+                                candidateQuery:
+                                    selectedCandidate.name
+                                    || selectedCandidate.placeName
+                            })
+                    }
+                );
+
+
+            if (!candidateResponse.ok) {
+
+                alert(
+                    "희망 장소 저장 실패"
+                );
+
+                return;
+            }
+        }
+
+
+        alert(
+            "장소 입력이 완료되었습니다."
+        );
+
+
+        returnToRoom();
+    }
+
+    function returnToRoom(){
+        location.href = "/meeting?meetingId=" + meetingId;
+    }
+
+
+    async function goRoom() {
+
+        /*
+         * 수정 모드인 경우
+         *
+         * 모임방으로 그냥 돌아간다는 것은
+         * 수정 취소를 의미한다.
+         *
+         * 이미 저장되어 있던 기존 장소는 그대로 두고
+         * DRAFT -> SUBMITTED 상태만 복구한다.
+         */
+
+        if(
+            pageMode === "edit"
+            &&
+            participant
+        ){
+            const response = await MeetBack.authenticatedFetch(
+                "/participants/"
+                + participant.participantId
+                + "/edit/cancel",
+                {
+                    method: "PUT"
+                }
+            );
+
+            if(!response.ok)
+            {
+                const text = await response.text();
+
+                alert(
+                    text || "수정 취소 처리에 실패했습니다."
+                );
+
+                return;
+            }
+        }
+
+        returnToRoom();
+    }
+
+
+    initialize();
+
+</script>
+
+</body>
+</html>

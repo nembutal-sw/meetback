@@ -1,13 +1,17 @@
 package com.meetback.dev.service;
 
+import com.meetback.dev.domain.Meeting;
 import com.meetback.dev.domain.MeetingCandidate;
 import com.meetback.dev.domain.MeetingParticipant;
+import com.meetback.dev.domain.MeetingStatus;
 import com.meetback.dev.place.client.KakaoLocalClient;
 import com.meetback.dev.place.dto.PlaceDTO;
 import com.meetback.dev.repository.CandidateReturnResultMapper;
 import com.meetback.dev.repository.MeetingCandidateMapper;
+import com.meetback.dev.repository.MeetingMapper;
 import com.meetback.dev.repository.MeetingParticipantMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,11 +28,13 @@ public class MeetingCandidateService {
     private final MeetingParticipantMapper meetingParticipantMapper;
     private final CandidateReturnResultMapper returnResultMapper;
     private final KakaoLocalClient kakaoLocalClient;
+    private final MeetingMapper meetingMapper;
 
 
     @Transactional
     public void saveCandidate(
             Long participantId,
+            Long userId,
             String candidateQuery
     ) {
 
@@ -42,6 +48,35 @@ public class MeetingCandidateService {
 
             throw new IllegalArgumentException(
                     "참가자를 찾을 수 없습니다."
+            );
+        }
+
+        // ★ 추가
+        if (
+                !Objects.equals(
+                        participant.getUserId(),
+                        userId
+                )
+        )
+        {
+            throw new AccessDeniedException(
+                    "본인의 희망 장소만 등록할 수 있습니다."
+            );
+        }
+
+        // ★ 여기에 MeetingStatus 검사
+        Meeting meeting =
+                meetingMapper.findById(
+                        participant.getMeetingId()
+                );
+
+        if (
+                meeting == null
+                        || meeting.getStatus()
+                        != MeetingStatus.INPUT_OPEN
+        ) {
+            throw new IllegalStateException(
+                    "현재 희망 장소를 등록하거나 수정할 수 없습니다."
             );
         }
 
