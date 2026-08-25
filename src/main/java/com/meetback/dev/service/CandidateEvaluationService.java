@@ -294,7 +294,6 @@ public class CandidateEvaluationService {
         );
 
 
-
         CandidateEvaluation saved =
                 candidateEvaluationMapper.findByCandidateId(
                         candidateId
@@ -492,15 +491,6 @@ public class CandidateEvaluationService {
 
 
         /*
-         * 귀가시간 최대 - 최소 차이가
-         * 10분 이하이면 공정한 장소
-         */
-        boolean fairPlace =
-                evaluation.getFairnessGapMinutes() != null
-                        && evaluation.getFairnessGapMinutes() <= 10;
-
-
-        /*
          * 이미 계산되어 DB에 저장된
          * 참가자별 귀가 결과 조회
          *
@@ -562,8 +552,6 @@ public class CandidateEvaluationService {
                 evaluation.getFairnessGapMinutes(),
 
                 evaluation.getFairnessScore(),
-
-                fairPlace,
 
                 participantResults
         );

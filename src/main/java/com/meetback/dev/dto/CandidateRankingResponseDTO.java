@@ -22,8 +22,6 @@ public record CandidateRankingResponseDTO(
         Integer fairnessGapMinutes,
         Integer fairnessScore,
 
-        boolean fairPlace,
-
         List<ParticipantReturnSummaryDTO> participantResults
 
 ) {

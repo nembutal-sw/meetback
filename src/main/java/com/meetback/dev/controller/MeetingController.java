@@ -1,9 +1,11 @@
 package com.meetback.dev.controller;
 
 import com.meetback.dev.domain.MeetingRoomResponse;
-import com.meetback.dev.dto.*;
+import com.meetback.dev.dto.FinalCandidateRequest;
+import com.meetback.dev.dto.MeetingCreateRequest;
+import com.meetback.dev.dto.MeetingCreateResponse;
+import com.meetback.dev.dto.MeetingJoinRequest;
 import com.meetback.dev.security.AuthenticatedUser;
-import com.meetback.dev.service.ChatService;
 import com.meetback.dev.service.MeetingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -27,7 +29,6 @@ public class MeetingController {
 
     private final MeetingService meetingService;
     private final SimpMessagingTemplate messagingTemplate;
-    private final ChatService chatService;
 
     /*
      * ============================================================
@@ -63,44 +64,15 @@ public class MeetingController {
      */
 
     @PostMapping("/join")
-    public MeetingJoinResponse joinMeeting(
+    public Long joinMeeting(
             @AuthenticationPrincipal AuthenticatedUser user,
             @RequestBody MeetingJoinRequest request
             )
     {
-
-        MeetingJoinResponse response = meetingService.joinMeeting(
+        return meetingService.joinMeeting(
                 user.userId(),
                 request
         );
-
-        /*
-         * 진짜 새 참가자일 때만
-         * 입장 이벤트 발생
-         */
-
-        if(response.newlyJoined())
-        {
-            ChatMessageResponse event =
-                    chatService.saveSystemMessage(
-                            response.meetingId(),
-                            user.userId(),
-                            "PARTICIPANT_JOINED",
-                            "모임에 참가했습니다."
-                    );
-
-
-            messagingTemplate.convertAndSend(
-                    "/topic/meetings/"
-                    + response.meetingId()
-                    + "/chat",
-
-                    event
-            );
-        }
-
-        return response;
-
     }
 
     /*
@@ -148,20 +120,17 @@ public class MeetingController {
                 user.userId()
         );
 
-        ChatMessageResponse event =
-                chatService.saveSystemMessage(
-                        meetingId,
-                        user.userId(),
-                        "VOTING_STARTED",
-                        "장소 투표를 시작합니다."
-                );
-
         messagingTemplate.convertAndSend(
-                "/topic/meetings/"
+                "/topic/meetings"
                         + meetingId
                         + "/chat",
 
-                event
+                (Object) Map.of(
+                        "messageType", "SYSTEM",
+                        "eventType", "VOTING_STARTED",
+                        "content",
+                        "방장이 장소 투표를 시작했습니다."
+                )
         );
     }
 

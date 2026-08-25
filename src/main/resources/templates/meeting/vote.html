@@ -20,6 +20,38 @@
             margin: 40px auto;
 
             font-family: Arial, sans-serif;
+            color: #222;
+        }
+
+        button {
+            padding: 11px 18px;
+
+            cursor: pointer;
+
+            border: 1px solid #ccc;
+            border-radius: 8px;
+
+            background: white;
+        }
+
+        button:hover {
+            background: #f5f5f5;
+        }
+
+        button:disabled {
+            cursor: default;
+            opacity: 0.6;
+        }
+
+        .primary {
+            background: #222;
+            color: white;
+
+            border-color: #222;
+        }
+
+        .primary:hover {
+            background: #444;
         }
 
         .candidate {
@@ -29,10 +61,66 @@
 
             border: 1px solid #ddd;
             border-radius: 12px;
+
+            background: white;
         }
 
         .candidate.top {
             border: 2px solid #222;
+
+            background: #fafafa;
+        }
+
+        .candidate-title {
+            display: flex;
+
+            flex-wrap: wrap;
+            align-items: center;
+
+            gap: 8px;
+
+            margin-bottom: 8px;
+        }
+
+        .candidate-title h2 {
+            margin: 0;
+
+            font-size: 24px;
+        }
+
+        .candidate-address {
+            margin-top: 8px;
+            margin-bottom: 15px;
+
+            color: #666;
+        }
+
+        .badge {
+            display: inline-block;
+
+            padding: 5px 10px;
+
+            border-radius: 15px;
+
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .badge-top {
+            background: #222;
+            color: white;
+        }
+
+        .badge-fair {
+            background: white;
+            color: #333;
+
+            border: 1px solid #555;
+        }
+
+        .badge-return {
+            background: #e8f5e9;
+            color: #1b5e20;
         }
 
         .info-grid {
@@ -54,21 +142,76 @@
             border-radius: 8px;
         }
 
-        button {
-            padding: 11px 18px;
+        .info-label {
+            display: block;
 
-            cursor: pointer;
+            margin-bottom: 5px;
 
-            border: 1px solid #ccc;
+            color: #777;
+
+            font-size: 13px;
+        }
+
+        .candidate-buttons {
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 8px;
+
+            margin-top: 16px;
+        }
+
+
+        /* =========================================================
+           참가자별 귀가 결과
+           ========================================================= */
+
+        .participant-results {
+            display: none;
+
+            margin-top: 20px;
+            padding-top: 18px;
+
+            border-top: 1px solid #eee;
+        }
+
+        .participant-results.show {
+            display: block;
+        }
+
+        .participant-result-title {
+            margin-bottom: 12px;
+
+            font-weight: bold;
+        }
+
+        .participant-result {
+            padding: 14px;
+
+            margin-top: 10px;
+
+            background: #f7f7f7;
+
             border-radius: 8px;
 
-            background: white;
+            line-height: 1.8;
         }
 
-        .primary {
-            background: #222;
-            color: white;
+        .return-possible {
+            color: #18864b;
+            font-weight: bold;
         }
+
+        .return-impossible {
+            color: #b71c1c;
+            font-weight: bold;
+        }
+
+
+        /* =========================================================
+           방장
+           ========================================================= */
 
         .host-area {
             padding: 20px;
@@ -80,6 +223,149 @@
             border-radius: 10px;
         }
 
+
+        /* =========================================================
+           Toast
+           ========================================================= */
+
+        .toast-container {
+            position: fixed;
+
+            top: 25px;
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            width: 420px;
+            max-width: calc(100vw - 40px);
+
+            z-index: 9999;
+        }
+
+        .toast {
+            display: none;
+
+            padding: 15px 18px;
+
+            border: 1px solid;
+            border-radius: 8px;
+
+            box-shadow:
+                    0 4px 12px rgba(0, 0, 0, 0.12);
+
+            text-align: center;
+
+            line-height: 1.5;
+
+            white-space: pre-line;
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        .toast-error {
+            color: #b71c1c;
+
+            background: #ffebee;
+
+            border-color: #e57373;
+        }
+
+        .toast-success {
+            color: #1b5e20;
+
+            background: #e8f5e9;
+
+            border-color: #81c784;
+        }
+
+        .toast-info {
+            color: #37474f;
+
+            background: #f5f7f8;
+
+            border-color: #90a4ae;
+        }
+
+
+        /* =========================================================
+           최종 장소 확정 모달
+           ========================================================= */
+
+        .confirm-overlay {
+            display: none;
+
+            position: fixed;
+
+            inset: 0;
+
+            background: rgba(0, 0, 0, 0.35);
+
+            z-index: 10000;
+
+            align-items: center;
+            justify-content: center;
+        }
+
+        .confirm-overlay.show {
+            display: flex;
+        }
+
+        .confirm-modal {
+            width: 420px;
+            max-width: calc(100vw - 40px);
+
+            padding: 26px;
+
+            background: white;
+
+            border-radius: 12px;
+
+            box-shadow:
+                    0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .confirm-title {
+            margin: 0 0 12px 0;
+
+            font-size: 20px;
+        }
+
+        .confirm-message {
+            margin: 0;
+
+            color: #555;
+
+            line-height: 1.6;
+        }
+
+        .confirm-buttons {
+            display: flex;
+
+            justify-content: flex-end;
+
+            gap: 8px;
+
+            margin-top: 24px;
+        }
+
+
+        @media (max-width: 750px) {
+
+            body {
+                width: auto;
+
+                margin: 20px;
+            }
+
+            .info-grid {
+                grid-template-columns:
+                    1fr;
+            }
+
+        }
+
     </style>
 
 </head>
@@ -87,7 +373,77 @@
 <body>
 
 
-<h1>장소 투표</h1>
+
+<!-- =========================================================
+     최종 장소 확정 확인 모달
+     ========================================================= -->
+
+<div
+        id="finalConfirmOverlay"
+        class="confirm-overlay">
+
+    <div class="confirm-modal">
+
+        <h3 class="confirm-title">
+            최종 장소 확정
+        </h3>
+
+        <p
+                id="finalConfirmMessage"
+                class="confirm-message">
+
+            이 장소를 최종 장소로 확정할까요?
+
+        </p>
+
+
+        <div class="confirm-buttons">
+
+            <button
+                    type="button"
+                    onclick="closeFinalConfirmModal()">
+
+                취소
+
+            </button>
+
+
+            <button
+                    type="button"
+                    id="finalConfirmActionButton"
+                    class="primary"
+                    onclick="confirmFinalCandidateAction()">
+
+                확정
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =========================================================
+     Toast
+     ========================================================= -->
+
+<div class="toast-container">
+
+    <div
+            id="toastMessage"
+            class="toast">
+    </div>
+
+</div>
+
+
+
+<h1>
+    장소 투표
+</h1>
 
 <p>
     귀가 가능 여부와 이동시간을 확인하고
@@ -95,8 +451,12 @@
 </p>
 
 
-<button onclick="goRoom()">
+<button
+        type="button"
+        onclick="goRoom()">
+
     모임방으로
+
 </button>
 
 
@@ -108,6 +468,7 @@
     후보 정보를 불러오는 중...
 
 </div>
+
 
 
 <div
@@ -124,6 +485,7 @@
     </p>
 
     <button
+            type="button"
             id="confirmButton"
             class="primary"
             disabled
@@ -139,25 +501,124 @@
 
 <script>
 
+    // ============================================================
+    // 상태
+    // ============================================================
+
     let meetingId = null;
 
     let currentUser = null;
+
     let meeting = null;
+
     let participant = null;
 
     let rankings = [];
 
     let selectedCandidateId = null;
 
+    let toastTimer = null;
 
 
-    async function initialize() {
+
+    // ============================================================
+    // Toast
+    // ============================================================
+
+    function showToast(
+        message,
+        type = "info"
+    )
+    {
+
+        const toast =
+            document.getElementById(
+                "toastMessage"
+            );
+
+
+        if (!toast)
+        {
+            return;
+        }
+
+
+        if (toastTimer)
+        {
+
+            clearTimeout(
+                toastTimer
+            );
+
+        }
+
+
+        toast.textContent =
+            message;
+
+
+        toast.className =
+            "toast show";
+
+
+        if (type === "error")
+        {
+
+            toast.classList.add(
+                "toast-error"
+            );
+
+        }
+
+        else if (type === "success")
+        {
+
+            toast.classList.add(
+                "toast-success"
+            );
+
+        }
+
+        else
+        {
+
+            toast.classList.add(
+                "toast-info"
+            );
+
+        }
+
+
+        toastTimer =
+            setTimeout(
+                () =>
+                {
+
+                    toast.classList.remove(
+                        "show"
+                    );
+
+                },
+                4000
+            );
+
+    }
+
+
+
+    // ============================================================
+    // 초기화
+    // ============================================================
+
+    async function initialize()
+    {
 
         currentUser =
             await MeetBack.checkLogin();
 
 
-        if (!currentUser) {
+        if (!currentUser)
+        {
             return;
         }
 
@@ -166,10 +627,12 @@
             MeetBack.getMeetingId();
 
 
-        if (!meetingId) {
+        if (!meetingId)
+        {
 
             location.href =
                 "/home";
+
 
             return;
         }
@@ -179,15 +642,27 @@
 
 
         if (
+            !meeting
+            ||
             meeting.status
             !== "VOTING"
-        ) {
+        )
+        {
 
-            alert(
+            sessionStorage.setItem(
+                "meetbackToastMessage",
                 "현재 투표 가능한 상태가 아닙니다."
             );
 
+
+            sessionStorage.setItem(
+                "meetbackToastType",
+                "info"
+            );
+
+
             goRoom();
+
 
             return;
         }
@@ -198,33 +673,51 @@
         await loadRanking();
 
         await loadVoteResults();
+
     }
 
 
 
-    async function loadMeeting() {
+    // ============================================================
+    // 모임 조회
+    // ============================================================
+
+    async function loadMeeting()
+    {
 
         const response =
             await MeetBack.authenticatedFetch(
-                "/meetings/" + meetingId
+                "/meetings/"
+                + meetingId
             );
 
 
-        if (!response.ok) {
+        if (!response.ok)
+        {
 
-            throw new Error(
-                "모임 조회 실패"
+            showToast(
+                "모임 조회에 실패했습니다.",
+                "error"
             );
+
+
+            return;
         }
 
 
         meeting =
             await response.json();
+
     }
 
 
 
-    async function loadParticipant() {
+    // ============================================================
+    // 현재 참가자
+    // ============================================================
+
+    async function loadParticipant()
+    {
 
         const response =
             await MeetBack.authenticatedFetch(
@@ -234,21 +727,32 @@
             );
 
 
-        if (!response.ok) {
+        if (!response.ok)
+        {
 
-            throw new Error(
-                "참가자 조회 실패"
+            showToast(
+                "참가자 조회에 실패했습니다.",
+                "error"
             );
+
+
+            return;
         }
 
 
         participant =
             await response.json();
+
     }
 
 
 
-    async function loadRanking() {
+    // ============================================================
+    // 추천 순위 조회
+    // ============================================================
+
+    async function loadRanking()
+    {
 
         const response =
             await MeetBack.authenticatedFetch(
@@ -257,12 +761,14 @@
             );
 
 
-        if (!response.ok) {
+        if (!response.ok)
+        {
 
-            document.getElementById(
-                "rankingArea"
-            ).textContent =
-                "추천 결과를 불러오지 못했습니다.";
+            showToast(
+                "추천 결과를 불러오지 못했습니다.",
+                "error"
+            );
+
 
             return;
         }
@@ -273,11 +779,17 @@
 
 
         renderRanking();
+
     }
 
 
 
-    function renderRanking() {
+    // ============================================================
+    // 추천 결과 렌더링
+    // ============================================================
+
+    function renderRanking()
+    {
 
         const area =
             document.getElementById(
@@ -289,114 +801,603 @@
             "";
 
 
-        rankings
-            .sort(
-                (a, b) =>
-                    a.recommendationRank
-                    - b.recommendationRank
-            )
-            .forEach(
-                item => {
+        if (
+            !rankings
+            ||
+            rankings.length === 0
+        )
+        {
 
-                    const card =
-                        document.createElement(
-                            "div"
-                        );
+            area.textContent =
+                "투표 가능한 장소가 없습니다.";
 
 
-                    card.className =
-                        "candidate"
-                        + (
-                            item.recommendationRank
-                            === 1
-                                ? " top"
-                                : ""
-                        );
+            return;
+        }
 
 
-                    card.innerHTML =
+        // --------------------------------------------------------
+        // 추천 순위 정렬
+        // --------------------------------------------------------
+
+        const sortedRankings =
+            [...rankings]
+                .sort(
+                    (a, b) =>
+                        (
+                            a.recommendationRank
+                            ?? Number.MAX_SAFE_INTEGER
+                        )
+                        -
+                        (
+                            b.recommendationRank
+                            ?? Number.MAX_SAFE_INTEGER
+                        )
+                );
+
+
+        // --------------------------------------------------------
+        // 공정성 BEST 딱 1곳
+        // --------------------------------------------------------
+
+        const fairnessCandidates =
+            sortedRankings.filter(
+                item =>
+                    item.fairnessGapMinutes
+                    != null
+            );
+
+
+        let fairnessBestCandidateId =
+            null;
+
+
+        if (fairnessCandidates.length > 0)
+        {
+
+            fairnessBestCandidateId =
+                [...fairnessCandidates]
+                    .sort(
+                        (a, b) =>
+                        {
+
+                            const gap =
+                                a.fairnessGapMinutes
+                                - b.fairnessGapMinutes;
+
+
+                            if (gap !== 0)
+                            {
+                                return gap;
+                            }
+
+
+                            const rankA =
+                                a.recommendationRank
+                                ?? Number.MAX_SAFE_INTEGER;
+
+
+                            const rankB =
+                                b.recommendationRank
+                                ?? Number.MAX_SAFE_INTEGER;
+
+
+                            if (rankA !== rankB)
+                            {
+                                return rankA - rankB;
+                            }
+
+
+                            return (
+                                (a.candidateId ?? 0)
+                                -
+                                (b.candidateId ?? 0)
+                            );
+
+                        }
+                    )[0]
+                    .candidateId;
+
+        }
+
+
+        // --------------------------------------------------------
+        // 후보 카드
+        // --------------------------------------------------------
+
+        sortedRankings.forEach(
+            item =>
+            {
+
+                const card =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                const isTop =
+                    item.recommendationRank
+                    === 1;
+
+
+                const isFairnessBest =
+                    item.candidateId
+                    === fairnessBestCandidateId;
+
+
+                card.className =
+                    isTop
+                        ? "candidate top"
+                        : "candidate";
+
+
+                // ------------------------------------------------
+                // 배지
+                // ------------------------------------------------
+
+                let badges =
+                    "";
+
+
+                if (isTop)
+                {
+
+                    badges +=
                         `
+                        <span class="badge badge-top">
+                            추천 1위
+                        </span>
+                        `;
+
+                }
+
+
+                if (isFairnessBest)
+                {
+
+                    badges +=
+                        `
+                        <span class="badge badge-fair">
+                            공정성 BEST
+                        </span>
+                        `;
+
+                }
+
+
+                if (
+                    item.allReturnable
+                    === true
+                )
+                {
+
+                    badges +=
+                        `
+                        <span class="badge badge-return">
+                            전원 귀가 가능
+                        </span>
+                        `;
+
+                }
+
+
+                // ------------------------------------------------
+                // 참가자별 귀가 결과
+                // ------------------------------------------------
+
+                const participantResults =
+                    item.participantResults
+                    || [];
+
+
+                let rows =
+                    "";
+
+
+                participantResults.forEach(
+                    participantResult =>
+                    {
+
+                        const canReturn =
+                            participantResult.canReturn
+                            === true;
+
+
+                        rows +=
+                            `
+                            <div class="participant-result">
+
+                                <strong>
+                                    참가자
+                                    ${MeetBack.escapeHtml(
+                                participantResult.participantId
+                            )}
+                                </strong>
+
+                                &nbsp;
+
+                                <span
+                                    class="${
+                                canReturn
+                                    ? "return-possible"
+                                    : "return-impossible"
+                            }">
+
+                                    ${
+                                canReturn
+                                    ? "귀가 가능"
+                                    : "귀가 불가"
+                            }
+
+                                </span>
+
+                                <br>
+
+                                귀가시간 :
+                                ${displayValue(
+                                participantResult.returnMinutes,
+                                "분"
+                            )}
+
+                                <br>
+
+                                환승 횟수 :
+                                ${displayValue(
+                                participantResult.transferCount,
+                                "회"
+                            )}
+
+                                <br>
+
+                                안전 출발 마감 :
+                                ${displayDateTime(
+                                participantResult.lastSafeDepartureAt
+                            )}
+
+                                <br>
+
+                                막차 출발 :
+                                ${displayDateTime(
+                                participantResult.lastTrainDepartureAt
+                            )}
+
+                                <br>
+
+                                막차 도착 :
+                                ${displayDateTime(
+                                participantResult.lastTrainArrivalAt
+                            )}
+
+                            </div>
+                            `;
+
+                    }
+                );
+
+
+                // ------------------------------------------------
+                // 카드 출력
+                // ------------------------------------------------
+
+                card.innerHTML =
+                    `
+                    <div class="candidate-title">
+
                         <h2>
-                            ${item.recommendationRank}위
+
                             ${MeetBack.escapeHtml(
-                            item.placeName
-                        )}
+                        item.recommendationRank
+                        ?? "-"
+                    )}위
+
+                            ${MeetBack.escapeHtml(
+                        item.placeName
+                        ?? "장소명 없음"
+                    )}
+
                         </h2>
 
-                        <p>
-                            ${MeetBack.escapeHtml(
-                            item.address || ""
-                        )}
-                        </p>
+                        ${badges}
 
-                        <div class="info-grid">
+                    </div>
 
-                            <div class="info">
+
+                    <div class="candidate-address">
+
+                        ${MeetBack.escapeHtml(
+                        item.address
+                        || ""
+                    )}
+
+                    </div>
+
+
+                    <div class="info-grid">
+
+                        <div class="info">
+
+                            <span class="info-label">
                                 Deadline
-                                <br>
-                                <strong>
-                                    ${MeetBack.formatDateTime(
-                            item.deadlineAt
-                        )}
-                                </strong>
-                            </div>
+                            </span>
 
-                            <div class="info">
-                                Golden Margin
-                                <br>
-                                <strong>
-                                    ${item.goldenMarginMinutes ?? "-"}분
-                                </strong>
-                            </div>
-
-                            <div class="info">
-                                평균 귀가시간
-                                <br>
-                                <strong>
-                                    ${
-                            item.averageReturnMinutes == null
-                                ? "-"
-                                : Math.round(
-                                item.averageReturnMinutes
-                            ) + "분"
-                        }
-                                </strong>
-                            </div>
-
-                            <div class="info">
-                                귀가시간 편차
-                                <br>
-                                <strong>
-                                    ${item.fairnessGapMinutes ?? "-"}분
-                                </strong>
-                            </div>
+                            <strong>
+                                ${displayDateTime(
+                        item.deadlineAt
+                    )}
+                            </strong>
 
                         </div>
 
+
+                        <div class="info">
+
+                            <span class="info-label">
+                                Golden Margin
+                            </span>
+
+                            <strong>
+                                ${displayValue(
+                        item.goldenMarginMinutes,
+                        "분"
+                    )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="info">
+
+                            <span class="info-label">
+                                평균 귀가시간
+                            </span>
+
+                            <strong>
+                                ${
+                        item.averageReturnMinutes
+                        == null
+                            ? "-"
+                            : (
+                                Math.round(
+                                    item.averageReturnMinutes
+                                )
+                                + "분"
+                            )
+                    }
+                            </strong>
+
+                        </div>
+
+
+                        <div class="info">
+
+                            <span class="info-label">
+                                귀가시간 편차
+                            </span>
+
+                            <strong>
+                                ${displayValue(
+                        item.fairnessGapMinutes,
+                        "분"
+                    )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="info">
+
+                            <span class="info-label">
+                                Fairness Score
+                            </span>
+
+                            <strong>
+                                ${displayValue(
+                        item.fairnessScore,
+                        "점"
+                    )}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="info">
+
+                            <span class="info-label">
+                                Rule Score
+                            </span>
+
+                            <strong>
+                                ${
+                        item.ruleScore
+                        == null
+                            ? "-"
+                            : Number(
+                                item.ruleScore
+                            ).toFixed(1)
+                    }
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="candidate-buttons">
+
                         <button
-                            class="primary"
-                            onclick="vote(
-                                ${item.candidateId}
-                            )">
+                                type="button"
+                                class="primary"
+                                onclick="vote(${item.candidateId})">
 
                             이 장소에 투표
 
                         </button>
-                        `;
 
 
-                    area.appendChild(
-                        card
-                    );
-                }
-            );
+                        <button
+                                type="button"
+                                id="participantButton-${item.candidateId}"
+                                onclick="toggleParticipantResults(${item.candidateId})">
+
+                            참가자별 귀가 결과
+
+                        </button>
+
+                    </div>
+
+
+                    <div
+                            id="participantResults-${item.candidateId}"
+                            class="participant-results">
+
+                        <div class="participant-result-title">
+                            참가자별 귀가 결과
+                            (${participantResults.length}명)
+                        </div>
+
+                        ${
+                        participantResults.length === 0
+                            ? "참가자별 귀가 결과가 없습니다."
+                            : rows
+                    }
+
+                    </div>
+                    `;
+
+
+                area.appendChild(
+                    card
+                );
+
+            }
+        );
+
     }
 
 
 
-    async function vote(
+    // ============================================================
+    // 참가자별 귀가 결과 열기 / 닫기
+    // ============================================================
+
+    function toggleParticipantResults(
         candidateId
-    ) {
+    )
+    {
+
+        const result =
+            document.getElementById(
+                "participantResults-"
+                + candidateId
+            );
+
+
+        const button =
+            document.getElementById(
+                "participantButton-"
+                + candidateId
+            );
+
+
+        if (
+            !result
+            ||
+            !button
+        )
+        {
+            return;
+        }
+
+
+        const opened =
+            result.classList.contains(
+                "show"
+            );
+
+
+        result.classList.toggle(
+            "show"
+        );
+
+
+        button.textContent =
+            opened
+                ? "참가자별 귀가 결과"
+                : "참가자별 귀가 결과 닫기";
+
+    }
+
+
+
+    // ============================================================
+    // 표시용 Util
+    // ============================================================
+
+    function displayValue(
+        value,
+        suffix = ""
+    )
+    {
+
+        if (
+            value === null
+            ||
+            value === undefined
+        )
+        {
+            return "-";
+        }
+
+
+        return (
+            MeetBack.escapeHtml(
+                value
+            )
+            + suffix
+        );
+
+    }
+
+
+
+    function displayDateTime(value)
+    {
+
+        if (!value)
+        {
+            return "-";
+        }
+
+
+        return MeetBack.escapeHtml(
+            MeetBack.formatDateTime(
+                value
+            )
+        );
+
+    }
+
+
+
+    // ============================================================
+    // 투표
+    // ============================================================
+
+    async function vote(candidateId)
+    {
+
+        if (!participant)
+        {
+
+            showToast(
+                "참가자 정보를 확인할 수 없습니다.",
+                "error"
+            );
+
+
+            return;
+        }
+
 
         const response =
             await MeetBack.authenticatedFetch(
@@ -405,28 +1406,44 @@
                 + "/votes?participantId="
                 + participant.participantId,
                 {
-                    method: "PUT",
+
+                    method:
+                        "PUT",
 
                     headers: {
+
                         "Content-Type":
                             "application/json"
+
                     },
 
                     body:
-                        JSON.stringify({
-                            candidateId:
-                            candidateId
-                        })
+                        JSON.stringify(
+                            {
+
+                                candidateId:
+                                candidateId
+
+                            }
+                        )
+
                 }
             );
 
 
-        if (!response.ok) {
+        if (!response.ok)
+        {
 
-            alert(
-                await response.text()
-                || "투표 실패"
+            const text =
+                await response.text();
+
+
+            showToast(
+                text
+                || "투표에 실패했습니다.",
+                "error"
             );
+
 
             return;
         }
@@ -436,17 +1453,24 @@
             candidateId;
 
 
-        alert(
-            "투표가 완료되었습니다."
+        showToast(
+            "투표가 완료되었습니다.",
+            "success"
         );
 
 
         await loadVoteResults();
+
     }
 
 
 
-    async function loadVoteResults() {
+    // ============================================================
+    // 투표 결과
+    // ============================================================
+
+    async function loadVoteResults()
+    {
 
         const response =
             await MeetBack.authenticatedFetch(
@@ -456,7 +1480,8 @@
             );
 
 
-        if (!response.ok) {
+        if (!response.ok)
+        {
             return;
         }
 
@@ -472,47 +1497,38 @@
 
 
         const isHost =
-            Number(meeting.hostUserId)
-            === Number(currentUser.userId);
+            Number(
+                meeting.hostUserId
+            )
+            === Number(
+                currentUser.userId
+            );
 
 
-        if (!isHost) {
+        if (!isHost)
+        {
             return;
         }
 
 
-        const hostArea =
-            document.getElementById(
-                "hostArea"
-            );
-
-
-        hostArea.style.display =
+        document.getElementById(
+            "hostArea"
+        ).style.display =
             "block";
 
 
-        /*
-         * 전원 투표 체크 API는
-         * 다음 단계에서 추가한다.
-         *
-         * 일단 후보 선택 후
-         * 결과 확인이 가능하도록 유지.
-         */
         document.getElementById(
             "voteStatus"
         ).textContent =
             "현재 득표 결과를 확인해주세요.";
 
 
-        /*
-         * 가장 득표수가 높은 후보를
-         * 기본 최종 후보로 설정.
-         */
         if (
             results
             &&
             results.length > 0
-        ) {
+        )
+        {
 
             const top =
                 [...results]
@@ -531,122 +1547,287 @@
                 "confirmButton"
             ).disabled =
                 false;
+
         }
+
     }
 
 
 
-    async function confirmFinalCandidate() {
+    // ============================================================
+    // 최종 확정 모달 열기
+    // ============================================================
 
-        if (!selectedCandidateId) {
+    function confirmFinalCandidate()
+    {
 
-            alert(
-                "확정할 후보가 없습니다."
+        if (!selectedCandidateId)
+        {
+
+            showToast(
+                "확정할 후보가 없습니다.",
+                "error"
             );
+
 
             return;
         }
 
 
-        if (!confirm(
-            "이 장소를 최종 장소로 확정할까요?"
-        )) {
+        const selectedCandidate =
+            rankings.find(
+                item =>
+                    Number(item.candidateId)
+                    === Number(selectedCandidateId)
+            );
+
+
+        const message =
+            document.getElementById(
+                "finalConfirmMessage"
+            );
+
+
+        if (
+            message
+            &&
+            selectedCandidate
+        )
+        {
+
+            message.textContent =
+                "'"
+                + (
+                    selectedCandidate.placeName
+                    || "선택된 장소"
+                )
+                + "'을 최종 장소로 확정할까요?";
+
+        }
+
+
+        const overlay =
+            document.getElementById(
+                "finalConfirmOverlay"
+            );
+
+
+        if (overlay)
+        {
+
+            overlay.classList.add(
+                "show"
+            );
+
+        }
+
+    }
+
+
+
+    // ============================================================
+    // 최종 확정 모달 닫기
+    // ============================================================
+
+    function closeFinalConfirmModal()
+    {
+
+        const overlay =
+            document.getElementById(
+                "finalConfirmOverlay"
+            );
+
+
+        if (!overlay)
+        {
             return;
         }
 
 
-        const response =
-            await MeetBack.authenticatedFetch(
-                "/meetings/"
-                + meetingId
-                + "/final-candidate",
-                {
-                    method: "PUT",
-
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
-
-                    body:
-                        JSON.stringify({
-                            candidateId:
-                            selectedCandidateId
-                        })
-                }
-            );
-
-
-        if (!response.ok) {
-
-            alert(
-                await response.text()
-                || "최종 장소 확정 실패"
-            );
-
-            return;
-        }
-
-
-        alert(
-            "최종 장소가 확정되었습니다."
+        overlay.classList.remove(
+            "show"
         );
 
-
-        goRoom();
     }
 
 
 
-    async function goRoom() {
+    // ============================================================
+    // 실제 최종 장소 확정
+    // ============================================================
 
-        // ============================================================
-        // 수정하다가 저장하지 않고 돌아가는 경우
-        //
-        // 장소 수정 버튼 누를 때
-        // SUBMITTED → DRAFT가 되었으므로
-        //
-        // 다시 SUBMITTED로 복구한다.
-        // 기존 DB 장소 데이터는 그대로 남아있기 때문에
-        // 상태만 복구하면 된다.
-        // ============================================================
+    async function confirmFinalCandidateAction()
+    {
 
-        if(
-            pageMode === "edit"
-            &&
-            participant
-        ){
+        if (!selectedCandidateId)
+        {
 
-            const response = await MeetBack.authenticatedFetch(
-                "/participants/"
-                + participant.participantId
-                + "/submit",
-                {
-                    method: "PUT"
-                }
+            closeFinalConfirmModal();
+
+
+            showToast(
+                "확정할 후보가 없습니다.",
+                "error"
             );
 
-            if(!response.ok)
-            {
-                const text = await response.text();
 
-                alert(
-                    text || "수정 취소 처리에 실패했습니다."
+            return;
+        }
+
+
+        const actionButton =
+            document.getElementById(
+                "finalConfirmActionButton"
+            );
+
+
+        if (actionButton)
+        {
+
+            actionButton.disabled =
+                true;
+
+
+            actionButton.textContent =
+                "확정 중...";
+
+        }
+
+
+        closeFinalConfirmModal();
+
+
+        try
+        {
+
+            const response =
+                await MeetBack.authenticatedFetch(
+                    "/meetings/"
+                    + meetingId
+                    + "/final-candidate",
+                    {
+
+                        method:
+                            "PUT",
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/json"
+
+                        },
+
+                        body:
+                            JSON.stringify(
+                                {
+
+                                    candidateId:
+                                    selectedCandidateId
+
+                                }
+                            )
+
+                    }
                 );
+
+
+            if (!response.ok)
+            {
+
+                const text =
+                    await response.text();
+
+
+                showToast(
+                    text
+                    || "최종 장소 확정에 실패했습니다.",
+                    "error"
+                );
+
 
                 return;
             }
 
+
+            // ----------------------------------------------------
+            // meeting-room에서 보여줄 메시지 저장
+            // ----------------------------------------------------
+
+            sessionStorage.setItem(
+                "meetbackToastMessage",
+                "최종 장소가 확정되었습니다."
+            );
+
+
+            sessionStorage.setItem(
+                "meetbackToastType",
+                "success"
+            );
+
+
+            // ----------------------------------------------------
+            // 딜레이 없이 바로 모임방 이동
+            // ----------------------------------------------------
+
+            goRoom();
+
         }
 
-        // 최초 입력(create) 상태에서 그냥 돌아가는 경우는
-        // DRAFT 그대로 유지
+        catch (error)
+        {
+
+            console.error(
+                "[FINAL CANDIDATE ERROR]",
+                error
+            );
+
+
+            showToast(
+                "최종 장소 확정 중 오류가 발생했습니다.",
+                "error"
+            );
+
+        }
+
+        finally
+        {
+
+            if (actionButton)
+            {
+
+                actionButton.disabled =
+                    false;
+
+
+                actionButton.textContent =
+                    "확정";
+
+            }
+
+        }
+
+    }
+
+
+
+    // ============================================================
+    // 모임방 이동
+    // ============================================================
+
+    function goRoom()
+    {
 
         location.href =
             "/meeting?meetingId="
             + meetingId;
+
     }
 
+
+
+    // ============================================================
+    // 실행
+    // ============================================================
 
     initialize();
 

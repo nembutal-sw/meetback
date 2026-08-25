@@ -42,7 +42,7 @@
         address = #{address},
         latitude = #{latitude},
         longitude = #{longitude},
-        is_active = TRUE,
+        is_active = #{isActive},
         updated_at = NOW()
 
         WHERE candidate_id = #{candidateId}
