@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>MeetBack 모임방</title>
+
+    <script
+            src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js">
+    </script>
+
+    <script src="/js/meeting-common.js"></script>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 900px;
+            margin: 40px auto;
+
+            font-family: Arial, sans-serif;
+            color: #222;
+        }
+
+        button {
+            padding: 11px 18px;
+
+            cursor: pointer;
+
+            border: 1px solid #ccc;
+            border-radius: 8px;
+
+            background: white;
+        }
+
+        .primary {
+            background: #222;
+            color: white;
+
+            border-color: #222;
+        }
+
+        .room-header {
+            display: flex;
+
+            justify-content: space-between;
+            align-items: flex-start;
+
+            margin-bottom: 30px;
+        }
+
+        .room-card {
+            padding: 22px;
+
+            margin-bottom: 20px;
+
+            border: 1px solid #ddd;
+            border-radius: 12px;
+        }
+
+        .meeting-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(4, 1fr);
+
+            gap: 12px;
+        }
+
+        .info-box {
+            padding: 15px;
+
+            background: #f7f7f7;
+
+            border-radius: 8px;
+        }
+
+        .label {
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: #777;
+
+            font-size: 13px;
+        }
+
+        .participant-row {
+            display: flex;
+
+            justify-content: space-between;
+
+            padding: 14px 5px;
+
+            border-bottom: 1px solid #eee;
+        }
+
+        .complete {
+            color: green;
+            font-weight: bold;
+        }
+
+        .waiting {
+            color: #888;
+        }
+
+        .chat-messages {
+            height: 300px;
+
+            overflow-y: auto;
+
+            padding: 15px;
+
+            margin-bottom: 10px;
+
+            background: #fafafa;
+
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .chat-row {
+            display: flex;
+
+            gap: 8px;
+        }
+
+        .chat-row input {
+            flex: 1;
+
+            padding: 11px;
+        }
+
+        .action-box {
+            padding: 20px;
+
+            background: #f7f7f7;
+
+            border-radius: 8px;
+        }
+
+        .status-badge {
+            padding: 8px 14px;
+
+            background: #eee;
+
+            border-radius: 20px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+
+<div class="room-header">
+
+    <div>
+
+        <h1 id="meetingTitle">
+            MeetBack 모임방
+        </h1>
+
+        <div id="loginInfo">
+        </div>
+
+    </div>
+
+
+    <div>
+
+        <span
+                id="meetingBadge"
+                class="status-badge">
+
+            로딩 중
+
+        </span>
+
+        <button onclick="location.href='/home'">
+            홈으로
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- 모임 정보 -->
+
+<div class="room-card">
+
+    <h2>모임 정보</h2>
+
+    <div class="meeting-grid">
+
+        <div class="info-box">
+
+            <span class="label">
+                모임 ID
+            </span>
+
+            <strong id="meetingIdView">
+                -
+            </strong>
+
+        </div>
+
+
+        <div class="info-box">
+
+            <span class="label">
+                초대 코드
+            </span>
+
+            <strong id="inviteCodeView">
+                -
+            </strong>
+
+        </div>
+
+
+        <div class="info-box">
+
+            <span class="label">
+                희망 종료시간
+            </span>
+
+            <strong id="desiredEndView">
+                -
+            </strong>
+
+        </div>
+
+
+        <div class="info-box">
+
+            <span class="label">
+                상태
+            </span>
+
+            <strong id="statusView">
+                -
+            </strong>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- 내 장소 -->
+
+<div class="room-card">
+
+    <h2>내 장소</h2>
+
+    <p id="myInputStatus">
+        상태 확인 중...
+    </p>
+
+    <button
+            id="locationButton"
+            class="primary"
+            onclick="goLocation()">
+
+        장소 입력
+
+    </button>
+
+</div>
+
+
+
+<!-- 참가자 현황 -->
+
+<div class="room-card">
+
+    <h2>참가자 현황</h2>
+
+    <div id="participantList">
+
+        불러오는 중...
+
+    </div>
+
+</div>
+
+
+
+<!-- 채팅 -->
+
+<div class="room-card">
+
+    <h2>모임 채팅</h2>
+
+    <p>
+        연결 상태 :
+        <strong id="chatStatus">
+            DISCONNECTED
+        </strong>
+    </p>
+
+    <div
+            id="chatMessages"
+            class="chat-messages">
+    </div>
+
+
+    <div class="chat-row">
+
+        <input
+                id="chatInput"
+                placeholder="메시지를 입력하세요"
+                onkeydown="
+                if(event.key === 'Enter') {
+                    sendChat();
+                }
+            ">
+
+        <button
+                class="primary"
+                onclick="sendChat()">
+
+            전송
+
+        </button>
+
+    </div>
+
+</div>
+
+
+
+<!-- 진행 -->
+
+<div class="room-card">
+
+    <h2>모임 진행</h2>
+
+    <div
+            id="progressArea"
+            class="action-box">
+
+        상태 확인 중...
+
+    </div>
+
+</div>
+
+
+
+<script>
+
+    let meetingId = null;
+
+    let currentUser = null;
+    let currentMeeting = null;
+    let currentParticipant = null;
+
+    let allSubmitted = false;
+
+    let stompClient = null;
+
+
+    async function initialize() {
+
+        currentUser =
+            await MeetBack.checkLogin();
+
+
+        if (!currentUser) {
+            return;
+        }
+
+
+        meetingId =
+            MeetBack.getMeetingId();
+
+
+        if (!meetingId) {
+
+            alert(
+                "잘못된 모임 ID입니다."
+            );
+
+            location.href =
+                "/home";
+
+            return;
+        }
+
+
+        document.getElementById(
+            "meetingIdView"
+        ).textContent =
+            meetingId;
+
+
+        document.getElementById(
+            "loginInfo"
+        ).textContent =
+            "userId = "
+            + currentUser.userId;
+
+
+        await loadMeeting();
+        await loadCurrentParticipant();
+        await loadParticipants();
+        await loadSubmittedStatus();
+
+        renderProgress();
+
+        await connectWebSocket();
+    }
+
+
+
+    async function loadMeeting() {
+
+        const response =
+            await MeetBack.authenticatedFetch(
+                "/meetings/" + meetingId
+            );
+
+
+        if (!response.ok) {
+
+            const text =
+                await response.text();
+
+            alert(
+                text
+                || "모임 조회 실패"
+            );
+
+            return;
+        }
+
+
+        currentMeeting =
+            await response.json();
+
+
+        document.getElementById(
+            "meetingTitle"
+        ).textContent =
+            currentMeeting.title
+            || "MeetBack 모임방";
+
+
+        document.getElementById(
+            "inviteCodeView"
+        ).textContent =
+            currentMeeting.inviteCode
+            || "-";
+
+
+        document.getElementById(
+            "desiredEndView"
+        ).textContent =
+            MeetBack.formatDateTime(
+                currentMeeting.desiredEndAt
+            );
+
+
+        document.getElementById(
+            "statusView"
+        ).textContent =
+            currentMeeting.status;
+
+
+        const badge =
+            document.getElementById(
+                "meetingBadge"
+            );
+
+
+        if (
+            currentMeeting.status
+            === "INPUT_OPEN"
+        ) {
+
+            badge.textContent =
+                "장소 입력 중";
+        }
+
+        else if (
+            currentMeeting.status
+            === "VOTING"
+        ) {
+
+            badge.textContent =
+                "투표 중";
+        }
+
+        else {
+
+            badge.textContent =
+                "장소 확정";
+        }
+    }
+
+
+
+    async function loadCurrentParticipant() {
+
+        const response =
+            await MeetBack.authenticatedFetch(
+                "/participants/meetings/"
+                + meetingId
+                + "/participants/me"
+            );
+
+
+        if (!response.ok) {
+            return;
+        }
+
+
+        currentParticipant =
+            await response.json();
+
+
+        const text =
+            document.getElementById(
+                "myInputStatus"
+            );
+
+
+        const button =
+            document.getElementById(
+                "locationButton"
+            );
+
+
+        if (
+            currentParticipant.inputStatus
+            === "SUBMITTED"
+        ) {
+
+            text.textContent =
+                "장소 입력 완료";
+
+            button.textContent =
+                "장소 수정";
+        }
+
+        else {
+
+            text.textContent =
+                "아직 장소를 입력하지 않았습니다.";
+
+            button.textContent =
+                "장소 입력";
+        }
+
+
+        if (
+            currentMeeting
+            &&
+            currentMeeting.status
+            !== "INPUT_OPEN"
+        ) {
+
+            button.disabled =
+                true;
+        }
+    }
+
+
+
+    async function loadParticipants() {
+
+        const response =
+            await MeetBack.authenticatedFetch(
+                "/participants/meeting/"
+                + meetingId
+            );
+
+
+        if (!response.ok) {
+            return;
+        }
+
+
+        const participants =
+            await response.json();
+
+
+        const area =
+            document.getElementById(
+                "participantList"
+            );
+
+
+        area.innerHTML =
+            "";
+
+
+        participants.forEach(
+            participant => {
+
+                const row =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                row.className =
+                    "participant-row";
+
+
+                const me =
+                    Number(participant.userId)
+                    === Number(currentUser.userId);
+
+
+                row.innerHTML =
+                    `
+                    <span>
+                        참가자 ${participant.userId}
+                        ${me ? "(나)" : ""}
+                    </span>
+
+                    <span class="${
+                        participant.inputStatus
+                        === "SUBMITTED"
+                            ? "complete"
+                            : "waiting"
+                    }">
+
+                        ${
+                        participant.inputStatus
+                        === "SUBMITTED"
+                            ? "입력 완료"
+                            : "입력 대기"
+                    }
+
+                    </span>
+                    `;
+
+
+                area.appendChild(
+                    row
+                );
+            }
+        );
+    }
+
+
+
+    async function loadSubmittedStatus() {
+
+        const response =
+            await MeetBack.authenticatedFetch(
+                "/participants/meeting/"
+                + meetingId
+                + "/submitted"
+            );
+
+
+        if (!response.ok) {
+            return;
+        }
+
+
+        allSubmitted =
+            await response.json();
+    }
+
+
+
+    async function goLocation() {
+
+        // 모임 정보가 아직 없으면 방어
+        if (!currentMeeting) {
+            alert(
+                "모임 정보를 불러오는 중입니다."
+            );
+            return;
+        }
+
+        // INPUT_OPEN에서만 장소 입력 / 수정 가능
+        if (
+            currentMeeting.status
+            !== "INPUT_OPEN"
+        ) {
+            alert(
+                "투표가 시작된 이후에는 장소를 수정할 수 없습니다."
+            );
+            return;
+        }
+
+        /*
+        * 이미 장소 입력을 완료한 사람
+        *
+        * SUBMITTED -> DRAFT
+        */
+
+        if (
+            currentParticipant
+            &&
+            currentParticipant.inputStatus
+            === "SUBMITTED"
+        ) {
+
+            const response =
+                await MeetBack.authenticatedFetch(
+                    "/participants/"
+                    + currentParticipant.participantId
+                    + "/edit",
+                    {
+                        method: "PUT"
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                const text = await response.text();
+
+                alert(
+                    "수정 상태 변경 실패"
+                );
+                return;
+            }
+
+           /*
+            * 수정 모드로 이동
+            */
+
+            location.href = "/meeting/location?meetingId="
+                + meetingId
+                + "&mode=edit";
+
+            return;
+        }
+
+        // ============================================================
+        // 최초 입력 사용자
+        //
+        // DRAFT 상태 그대로 장소 입력 페이지 이동
+        // ============================================================
+
+        location.href =
+            "/meeting/location?meetingId="
+            + meetingId
+            + "&mode=create";
+    }
+
+
+
+    function renderProgress() {
+
+        const area =
+            document.getElementById(
+                "progressArea"
+            );
+
+
+        const isHost =
+            Number(
+                currentMeeting.hostUserId
+            )
+            === Number(
+                currentUser.userId
+            );
+
+
+        if (
+            currentMeeting.status
+            === "INPUT_OPEN"
+        ) {
+
+            if (!allSubmitted) {
+
+                area.innerHTML =
+                    `
+                    모든 참가자의 장소 입력을
+                    기다리고 있습니다.
+                    `;
+
+                return;
+            }
+
+
+            if (isHost) {
+
+                area.innerHTML =
+                    `
+                    <p>
+                        모든 참가자가 장소 입력을
+                        완료했습니다.
+                    </p>
+
+                    <button
+                        class="primary"
+                        onclick="startVoting()">
+                        투표 시작
+                    </button>
+                    `;
+
+            }
+
+            else {
+
+                area.innerHTML =
+                    `
+                    모든 참가자의 장소 입력이 완료되었습니다.
+                    방장이 투표를 시작할 때까지 기다려주세요.
+                    `;
+            }
+
+            return;
+        }
+
+
+        if (
+            currentMeeting.status
+            === "VOTING"
+        ) {
+
+            area.innerHTML =
+                `
+                <p>
+                    장소 투표가 진행 중입니다.
+                </p>
+
+                <button
+                    class="primary"
+                    onclick="goVote()">
+                    투표하러 가기
+                </button>
+                `;
+
+            return;
+        }
+
+
+        if (
+            currentMeeting.status
+            === "CONFIRMED"
+        ) {
+
+            area.innerHTML =
+                `
+                최종 장소가 확정되었습니다.
+                `;
+
+        }
+    }
+
+
+
+    async function startVoting() {
+
+        if (!confirm(
+            "장소 계산 후 투표를 시작할까요?"
+        )) {
+            return;
+        }
+
+
+        /*
+         * 먼저 계산.
+         *
+         * 계산 실패 시 INPUT_OPEN을 유지하는 편이
+         * 안전하다.
+         */
+        const calculation =
+            await MeetBack.authenticatedFetch(
+                "/calculations/meeting?meetingId="
+                + meetingId,
+                {
+                    method: "POST"
+                }
+            );
+
+
+        if (!calculation.ok) {
+
+            alert(
+                await calculation.text()
+                || "후보 계산 실패"
+            );
+
+            return;
+        }
+
+
+        /*
+         * 기존 MeetingController에 이미 존재.
+         */
+        const voting =
+            await MeetBack.authenticatedFetch(
+                "/meetings/"
+                + meetingId
+                + "/voting",
+                {
+                    method: "PUT"
+                }
+            );
+
+
+        if (!voting.ok) {
+
+            alert(
+                await voting.text()
+                || "투표 시작 실패"
+            );
+
+            return;
+        }
+
+
+        location.href =
+            "/meeting/vote?meetingId="
+            + meetingId;
+    }
+
+
+
+    function goVote() {
+
+        location.href =
+            "/meeting/vote?meetingId="
+            + meetingId;
+    }
+
+
+
+    async function connectWebSocket() {
+
+        const protocol =
+            location.protocol === "https:"
+                ? "wss"
+                : "ws";
+
+
+        stompClient =
+            new StompJs.Client({
+
+                brokerURL:
+                    protocol
+                    + "://"
+                    + location.host
+                    + "/ws",
+
+
+                connectHeaders: {
+
+                    "Authorization":
+                        "Bearer "
+                        + MeetBack.getAccessToken()
+                },
+
+
+                reconnectDelay:
+                    5000,
+
+
+                onConnect:
+                    async function() {
+
+                        document.getElementById(
+                            "chatStatus"
+                        ).textContent =
+                            "CONNECTED";
+
+
+                        stompClient.subscribe(
+                            "/topic/meetings/"
+                            + meetingId
+                            + "/chat",
+
+                            async message => {
+
+                                const data =
+                                    JSON.parse(
+                                        message.body
+                                    );
+
+                                // 시스템 이벤트
+                                if(data.messageType === "SYSTEM" && data.eventType)
+                                {
+                                    await handleMeetingEvent(
+                                        data
+                                    );
+
+                                    return;
+                                }
+
+                                // 일반 채팅
+                                addChat(
+                                    data
+                                );
+                            }
+                        );
+
+
+                        await loadChatHistory();
+                    }
+            });
+
+
+        stompClient.activate();
+    }
+
+
+
+    async function loadChatHistory() {
+
+        const response =
+            await MeetBack.authenticatedFetch(
+                "/meetings/"
+                + meetingId
+                + "/messages"
+            );
+
+
+        if (!response.ok) {
+            return;
+        }
+
+
+        const messages =
+            await response.json();
+
+
+        const area =
+            document.getElementById(
+                "chatMessages"
+            );
+
+
+        area.innerHTML =
+            "";
+
+
+        messages.forEach(
+            addChat
+        );
+    }
+
+
+
+    function addChat(message) {
+
+        const area =
+            document.getElementById(
+                "chatMessages"
+            );
+
+
+        const div =
+            document.createElement(
+                "div"
+            );
+
+
+        div.innerHTML =
+            `
+            <strong>
+                ${MeetBack.escapeHtml(
+                message.nickname
+                || "참가자"
+            )}
+            </strong>
+
+            ${MeetBack.escapeHtml(
+                message.content
+            )}
+            `;
+
+
+        area.appendChild(
+            div
+        );
+
+
+        area.scrollTop =
+            area.scrollHeight;
+    }
+
+    async function handleMeetingEvent(
+        event
+    ){
+
+        // 채팅방에 시스템 메세지 출력
+        addSystemMessage(
+            event.content
+        );
+
+        if(event.eventType === "LOCATION_SUBMITTED")
+        {
+            await refreshRoomState();
+
+            return;
+        }
+
+        if(event.eventType === "VOTING_STARTED")
+        {
+            await refreshRoomState();
+        }
+
+    }
+
+    async function refreshRoomState()
+    {
+        // 모임 상태
+        await loadMeeting();
+
+        // 내 상태
+        await loadCurrentParticipant();
+
+        // 참가자 전체 상태
+        await loadParticipants();
+
+        // 전원 SUBMITTED 여부
+        await loadSubmittedStatus();
+
+        // 방장 버튼 / 투표 버튼 다시 그림
+        renderProgress();
+    }
+
+    function addSystemMessage(
+        content
+    ){
+        const area = document.getElementById("chatMessages");
+
+        if(!area)
+        {
+            return;
+        }
+
+        const div = document.createElement("div");
+
+        div.style.textAlign = "center";
+
+        div.style.color = "#888";
+
+        div.style.padding = "8px";
+
+        div.style.fontSize = "13px";
+
+        div.textContent = content;
+
+        area.appendChild(div);
+
+        area.scrollTop = area.scrollHeight;
+    }
+
+
+
+    function sendChat() {
+
+        const input =
+            document.getElementById(
+                "chatInput"
+            );
+
+
+        const content =
+            input.value.trim();
+
+
+        if (!content) {
+            return;
+        }
+
+
+        if (
+            !stompClient
+            ||
+            !stompClient.connected
+        ) {
+
+            alert(
+                "채팅 연결 중입니다."
+            );
+
+            return;
+        }
+
+
+        stompClient.publish({
+
+            destination:
+                "/app/meetings/"
+                + meetingId
+                + "/chat",
+
+
+            body:
+                JSON.stringify({
+                    content: content
+                })
+        });
+
+
+        input.value =
+            "";
+    }
+
+
+    initialize();
+
+</script>
+
+</body>
+</html>

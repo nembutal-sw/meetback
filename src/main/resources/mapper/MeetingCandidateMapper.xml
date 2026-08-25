@@ -55,16 +55,16 @@
             resultType="com.meetback.dev.domain.MeetingCandidate">
 
         SELECT
-        candidate_id,
-        meeting_id,
-        proposer_participant_id,
-        place_name,
-        address,
-        latitude,
-        longitude,
-        is_active,
-        created_at,
-        updated_at
+            candidate_id,
+            meeting_id,
+            proposer_participant_id,
+            place_name,
+            address,
+            latitude,
+            longitude,
+            is_active,
+            created_at,
+            updated_at
 
         FROM meeting_candidates
 
@@ -81,16 +81,16 @@
             resultType="com.meetback.dev.domain.MeetingCandidate">
 
         SELECT
-        candidate_id,
-        meeting_id,
-        proposer_participant_id,
-        place_name,
-        address,
-        latitude,
-        longitude,
-        is_active,
-        created_at,
-        updated_at
+            candidate_id,
+            meeting_id,
+            proposer_participant_id,
+            place_name,
+            address,
+            latitude,
+            longitude,
+            is_active,
+            created_at,
+            updated_at
 
         FROM meeting_candidates
 
@@ -103,16 +103,16 @@
             resultType="com.meetback.dev.domain.MeetingCandidate">
 
         SELECT
-        candidate_id,
-        meeting_id,
-        proposer_participant_id,
-        place_name,
-        address,
-        latitude,
-        longitude,
-        is_active,
-        created_at,
-        updated_at
+            candidate_id,
+            meeting_id,
+            proposer_participant_id,
+            place_name,
+            address,
+            latitude,
+            longitude,
+            is_active,
+            created_at,
+            updated_at
 
         FROM meeting_candidates
 

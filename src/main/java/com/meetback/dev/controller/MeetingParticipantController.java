@@ -8,10 +8,12 @@ import com.meetback.dev.service.MeetingParticipantService;
 import com.meetback.dev.service.ParticipantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -20,15 +22,20 @@ public class MeetingParticipantController {
 
     private final MeetingParticipantService meetingParticipantService;
     private final ParticipantService participantService;
+    private final SimpMessagingTemplate messagingTemplate;
 
 
     @GetMapping("/{participantId}")
     public MeetingParticipant findById(
-            @PathVariable Long participantId
-    ) {
+            @PathVariable Long participantId,
 
-        return meetingParticipantService.findById(
-                participantId
+            @AuthenticationPrincipal
+            AuthenticatedUser user
+    )
+    {
+        return meetingParticipantService.findOwnedById(
+                participantId,
+                user.userId()
         );
     }
 
@@ -42,12 +49,55 @@ public class MeetingParticipantController {
     @PutMapping("/{participantId}/location")
     public ResponseEntity<Void> updateLocation(
             @PathVariable Long participantId,
+            @AuthenticationPrincipal AuthenticatedUser user,
             @RequestBody ParticipantLocationRequestDTO request
     ) {
 
         meetingParticipantService.updateLocation(
                 participantId,
+                user.userId(),
                 request
+        );
+
+
+        MeetingParticipant participant =
+                meetingParticipantService.findOwnedById(
+                        participantId,
+                        user.userId()
+                );
+
+
+        messagingTemplate.convertAndSend(
+                "/topic/meetings/"
+                        + participant.getMeetingId()
+                        + "/chat",
+
+                (Object) Map.of(
+                        "messageType", "SYSTEM",
+                        "eventType", "LOCATION_SUBMITTED",
+                        "userId", participant.getUserId(),
+                        "content",
+                        "참가자 "
+                                + participant.getUserId()
+                                + "님이 장소 입력을 완료했습니다."
+                )
+        );
+
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{participantId}/submit")
+    public ResponseEntity<Void> submitInput(
+            @PathVariable Long participantId,
+
+            @AuthenticationPrincipal
+            AuthenticatedUser user
+    )
+    {
+        meetingParticipantService.submitInput(
+                participantId,
+                user.userId()
         );
 
         return ResponseEntity.noContent().build();
@@ -61,15 +111,38 @@ public class MeetingParticipantController {
      */
     @PutMapping("/{participantId}/edit")
     public ResponseEntity<Void> startEdit(
-            @PathVariable Long participantId
+            @PathVariable Long participantId,
+            @AuthenticationPrincipal AuthenticatedUser user
     ) {
 
         meetingParticipantService.startEdit(
-                participantId
+                participantId,
+                user.userId()
         );
 
         return ResponseEntity.noContent().build();
     }
+
+   /*
+    * 장소 수정 취소
+    *
+    * DRAFT -> SUBMITTED
+    */
+   @PutMapping("/{participantId}/edit/cancel")
+   public ResponseEntity<Void> cancelEdit(
+           @PathVariable Long participantId,
+
+           @AuthenticationPrincipal
+           AuthenticatedUser user
+   )
+   {
+       meetingParticipantService.cancelEdit(
+               participantId,
+               user.userId()
+       );
+
+       return ResponseEntity.noContent().build();
+   }
 
 
     /*
@@ -91,8 +164,14 @@ public class MeetingParticipantController {
      */
     @GetMapping("/meeting/{meetingId}")
     public List<MeetingParticipant> findByMeetingId(
-            @PathVariable Long meetingId
+            @PathVariable Long meetingId,
+            @AuthenticationPrincipal AuthenticatedUser user
     ) {
+
+        participantService.getCurrentParticipant(
+                meetingId,
+                user.userId()
+        );
 
         return meetingParticipantService.findByMeetingId(
                 meetingId

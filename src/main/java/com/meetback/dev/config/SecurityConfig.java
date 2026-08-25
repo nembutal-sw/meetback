@@ -55,7 +55,9 @@ public class SecurityConfig {
                                                 // WebSocket 허가
                                                 "/meeting",
                                                 "/meeting/location-test",
-                                                "/meeting/location-test/**"
+                                                "/meeting/location-test/**",
+                                                "/meeting/location",
+                                                "/meeting/vote"
                                         )
                                         .permitAll()
 

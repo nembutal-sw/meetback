@@ -1,5 +1,6 @@
 package com.meetback.dev.controller;
 
+import com.meetback.dev.domain.MeetingRoomResponse;
 import com.meetback.dev.dto.FinalCandidateRequest;
 import com.meetback.dev.dto.MeetingCreateRequest;
 import com.meetback.dev.dto.MeetingCreateResponse;
@@ -7,8 +8,11 @@ import com.meetback.dev.dto.MeetingJoinRequest;
 import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.MeetingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 
 // ============================================================
@@ -24,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class MeetingController {
 
     private final MeetingService meetingService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     /*
      * ============================================================
@@ -108,7 +113,35 @@ public class MeetingController {
             @AuthenticationPrincipal AuthenticatedUser user
             ) {
 
+        // DB 상태
+        // INPUT_OPEN -> VOTING
         meetingService.startVoting(
+                meetingId,
+                user.userId()
+        );
+
+        messagingTemplate.convertAndSend(
+                "/topic/meetings"
+                        + meetingId
+                        + "/chat",
+
+                (Object) Map.of(
+                        "messageType", "SYSTEM",
+                        "eventType", "VOTING_STARTED",
+                        "content",
+                        "방장이 장소 투표를 시작했습니다."
+                )
+        );
+    }
+
+    @GetMapping("/{meetingId}")
+    public MeetingRoomResponse getMeeting(
+            @PathVariable Long meetingId,
+            @AuthenticationPrincipal
+            AuthenticatedUser user
+    )
+    {
+        return meetingService.getMeetingRoom(
                 meetingId,
                 user.userId()
         );
