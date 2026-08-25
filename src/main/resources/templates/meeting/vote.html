@@ -9,364 +9,7 @@
 
     <script src="/js/meeting-common.js"></script>
 
-    <style>
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            width: 900px;
-            margin: 40px auto;
-
-            font-family: Arial, sans-serif;
-            color: #222;
-        }
-
-        button {
-            padding: 11px 18px;
-
-            cursor: pointer;
-
-            border: 1px solid #ccc;
-            border-radius: 8px;
-
-            background: white;
-        }
-
-        button:hover {
-            background: #f5f5f5;
-        }
-
-        button:disabled {
-            cursor: default;
-            opacity: 0.6;
-        }
-
-        .primary {
-            background: #222;
-            color: white;
-
-            border-color: #222;
-        }
-
-        .primary:hover {
-            background: #444;
-        }
-
-        .candidate {
-            padding: 22px;
-
-            margin-bottom: 18px;
-
-            border: 1px solid #ddd;
-            border-radius: 12px;
-
-            background: white;
-        }
-
-        .candidate.top {
-            border: 2px solid #222;
-
-            background: #fafafa;
-        }
-
-        .candidate-title {
-            display: flex;
-
-            flex-wrap: wrap;
-            align-items: center;
-
-            gap: 8px;
-
-            margin-bottom: 8px;
-        }
-
-        .candidate-title h2 {
-            margin: 0;
-
-            font-size: 24px;
-        }
-
-        .candidate-address {
-            margin-top: 8px;
-            margin-bottom: 15px;
-
-            color: #666;
-        }
-
-        .badge {
-            display: inline-block;
-
-            padding: 5px 10px;
-
-            border-radius: 15px;
-
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .badge-top {
-            background: #222;
-            color: white;
-        }
-
-        .badge-fair {
-            background: white;
-            color: #333;
-
-            border: 1px solid #555;
-        }
-
-        .badge-return {
-            background: #e8f5e9;
-            color: #1b5e20;
-        }
-
-        .info-grid {
-            display: grid;
-
-            grid-template-columns:
-                repeat(2, 1fr);
-
-            gap: 10px;
-
-            margin: 15px 0;
-        }
-
-        .info {
-            padding: 14px;
-
-            background: #f7f7f7;
-
-            border-radius: 8px;
-        }
-
-        .info-label {
-            display: block;
-
-            margin-bottom: 5px;
-
-            color: #777;
-
-            font-size: 13px;
-        }
-
-        .candidate-buttons {
-            display: flex;
-
-            flex-wrap: wrap;
-
-            gap: 8px;
-
-            margin-top: 16px;
-        }
-
-
-        /* =========================================================
-           참가자별 귀가 결과
-           ========================================================= */
-
-        .participant-results {
-            display: none;
-
-            margin-top: 20px;
-            padding-top: 18px;
-
-            border-top: 1px solid #eee;
-        }
-
-        .participant-results.show {
-            display: block;
-        }
-
-        .participant-result-title {
-            margin-bottom: 12px;
-
-            font-weight: bold;
-        }
-
-        .participant-result {
-            padding: 14px;
-
-            margin-top: 10px;
-
-            background: #f7f7f7;
-
-            border-radius: 8px;
-
-            line-height: 1.8;
-        }
-
-        .return-possible {
-            color: #18864b;
-            font-weight: bold;
-        }
-
-        .return-impossible {
-            color: #b71c1c;
-            font-weight: bold;
-        }
-
-
-        /* =========================================================
-           방장
-           ========================================================= */
-
-        .host-area {
-            padding: 20px;
-
-            margin-top: 30px;
-
-            background: #f7f7f7;
-
-            border-radius: 10px;
-        }
-
-
-        /* =========================================================
-           Toast
-           ========================================================= */
-
-        .toast-container {
-            position: fixed;
-
-            top: 25px;
-            left: 50%;
-
-            transform: translateX(-50%);
-
-            width: 420px;
-            max-width: calc(100vw - 40px);
-
-            z-index: 9999;
-        }
-
-        .toast {
-            display: none;
-
-            padding: 15px 18px;
-
-            border: 1px solid;
-            border-radius: 8px;
-
-            box-shadow:
-                    0 4px 12px rgba(0, 0, 0, 0.12);
-
-            text-align: center;
-
-            line-height: 1.5;
-
-            white-space: pre-line;
-        }
-
-        .toast.show {
-            display: block;
-        }
-
-        .toast-error {
-            color: #b71c1c;
-
-            background: #ffebee;
-
-            border-color: #e57373;
-        }
-
-        .toast-success {
-            color: #1b5e20;
-
-            background: #e8f5e9;
-
-            border-color: #81c784;
-        }
-
-        .toast-info {
-            color: #37474f;
-
-            background: #f5f7f8;
-
-            border-color: #90a4ae;
-        }
-
-
-        /* =========================================================
-           최종 장소 확정 모달
-           ========================================================= */
-
-        .confirm-overlay {
-            display: none;
-
-            position: fixed;
-
-            inset: 0;
-
-            background: rgba(0, 0, 0, 0.35);
-
-            z-index: 10000;
-
-            align-items: center;
-            justify-content: center;
-        }
-
-        .confirm-overlay.show {
-            display: flex;
-        }
-
-        .confirm-modal {
-            width: 420px;
-            max-width: calc(100vw - 40px);
-
-            padding: 26px;
-
-            background: white;
-
-            border-radius: 12px;
-
-            box-shadow:
-                    0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .confirm-title {
-            margin: 0 0 12px 0;
-
-            font-size: 20px;
-        }
-
-        .confirm-message {
-            margin: 0;
-
-            color: #555;
-
-            line-height: 1.6;
-        }
-
-        .confirm-buttons {
-            display: flex;
-
-            justify-content: flex-end;
-
-            gap: 8px;
-
-            margin-top: 24px;
-        }
-
-
-        @media (max-width: 750px) {
-
-            body {
-                width: auto;
-
-                margin: 20px;
-            }
-
-            .info-grid {
-                grid-template-columns:
-                    1fr;
-            }
-
-        }
-
-    </style>
+    <link rel="stylesheet" href="/css/meeting-vote.css">
 
 </head>
 
@@ -1136,9 +779,8 @@
                             </span>
 
                             <strong>
-                                ${displayValue(
-                        item.goldenMarginMinutes,
-                        "분"
+                                ${formatMinutes(
+                        item.goldenMarginMinutes
                     )}
                             </strong>
 
@@ -1821,6 +1463,52 @@
             "/meeting?meetingId="
             + meetingId;
 
+    }
+
+    function formatMinutes(value)
+    {
+        if (
+            value === null
+            ||
+            value === undefined
+        )
+        {
+            return "-";
+        }
+
+
+        const totalMinutes =
+            Number(value);
+
+
+        const hours =
+            Math.floor(
+                totalMinutes / 60
+            );
+
+
+        const minutes =
+            totalMinutes % 60;
+
+
+        if (hours === 0)
+        {
+            return minutes + "분";
+        }
+
+
+        if (minutes === 0)
+        {
+            return hours + "시간";
+        }
+
+
+        return (
+            hours
+            + "시간 "
+            + minutes
+            + "분"
+        );
     }
 
 
