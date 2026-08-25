@@ -5,9 +5,7 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class AuthCheckResponse
-{
-
+public class AuthCheckResponse {
    private Long userId;
    private String email;
    private String nickname;

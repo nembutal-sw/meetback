@@ -13,15 +13,19 @@ import com.meetback.dev.repository.SocialMapper;
 import com.meetback.dev.repository.UserMapper;
 import com.meetback.dev.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
+import java.util.Locale;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -36,15 +40,34 @@ public class AuthService {
     private final JwtProvider jwtProvider;
     private final KakaoOAuthProvider kakaoOAuthProvider;
     private final GoogleIdentityProvider googleIdentityProvider;
+    private final MailService mailService;
+
+    @Value("${app.base-url:http://localhost:8080}")
+    private String baseUrl;
+
+
+    private static final Pattern EMAIL_PATTERN =
+            Pattern.compile(
+                    "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$"
+            );
+
+
+    private static final Pattern PASSWORD_PATTERN =
+            Pattern.compile(
+                    "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^A-Za-z0-9\\s])\\S{8,20}$"
+            );
 
 
     // =========================================================
     // 회원가입
     // =========================================================
 
-    public void signup(SignupRequest request) {
+    public void signup(
+            SignupRequest request
+    ) {
 
         if (request == null) {
+
             throw new IllegalArgumentException(
                     "회원가입 요청이 없습니다."
             );
@@ -74,15 +97,33 @@ public class AuthService {
             );
         }
 
+
+        String normalizedEmail =
+                normalizeEmail(
+                        request.getEmail()
+                );
+
+
+        validateEmail(
+                normalizedEmail
+        );
+
+
+        validatePassword(
+                request.getPassword()
+        );
+
+
         // 이메일 중복 검사
         if (userMapper.existByEmail(
-                request.getEmail()
+                normalizedEmail
         ) > 0) {
 
             throw new IllegalArgumentException(
                     "이미 사용 중인 이메일입니다."
             );
         }
+
 
         // 닉네임 중복 검사
         if (userMapper.existByNickname(
@@ -94,15 +135,20 @@ public class AuthService {
             );
         }
 
-        User user = new User();
+
+        User user =
+                new User();
+
 
         user.setEmail(
-                request.getEmail()
+                normalizedEmail
         );
+
 
         user.setNickname(
                 request.getNickname()
         );
+
 
         user.setPasswordHash(
                 passwordEncoder.encode(
@@ -110,14 +156,17 @@ public class AuthService {
                 )
         );
 
+
         user.setRole(
                 "user"
         );
+
 
         // 최초 가입 시 0
         user.setTokenVersion(
                 0
         );
+
 
         userMapper.insertUser(
                 user
@@ -126,16 +175,355 @@ public class AuthService {
 
 
     // =========================================================
+    // 이메일 중복 검사
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public boolean isEmailAvailable(
+            String email
+    ) {
+
+        if (email == null
+                || email.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "이메일을 입력해주세요."
+            );
+        }
+
+
+        String normalizedEmail =
+                normalizeEmail(
+                        email
+                );
+
+
+        validateEmail(
+                normalizedEmail
+        );
+
+
+        return userMapper.existByEmail(
+                normalizedEmail
+        ) == 0;
+    }
+
+
+    // =========================================================
+    // 닉네임 중복 검사
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public boolean isNicknameAvailable(
+            String nickname
+    ) {
+
+        if (nickname == null
+                || nickname.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "닉네임을 입력해주세요."
+            );
+        }
+
+
+        return userMapper.existByNickname(
+                nickname.trim()
+        ) == 0;
+    }
+
+
+    // =========================================================
+    // 아이디 찾기
+    // =========================================================
+
+    @Transactional(readOnly = true)
+    public String findEmail(
+            String nickname
+    ) {
+
+        if (nickname == null
+                || nickname.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "닉네임을 입력해주세요."
+            );
+        }
+
+
+        User user =
+                userMapper.selectByNickname(
+                        nickname.trim()
+                );
+
+
+        if (user == null
+                || user.getEmail() == null
+                || user.getEmail().isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "일치하는 회원 정보를 찾을 수 없습니다."
+            );
+        }
+
+
+        return maskEmail(
+                user.getEmail()
+        );
+    }
+
+
+    // =========================================================
+    // 비밀번호 재설정 이메일 요청
+    // =========================================================
+
+    public void requestPasswordReset(
+            String email
+    ) {
+
+        if (email == null
+                || email.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "이메일을 입력해주세요."
+            );
+        }
+
+
+        String normalizedEmail =
+                normalizeEmail(
+                        email
+                );
+
+
+        validateEmail(
+                normalizedEmail
+        );
+
+
+        User user =
+                userMapper.selectByEmail(
+                        normalizedEmail
+                );
+
+
+        // 존재하지 않는 이메일 여부를 외부에 노출하지 않는다
+        if (user == null) {
+            return;
+        }
+
+
+        // 소셜 로그인 전용 계정
+        if (user.getPasswordHash() == null
+                || user.getPasswordHash().isBlank()) {
+
+            return;
+        }
+
+
+        if (user.getTokenVersion() == null) {
+            return;
+        }
+
+
+        if (isWithdrawalExpired(
+                user
+        )) {
+
+            return;
+        }
+
+
+        String resetToken =
+                jwtProvider.createPasswordResetToken(
+                        user.getUserId(),
+                        user.getTokenVersion()
+                );
+
+
+        String encodedToken =
+                URLEncoder.encode(
+                        resetToken,
+                        StandardCharsets.UTF_8
+                );
+
+
+        String resetLink =
+                baseUrl
+                        + "/reset-password?token="
+                        + encodedToken;
+
+
+        mailService.sendPasswordResetEmail(
+                user.getEmail(),
+                resetLink
+        );
+    }
+
+
+    // =========================================================
+    // 비밀번호 재설정 완료
+    // =========================================================
+
+    public void confirmPasswordReset(
+            String resetToken,
+            String newPassword
+    ) {
+
+        if (resetToken == null
+                || resetToken.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "비밀번호 재설정 Token이 없습니다."
+            );
+        }
+
+
+        if (newPassword == null
+                || newPassword.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "새 비밀번호를 입력해주세요."
+            );
+        }
+
+
+        validatePassword(
+                newPassword
+        );
+
+
+        if (!jwtProvider.validateToken(
+                resetToken
+        )) {
+
+            throw new IllegalArgumentException(
+                    "유효하지 않거나 만료된 비밀번호 재설정 링크입니다."
+            );
+        }
+
+
+        if (!"PASSWORD_RESET".equals(
+                jwtProvider.getTokenType(
+                        resetToken
+                )
+        )) {
+
+            throw new IllegalArgumentException(
+                    "비밀번호 재설정 Token이 아닙니다."
+            );
+        }
+
+
+        Long userId =
+                jwtProvider.getUserId(
+                        resetToken
+                );
+
+
+        Integer requestTokenVersion =
+                jwtProvider.getTokenVersion(
+                        resetToken
+                );
+
+
+        if (userId == null
+                || requestTokenVersion == null) {
+
+            throw new IllegalArgumentException(
+                    "비밀번호 재설정 사용자 정보가 올바르지 않습니다."
+            );
+        }
+
+
+        User user =
+                userMapper.selectById(
+                        userId
+                );
+
+
+        if (user == null
+                || user.getTokenVersion() == null) {
+
+            throw new IllegalArgumentException(
+                    "사용자를 찾을 수 없습니다."
+            );
+        }
+
+
+        validateWithdrawalStatus(
+                user
+        );
+
+
+        if (!requestTokenVersion.equals(
+                user.getTokenVersion()
+        )) {
+
+            throw new IllegalArgumentException(
+                    "이미 사용되었거나 무효화된 비밀번호 재설정 링크입니다."
+            );
+        }
+
+
+        String passwordHash =
+                passwordEncoder.encode(
+                        newPassword
+                );
+
+
+        int updatedRows =
+                userMapper.updatePassword(
+                        userId,
+                        passwordHash
+                );
+
+
+        if (updatedRows != 1) {
+
+            throw new IllegalStateException(
+                    "비밀번호 변경에 실패했습니다."
+            );
+        }
+
+
+        // 기존 Refresh Token 제거
+        refreshTokenMapper.deleteByUserId(
+                userId
+        );
+
+
+        // 기존 Access Token과 재설정 Token 무효화
+        int versionUpdatedRows =
+                userMapper.increaseTokenVersion(
+                        userId
+                );
+
+
+        if (versionUpdatedRows != 1) {
+
+            throw new IllegalStateException(
+                    "Token Version 변경에 실패했습니다."
+            );
+        }
+    }
+
+
+    // =========================================================
     // 일반 로그인
     // =========================================================
 
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse login(
+            LoginRequest request
+    ) {
 
         if (request == null) {
+
             throw new IllegalArgumentException(
                     "로그인 요청이 없습니다."
             );
         }
+
 
         if (request.getEmail() == null
                 || request.getEmail().isBlank()
@@ -147,20 +535,41 @@ public class AuthService {
             );
         }
 
-        User user =
-                userMapper.selectByEmail(
+
+        String normalizedEmail =
+                normalizeEmail(
                         request.getEmail()
                 );
 
-        if (user == null) {
+
+        if (!EMAIL_PATTERN.matcher(
+                normalizedEmail
+        ).matches()) {
+
             throw new IllegalArgumentException(
                     "이메일 또는 비밀번호가 일치하지 않습니다."
             );
         }
 
+
+        User user =
+                userMapper.selectByEmail(
+                        normalizedEmail
+                );
+
+
+        if (user == null) {
+
+            throw new IllegalArgumentException(
+                    "이메일 또는 비밀번호가 일치하지 않습니다."
+            );
+        }
+
+
         validateWithdrawalStatus(
                 user
         );
+
 
         if (user.getPasswordHash() == null
                 || !passwordEncoder.matches(
@@ -173,36 +582,36 @@ public class AuthService {
             );
         }
 
-        /*
-         * ★ 여기서 issueLoginToken() 호출
-         *
-         * issueLoginToken 안에서
-         * tokenVersion을 증가시킨 뒤
-         * Access / Refresh Token을 발급한다.
-         */
+
         LoginToken loginToken =
                 issueLoginToken(
                         user
                 );
 
+
         LoginResponse response =
                 new LoginResponse();
+
 
         response.setAccessToken(
                 loginToken.accessToken()
         );
 
+
         response.setRefreshToken(
                 loginToken.refreshToken()
         );
+
 
         response.setUserId(
                 user.getUserId()
         );
 
+
         response.setRole(
                 user.getRole()
         );
+
 
         return response;
     }
@@ -212,7 +621,7 @@ public class AuthService {
     // 카카오 로그인
     // =========================================================
 
-    public KakaoLoginResponse kakaoLogin(
+    public SocialLoginResponse kakaoLogin(
             KakaoLoginRequest request
     ) {
 
@@ -225,15 +634,18 @@ public class AuthService {
             );
         }
 
+
         String kakaoAccessToken =
                 kakaoOAuthProvider.requestAccessToken(
                         request.getCode()
                 );
 
+
         KakaoUserInfo kakaoUserInfo =
                 kakaoOAuthProvider.getUserInfo(
                         kakaoAccessToken
                 );
+
 
         if (kakaoUserInfo == null
                 || kakaoUserInfo.getProviderId() == null
@@ -244,128 +656,129 @@ public class AuthService {
             );
         }
 
+
+        String normalizedEmail =
+                normalizeEmail(
+                        kakaoUserInfo.getEmail()
+                );
+
+
         Social social =
                 socialMapper.selectByProviderAndProviderId(
                         "KAKAO",
                         kakaoUserInfo.getProviderId()
                 );
 
-        User user;
 
         // 기존 카카오 사용자
         if (social != null) {
 
-            user =
+            User user =
                     userMapper.selectById(
                             social.getUserId()
                     );
 
+
             if (user == null) {
+
                 throw new IllegalArgumentException(
                         "사용자 정보를 찾을 수 없습니다."
                 );
             }
 
-        } else {
 
-            // 같은 이메일의 기존 회원 조회
-            user =
+            validateWithdrawalStatus(
+                    user
+            );
+
+
+            return createSocialLoginSuccessResponse(
+                    user
+            );
+        }
+
+
+        User existingUser =
+                null;
+
+
+        // 같은 이메일의 기존 회원 조회
+        if (normalizedEmail != null
+                && !normalizedEmail.isBlank()) {
+
+            existingUser =
                     userMapper.selectByEmail(
-                            kakaoUserInfo.getEmail()
+                            normalizedEmail
                     );
+        }
 
-            // 신규 카카오 회원
-            if (user == null) {
 
-                user =
-                        new User();
-
-                user.setEmail(
-                        kakaoUserInfo.getEmail()
-                );
-
-                user.setNickname(
-                        kakaoUserInfo.getName()
-                );
-
-                user.setRole(
-                        "user"
-                );
-
-                user.setTokenVersion(
-                        0
-                );
-
-                userMapper.insertUser(
-                        user
-                );
-            }
+        // 기존 회원이면 카카오 계정 연결
+        if (existingUser != null) {
 
             Social newSocial =
                     new Social();
 
+
             newSocial.setUserId(
-                    user.getUserId()
+                    existingUser.getUserId()
             );
+
 
             newSocial.setProvider(
                     "KAKAO"
             );
 
+
             newSocial.setProviderId(
                     kakaoUserInfo.getProviderId()
             );
 
+
             newSocial.setEmail(
-                    kakaoUserInfo.getEmail()
+                    normalizedEmail
             );
+
 
             newSocial.setEmailVerified(
                     kakaoUserInfo.getEmailVerified()
             );
 
+
             newSocial.setName(
                     kakaoUserInfo.getName()
             );
 
+
             socialMapper.insertSocial(
                     newSocial
             );
+
+
+            validateWithdrawalStatus(
+                    existingUser
+            );
+
+
+            return createSocialLoginSuccessResponse(
+                    existingUser
+            );
         }
 
-        validateWithdrawalStatus(
-                user
-        );
 
-        /*
-         * ★ 카카오 로그인도 여기서
-         * tokenVersion 증가
-         */
-        LoginToken loginToken =
-                issueLoginToken(
-                        user
+        String signupToken =
+                jwtProvider.createSocialSignupToken(
+                        "KAKAO",
+                        kakaoUserInfo.getProviderId(),
+                        normalizedEmail,
+                        kakaoUserInfo.getEmailVerified(),
+                        kakaoUserInfo.getName()
                 );
 
-        KakaoLoginResponse response =
-                new KakaoLoginResponse();
 
-        response.setAccessToken(
-                loginToken.accessToken()
+        return createNicknameRequiredResponse(
+                signupToken
         );
-
-        response.setRefreshToken(
-                loginToken.refreshToken()
-        );
-
-        response.setUserId(
-                user.getUserId()
-        );
-
-        response.setRole(
-                user.getRole()
-        );
-
-        return response;
     }
 
 
@@ -373,15 +786,17 @@ public class AuthService {
     // 구글 로그인
     // =========================================================
 
-    public LoginResponse googleLogin(
+    public SocialLoginResponse googleLogin(
             GoogleLoginRequest request
     ) {
 
         if (request == null) {
+
             throw new IllegalArgumentException(
                     "Google 로그인 요청이 없습니다."
             );
         }
+
 
         if (request.getCredential() == null
                 || request.getCredential().isBlank()) {
@@ -391,10 +806,12 @@ public class AuthService {
             );
         }
 
+
         GoogleUserInfo googleUserInfo =
                 googleIdentityProvider.verifyIdToken(
                         request.getCredential()
                 );
+
 
         if (googleUserInfo == null
                 || googleUserInfo.getProviderId() == null
@@ -405,133 +822,311 @@ public class AuthService {
             );
         }
 
+
+        String normalizedEmail =
+                normalizeEmail(
+                        googleUserInfo.getEmail()
+                );
+
+
         Social social =
                 socialMapper.selectByProviderAndProviderId(
                         "GOOGLE",
                         googleUserInfo.getProviderId()
                 );
 
-        User user;
 
         // 기존 Google 사용자
         if (social != null) {
 
-            user =
+            User user =
                     userMapper.selectById(
                             social.getUserId()
                     );
 
+
             if (user == null) {
+
                 throw new IllegalArgumentException(
                         "사용자 정보를 찾을 수 없습니다."
                 );
             }
 
-        } else {
 
-            User existingUser =
-                    userMapper.selectByEmail(
-                            googleUserInfo.getEmail()
-                    );
-
-            if (existingUser != null) {
-                throw new IllegalStateException(
-                        "같은 이메일의 기존 계정이 있습니다. "
-                                + "기존 계정으로 로그인한 뒤 Google 계정을 연결해주세요."
-                );
-            }
-
-            user =
-                    new User();
-
-            user.setEmail(
-                    googleUserInfo.getEmail()
-            );
-
-            user.setNickname(
-                    createGoogleNickname(
-                            googleUserInfo
-                    )
-            );
-
-            user.setRole(
-                    "user"
-            );
-
-            user.setTokenVersion(
-                    0
-            );
-
-            userMapper.insertUser(
+            validateWithdrawalStatus(
                     user
             );
 
-            Social newSocial =
-                    new Social();
 
-            newSocial.setUserId(
-                    user.getUserId()
-            );
-
-            newSocial.setProvider(
-                    "GOOGLE"
-            );
-
-            newSocial.setProviderId(
-                    googleUserInfo.getProviderId()
-            );
-
-            newSocial.setEmail(
-                    googleUserInfo.getEmail()
-            );
-
-            newSocial.setEmailVerified(
-                    googleUserInfo.getEmailVerified()
-            );
-
-            socialMapper.insertSocial(
-                    newSocial
+            return createSocialLoginSuccessResponse(
+                    user
             );
         }
 
-        validateWithdrawalStatus(
+
+        User existingUser =
+                null;
+
+
+        if (normalizedEmail != null
+                && !normalizedEmail.isBlank()) {
+
+            existingUser =
+                    userMapper.selectByEmail(
+                            normalizedEmail
+                    );
+        }
+
+
+        // 기존 Google 정책 유지
+        if (existingUser != null) {
+
+            throw new IllegalStateException(
+                    "같은 이메일의 기존 계정이 있습니다. "
+                            + "기존 계정으로 로그인한 뒤 Google 계정을 연결해주세요."
+            );
+        }
+
+
+        String signupToken =
+                jwtProvider.createSocialSignupToken(
+                        "GOOGLE",
+                        googleUserInfo.getProviderId(),
+                        normalizedEmail,
+                        googleUserInfo.getEmailVerified(),
+                        googleUserInfo.getNickname()
+                );
+
+
+        return createNicknameRequiredResponse(
+                signupToken
+        );
+    }
+
+
+    // =========================================================
+    // 소셜 신규 회원 가입 완료
+    // =========================================================
+
+    public SocialLoginResponse completeSocialSignup(
+            String signupToken,
+            String nickname
+    ) {
+
+        if (signupToken == null
+                || signupToken.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "소셜 회원가입 Token이 없습니다."
+            );
+        }
+
+
+        if (nickname == null
+                || nickname.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "닉네임을 입력해주세요."
+            );
+        }
+
+
+        if (!jwtProvider.validateToken(
+                signupToken
+        )) {
+
+            throw new IllegalArgumentException(
+                    "유효하지 않거나 만료된 소셜 회원가입 정보입니다."
+            );
+        }
+
+
+        if (!"SOCIAL_SIGNUP".equals(
+                jwtProvider.getTokenType(
+                        signupToken
+                )
+        )) {
+
+            throw new IllegalArgumentException(
+                    "소셜 회원가입 Token이 아닙니다."
+            );
+        }
+
+
+        String provider =
+                jwtProvider.getProvider(
+                        signupToken
+                );
+
+
+        String providerId =
+                jwtProvider.getSubject(
+                        signupToken
+                );
+
+
+        String email =
+                normalizeEmail(
+                        jwtProvider.getEmail(
+                                signupToken
+                        )
+                );
+
+
+        Boolean emailVerified =
+                jwtProvider.getEmailVerified(
+                        signupToken
+                );
+
+
+        String name =
+                jwtProvider.getName(
+                        signupToken
+                );
+
+
+        if (!"KAKAO".equals(
+                provider
+        )
+                && !"GOOGLE".equals(
+                provider
+        )) {
+
+            throw new IllegalArgumentException(
+                    "지원하지 않는 소셜 로그인입니다."
+            );
+        }
+
+
+        if (providerId == null
+                || providerId.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "소셜 사용자 정보가 없습니다."
+            );
+        }
+
+
+        Social existingSocial =
+                socialMapper.selectByProviderAndProviderId(
+                        provider,
+                        providerId
+                );
+
+
+        if (existingSocial != null) {
+
+            throw new IllegalArgumentException(
+                    "이미 가입된 소셜 계정입니다."
+            );
+        }
+
+
+        String selectedNickname =
+                nickname.trim();
+
+
+        // 최종 가입 시 다시 닉네임 중복 검사
+        if (userMapper.existByNickname(
+                selectedNickname
+        ) > 0) {
+
+            throw new IllegalArgumentException(
+                    "이미 사용 중인 닉네임입니다."
+            );
+        }
+
+
+        if (email != null
+                && !email.isBlank()
+                && userMapper.existByEmail(
+                email
+        ) > 0) {
+
+            throw new IllegalArgumentException(
+                    "같은 이메일의 기존 계정이 있습니다."
+            );
+        }
+
+
+        User user =
+                new User();
+
+
+        user.setEmail(
+                email
+        );
+
+
+        user.setNickname(
+                selectedNickname
+        );
+
+
+        user.setRole(
+                "user"
+        );
+
+
+        user.setTokenVersion(
+                0
+        );
+
+
+        userMapper.insertUser(
                 user
         );
 
-        /*
-         * ★ 구글 로그인도 여기서
-         * tokenVersion 증가
-         */
-        LoginToken loginToken =
-                issueLoginToken(
-                        user
-                );
 
-        LoginResponse response =
-                new LoginResponse();
+        Social social =
+                new Social();
 
-        response.setAccessToken(
-                loginToken.accessToken()
-        );
 
-        response.setRefreshToken(
-                loginToken.refreshToken()
-        );
-
-        response.setUserId(
+        social.setUserId(
                 user.getUserId()
         );
 
-        response.setRole(
-                user.getRole()
+
+        social.setProvider(
+                provider
         );
 
-        return response;
+
+        social.setProviderId(
+                providerId
+        );
+
+
+        social.setEmail(
+                email
+        );
+
+
+        social.setEmailVerified(
+                emailVerified
+        );
+
+
+        social.setName(
+                name
+        );
+
+
+        socialMapper.insertSocial(
+                social
+        );
+
+
+        return createSocialLoginSuccessResponse(
+                user
+        );
     }
 
 
     // =========================================================
     // Google 닉네임 생성
+    // 기존 코드 보존
+    // 신규 Google 가입에서는 더 이상 호출하지 않는다.
     // =========================================================
 
     private String createGoogleNickname(
@@ -541,6 +1136,7 @@ public class AuthService {
         String baseNickname =
                 googleUserInfo.getNickname();
 
+
         if (baseNickname == null
                 || baseNickname.isBlank()) {
 
@@ -548,8 +1144,10 @@ public class AuthService {
                     "GoogleUser";
         }
 
+
         baseNickname =
                 baseNickname.trim();
+
 
         if (baseNickname.length() > 255) {
 
@@ -560,6 +1158,7 @@ public class AuthService {
                     );
         }
 
+
         if (userMapper.existByNickname(
                 baseNickname
         ) == 0) {
@@ -567,8 +1166,10 @@ public class AuthService {
             return baseNickname;
         }
 
+
         String providerId =
                 googleUserInfo.getProviderId();
+
 
         String idSuffix =
                 providerId.substring(
@@ -578,11 +1179,14 @@ public class AuthService {
                         )
                 );
 
+
         String suffix =
                 "_g" + idSuffix;
 
+
         int maxBaseLength =
                 255 - suffix.length();
+
 
         String uniqueNickname =
                 baseNickname.substring(
@@ -594,6 +1198,7 @@ public class AuthService {
                 )
                         + suffix;
 
+
         if (userMapper.existByNickname(
                 uniqueNickname
         ) > 0) {
@@ -602,6 +1207,7 @@ public class AuthService {
                     "Google 프로필 이름으로 닉네임을 생성할 수 없습니다."
             );
         }
+
 
         return uniqueNickname;
     }
@@ -624,8 +1230,10 @@ public class AuthService {
             );
         }
 
+
         String requestRefreshToken =
                 request.getRefreshToken();
+
 
         if (!jwtProvider.validateToken(
                 requestRefreshToken
@@ -635,6 +1243,7 @@ public class AuthService {
                     "유효하지 않은 Refresh Token입니다."
             );
         }
+
 
         if (!"REFRESH".equals(
                 jwtProvider.getTokenType(
@@ -647,15 +1256,18 @@ public class AuthService {
             );
         }
 
+
         Long userId =
                 jwtProvider.getUserId(
                         requestRefreshToken
                 );
 
+
         Integer requestTokenVersion =
                 jwtProvider.getTokenVersion(
                         requestRefreshToken
                 );
+
 
         if (userId == null
                 || requestTokenVersion == null) {
@@ -665,27 +1277,26 @@ public class AuthService {
             );
         }
 
+
         String tokenHash =
                 hashToken(
                         requestRefreshToken
                 );
+
 
         RefreshToken savedToken =
                 refreshTokenMapper.selectByTokenHash(
                         tokenHash
                 );
 
-        /*
-         * 다른 기기에서 새로 로그인하면
-         * DB Refresh Token이 새 토큰으로 교체되기 때문에
-         * 기존 기기의 Refresh Token은 여기서 걸린다.
-         */
+
         if (savedToken == null) {
 
             throw new IllegalArgumentException(
                     "등록되지 않은 Refresh Token입니다."
             );
         }
+
 
         if (savedToken.getUserId() == null
                 || !savedToken.getUserId().equals(
@@ -697,6 +1308,7 @@ public class AuthService {
             );
         }
 
+
         if (savedToken.getExpiresAt() == null
                 || !savedToken.getExpiresAt()
                 .isAfter(
@@ -707,15 +1319,18 @@ public class AuthService {
                     userId
             );
 
+
             throw new IllegalArgumentException(
                     "만료된 Refresh Token입니다."
             );
         }
 
+
         User user =
                 userMapper.selectById(
                         userId
                 );
+
 
         if (user == null) {
 
@@ -723,12 +1338,13 @@ public class AuthService {
                     userId
             );
 
+
             throw new IllegalArgumentException(
                     "사용자를 찾을 수 없습니다."
             );
         }
 
-        // ★ Token Version 확인
+
         if (user.getTokenVersion() == null
                 || !requestTokenVersion.equals(
                 user.getTokenVersion()
@@ -738,10 +1354,12 @@ public class AuthService {
                     userId
             );
 
+
             throw new IllegalArgumentException(
                     "무효화된 Refresh Token입니다."
             );
         }
+
 
         if (isWithdrawalExpired(
                 user
@@ -751,10 +1369,12 @@ public class AuthService {
                     user.getUserId()
             );
 
+
             throw new IllegalArgumentException(
                     "회원탈퇴 유예기간이 만료되었습니다."
             );
         }
+
 
         LoginToken loginToken =
                 issueRotatedToken(
@@ -762,16 +1382,20 @@ public class AuthService {
                         tokenHash
                 );
 
+
         TokenRefreshResponse response =
                 new TokenRefreshResponse();
+
 
         response.setAccessToken(
                 loginToken.accessToken()
         );
 
+
         response.setRefreshToken(
                 loginToken.refreshToken()
         );
+
 
         return response;
     }
@@ -786,21 +1410,26 @@ public class AuthService {
     ) {
 
         if (userId == null) {
+
             throw new IllegalArgumentException(
                     "사용자 정보가 없습니다."
             );
         }
+
 
         User user =
                 userMapper.selectById(
                         userId
                 );
 
+
         if (user == null) {
+
             throw new IllegalArgumentException(
                     "사용자를 찾을 수 없습니다."
             );
         }
+
 
         return new AuthCheckResponse(
                 user.getUserId(),
@@ -820,28 +1449,26 @@ public class AuthService {
     ) {
 
         if (userId == null) {
+
             throw new IllegalArgumentException(
                     "사용자 정보가 없습니다."
             );
         }
 
-        // Refresh Token 제거
+
         refreshTokenMapper.deleteByUserId(
                 userId
         );
 
-        /*
-         * ★ 로그아웃 시에도 버전 증가
-         *
-         * 이미 발급되어 있던 Access Token을
-         * 무효화시키기 위한 처리
-         */
+
         int updatedRows =
                 userMapper.increaseTokenVersion(
                         userId
                 );
 
+
         if (updatedRows == 0) {
+
             throw new IllegalArgumentException(
                     "사용자를 찾을 수 없습니다."
             );
@@ -858,27 +1485,34 @@ public class AuthService {
     ) {
 
         if (userId == null) {
+
             throw new IllegalArgumentException(
                     "사용자 정보가 없습니다."
             );
         }
+
 
         User user =
                 userMapper.selectById(
                         userId
                 );
 
+
         if (user == null) {
+
             throw new IllegalArgumentException(
                     "존재하지 않는 사용자입니다."
             );
         }
 
+
         if (user.getDeletedAt() != null) {
+
             throw new IllegalArgumentException(
                     "이미 회원탈퇴가 요청된 상태입니다."
             );
         }
+
 
         userMapper.withdrawUser(
                 userId
@@ -895,33 +1529,41 @@ public class AuthService {
     ) {
 
         if (userId == null) {
+
             throw new IllegalArgumentException(
                     "사용자 정보가 없습니다."
             );
         }
+
 
         User user =
                 userMapper.selectById(
                         userId
                 );
 
+
         if (user == null) {
+
             throw new IllegalArgumentException(
                     "존재하지 않는 사용자입니다."
             );
         }
 
+
         if (user.getDeletedAt() == null) {
+
             throw new IllegalArgumentException(
                     "회원탈퇴 요청 상태가 아닙니다."
             );
         }
+
 
         LocalDateTime withdrawalDeadline =
                 user.getDeletedAt()
                         .plusDays(
                                 7
                         );
+
 
         if (!LocalDateTime.now()
                 .isBefore(
@@ -933,6 +1575,7 @@ public class AuthService {
             );
         }
 
+
         userMapper.cancelWithdrawal(
                 userId
         );
@@ -940,8 +1583,222 @@ public class AuthService {
 
 
     // =========================================================
+    // 소셜 로그인 성공 응답
+    // =========================================================
+
+    private SocialLoginResponse createSocialLoginSuccessResponse(
+            User user
+    ) {
+
+        LoginToken loginToken =
+                issueLoginToken(
+                        user
+                );
+
+
+        SocialLoginResponse response =
+                new SocialLoginResponse();
+
+
+        response.setStatus(
+                "LOGIN_SUCCESS"
+        );
+
+
+        response.setAccessToken(
+                loginToken.accessToken()
+        );
+
+
+        response.setRefreshToken(
+                loginToken.refreshToken()
+        );
+
+
+        response.setUserId(
+                user.getUserId()
+        );
+
+
+        response.setRole(
+                user.getRole()
+        );
+
+
+        return response;
+    }
+
+
+    // =========================================================
+    // 소셜 신규가입 닉네임 요청 응답
+    // =========================================================
+
+    private SocialLoginResponse createNicknameRequiredResponse(
+            String signupToken
+    ) {
+
+        SocialLoginResponse response =
+                new SocialLoginResponse();
+
+
+        response.setStatus(
+                "NICKNAME_REQUIRED"
+        );
+
+
+        response.setSignupToken(
+                signupToken
+        );
+
+
+        return response;
+    }
+
+
+    // =========================================================
+    // 이메일 정규화
+    // =========================================================
+
+    private String normalizeEmail(
+            String email
+    ) {
+
+        if (email == null) {
+            return null;
+        }
+
+
+        return email
+                .trim()
+                .toLowerCase(
+                        Locale.ROOT
+                );
+    }
+
+
+    // =========================================================
+    // 이메일 형식 검사
+    // =========================================================
+
+    private void validateEmail(
+            String email
+    ) {
+
+        if (email == null
+                || email.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "이메일을 입력해주세요."
+            );
+        }
+
+
+        if (!EMAIL_PATTERN.matcher(
+                email
+        ).matches()) {
+
+            throw new IllegalArgumentException(
+                    "올바른 이메일 형식을 입력해주세요."
+            );
+        }
+    }
+
+
+    // =========================================================
+    // 비밀번호 정책 검사
+    // =========================================================
+
+    private void validatePassword(
+            String password
+    ) {
+
+        if (password == null
+                || password.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "비밀번호를 입력해주세요."
+            );
+        }
+
+
+        if (!PASSWORD_PATTERN.matcher(
+                password
+        ).matches()) {
+
+            throw new IllegalArgumentException(
+                    "비밀번호는 8~20자이며 대문자, 소문자, 숫자, 특수문자를 각각 1개 이상 포함해야 하며 공백은 사용할 수 없습니다."
+            );
+        }
+    }
+
+
+    // =========================================================
+    // 이메일 마스킹
+    // =========================================================
+
+    private String maskEmail(
+            String email
+    ) {
+
+        if (email == null
+                || !email.contains(
+                "@"
+        )) {
+
+            throw new IllegalArgumentException(
+                    "올바른 이메일 형식이 아닙니다."
+            );
+        }
+
+
+        String[] parts =
+                email.split(
+                        "@",
+                        2
+                );
+
+
+        String localPart =
+                parts[0];
+
+
+        String domain =
+                parts[1];
+
+
+        int visibleLength =
+                Math.min(
+                        3,
+                        localPart.length()
+                );
+
+
+        String visible =
+                localPart.substring(
+                        0,
+                        visibleLength
+                );
+
+
+        String masked =
+                "*".repeat(
+                        Math.max(
+                                1,
+                                localPart.length()
+                                        - visibleLength
+                        )
+                );
+
+
+        return visible
+                + masked
+                + "@"
+                + domain;
+    }
+
+
+    // =========================================================
     // Access / Refresh Token 발급
-    // ★ 여기 핵심 수정
     // =========================================================
 
     private LoginToken issueLoginToken(
@@ -952,56 +1809,44 @@ public class AuthService {
                 user
         );
 
-        /*
-         * ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-         *
-         * 새 로그인이 발생할 때마다
-         * DB token_version + 1
-         *
-         * A 로그인 version = 5
-         * B 로그인 version = 6
-         *
-         * 그러면 A의 기존 토큰은
-         * DB version과 달라져서 무효화된다.
-         *
-         * ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-         */
+
         int updatedRows =
                 userMapper.increaseTokenVersion(
                         user.getUserId()
                 );
 
+
         if (updatedRows == 0) {
+
             throw new IllegalArgumentException(
                     "사용자를 찾을 수 없습니다."
             );
         }
 
-        /*
-         * ★ 반드시 DB에서 다시 조회
-         *
-         * 기존 user 객체에는
-         * 증가 전 tokenVersion이 들어 있기 때문
-         */
+
         User updatedUser =
                 userMapper.selectById(
                         user.getUserId()
                 );
 
+
         if (updatedUser == null) {
+
             throw new IllegalArgumentException(
                     "사용자를 찾을 수 없습니다."
             );
         }
 
+
         validateTokenUser(
                 updatedUser
         );
 
-        // 기존 user 객체에도 최신 버전 반영
+
         user.setTokenVersion(
                 updatedUser.getTokenVersion()
         );
+
 
         String accessToken =
                 jwtProvider.createAccessToken(
@@ -1010,6 +1855,7 @@ public class AuthService {
                         updatedUser.getTokenVersion()
                 );
 
+
         String refreshToken =
                 jwtProvider.createRefreshToken(
                         updatedUser.getUserId(),
@@ -1017,16 +1863,12 @@ public class AuthService {
                         updatedUser.getTokenVersion()
                 );
 
-        /*
-         * 같은 userId의 RefreshToken이 이미 존재하면
-         * saveRefreshToken()에서 UPDATE 된다.
-         *
-         * 따라서 A의 RefreshToken도 교체된다.
-         */
+
         saveRefreshToken(
                 updatedUser,
                 refreshToken
         );
+
 
         return new LoginToken(
                 accessToken,
@@ -1048,18 +1890,14 @@ public class AuthService {
                 user
         );
 
-        /*
-         * Refresh 재발급에서는 tokenVersion을 올리지 않는다.
-         *
-         * 같은 로그인 세션 안에서
-         * Refresh Token만 Rotation 하는 것이기 때문.
-         */
+
         String accessToken =
                 jwtProvider.createAccessToken(
                         user.getUserId(),
                         user.getRole(),
                         user.getTokenVersion()
                 );
+
 
         String refreshToken =
                 jwtProvider.createRefreshToken(
@@ -1068,15 +1906,18 @@ public class AuthService {
                         user.getTokenVersion()
                 );
 
+
         String newTokenHash =
                 hashToken(
                         refreshToken
                 );
 
+
         LocalDateTime expiresAt =
                 createRefreshTokenExpiresAt(
                         user
                 );
+
 
         int updatedRows =
                 refreshTokenMapper.rotateRefreshToken(
@@ -1086,11 +1927,14 @@ public class AuthService {
                         expiresAt
                 );
 
+
         if (updatedRows != 1) {
+
             throw new IllegalArgumentException(
                     "이미 사용되었거나 무효화된 Refresh Token입니다."
             );
         }
+
 
         return new LoginToken(
                 accessToken,
@@ -1115,6 +1959,7 @@ public class AuthService {
             );
         }
 
+
         if (user.getRole() == null
                 || user.getRole().isBlank()) {
 
@@ -1122,6 +1967,7 @@ public class AuthService {
                     "사용자 권한 정보가 없습니다."
             );
         }
+
 
         if (user.getTokenVersion() == null) {
 
@@ -1165,11 +2011,13 @@ public class AuthService {
             return false;
         }
 
+
         LocalDateTime withdrawalDeadline =
                 user.getDeletedAt()
                         .plusDays(
                                 7
                         );
+
 
         return !LocalDateTime.now()
                 .isBefore(
@@ -1192,27 +2040,33 @@ public class AuthService {
                         refreshToken
                 );
 
+
         RefreshToken existingToken =
                 refreshTokenMapper.selectByUserId(
                         user.getUserId()
                 );
 
+
         RefreshToken token =
                 new RefreshToken();
+
 
         token.setUserId(
                 user.getUserId()
         );
 
+
         token.setTokenHash(
                 tokenHash
         );
+
 
         token.setExpiresAt(
                 createRefreshTokenExpiresAt(
                         user
                 )
         );
+
 
         if (existingToken == null) {
 
@@ -1222,11 +2076,6 @@ public class AuthService {
 
         } else {
 
-            /*
-             * ★ B가 로그인하면
-             * A의 Refresh Token을
-             * 여기서 B의 Refresh Token으로 교체
-             */
             refreshTokenMapper.updateRefreshToken(
                     token
             );
@@ -1249,6 +2098,7 @@ public class AuthService {
                                         .getRefreshTokenExpirationSeconds()
                         );
 
+
         if (user.getDeletedAt() != null) {
 
             LocalDateTime withdrawalDeadline =
@@ -1256,6 +2106,7 @@ public class AuthService {
                             .plusDays(
                                     7
                             );
+
 
             if (expiresAt.isAfter(
                     withdrawalDeadline
@@ -1265,6 +2116,7 @@ public class AuthService {
                         withdrawalDeadline;
             }
         }
+
 
         return expiresAt;
     }
@@ -1285,12 +2137,14 @@ public class AuthService {
                             "SHA-256"
                     );
 
+
             byte[] hash =
                     digest.digest(
                             token.getBytes(
                                     StandardCharsets.UTF_8
                             )
                     );
+
 
             return HexFormat.of()
                     .formatHex(

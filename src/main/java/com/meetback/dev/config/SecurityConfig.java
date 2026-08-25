@@ -16,7 +16,6 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http
@@ -39,15 +38,30 @@ public class SecurityConfig {
                                                 "/",
                                                 "/login",
                                                 "/signup",
+                                                "/find-email",
+                                                "/forgot-password",
+                                                "/reset-password",
                                                 "/home",
+
                                                 "/auth/login",
                                                 "/auth/signup",
                                                 "/auth/kakao",
                                                 "/auth/google",
                                                 "/auth/refresh",
+
+                                                "/auth/email/check",
+                                                "/auth/nickname/check",
+
+                                                "/auth/find-email",
+                                                "/auth/password/reset/request",
+                                                "/auth/password/reset/confirm",
+                                                "/auth/social/complete",
+
                                                 "/oauth/**",
+
                                                 "/ws",
                                                 "/ws/**",
+
                                                 "/css/**",
                                                 "/js/**",
                                                 "/images/**",

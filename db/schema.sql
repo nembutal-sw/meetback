@@ -21,6 +21,9 @@ CREATE TABLE users (
 
                        CONSTRAINT uq_users_email
                            UNIQUE (email)
+
+                        CONSTRAINT uq_users_nicknamesssss
+                            UNIQUE (nickname)
 );
 
 

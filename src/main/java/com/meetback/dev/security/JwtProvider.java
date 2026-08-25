@@ -15,13 +15,20 @@ import java.util.Date;
 public class JwtProvider {
 
     private final SecretKey secretKey;
+
     private final long accessTokenExpiration;
     private final long refreshTokenExpiration;
+
+    private final long socialSignupTokenExpiration;
+    private final long passwordResetTokenExpiration;
+
 
     public JwtProvider(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.access-token-expiration}") long accessTokenExpiration,
-            @Value("${jwt.refresh-token-expiration}") long refreshTokenExpiration
+            @Value("${jwt.refresh-token-expiration}") long refreshTokenExpiration,
+            @Value("${jwt.social-signup-token-expiration}") long socialSignupTokenExpiration,
+            @Value("${jwt.password-reset-token-expiration}") long passwordResetTokenExpiration
     ) {
 
         byte[] keyBytes =
@@ -39,6 +46,12 @@ public class JwtProvider {
 
         this.refreshTokenExpiration =
                 refreshTokenExpiration;
+
+        this.socialSignupTokenExpiration =
+                socialSignupTokenExpiration;
+
+        this.passwordResetTokenExpiration =
+                passwordResetTokenExpiration;
     }
 
 
@@ -57,7 +70,6 @@ public class JwtProvider {
                         now.getTime()
                                 + accessTokenExpiration
                 );
-
 
         return Jwts.builder()
                 .subject(
@@ -106,7 +118,6 @@ public class JwtProvider {
                                 + refreshTokenExpiration
                 );
 
-
         return Jwts.builder()
                 .subject(
                         String.valueOf(
@@ -120,6 +131,105 @@ public class JwtProvider {
                 .claim(
                         "tokenType",
                         "REFRESH"
+                )
+                .claim(
+                        "tokenVersion",
+                        tokenVersion
+                )
+                .issuedAt(
+                        now
+                )
+                .expiration(
+                        expiration
+                )
+                .signWith(
+                        secretKey
+                )
+                .compact();
+    }
+
+
+    // 소셜 회원가입 임시 Token 생성
+    public String createSocialSignupToken(
+            String provider,
+            String providerId,
+            String email,
+            Boolean emailVerified,
+            String profileName
+    ) {
+
+        Date now =
+                new Date();
+
+        Date expiration =
+                new Date(
+                        now.getTime()
+                                + socialSignupTokenExpiration
+                );
+
+        return Jwts.builder()
+                .subject(
+                        providerId
+                )
+                .claim(
+                        "provider",
+                        provider
+                )
+                .claim(
+                        "email",
+                        email
+                )
+                .claim(
+                        "emailVerified",
+                        Boolean.TRUE.equals(
+                                emailVerified
+                        )
+                )
+                .claim(
+                        "name",
+                        profileName
+                )
+                .claim(
+                        "tokenType",
+                        "SOCIAL_SIGNUP"
+                )
+                .issuedAt(
+                        now
+                )
+                .expiration(
+                        expiration
+                )
+                .signWith(
+                        secretKey
+                )
+                .compact();
+    }
+
+
+    // 비밀번호 재설정 Token 생성
+    public String createPasswordResetToken(
+            Long userId,
+            Integer tokenVersion
+    ) {
+
+        Date now =
+                new Date();
+
+        Date expiration =
+                new Date(
+                        now.getTime()
+                                + passwordResetTokenExpiration
+                );
+
+        return Jwts.builder()
+                .subject(
+                        String.valueOf(
+                                userId
+                        )
+                )
+                .claim(
+                        "tokenType",
+                        "PASSWORD_RESET"
                 )
                 .claim(
                         "tokenVersion",
@@ -173,17 +283,14 @@ public class JwtProvider {
                         token
                 );
 
-
         String subject =
                 claims.getSubject();
-
 
         if (subject == null
                 || subject.isBlank()) {
 
             return null;
         }
-
 
         try {
 
@@ -198,18 +305,25 @@ public class JwtProvider {
     }
 
 
+    // Subject 조회
+    public String getSubject(
+            String token
+    ) {
+
+        return getClaims(
+                token
+        ).getSubject();
+    }
+
+
     // Role 조회
     public String getRole(
             String token
     ) {
 
-        Claims claims =
-                getClaims(
-                        token
-                );
-
-
-        return claims.get(
+        return getClaims(
+                token
+        ).get(
                 "role",
                 String.class
         );
@@ -221,13 +335,9 @@ public class JwtProvider {
             String token
     ) {
 
-        Claims claims =
-                getClaims(
-                        token
-                );
-
-
-        return claims.get(
+        return getClaims(
+                token
+        ).get(
                 "tokenType",
                 String.class
         );
@@ -239,28 +349,101 @@ public class JwtProvider {
             String token
     ) {
 
-        Claims claims =
+        Object tokenVersion =
                 getClaims(
                         token
-                );
-
-
-        Object tokenVersion =
-                claims.get(
+                ).get(
                         "tokenVersion"
                 );
-
 
         if (!(tokenVersion instanceof Number number)) {
 
             return null;
         }
 
-
         return number.intValue();
     }
 
 
+    // 소셜 Provider 조회
+    public String getProvider(
+            String token
+    ) {
+
+        return getClaims(
+                token
+        ).get(
+                "provider",
+                String.class
+        );
+    }
+
+
+    // 소셜 ProviderId 조회
+    public String getProviderId(
+            String token
+    ) {
+
+        return getSubject(
+                token
+        );
+    }
+
+
+    // 소셜 이메일 조회
+    public String getEmail(
+            String token
+    ) {
+
+        return getClaims(
+                token
+        ).get(
+                "email",
+                String.class
+        );
+    }
+
+
+    // 소셜 이메일 인증 여부 조회
+    public Boolean getEmailVerified(
+            String token
+    ) {
+
+        return getClaims(
+                token
+        ).get(
+                "emailVerified",
+                Boolean.class
+        );
+    }
+
+
+    // 소셜 프로필 이름 조회
+    public String getName(
+            String token
+    ) {
+
+        return getClaims(
+                token
+        ).get(
+                "name",
+                String.class
+        );
+    }
+
+
+    // 기존 프로필 이름 조회 호환
+    public String getProfileName(
+            String token
+    ) {
+
+        return getName(
+                token
+        );
+    }
+
+
+    // Refresh Token 만료시간 조회
     public long getRefreshTokenExpirationSeconds() {
 
         return refreshTokenExpiration
@@ -268,6 +451,7 @@ public class JwtProvider {
     }
 
 
+    // Token Claims 조회
     private Claims getClaims(
             String token
     ) {
