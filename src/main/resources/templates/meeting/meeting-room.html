@@ -13,151 +13,7 @@
 
     <script src="/js/meeting-common.js"></script>
 
-    <style>
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            width: 900px;
-            margin: 40px auto;
-
-            font-family: Arial, sans-serif;
-            color: #222;
-        }
-
-        button {
-            padding: 11px 18px;
-
-            cursor: pointer;
-
-            border: 1px solid #ccc;
-            border-radius: 8px;
-
-            background: white;
-        }
-
-        .primary {
-            background: #222;
-            color: white;
-
-            border-color: #222;
-        }
-
-        .room-header {
-            display: flex;
-
-            justify-content: space-between;
-            align-items: flex-start;
-
-            margin-bottom: 30px;
-        }
-
-        .room-card {
-            padding: 22px;
-
-            margin-bottom: 20px;
-
-            border: 1px solid #ddd;
-            border-radius: 12px;
-        }
-
-        .meeting-grid {
-            display: grid;
-
-            grid-template-columns:
-                repeat(4, 1fr);
-
-            gap: 12px;
-        }
-
-        .info-box {
-            padding: 15px;
-
-            background: #f7f7f7;
-
-            border-radius: 8px;
-        }
-
-        .label {
-            display: block;
-
-            margin-bottom: 7px;
-
-            color: #777;
-
-            font-size: 13px;
-        }
-
-        .participant-row {
-            display: flex;
-
-            justify-content: space-between;
-
-            padding: 14px 5px;
-
-            border-bottom: 1px solid #eee;
-        }
-
-        .complete {
-            color: green;
-            font-weight: bold;
-        }
-
-        .waiting {
-            color: #888;
-        }
-
-        .editing{
-            color: #e67e22;
-            font-weight: bold;
-        }
-
-        .chat-messages {
-            height: 300px;
-
-            overflow-y: auto;
-
-            padding: 15px;
-
-            margin-bottom: 10px;
-
-            background: #fafafa;
-
-            border: 1px solid #ddd;
-            border-radius: 8px;
-        }
-
-        .chat-row {
-            display: flex;
-
-            gap: 8px;
-        }
-
-        .chat-row input {
-            flex: 1;
-
-            padding: 11px;
-        }
-
-        .action-box {
-            padding: 20px;
-
-            background: #f7f7f7;
-
-            border-radius: 8px;
-        }
-
-        .status-badge {
-            padding: 8px 14px;
-
-            background: #eee;
-
-            border-radius: 20px;
-        }
-
-    </style>
+    <link rel="stylesheet" href="/css/meeting-room.css">
 
 </head>
 
@@ -377,6 +233,7 @@
     let stompClient = null;
 
 
+
     async function initialize() {
 
         currentUser =
@@ -426,6 +283,7 @@
         renderProgress();
 
         await connectWebSocket();
+
     }
 
 
@@ -497,8 +355,8 @@
 
             badge.textContent =
                 "장소 입력 중";
-        }
 
+        }
         else if (
             currentMeeting.status
             === "VOTING"
@@ -506,13 +364,15 @@
 
             badge.textContent =
                 "투표 중";
-        }
 
+        }
         else {
 
             badge.textContent =
                 "장소 확정";
+
         }
+
     }
 
 
@@ -558,8 +418,8 @@
 
             button.textContent =
                 "장소 수정";
-        }
 
+        }
         else {
 
             text.textContent =
@@ -567,6 +427,7 @@
 
             button.textContent =
                 "장소 입력";
+
         }
 
 
@@ -579,54 +440,61 @@
 
             button.disabled =
                 true;
+
         }
+
     }
+
+
 
     function getParticipantInputStatus(
         participant
-    )
-    {
-       /*
-        * 1. 제출 완료
-        */
+    ) {
 
-        if(participant.inputStatus === "SUBMITTED")
-        {
+        /*
+         * 1. 제출 완료
+         */
+        if (
+            participant.inputStatus === "SUBMITTED"
+        ) {
+
             return {
                 text: "입력 완료",
                 className: "complete"
             };
+
         }
+
 
         /*
          * 2. 수정 중
-         *
-         * 이미 한 번 장소를 저장해서
-         * 출발지 / 귀가지 데이터가 존재하지만
-         *
-         * 장소 수정 버튼을 눌러
-         * SUBMITTED -> DRAFT가 된 상태
          */
+        if (
+            participant.inputStatus === "DRAFT"
+            &&
+            participant.departureName
+            &&
+            participant.returnName
+        ) {
 
-        if(participant.inputStatus === "DRAFT"
-        && participant.departureName
-        && participant.returnName)
-        {
             return {
                 text: "수정 중",
                 className: "editing"
             };
+
         }
+
 
         /*
          * 3. 최초 입력 전
          */
-
         return {
             text: "입력 대기",
             className: "waiting"
         };
+
     }
+
 
 
     async function loadParticipants() {
@@ -671,25 +539,20 @@
 
 
                 const me =
-                    Number(participant.userId)
-                    === Number(currentUser.userId);
+                    Number(
+                        participant.userId
+                    )
+                    ===
+                    Number(
+                        currentUser.userId
+                    );
 
-                /*
-                 * ★ 참가자의 현재 입력 상태 계산
-                 *
-                 * SUBMITTED
-                 *      → 입력 완료
-                 *
-                 * DRAFT + 기존 장소 존재
-                 *      → 수정 중
-                 *
-                 * DRAFT + 장소 없음
-                 *      → 입력 대기
-                 */
 
-                const status = getParticipantInputStatus(
-                    participant
-                );
+                const status =
+                    getParticipantInputStatus(
+                        participant
+                    );
+
 
                 row.innerHTML =
                     `
@@ -703,11 +566,14 @@
                     </span>
                     `;
 
+
                 area.appendChild(
                     row
                 );
+
             }
         );
+
     }
 
 
@@ -729,37 +595,42 @@
 
         allSubmitted =
             await response.json();
+
     }
 
 
 
     async function goLocation() {
 
-        // 모임 정보가 아직 없으면 방어
         if (!currentMeeting) {
+
             alert(
                 "모임 정보를 불러오는 중입니다."
             );
+
             return;
+
         }
 
-        // INPUT_OPEN에서만 장소 입력 / 수정 가능
+
         if (
             currentMeeting.status
             !== "INPUT_OPEN"
         ) {
+
             alert(
                 "투표가 시작된 이후에는 장소를 수정할 수 없습니다."
             );
+
             return;
+
         }
 
-        /*
-        * 이미 장소 입력을 완료한 사람
-        *
-        * SUBMITTED -> DRAFT
-        */
 
+        /*
+         * 이미 장소 입력 완료
+         * SUBMITTED -> DRAFT
+         */
         if (
             currentParticipant
             &&
@@ -780,38 +651,40 @@
 
             if (!response.ok) {
 
-                const text = await response.text();
-
                 alert(
                     "수정 상태 변경 실패"
                 );
+
                 return;
+
             }
 
-           /*
-            * 수정 모드로 이동
-            */
 
-            location.href = "/meeting/location?meetingId="
+            location.href =
+                "/meeting/location?meetingId="
                 + meetingId
                 + "&mode=edit";
 
             return;
+
         }
 
-        // ============================================================
-        // 최초 입력 사용자
-        //
-        // DRAFT 상태 그대로 장소 입력 페이지 이동
-        // ============================================================
 
+        /*
+         * 최초 입력
+         */
         location.href =
             "/meeting/location?meetingId="
             + meetingId
             + "&mode=create";
+
     }
 
 
+
+    /* =========================================================
+       모임 진행 상태 출력
+       ========================================================= */
 
     function renderProgress() {
 
@@ -825,11 +698,15 @@
             Number(
                 currentMeeting.hostUserId
             )
-            === Number(
+            ===
+            Number(
                 currentUser.userId
             );
 
 
+        /*
+         * 장소 입력 단계
+         */
         if (
             currentMeeting.status
             === "INPUT_OPEN"
@@ -844,6 +721,7 @@
                     `;
 
                 return;
+
             }
 
 
@@ -857,14 +735,15 @@
                     </p>
 
                     <button
-                        class="primary"
-                        onclick="startVoting()">
+                            class="primary"
+                            onclick="startVoting()">
+
                         투표 시작
+
                     </button>
                     `;
 
             }
-
             else {
 
                 area.innerHTML =
@@ -872,12 +751,18 @@
                     모든 참가자의 장소 입력이 완료되었습니다.
                     방장이 투표를 시작할 때까지 기다려주세요.
                     `;
+
             }
 
+
             return;
+
         }
 
 
+        /*
+         * 투표 단계
+         */
         if (
             currentMeeting.status
             === "VOTING"
@@ -890,16 +775,24 @@
                 </p>
 
                 <button
-                    class="primary"
-                    onclick="goVote()">
+                        type="button"
+                        class="primary"
+                        onclick="goVote()">
+
                     투표하러 가기
+
                 </button>
                 `;
 
+
             return;
+
         }
 
 
+        /*
+         * 최종 장소 확정
+         */
         if (
             currentMeeting.status
             === "CONFIRMED"
@@ -907,28 +800,44 @@
 
             area.innerHTML =
                 `
-                최종 장소가 확정되었습니다.
+                <p>
+                    최종 장소가 확정되었습니다.
+                </p>
+
+                <button
+                        type="button"
+                        class="primary"
+                        onclick="goResult()">
+
+                    결과 확인
+
+                </button>
                 `;
 
+
+            return;
+
         }
+
     }
 
 
 
     async function startVoting() {
 
-        if (!confirm(
-            "장소 계산 후 투표를 시작할까요?"
-        )) {
+        if (
+            !confirm(
+                "장소 계산 후 투표를 시작할까요?"
+            )
+        ) {
+
             return;
+
         }
 
 
         /*
-         * 먼저 계산.
-         *
-         * 계산 실패 시 INPUT_OPEN을 유지하는 편이
-         * 안전하다.
+         * 후보 계산
          */
         const calculation =
             await MeetBack.authenticatedFetch(
@@ -948,11 +857,12 @@
             );
 
             return;
+
         }
 
 
         /*
-         * 기존 MeetingController에 이미 존재.
+         * 투표 시작
          */
         const voting =
             await MeetBack.authenticatedFetch(
@@ -973,12 +883,14 @@
             );
 
             return;
+
         }
 
 
         location.href =
             "/meeting/vote?meetingId="
             + meetingId;
+
     }
 
 
@@ -988,6 +900,21 @@
         location.href =
             "/meeting/vote?meetingId="
             + meetingId;
+
+    }
+
+
+
+    /* =========================================================
+       결과 화면 이동
+       ========================================================= */
+
+    function goResult() {
+
+        location.href =
+            "/meeting/result?meetingId="
+            + meetingId;
+
     }
 
 
@@ -1015,6 +942,7 @@
                     "Authorization":
                         "Bearer "
                         + MeetBack.getAccessToken()
+
                 },
 
 
@@ -1029,7 +957,7 @@
                             "chatStatus"
                         ).textContent =
                             "CONNECTED";
-                        // 백기완 추가
+
 
                         console.log(
                             "[WS SUBSCRIBE]",
@@ -1050,36 +978,52 @@
                                     JSON.parse(
                                         message.body
                                     );
-                                // 백기완 추가
+
+
                                 console.log(
                                     "[WS RECEIVE]",
                                     data
                                 );
 
-                                // 시스템 이벤트
-                                if(data.messageType === "SYSTEM" && data.eventType)
-                                {
+
+                                /*
+                                 * 시스템 이벤트
+                                 */
+                                if (
+                                    data.messageType === "SYSTEM"
+                                    &&
+                                    data.eventType
+                                ) {
+
                                     await handleMeetingEvent(
                                         data
                                     );
 
                                     return;
+
                                 }
 
-                                // 일반 채팅
+
+                                /*
+                                 * 일반 채팅
+                                 */
                                 addChat(
                                     data
                                 );
+
                             }
                         );
 
 
                         await loadChatHistory();
+
                     }
+
             });
 
 
         stompClient.activate();
+
     }
 
 
@@ -1115,18 +1059,24 @@
 
         messages.forEach(
             message => {
+
                 /*
                  * SYSTEM 기록
                  */
-                if(message.messageType === "SYSTEM")
-                {
+                if (
+                    message.messageType === "SYSTEM"
+                ) {
+
                     addSystemMessage(
                         getSystemMessageText(
                             message
                         )
                     );
+
                     return;
+
                 }
+
 
                 /*
                  * 일반 채팅
@@ -1134,13 +1084,17 @@
                 addChat(
                     message
                 );
+
             }
         );
+
     }
 
 
 
-    function addChat(message) {
+    function addChat(
+        message
+    ) {
 
         const area =
             document.getElementById(
@@ -1176,27 +1130,38 @@
 
         area.scrollTop =
             area.scrollHeight;
+
     }
+
+
 
     function getSystemMessageText(
         message
-    )
-    {
+    ) {
+
         const name =
             message.nickname
-            || (
+            ||
+            (
                 message.userId
                     ? "참가자 " + message.userId
                     : "참가자"
             );
 
 
-        return name
+        return (
+            name
             + "님이 "
-            + message.content;
+            + message.content
+        );
+
     }
 
-    async function handleMeetingEvent(event) {
+
+
+    async function handleMeetingEvent(
+        event
+    ) {
 
         console.log(
             "[MEETING EVENT]",
@@ -1204,7 +1169,6 @@
         );
 
 
-        // 서버에서 받은 시스템 메시지를 그대로 출력
         addSystemMessage(
             getSystemMessageText(
                 event
@@ -1225,52 +1189,74 @@
         ) {
 
             await refreshRoomState();
+
         }
+
     }
 
-    async function refreshRoomState()
-    {
-        // 모임 상태
+
+
+    async function refreshRoomState() {
+
         await loadMeeting();
 
-        // 내 상태
         await loadCurrentParticipant();
 
-        // 참가자 전체 상태
         await loadParticipants();
 
-        // 전원 SUBMITTED 여부
         await loadSubmittedStatus();
 
-        // 방장 버튼 / 투표 버튼 다시 그림
         renderProgress();
+
     }
+
+
 
     function addSystemMessage(
         content
-    ){
-        const area = document.getElementById("chatMessages");
+    ) {
 
-        if(!area)
-        {
+        const area =
+            document.getElementById(
+                "chatMessages"
+            );
+
+
+        if (!area) {
             return;
         }
 
-        const div = document.createElement("div");
 
-        div.style.textAlign = "center";
+        const div =
+            document.createElement(
+                "div"
+            );
 
-        div.style.color = "#888";
 
-        div.style.padding = "8px";
+        div.style.textAlign =
+            "center";
 
-        div.style.fontSize = "13px";
+        div.style.color =
+            "#888";
 
-        div.textContent = content;
+        div.style.padding =
+            "8px";
 
-        area.appendChild(div);
+        div.style.fontSize =
+            "13px";
 
-        area.scrollTop = area.scrollHeight;
+        div.textContent =
+            content;
+
+
+        area.appendChild(
+            div
+        );
+
+
+        area.scrollTop =
+            area.scrollHeight;
+
     }
 
 
@@ -1303,6 +1289,7 @@
             );
 
             return;
+
         }
 
 
@@ -1318,12 +1305,15 @@
                 JSON.stringify({
                     content: content
                 })
+
         });
 
 
         input.value =
             "";
+
     }
+
 
 
     initialize();
@@ -1331,4 +1321,5 @@
 </script>
 
 </body>
+
 </html>

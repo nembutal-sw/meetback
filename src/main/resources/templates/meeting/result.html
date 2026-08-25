@@ -86,9 +86,26 @@
         </div>
 
 
-        <span class="final-badge">
-            최종 확정
-        </span>
+        <div class="final-header-info">
+
+            <div class="final-desired-end">
+
+                <span>
+                    희망 종료시간
+                </span>
+
+                <strong id="finalDesiredEndView">
+                    -
+                </strong>
+
+            </div>
+
+
+            <span class="final-badge">
+                최종 확정
+            </span>
+
+        </div>
 
     </div>
 
@@ -315,10 +332,6 @@
         }
 
 
-        /*
-         * 현재는 추천 순위 1위 후보를
-         * 결과 화면에 표시
-         */
         finalCandidate =
             rankings.find(
                 item =>
@@ -371,6 +384,22 @@
             </div>
             `;
 
+
+        /*
+         * 최종 장소 오른쪽에
+         * 현재 / +30분 희망 종료시간 표시
+         */
+        const desiredEndView =
+            document.getElementById(
+                "finalDesiredEndView"
+            );
+
+
+        desiredEndView.textContent =
+            formatDateObject(
+                getDisplayEndTime()
+            );
+
     }
 
 
@@ -382,8 +411,8 @@
     function getDesiredEndTime() {
 
         /*
-         * API가 희망 종료시간을 직접 내려주는 경우
-         * 해당 값을 우선 사용
+         * API가 직접 희망 종료시간을 내려주면
+         * 해당 값 우선 사용
          */
         const directValue =
             finalCandidate.desiredEndAt
@@ -413,12 +442,10 @@
 
 
         /*
-         * 직접 값이 없으면 계산
+         * 직접 값이 없으면
          *
          * Golden Margin
          * = Deadline - 희망 종료시간
-         *
-         * 따라서
          *
          * 희망 종료시간
          * = Deadline - Golden Margin
@@ -476,7 +503,7 @@
 
 
     /* =========================================================
-       현재 화면에 표시할 종료시간
+       화면에 표시할 희망 종료시간
        ========================================================= */
 
     function getDisplayEndTime() {
@@ -493,7 +520,7 @@
 
 
         /*
-         * 일반 결과
+         * 현재 결과
          */
         if (!whatIfActive) {
 
@@ -521,7 +548,7 @@
 
 
     /* =========================================================
-       귀가 분석 요약 출력
+       귀가 분석 요약
        ========================================================= */
 
     function renderSummary() {
@@ -537,10 +564,6 @@
             || [];
 
 
-        const displayEndTime =
-            getDisplayEndTime();
-
-
         let goldenMargin =
             finalCandidate.goldenMarginMinutes;
 
@@ -550,7 +573,7 @@
 
 
         /*
-         * +30분 결과
+         * What-if +30분
          */
         if (whatIfActive) {
 
@@ -582,23 +605,35 @@
         }
 
 
+        /*
+         * What-if에서는 Rule Score 숨김
+         */
+        const ruleScoreHtml =
+            !whatIfActive
+                ? `
+                    <div class="summary-item">
+
+                        <span>
+                            Rule Score
+                        </span>
+
+                        <strong>
+                            ${
+                    finalCandidate.ruleScore == null
+                        ? "-"
+                        : Number(
+                            finalCandidate.ruleScore
+                        ).toFixed(1)
+                }
+                        </strong>
+
+                    </div>
+                  `
+                : "";
+
+
         area.innerHTML =
             `
-            <div class="summary-item">
-
-                <span>
-                    희망 종료시간
-                </span>
-
-                <strong>
-                    ${formatDateObject(
-                displayEndTime
-            )}
-                </strong>
-
-            </div>
-
-
             <div class="summary-item">
 
                 <span>
@@ -682,23 +717,7 @@
             </div>
 
 
-            <div class="summary-item">
-
-                <span>
-                    Rule Score
-                </span>
-
-                <strong>
-                    ${
-                finalCandidate.ruleScore == null
-                    ? "-"
-                    : Number(
-                        finalCandidate.ruleScore
-                    ).toFixed(1)
-            }
-                </strong>
-
-            </div>
+            ${ruleScoreHtml}
             `;
 
     }
@@ -748,9 +767,6 @@
                     "participant-result";
 
 
-                /*
-                 * 일반 결과 또는 +30분 결과
-                 */
                 const canReturn =
                     whatIfActive
                         ? calculateWhatIfCanReturn(
@@ -867,7 +883,7 @@
 
 
     /* =========================================================
-       +30분 후 귀가 가능 여부
+       What-if 귀가 가능 여부
        ========================================================= */
 
     function calculateWhatIfCanReturn(
@@ -876,8 +892,7 @@
 
         /*
          * 도보 귀가 등
-         * 안전 출발 마감시간이 없는 경우
-         * 기존 결과 유지
+         * 막차 제한이 없는 경우
          */
         if (
             !participant.lastSafeDepartureAt
@@ -993,7 +1008,7 @@
 
 
         /*
-         * +30분 결과 화면
+         * +30분 결과
          */
         if (whatIfActive) {
 
@@ -1024,7 +1039,7 @@
 
 
         /*
-         * 원래 결과 화면
+         * 현재 결과
          */
         else {
 
@@ -1055,8 +1070,10 @@
 
 
         /*
-         * 현재 모드 기준으로 다시 출력
+         * 희망 종료시간도 다시 렌더링
          */
+        renderFinalPlace();
+
         renderSummary();
 
         renderParticipants();
@@ -1066,7 +1083,7 @@
 
 
     /* =========================================================
-       일반 값 출력
+       일반 값
        ========================================================= */
 
     function displayValue(
@@ -1274,6 +1291,7 @@
                 "/home";
 
             return;
+
         }
 
 
