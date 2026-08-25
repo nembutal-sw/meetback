@@ -22,4 +22,5 @@ public class MeetingParticipant {
     private LocalDateTime submittedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String nickname;
 }
