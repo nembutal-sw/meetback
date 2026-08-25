@@ -1,9 +1,11 @@
 package com.meetback.dev.controller;
 
 import com.meetback.dev.domain.MeetingParticipant;
+import com.meetback.dev.dto.ChatMessageResponse;
 import com.meetback.dev.dto.CurrentParticipantResponse;
 import com.meetback.dev.dto.ParticipantLocationRequestDTO;
 import com.meetback.dev.security.AuthenticatedUser;
+import com.meetback.dev.service.ChatService;
 import com.meetback.dev.service.MeetingParticipantService;
 import com.meetback.dev.service.ParticipantService;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class MeetingParticipantController {
     private final MeetingParticipantService meetingParticipantService;
     private final ParticipantService participantService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ChatService chatService;
 
 
     @GetMapping("/{participantId}")
@@ -59,11 +62,18 @@ public class MeetingParticipantController {
                 request
         );
 
-
         MeetingParticipant participant =
                 meetingParticipantService.findOwnedById(
                         participantId,
                         user.userId()
+                );
+
+        ChatMessageResponse event =
+                chatService.saveSystemMessage(
+                        participant.getMeetingId(),
+                        user.userId(),
+                        "LOCATION_SUBMITTED",
+                        "장소 입력을 완료했습니다."
                 );
 
 
@@ -72,16 +82,9 @@ public class MeetingParticipantController {
                         + participant.getMeetingId()
                         + "/chat",
 
-                (Object) Map.of(
-                        "messageType", "SYSTEM",
-                        "eventType", "LOCATION_SUBMITTED",
-                        "userId", participant.getUserId(),
-                        "content",
-                        "참가자 "
-                                + participant.getUserId()
-                                + "님이 장소 입력을 완료했습니다."
-                )
+                event
         );
+
 
 
         return ResponseEntity.noContent().build();
@@ -114,10 +117,36 @@ public class MeetingParticipantController {
             @PathVariable Long participantId,
             @AuthenticationPrincipal AuthenticatedUser user
     ) {
-
+        // SUBMITTED -> DRAFT
         meetingParticipantService.startEdit(
                 participantId,
                 user.userId()
+        );
+
+        MeetingParticipant participant = meetingParticipantService.findOwnedById(
+                participantId,
+                user.userId()
+        );
+
+        /*
+         * SYSTEM 메시지 DB 저장
+         */
+
+        ChatMessageResponse event =
+                chatService.saveSystemMessage(
+                        participant.getMeetingId(),
+                        user.userId(),
+                        "LOCATION_EDITING",
+                        "장소를 수정 중입니다."
+                );
+
+
+        messagingTemplate.convertAndSend(
+                "/topic/meetings/"
+                        + participant.getMeetingId()
+                        + "/chat",
+
+                event
         );
 
         return ResponseEntity.noContent().build();
@@ -131,7 +160,6 @@ public class MeetingParticipantController {
    @PutMapping("/{participantId}/edit/cancel")
    public ResponseEntity<Void> cancelEdit(
            @PathVariable Long participantId,
-
            @AuthenticationPrincipal
            AuthenticatedUser user
    )
@@ -139,6 +167,26 @@ public class MeetingParticipantController {
        meetingParticipantService.cancelEdit(
                participantId,
                user.userId()
+       );
+
+       MeetingParticipant participant = meetingParticipantService.findOwnedById(
+               participantId,
+               user.userId()
+       );
+
+       ChatMessageResponse event =
+               chatService.saveSystemMessage(
+                       participant.getMeetingId(),
+                       user.userId(),
+                       "LOCATION_EDIT_CANCELED",
+                       "장소 수정을 취소했습니다."
+               );
+
+       messagingTemplate.convertAndSend(
+               "/topic/meetings/"
+                            + participant.getMeetingId()
+                            + "/chat",
+               event
        );
 
        return ResponseEntity.noContent().build();
