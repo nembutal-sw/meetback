@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>MeetBack 최종 결과</title>
+
+    <link rel="stylesheet"
+          href="/css/meeting-result.css">
+
+    <script src="/js/meeting-common.js"></script>
+
+</head>
+
+<body>
+
+
+<div class="result-header">
+
+    <div>
+
+        <span class="result-label">
+            MEETBACK RESULT
+        </span>
+
+        <h1>
+            모임 장소 결과
+        </h1>
+
+        <p>
+            최종 장소와 참가자별 귀가 정보를 확인해보세요.
+        </p>
+
+    </div>
+
+
+    <button
+            type="button"
+            onclick="goRoom()">
+
+        모임방으로
+
+    </button>
+
+</div>
+
+
+
+<!-- 최종 장소 -->
+
+<section class="result-card final-card">
+
+    <div class="section-title">
+
+        <div>
+
+            <span class="section-small">
+                FINAL PLACE
+            </span>
+
+            <h2>
+                최종 선택 장소
+            </h2>
+
+        </div>
+
+        <span class="final-badge">
+            최종 확정
+        </span>
+
+    </div>
+
+
+    <div id="finalPlaceArea">
+
+        최종 장소 정보를 불러오는 중...
+
+    </div>
+
+</section>
+
+
+
+<!-- 핵심 결과 -->
+
+<section class="result-card">
+
+    <div class="section-title">
+
+        <div>
+
+            <span class="section-small">
+                SUMMARY
+            </span>
+
+            <h2>
+                귀가 분석 결과
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div
+            id="summaryArea"
+            class="summary-grid">
+
+        분석 결과를 불러오는 중...
+
+    </div>
+
+</section>
+
+
+
+<!-- 참가자별 귀가 -->
+
+<section class="result-card">
+
+    <div class="section-title">
+
+        <div>
+
+            <span class="section-small">
+                PARTICIPANTS
+            </span>
+
+            <h2>
+                참가자별 귀가 결과
+            </h2>
+
+        </div>
+
+    </div>
+
+
+    <div id="participantResultArea">
+
+        참가자 결과를 불러오는 중...
+
+    </div>
+
+</section>
+
+
+
+<!-- What-if -->
+
+<section class="result-card what-if-card">
+
+    <div class="section-title">
+
+        <div>
+
+            <span class="section-small">
+                WHAT IF
+            </span>
+
+            <h2>
+                30분 더 놀면?
+            </h2>
+
+            <p>
+                종료시간을 30분 늦췄을 때
+                귀가 가능 여부가 어떻게 달라지는지 확인해보세요.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <button
+            type="button"
+            id="whatIfButton"
+            class="primary"
+            onclick="runWhatIf()">
+
+        +30분 시뮬레이션
+
+    </button>
+
+
+    <div
+            id="whatIfResultArea"
+            class="what-if-result">
+
+    </div>
+
+</section>
+
+
+
+<div class="toast-container">
+
+    <div
+            id="toastMessage"
+            class="toast">
+    </div>
+
+</div>
+
+
+<script>
+
+    let meetingId = null;
+
+    let currentUser = null;
+
+    let rankings = [];
+
+    let finalCandidate = null;
+
+
+    async function initialize() {
+
+        currentUser =
+            await MeetBack.checkLogin();
+
+
+        if (!currentUser) {
+            return;
+        }
+
+
+        meetingId =
+            MeetBack.getMeetingId();
+
+
+        if (!meetingId) {
+
+            location.href =
+                "/home";
+
+            return;
+        }
+
+
+        await loadResult();
+
+    }
+
+
+
+    async function loadResult() {
+
+        const response =
+            await MeetBack.authenticatedFetch(
+                "/calculations/meeting/ranking?meetingId="
+                + meetingId
+            );
+
+
+        if (!response.ok) {
+
+            document.getElementById(
+                "finalPlaceArea"
+            ).textContent =
+                "결과를 불러오지 못했습니다.";
+
+            return;
+        }
+
+
+        rankings =
+            await response.json();
+
+
+        if (
+            !rankings
+            ||
+            rankings.length === 0
+        ) {
+
+            document.getElementById(
+                "finalPlaceArea"
+            ).textContent =
+                "결과가 없습니다.";
+
+            return;
+        }
+
+
+        /*
+         * 일단 추천 1위 기준 표시.
+         *
+         * 최종 확정 candidateId를 Meeting 응답에서
+         * 받을 수 있다면 이후 그 candidateId 기준으로
+         * 찾는 게 정확함.
+         */
+
+        finalCandidate =
+            rankings.find(
+                item =>
+                    item.recommendationRank === 1
+            )
+            || rankings[0];
+
+
+        renderFinalPlace();
+
+        renderSummary();
+
+        renderParticipants();
+
+    }
+
+
+
+    function renderFinalPlace() {
+
+        const area =
+            document.getElementById(
+                "finalPlaceArea"
+            );
+
+
+        area.innerHTML =
+            `
+            <div class="final-place-name">
+
+                ${MeetBack.escapeHtml(
+                finalCandidate.placeName
+                || "장소명 없음"
+            )}
+
+            </div>
+
+            <div class="final-place-address">
+
+                ${MeetBack.escapeHtml(
+                finalCandidate.address
+                || ""
+            )}
+
+            </div>
+            `;
+
+    }
+
+
+
+    function renderSummary() {
+
+        const area =
+            document.getElementById(
+                "summaryArea"
+            );
+
+
+        area.innerHTML =
+            `
+            <div class="summary-item">
+
+                <span>
+                    전체 귀가
+                </span>
+
+                <strong>
+                    ${
+                finalCandidate.allReturnable
+                    ? "전원 가능"
+                    : "일부 불가"
+            }
+                </strong>
+
+            </div>
+
+
+            <div class="summary-item">
+
+                <span>
+                    Deadline
+                </span>
+
+                <strong>
+                    ${displayDateTime(
+                finalCandidate.deadlineAt
+            )}
+                </strong>
+
+            </div>
+
+
+            <div class="summary-item">
+
+                <span>
+                    Golden Margin
+                </span>
+
+                <strong>
+                    ${displayValue(
+                finalCandidate.goldenMarginMinutes,
+                "분"
+            )}
+                </strong>
+
+            </div>
+
+
+            <div class="summary-item">
+
+                <span>
+                    평균 귀가시간
+                </span>
+
+                <strong>
+                    ${
+                finalCandidate.averageReturnMinutes == null
+                    ? "-"
+                    : Math.round(
+                    finalCandidate.averageReturnMinutes
+                ) + "분"
+            }
+                </strong>
+
+            </div>
+
+
+            <div class="summary-item">
+
+                <span>
+                    귀가시간 편차
+                </span>
+
+                <strong>
+                    ${displayValue(
+                finalCandidate.fairnessGapMinutes,
+                "분"
+            )}
+                </strong>
+
+            </div>
+
+
+            <div class="summary-item">
+
+                <span>
+                    Rule Score
+                </span>
+
+                <strong>
+                    ${
+                finalCandidate.ruleScore == null
+                    ? "-"
+                    : Number(
+                        finalCandidate.ruleScore
+                    ).toFixed(1)
+            }
+                </strong>
+
+            </div>
+            `;
+
+    }
+
+
+
+    function renderParticipants() {
+
+        const area =
+            document.getElementById(
+                "participantResultArea"
+            );
+
+
+        const participants =
+            finalCandidate.participantResults
+            || [];
+
+
+        if (participants.length === 0) {
+
+            area.textContent =
+                "참가자별 결과가 없습니다.";
+
+            return;
+        }
+
+
+        area.innerHTML =
+            "";
+
+
+        participants.forEach(
+            participant => {
+
+                const div =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                div.className =
+                    "participant-result";
+
+
+                div.innerHTML =
+                    `
+                    <div class="participant-result-header">
+
+                        <strong>
+                            참가자
+                            ${MeetBack.escapeHtml(
+                        participant.participantId
+                    )}
+                        </strong>
+
+                        <span class="${
+                        participant.canReturn
+                            ? "possible"
+                            : "impossible"
+                    }">
+
+                            ${
+                        participant.canReturn
+                            ? "귀가 가능"
+                            : "귀가 불가"
+                    }
+
+                        </span>
+
+                    </div>
+
+
+                    <div class="participant-info-grid">
+
+                        <div>
+                            <span>귀가시간</span>
+
+                            <strong>
+                                ${displayValue(
+                        participant.returnMinutes,
+                        "분"
+                    )}
+                            </strong>
+                        </div>
+
+
+                        <div>
+                            <span>환승 횟수</span>
+
+                            <strong>
+                                ${displayValue(
+                        participant.transferCount,
+                        "회"
+                    )}
+                            </strong>
+                        </div>
+
+
+                        <div>
+                            <span>안전 출발 마감</span>
+
+                            <strong>
+                                ${displayDateTime(
+                        participant.lastSafeDepartureAt
+                    )}
+                            </strong>
+                        </div>
+
+
+                        <div>
+                            <span>막차 출발</span>
+
+                            <strong>
+                                ${displayDateTime(
+                        participant.lastTrainDepartureAt
+                    )}
+                            </strong>
+                        </div>
+
+                    </div>
+                    `;
+
+
+                area.appendChild(
+                    div
+                );
+
+            }
+        );
+
+    }
+
+
+
+    function displayValue(
+        value,
+        suffix = ""
+    ) {
+
+        if (
+            value === null
+            ||
+            value === undefined
+        ) {
+            return "-";
+        }
+
+
+        return (
+            MeetBack.escapeHtml(value)
+            + suffix
+        );
+
+    }
+
+
+
+    function displayDateTime(value) {
+
+        if (!value) {
+            return "-";
+        }
+
+
+        return MeetBack.escapeHtml(
+            MeetBack.formatDateTime(value)
+        );
+
+    }
+
+
+
+    function goRoom() {
+
+        location.href =
+            "/meeting?meetingId="
+            + meetingId;
+
+    }
+
+
+
+    initialize();
+
+</script>
+
+</body>
+
+</html>

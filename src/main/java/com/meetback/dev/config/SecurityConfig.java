@@ -57,7 +57,8 @@ public class SecurityConfig {
                                                 "/meeting/location-test",
                                                 "/meeting/location-test/**",
                                                 "/meeting/location",
-                                                "/meeting/vote"
+                                                "/meeting/vote",
+                                                "/meeting/result"
                                         )
                                         .permitAll()
 

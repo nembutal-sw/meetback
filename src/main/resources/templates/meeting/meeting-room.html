@@ -2,63 +2,51 @@
 <html lang="ko">
 
 <head>
-
     <meta charset="UTF-8">
 
-    <title>MeetBack 모임방</title>
+    <title>MeetBack 최종 결과</title>
 
-    <script
-            src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js">
-    </script>
+    <link rel="stylesheet"
+          href="/css/meeting-result.css">
 
     <script src="/js/meeting-common.js"></script>
-
-    <link rel="stylesheet" href="/css/meeting-room.css">
-
 </head>
 
 <body>
 
 
-<!-- =========================================================
-     투표 시작 확인 모달
-     ========================================================= -->
+<div class="result-header">
 
-<div
-        id="votingConfirmOverlay"
-        class="confirm-overlay">
+    <div>
+        <span class="result-label">
+            MEETBACK RESULT
+        </span>
 
-    <div class="confirm-modal">
+        <h1>
+            모임 장소 결과
+        </h1>
 
-        <h3 class="confirm-title">
-            투표 시작
-        </h3>
-
-        <p class="confirm-message">
-            장소 계산 후 투표를 시작할까요?
+        <p id="resultDescription">
+            최종 장소와 참가자별 귀가 정보를 확인해보세요.
         </p>
+    </div>
 
-        <div class="confirm-buttons">
 
-            <button
-                    type="button"
-                    onclick="closeVotingConfirmModal()">
+    <div class="header-actions">
 
-                취소
+        <button
+                type="button"
+                id="whatIfButton"
+                class="primary"
+                onclick="toggleWhatIf()">
+            +30분 결과 보기
+        </button>
 
-            </button>
-
-            <button
-                    type="button"
-                    id="confirmVotingButton"
-                    class="primary"
-                    onclick="confirmStartVoting()">
-
-                투표 시작
-
-            </button>
-
-        </div>
+        <button
+                type="button"
+                onclick="goRoom()">
+            모임방으로
+        </button>
 
     </div>
 
@@ -66,9 +54,96 @@
 
 
 
-<!-- =========================================================
-     Toast
-     ========================================================= -->
+<!-- 최종 장소 -->
+
+<section class="result-card final-card">
+
+    <div class="section-title">
+
+        <div>
+            <span class="section-small">
+                FINAL PLACE
+            </span>
+
+            <h2>
+                최종 선택 장소
+            </h2>
+        </div>
+
+        <span class="final-badge">
+            최종 확정
+        </span>
+
+    </div>
+
+
+    <div id="finalPlaceArea">
+        최종 장소 정보를 불러오는 중...
+    </div>
+
+</section>
+
+
+
+<!-- 핵심 결과 -->
+
+<section class="result-card">
+
+    <div class="section-title">
+
+        <div>
+            <span
+                    id="summaryLabel"
+                    class="section-small">
+                SUMMARY
+            </span>
+
+            <h2 id="summaryTitle">
+                귀가 분석 결과
+            </h2>
+        </div>
+
+    </div>
+
+
+    <div
+            id="summaryArea"
+            class="summary-grid">
+        분석 결과를 불러오는 중...
+    </div>
+
+</section>
+
+
+
+<!-- 참가자별 귀가 -->
+
+<section class="result-card">
+
+    <div class="section-title">
+
+        <div>
+            <span
+                    id="participantLabel"
+                    class="section-small">
+                PARTICIPANTS
+            </span>
+
+            <h2 id="participantTitle">
+                참가자별 귀가 결과
+            </h2>
+        </div>
+
+    </div>
+
+
+    <div id="participantResultArea">
+        참가자 결과를 불러오는 중...
+    </div>
+
+</section>
+
+
 
 <div class="toast-container">
 
@@ -81,391 +156,31 @@
 
 
 
-<div class="room-header">
-
-    <div>
-
-        <h1 id="meetingTitle">
-            MeetBack 모임방
-        </h1>
-
-        <div id="loginInfo">
-        </div>
-
-    </div>
-
-
-    <div>
-
-        <span
-                id="meetingBadge"
-                class="status-badge">
-
-            로딩 중
-
-        </span>
-
-        <button
-                type="button"
-                onclick="location.href='/home'">
-
-            홈으로
-
-        </button>
-
-    </div>
-
-</div>
-
-
-
-<!-- =========================================================
-     모임 정보
-     ========================================================= -->
-
-<div class="room-card">
-
-    <h2>모임 정보</h2>
-
-    <div class="meeting-grid">
-
-        <div class="info-box">
-
-            <span class="label">
-                모임 ID
-            </span>
-
-            <strong id="meetingIdView">
-                -
-            </strong>
-
-        </div>
-
-
-        <div class="info-box">
-
-            <span class="label">
-                초대 코드
-            </span>
-
-            <strong id="inviteCodeView">
-                -
-            </strong>
-
-        </div>
-
-
-        <div class="info-box">
-
-            <span class="label">
-                희망 종료시간
-            </span>
-
-            <strong id="desiredEndView">
-                -
-            </strong>
-
-        </div>
-
-
-        <div class="info-box">
-
-            <span class="label">
-                상태
-            </span>
-
-            <strong id="statusView">
-                -
-            </strong>
-
-        </div>
-
-    </div>
-
-</div>
-
-
-
-<!-- =========================================================
-     내 장소
-     ========================================================= -->
-
-<div class="room-card">
-
-    <h2>내 장소</h2>
-
-    <p id="myInputStatus">
-        상태 확인 중...
-    </p>
-
-    <button
-            type="button"
-            id="locationButton"
-            class="primary"
-            onclick="goLocation()">
-
-        장소 입력
-
-    </button>
-
-</div>
-
-
-
-<!-- =========================================================
-     참가자 현황
-     ========================================================= -->
-
-<div class="room-card">
-
-    <h2>참가자 현황</h2>
-
-    <div id="participantList">
-
-        불러오는 중...
-
-    </div>
-
-</div>
-
-
-
-<!-- =========================================================
-     채팅
-     ========================================================= -->
-
-<div class="room-card">
-
-    <h2>모임 채팅</h2>
-
-    <p>
-        연결 상태 :
-
-        <strong id="chatStatus">
-            DISCONNECTED
-        </strong>
-    </p>
-
-    <div
-            id="chatMessages"
-            class="chat-messages">
-    </div>
-
-
-    <div class="chat-row">
-
-        <input
-                id="chatInput"
-                placeholder="메시지를 입력하세요"
-                onkeydown="
-                if(event.key === 'Enter') {
-                    sendChat();
-                }
-            ">
-
-        <button
-                type="button"
-                class="primary"
-                onclick="sendChat()">
-
-            전송
-
-        </button>
-
-    </div>
-
-</div>
-
-
-
-<!-- =========================================================
-     모임 진행
-     ========================================================= -->
-
-<div class="room-card">
-
-    <h2>모임 진행</h2>
-
-    <div
-            id="progressArea"
-            class="action-box">
-
-        상태 확인 중...
-
-    </div>
-
-</div>
-
-
-
 <script>
-
-    // ============================================================
-    // 상태
-    // ============================================================
 
     let meetingId = null;
 
     let currentUser = null;
 
-    let currentMeeting = null;
+    let rankings = [];
 
-    let currentParticipant = null;
+    let finalCandidate = null;
 
-    let allSubmitted = false;
-
-    let stompClient = null;
-
-    let toastTimer = null;
+    let whatIfActive = false;
 
 
 
-    // ============================================================
-    // Toast
-    // ============================================================
+    /* =========================================================
+       초기화
+       ========================================================= */
 
-    function showToast(
-        message,
-        type = "info"
-    )
-    {
-
-        const toast =
-            document.getElementById(
-                "toastMessage"
-            );
-
-
-        if (!toast)
-        {
-            return;
-        }
-
-
-        if (toastTimer)
-        {
-
-            clearTimeout(
-                toastTimer
-            );
-
-        }
-
-
-        toast.textContent =
-            message;
-
-
-        toast.className =
-            "toast show";
-
-
-        if (type === "error")
-        {
-
-            toast.classList.add(
-                "toast-error"
-            );
-
-        }
-
-        else if (type === "success")
-        {
-
-            toast.classList.add(
-                "toast-success"
-            );
-
-        }
-
-        else
-        {
-
-            toast.classList.add(
-                "toast-info"
-            );
-
-        }
-
-
-        toastTimer =
-            setTimeout(
-                () =>
-                {
-
-                    toast.classList.remove(
-                        "show"
-                    );
-
-                },
-                4000
-            );
-
-    }
-
-
-
-    // ============================================================
-    // 다른 페이지에서 전달받은 메시지
-    // ============================================================
-
-    function showFlashMessage()
-    {
-
-        const message =
-            sessionStorage.getItem(
-                "meetbackToastMessage"
-            );
-
-
-        const type =
-            sessionStorage.getItem(
-                "meetbackToastType"
-            )
-            || "info";
-
-
-        if (!message)
-        {
-            return;
-        }
-
-
-        sessionStorage.removeItem(
-            "meetbackToastMessage"
-        );
-
-
-        sessionStorage.removeItem(
-            "meetbackToastType"
-        );
-
-
-        showToast(
-            message,
-            type
-        );
-
-    }
-
-
-
-    // ============================================================
-    // 초기화
-    // ============================================================
-
-    async function initialize()
-    {
-
-        showFlashMessage();
-
+    async function initialize() {
 
         currentUser =
             await MeetBack.checkLogin();
 
 
-        if (!currentUser)
-        {
+        if (!currentUser) {
             return;
         }
 
@@ -474,391 +189,592 @@
             MeetBack.getMeetingId();
 
 
-        if (!meetingId)
-        {
+        if (!meetingId) {
 
-            showToast(
-                "잘못된 모임 ID입니다.",
-                "error"
-            );
-
+            location.href =
+                "/home";
 
             return;
         }
 
 
-        document.getElementById(
-            "meetingIdView"
-        ).textContent =
-            meetingId;
-
-
-        document.getElementById(
-            "loginInfo"
-        ).textContent =
-            currentUser.nickname
-                ? currentUser.nickname
-                : (
-                    "userId = "
-                    + currentUser.userId
-                );
-
-
-        await loadMeeting();
-
-        await loadCurrentParticipant();
-
-        await loadParticipants();
-
-        await loadSubmittedStatus();
-
-
-        renderProgress();
-
-
-        await connectWebSocket();
+        await loadResult();
 
     }
 
 
 
-    // ============================================================
-    // 모임 정보
-    // ============================================================
+    /* =========================================================
+       결과 조회
+       ========================================================= */
 
-    async function loadMeeting()
-    {
+    async function loadResult() {
 
         const response =
             await MeetBack.authenticatedFetch(
-                "/meetings/"
+                "/calculations/meeting/ranking?meetingId="
                 + meetingId
             );
 
 
-        if (!response.ok)
-        {
+        if (!response.ok) {
 
-            const text =
-                await response.text();
-
-
-            showToast(
-                text
-                || "모임 조회에 실패했습니다.",
-                "error"
-            );
-
+            document.getElementById(
+                "finalPlaceArea"
+            ).textContent =
+                "결과를 불러오지 못했습니다.";
 
             return;
         }
 
 
-        currentMeeting =
+        rankings =
             await response.json();
 
 
-        document.getElementById(
-            "meetingTitle"
-        ).textContent =
-            currentMeeting.title
-            || "MeetBack 모임방";
-
-
-        document.getElementById(
-            "inviteCodeView"
-        ).textContent =
-            currentMeeting.inviteCode
-            || "-";
-
-
-        document.getElementById(
-            "desiredEndView"
-        ).textContent =
-            MeetBack.formatDateTime(
-                currentMeeting.desiredEndAt
-            );
-
-
-        document.getElementById(
-            "statusView"
-        ).textContent =
-            currentMeeting.status
-            || "-";
-
-
-        const badge =
-            document.getElementById(
-                "meetingBadge"
-            );
-
-
         if (
-            currentMeeting.status
-            === "INPUT_OPEN"
-        )
-        {
+            !rankings
+            ||
+            rankings.length === 0
+        ) {
 
-            badge.textContent =
-                "장소 입력 중";
+            document.getElementById(
+                "finalPlaceArea"
+            ).textContent =
+                "결과가 없습니다.";
 
+            return;
         }
 
-        else if (
-            currentMeeting.status
-            === "VOTING"
-        )
-        {
 
-            badge.textContent =
-                "투표 중";
+        finalCandidate =
+            rankings.find(
+                item =>
+                    item.recommendationRank === 1
+            )
+            || rankings[0];
 
-        }
 
-        else if (
-            currentMeeting.status
-            === "CONFIRMED"
-        )
-        {
+        renderFinalPlace();
 
-            badge.textContent =
-                "장소 확정";
+        renderSummary();
 
-        }
-
-        else
-        {
-
-            badge.textContent =
-                currentMeeting.status
-                || "진행 중";
-
-        }
+        renderParticipants();
 
     }
 
 
 
-    // ============================================================
-    // 현재 참가자
-    // ============================================================
+    /* =========================================================
+       최종 장소
+       ========================================================= */
 
-    async function loadCurrentParticipant()
-    {
-
-        const response =
-            await MeetBack.authenticatedFetch(
-                "/participants/meetings/"
-                + meetingId
-                + "/participants/me"
-            );
-
-
-        if (!response.ok)
-        {
-            return;
-        }
-
-
-        currentParticipant =
-            await response.json();
-
-
-        const text =
-            document.getElementById(
-                "myInputStatus"
-            );
-
-
-        const button =
-            document.getElementById(
-                "locationButton"
-            );
-
-
-        if (
-            currentParticipant.inputStatus
-            === "SUBMITTED"
-        )
-        {
-
-            text.textContent =
-                "장소 입력 완료";
-
-
-            button.textContent =
-                "장소 수정";
-
-        }
-
-        else
-        {
-
-            text.textContent =
-                "아직 장소를 입력하지 않았습니다.";
-
-
-            button.textContent =
-                "장소 입력";
-
-        }
-
-
-        if (
-            currentMeeting
-            &&
-            currentMeeting.status
-            !== "INPUT_OPEN"
-        )
-        {
-
-            button.disabled =
-                true;
-
-
-            button.textContent =
-                "투표 진행 중 - 수정 불가";
-
-        }
-
-        else
-        {
-
-            button.disabled =
-                false;
-
-        }
-
-    }
-
-
-
-    // ============================================================
-    // 참가자 현황
-    // ============================================================
-
-    async function loadParticipants()
-    {
-
-        const response =
-            await MeetBack.authenticatedFetch(
-                "/participants/meeting/"
-                + meetingId
-            );
-
-
-        if (!response.ok)
-        {
-            return;
-        }
-
-
-        const participants =
-            await response.json();
-
+    function renderFinalPlace() {
 
         const area =
             document.getElementById(
-                "participantList"
+                "finalPlaceArea"
             );
+
+
+        area.innerHTML =
+            `
+            <div class="final-place-name">
+
+                ${MeetBack.escapeHtml(
+                finalCandidate.placeName
+                || "장소명 없음"
+            )}
+
+            </div>
+
+            <div class="final-place-address">
+
+                ${MeetBack.escapeHtml(
+                finalCandidate.address
+                || ""
+            )}
+
+            </div>
+            `;
+
+    }
+
+
+
+    /* =========================================================
+       희망 종료시간 계산
+       ========================================================= */
+
+    function getDesiredEndTime() {
+
+        /*
+         * API 응답에 희망 종료시간이 직접 있다면
+         * 해당 값을 우선 사용
+         */
+        const directValue =
+            finalCandidate.desiredEndAt
+            || finalCandidate.desiredEndTime;
+
+
+        if (directValue) {
+
+            const directDate =
+                new Date(
+                    directValue
+                );
+
+
+            if (
+                !Number.isNaN(
+                    directDate.getTime()
+                )
+            ) {
+
+                return directDate;
+
+            }
+
+        }
+
+
+        /*
+         * 직접 값이 없다면
+         *
+         * Golden Margin =
+         * Deadline - 희망 종료시간
+         *
+         * 희망 종료시간 =
+         * Deadline - Golden Margin
+         */
+        if (
+            !finalCandidate.deadlineAt
+            ||
+            finalCandidate.goldenMarginMinutes === null
+            ||
+            finalCandidate.goldenMarginMinutes === undefined
+        ) {
+
+            return null;
+
+        }
+
+
+        const deadline =
+            new Date(
+                finalCandidate.deadlineAt
+            );
+
+
+        const goldenMargin =
+            Number(
+                finalCandidate.goldenMarginMinutes
+            );
+
+
+        if (
+            Number.isNaN(
+                deadline.getTime()
+            )
+            ||
+            Number.isNaN(
+                goldenMargin
+            )
+        ) {
+
+            return null;
+
+        }
+
+
+        return new Date(
+            deadline.getTime()
+            -
+            goldenMargin
+            * 60
+            * 1000
+        );
+
+    }
+
+
+
+    /* =========================================================
+       현재 화면에서 사용할 종료시간
+       ========================================================= */
+
+    function getDisplayEndTime() {
+
+        const desiredEndTime =
+            getDesiredEndTime();
+
+
+        if (!desiredEndTime) {
+            return null;
+        }
+
+
+        /*
+         * 일반 결과
+         */
+        if (!whatIfActive) {
+
+            return new Date(
+                desiredEndTime.getTime()
+            );
+
+        }
+
+
+        /*
+         * What-if 결과
+         * 희망 종료시간 +30분
+         */
+        return new Date(
+            desiredEndTime.getTime()
+            +
+            30
+            * 60
+            * 1000
+        );
+
+    }
+
+
+
+    /* =========================================================
+       분석 요약
+       ========================================================= */
+
+    function renderSummary() {
+
+        const area =
+            document.getElementById(
+                "summaryArea"
+            );
+
+
+        const participants =
+            finalCandidate.participantResults
+            || [];
+
+
+        let allReturnable =
+            finalCandidate.allReturnable;
+
+
+        let goldenMargin =
+            finalCandidate.goldenMarginMinutes;
+
+
+        const displayEndTime =
+            getDisplayEndTime();
+
+
+        /*
+         * What-if 모드
+         */
+        if (whatIfActive) {
+
+            if (
+                goldenMargin !== null
+                &&
+                goldenMargin !== undefined
+            ) {
+
+                goldenMargin =
+                    Number(goldenMargin)
+                    - 30;
+
+            }
+
+
+            if (participants.length > 0) {
+
+                allReturnable =
+                    participants.every(
+                        participant =>
+                            calculateWhatIfCanReturn(
+                                participant
+                            )
+                    );
+
+            }
+
+        }
+
+
+        area.innerHTML =
+            `
+            <div class="summary-item">
+
+                <span>
+                    희망 종료시간
+                </span>
+
+                <strong>
+                    ${formatDateObject(
+                displayEndTime
+            )}
+                </strong>
+
+            </div>
+
+
+            <div class="summary-item">
+
+                <span>
+                    전체 귀가
+                </span>
+
+                <strong>
+                    ${
+                allReturnable
+                    ? "전원 가능"
+                    : "일부 불가"
+            }
+                </strong>
+
+            </div>
+
+
+            <div class="summary-item">
+
+                <span>
+                    Deadline
+                </span>
+
+                <strong>
+                    ${displayDateTime(
+                finalCandidate.deadlineAt
+            )}
+                </strong>
+
+            </div>
+
+
+            <div class="summary-item">
+
+                <span>
+                    Golden Margin
+                </span>
+
+                <strong>
+                    ${formatMinutes(
+                goldenMargin
+            )}
+                </strong>
+
+            </div>
+
+
+            <div class="summary-item">
+
+                <span>
+                    평균 귀가시간
+                </span>
+
+                <strong>
+                    ${
+                finalCandidate.averageReturnMinutes == null
+                    ? "-"
+                    : Math.round(
+                        finalCandidate.averageReturnMinutes
+                    )
+                    + "분"
+            }
+                </strong>
+
+            </div>
+
+
+            <div class="summary-item">
+
+                <span>
+                    귀가시간 편차
+                </span>
+
+                <strong>
+                    ${displayValue(
+                finalCandidate.fairnessGapMinutes,
+                "분"
+            )}
+                </strong>
+
+            </div>
+
+
+            <div class="summary-item">
+
+                <span>
+                    Rule Score
+                </span>
+
+                <strong>
+                    ${
+                finalCandidate.ruleScore == null
+                    ? "-"
+                    : Number(
+                        finalCandidate.ruleScore
+                    ).toFixed(1)
+            }
+                </strong>
+
+            </div>
+            `;
+
+    }
+
+
+
+    /* =========================================================
+       참가자 결과
+       ========================================================= */
+
+    function renderParticipants() {
+
+        const area =
+            document.getElementById(
+                "participantResultArea"
+            );
+
+
+        const participants =
+            finalCandidate.participantResults
+            || [];
+
+
+        if (participants.length === 0) {
+
+            area.textContent =
+                "참가자별 결과가 없습니다.";
+
+            return;
+        }
 
 
         area.innerHTML =
             "";
 
 
-        if (
-            !participants
-            ||
-            participants.length === 0
-        )
-        {
-
-            area.textContent =
-                "참가자가 없습니다.";
-
-
-            return;
-        }
-
-
         participants.forEach(
-            participant =>
-            {
+            participant => {
 
-                const row =
+                const div =
                     document.createElement(
                         "div"
                     );
 
 
-                row.className =
-                    "participant-row";
+                div.className =
+                    "participant-result";
 
 
-                const me =
-                    Number(
-                        participant.userId
-                    )
-                    === Number(
-                        currentUser.userId
-                    );
+                const canReturn =
+                    whatIfActive
+                        ? calculateWhatIfCanReturn(
+                            participant
+                        )
+                        : participant.canReturn;
 
 
-                const nickname =
-                    participant.nickname
-                    || (
-                        "참가자 "
-                        + participant.participantId
-                    );
-
-
-                const complete =
-                    participant.inputStatus
-                    === "SUBMITTED";
-
-
-                row.innerHTML =
+                div.innerHTML =
                     `
-                    <div>
+                    <div class="participant-result-header">
 
-                        <span class="participant-name">
+                        <strong>
+                            참가자
                             ${MeetBack.escapeHtml(
-                        nickname
+                        participant.participantId
                     )}
-                        </span>
+                        </strong>
 
-                        ${
-                        me
-                            ? `
-                                <span class="participant-me">
-                                    나
-                                </span>
-                                `
-                            : ""
+                        <span class="${
+                        canReturn
+                            ? "possible"
+                            : "impossible"
+                    }">
+
+                            ${
+                        canReturn
+                            ? "귀가 가능"
+                            : "귀가 불가"
                     }
+
+                        </span>
 
                     </div>
 
-                    <span
-                        class="${
-                        complete
-                            ? "complete"
-                            : "waiting"
-                    }">
 
-                        ${
-                        complete
-                            ? "입력 완료"
-                            : "입력 대기"
-                    }
+                    <div class="participant-info-grid">
 
-                    </span>
+                        <div>
+
+                            <span>
+                                귀가시간
+                            </span>
+
+                            <strong>
+                                ${displayValue(
+                        participant.returnMinutes,
+                        "분"
+                    )}
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                환승 횟수
+                            </span>
+
+                            <strong>
+                                ${displayValue(
+                        participant.transferCount,
+                        "회"
+                    )}
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                안전 출발 마감
+                            </span>
+
+                            <strong>
+                                ${displayDateTime(
+                        participant.lastSafeDepartureAt
+                    )}
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                막차 출발
+                            </span>
+
+                            <strong>
+                                ${displayDateTime(
+                        participant.lastTrainDepartureAt
+                    )}
+                            </strong>
+
+                        </div>
+
+                    </div>
                     `;
 
 
                 area.appendChild(
-                    row
+                    div
                 );
 
             }
@@ -868,920 +784,399 @@
 
 
 
-    // ============================================================
-    // 전원 제출 여부
-    // ============================================================
+    /* =========================================================
+       What-if 귀가 가능 계산
+       ========================================================= */
 
-    async function loadSubmittedStatus()
-    {
+    function calculateWhatIfCanReturn(
+        participant
+    ) {
 
-        const response =
-            await MeetBack.authenticatedFetch(
-                "/participants/meeting/"
-                + meetingId
-                + "/submitted"
-            );
-
-
-        if (!response.ok)
-        {
-            return;
-        }
-
-
-        allSubmitted =
-            await response.json();
-
-    }
-
-
-
-    // ============================================================
-    // 장소 입력 / 수정
-    // ============================================================
-
-    async function goLocation()
-    {
-
-        if (!currentMeeting)
-        {
-
-            showToast(
-                "모임 정보를 불러오는 중입니다.",
-                "info"
-            );
-
-
-            return;
-        }
-
-
+        /*
+         * 도보 귀가 등
+         * 막차 제한이 없는 경우
+         */
         if (
-            currentMeeting.status
-            !== "INPUT_OPEN"
-        )
-        {
+            !participant.lastSafeDepartureAt
+        ) {
 
-            showToast(
-                "투표가 시작된 이후에는 장소를 수정할 수 없습니다.",
-                "info"
+            return participant.canReturn;
+
+        }
+
+
+        const desiredEndTime =
+            getDesiredEndTime();
+
+
+        if (!desiredEndTime) {
+
+            return participant.canReturn;
+
+        }
+
+
+        /*
+         * 희망 종료시간 +30분
+         */
+        const whatIfEndTime =
+            new Date(
+                desiredEndTime.getTime()
+                +
+                30
+                * 60
+                * 1000
             );
 
 
-            return;
-        }
-
-
-        if (
-            currentParticipant
-            &&
-            currentParticipant.inputStatus
-            === "SUBMITTED"
-        )
-        {
-
-            const response =
-                await MeetBack.authenticatedFetch(
-                    "/participants/"
-                    + currentParticipant.participantId
-                    + "/edit",
-                    {
-
-                        method:
-                            "PUT"
-
-                    }
-                );
-
-
-            if (!response.ok)
-            {
-
-                const text =
-                    await response.text();
-
-
-                showToast(
-                    text
-                    || "수정 상태 변경에 실패했습니다.",
-                    "error"
-                );
-
-
-                return;
-            }
-
-
-            location.href =
-                "/meeting/location?meetingId="
-                + meetingId
-                + "&mode=edit";
-
-
-            return;
-        }
-
-
-        location.href =
-            "/meeting/location?meetingId="
-            + meetingId
-            + "&mode=create";
-
-    }
-
-
-
-    // ============================================================
-    // 모임 진행
-    // ============================================================
-
-    function renderProgress()
-    {
-
-        const area =
-            document.getElementById(
-                "progressArea"
+        const safeDeparture =
+            new Date(
+                participant.lastSafeDepartureAt
             );
 
 
         if (
-            !currentMeeting
-            ||
-            !currentUser
-        )
-        {
-            return;
-        }
-
-
-        const isHost =
-            Number(
-                currentMeeting.hostUserId
+            Number.isNaN(
+                safeDeparture.getTime()
             )
-            === Number(
-                currentUser.userId
-            );
+        ) {
 
+            return participant.canReturn;
 
-        // --------------------------------------------------------
-        // 장소 입력
-        // --------------------------------------------------------
-
-        if (
-            currentMeeting.status
-            === "INPUT_OPEN"
-        )
-        {
-
-            if (!allSubmitted)
-            {
-
-                area.innerHTML =
-                    `
-                    모든 참가자의 장소 입력을
-                    기다리고 있습니다.
-                    `;
-
-
-                return;
-            }
-
-
-            if (isHost)
-            {
-
-                area.innerHTML =
-                    `
-                    <p>
-                        모든 참가자가 장소 입력을
-                        완료했습니다.
-                    </p>
-
-                    <button
-                        type="button"
-                        class="primary"
-                        onclick="startVoting()">
-
-                        투표 시작
-
-                    </button>
-                    `;
-
-            }
-
-            else
-            {
-
-                area.innerHTML =
-                    `
-                    모든 참가자의 장소 입력이 완료되었습니다.
-                    방장이 투표를 시작할 때까지 기다려주세요.
-                    `;
-
-            }
-
-
-            return;
         }
 
 
-        // --------------------------------------------------------
-        // 투표
-        // --------------------------------------------------------
-
-        if (
-            currentMeeting.status
-            === "VOTING"
-        )
-        {
-
-            area.innerHTML =
-                `
-                <p>
-                    장소 투표가 진행 중입니다.
-                    후보별 추천 정보와 귀가 결과를 확인한 뒤
-                    투표해주세요.
-                </p>
-
-                <button
-                    type="button"
-                    class="primary"
-                    onclick="goVote()">
-
-                    투표하러 가기
-
-                </button>
-                `;
-
-
-            return;
-        }
-
-
-        // --------------------------------------------------------
-        // 확정
-        // --------------------------------------------------------
-
-        if (
-            currentMeeting.status
-            === "CONFIRMED"
-        )
-        {
-
-            area.innerHTML =
-                `
-                최종 장소가 확정되었습니다.
-                `;
-
-
-            return;
-        }
-
-
-        area.textContent =
-            "현재 모임 상태를 확인해주세요.";
-
-    }
-
-
-
-    // ============================================================
-    // 투표 시작 모달 열기
-    // ============================================================
-
-    function startVoting()
-    {
-
-        const overlay =
-            document.getElementById(
-                "votingConfirmOverlay"
-            );
-
-
-        if (!overlay)
-        {
-            return;
-        }
-
-
-        overlay.classList.add(
-            "show"
+        return (
+            whatIfEndTime
+            <=
+            safeDeparture
         );
 
     }
 
 
 
-    // ============================================================
-    // 투표 시작 모달 닫기
-    // ============================================================
+    /* =========================================================
+       What-if 토글
+       ========================================================= */
 
-    function closeVotingConfirmModal()
-    {
+    function toggleWhatIf() {
 
-        const overlay =
-            document.getElementById(
-                "votingConfirmOverlay"
-            );
-
-
-        if (!overlay)
-        {
+        if (!finalCandidate) {
             return;
         }
 
 
-        overlay.classList.remove(
-            "show"
-        );
+        whatIfActive =
+            !whatIfActive;
 
-    }
-
-
-
-    // ============================================================
-    // 실제 계산 후 투표 시작
-    // ============================================================
-
-    async function confirmStartVoting()
-    {
 
         const button =
             document.getElementById(
-                "confirmVotingButton"
+                "whatIfButton"
             );
 
 
-        if (button)
-        {
+        const description =
+            document.getElementById(
+                "resultDescription"
+            );
 
-            button.disabled =
-                true;
 
+        const summaryLabel =
+            document.getElementById(
+                "summaryLabel"
+            );
+
+
+        const summaryTitle =
+            document.getElementById(
+                "summaryTitle"
+            );
+
+
+        const participantLabel =
+            document.getElementById(
+                "participantLabel"
+            );
+
+
+        const participantTitle =
+            document.getElementById(
+                "participantTitle"
+            );
+
+
+        if (whatIfActive) {
 
             button.textContent =
-                "계산 중...";
+                "현재 결과 보기";
+
+
+            description.textContent =
+                "희망 종료시간을 30분 늦춘 경우의 귀가 결과입니다.";
+
+
+            summaryLabel.textContent =
+                "WHAT IF · +30 MIN";
+
+
+            summaryTitle.textContent =
+                "30분 후 귀가 분석 결과";
+
+
+            participantLabel.textContent =
+                "PARTICIPANTS · +30 MIN";
+
+
+            participantTitle.textContent =
+                "30분 후 참가자별 귀가 결과";
+
+        }
+        else {
+
+            button.textContent =
+                "+30분 결과 보기";
+
+
+            description.textContent =
+                "최종 장소와 참가자별 귀가 정보를 확인해보세요.";
+
+
+            summaryLabel.textContent =
+                "SUMMARY";
+
+
+            summaryTitle.textContent =
+                "귀가 분석 결과";
+
+
+            participantLabel.textContent =
+                "PARTICIPANTS";
+
+
+            participantTitle.textContent =
+                "참가자별 귀가 결과";
 
         }
 
 
-        closeVotingConfirmModal();
+        renderSummary();
 
-
-        try
-        {
-
-            // ----------------------------------------------------
-            // 1. 후보 계산
-            // ----------------------------------------------------
-
-            const calculation =
-                await MeetBack.authenticatedFetch(
-                    "/calculations/meeting?meetingId="
-                    + meetingId,
-                    {
-
-                        method:
-                            "POST"
-
-                    }
-                );
-
-
-            if (!calculation.ok)
-            {
-
-                const text =
-                    await calculation.text();
-
-
-                showToast(
-                    text
-                    || "후보 계산에 실패했습니다.",
-                    "error"
-                );
-
-
-                return;
-            }
-
-
-            // ----------------------------------------------------
-            // 2. VOTING 상태 변경
-            // ----------------------------------------------------
-
-            const voting =
-                await MeetBack.authenticatedFetch(
-                    "/meetings/"
-                    + meetingId
-                    + "/voting",
-                    {
-
-                        method:
-                            "PUT"
-
-                    }
-                );
-
-
-            if (!voting.ok)
-            {
-
-                const text =
-                    await voting.text();
-
-
-                showToast(
-                    text
-                    || "투표 시작에 실패했습니다.",
-                    "error"
-                );
-
-
-                return;
-            }
-
-
-            // ----------------------------------------------------
-            // 3. 투표 페이지 이동
-            // ----------------------------------------------------
-
-            location.href =
-                "/meeting/vote?meetingId="
-                + meetingId;
-
-        }
-
-        catch (error)
-        {
-
-            console.error(
-                "[START VOTING ERROR]",
-                error
-            );
-
-
-            showToast(
-                "투표 시작 중 오류가 발생했습니다.",
-                "error"
-            );
-
-        }
-
-        finally
-        {
-
-            if (button)
-            {
-
-                button.disabled =
-                    false;
-
-
-                button.textContent =
-                    "투표 시작";
-
-            }
-
-        }
+        renderParticipants();
 
     }
 
 
 
-    // ============================================================
-    // 투표 페이지 이동
-    // ============================================================
-
-    function goVote()
-    {
-
-        location.href =
-            "/meeting/vote?meetingId="
-            + meetingId;
-
-    }
-
-
-
-    // ============================================================
-    // WebSocket
-    // ============================================================
-
-    async function connectWebSocket()
-    {
-
-        const protocol =
-            location.protocol === "https:"
-                ? "wss"
-                : "ws";
-
-
-        stompClient =
-            new StompJs.Client(
-                {
-
-                    brokerURL:
-                        protocol
-                        + "://"
-                        + location.host
-                        + "/ws",
-
-
-                    connectHeaders: {
-
-                        "Authorization":
-                            "Bearer "
-                            + MeetBack.getAccessToken()
-
-                    },
-
-
-                    reconnectDelay:
-                        5000,
-
-
-                    onConnect:
-                        async function()
-                        {
-
-                            document.getElementById(
-                                "chatStatus"
-                            ).textContent =
-                                "CONNECTED";
-
-
-                            stompClient.subscribe(
-                                "/topic/meetings/"
-                                + meetingId
-                                + "/chat",
-
-                                async message =>
-                                {
-
-                                    const data =
-                                        JSON.parse(
-                                            message.body
-                                        );
-
-
-                                    if (
-                                        data.messageType
-                                        === "SYSTEM"
-                                        &&
-                                        data.eventType
-                                    )
-                                    {
-
-                                        await handleMeetingEvent(
-                                            data
-                                        );
-
-
-                                        return;
-                                    }
-
-
-                                    addChat(
-                                        data
-                                    );
-
-                                }
-                            );
-
-
-                            await loadChatHistory();
-
-                        }
-
-                }
-            );
-
-
-        stompClient.activate();
-
-    }
-
-
-
-    // ============================================================
-    // 채팅 내역
-    // ============================================================
-
-    async function loadChatHistory()
-    {
-
-        const response =
-            await MeetBack.authenticatedFetch(
-                "/meetings/"
-                + meetingId
-                + "/messages"
-            );
-
-
-        if (!response.ok)
-        {
-            return;
-        }
-
-
-        const messages =
-            await response.json();
-
-
-        const area =
-            document.getElementById(
-                "chatMessages"
-            );
-
-
-        area.innerHTML =
-            "";
-
-
-        messages.forEach(
-            message =>
-            {
-
-                if (
-                    message.messageType
-                    === "SYSTEM"
-                )
-                {
-
-                    addSystemMessage(
-                        message.content
-                    );
-
-                }
-
-                else
-                {
-
-                    addChat(
-                        message
-                    );
-
-                }
-
-            }
-        );
-
-    }
-
-
-
-    // ============================================================
-    // 일반 채팅
-    // ============================================================
-
-    function addChat(message)
-    {
-
-        const area =
-            document.getElementById(
-                "chatMessages"
-            );
-
-
-        if (!area)
-        {
-            return;
-        }
-
-
-        const div =
-            document.createElement(
-                "div"
-            );
-
-
-        div.style.marginBottom =
-            "8px";
-
-
-        div.innerHTML =
-            `
-            <strong>
-                ${MeetBack.escapeHtml(
-                message.nickname
-                || "참가자"
-            )}
-            </strong>
-
-            ${MeetBack.escapeHtml(
-                message.content
-                || ""
-            )}
-            `;
-
-
-        area.appendChild(
-            div
-        );
-
-
-        area.scrollTop =
-            area.scrollHeight;
-
-    }
-
-
-
-    // ============================================================
-    // 시스템 이벤트
-    // ============================================================
-
-    async function handleMeetingEvent(event)
-    {
-
-        addSystemMessage(
-            event.content
-        );
-
+    /* =========================================================
+       일반 값 표시
+       ========================================================= */
+
+    function displayValue(
+        value,
+        suffix = ""
+    ) {
 
         if (
-            event.eventType
-            === "LOCATION_SUBMITTED"
-        )
-        {
-
-            await refreshRoomState();
-
-
-            return;
-        }
-
-
-        if (
-            event.eventType
-            === "VOTING_STARTED"
-        )
-        {
-
-            await refreshRoomState();
-
-        }
-
-    }
-
-
-
-    // ============================================================
-    // 모임방 상태 갱신
-    // ============================================================
-
-    async function refreshRoomState()
-    {
-
-        await loadMeeting();
-
-        await loadCurrentParticipant();
-
-        await loadParticipants();
-
-        await loadSubmittedStatus();
-
-
-        renderProgress();
-
-    }
-
-
-
-    // ============================================================
-    // 시스템 메시지
-    // ============================================================
-
-    function addSystemMessage(content)
-    {
-
-        const area =
-            document.getElementById(
-                "chatMessages"
-            );
-
-
-        if (!area)
-        {
-            return;
-        }
-
-
-        const div =
-            document.createElement(
-                "div"
-            );
-
-
-        div.style.textAlign =
-            "center";
-
-
-        div.style.color =
-            "#888";
-
-
-        div.style.padding =
-            "8px";
-
-
-        div.style.fontSize =
-            "13px";
-
-
-        div.textContent =
-            content
-            || "";
-
-
-        area.appendChild(
-            div
-        );
-
-
-        area.scrollTop =
-            area.scrollHeight;
-
-    }
-
-
-
-    // ============================================================
-    // 채팅 전송
-    // ============================================================
-
-    function sendChat()
-    {
-
-        const input =
-            document.getElementById(
-                "chatInput"
-            );
-
-
-        const content =
-            input.value.trim();
-
-
-        if (!content)
-        {
-            return;
-        }
-
-
-        if (
-            !stompClient
+            value === null
             ||
-            !stompClient.connected
-        )
-        {
+            value === undefined
+        ) {
 
-            showToast(
-                "채팅 서버에 연결 중입니다.",
-                "info"
-            );
+            return "-";
 
-
-            return;
         }
 
 
-        stompClient.publish(
-            {
-
-                destination:
-                    "/app/meetings/"
-                    + meetingId
-                    + "/chat",
-
-
-                body:
-                    JSON.stringify(
-                        {
-                            content:
-                            content
-                        }
-                    )
-
-            }
+        return (
+            MeetBack.escapeHtml(value)
+            +
+            suffix
         );
-
-
-        input.value =
-            "";
 
     }
 
 
 
-    // ============================================================
-    // 실행
-    // ============================================================
+    /* =========================================================
+       분 → 시간/분
+       ========================================================= */
+
+    function formatMinutes(value) {
+
+        if (
+            value === null
+            ||
+            value === undefined
+        ) {
+
+            return "-";
+
+        }
+
+
+        const totalMinutes =
+            Number(value);
+
+
+        if (
+            Number.isNaN(
+                totalMinutes
+            )
+        ) {
+
+            return "-";
+
+        }
+
+
+        const sign =
+            totalMinutes < 0
+                ? "-"
+                : "";
+
+
+        const absoluteMinutes =
+            Math.abs(
+                Math.round(
+                    totalMinutes
+                )
+            );
+
+
+        const hours =
+            Math.floor(
+                absoluteMinutes / 60
+            );
+
+
+        const minutes =
+            absoluteMinutes % 60;
+
+
+        if (hours === 0) {
+
+            return (
+                sign
+                +
+                minutes
+                +
+                "분"
+            );
+
+        }
+
+
+        if (minutes === 0) {
+
+            return (
+                sign
+                +
+                hours
+                +
+                "시간"
+            );
+
+        }
+
+
+        return (
+            sign
+            +
+            hours
+            +
+            "시간 "
+            +
+            minutes
+            +
+            "분"
+        );
+
+    }
+
+
+
+    /* =========================================================
+       서버 날짜 문자열 표시
+       ========================================================= */
+
+    function displayDateTime(value) {
+
+        if (!value) {
+
+            return "-";
+
+        }
+
+
+        return MeetBack.escapeHtml(
+            MeetBack.formatDateTime(
+                value
+            )
+        );
+
+    }
+
+
+
+    /* =========================================================
+       Date 객체 날짜 표시
+       ========================================================= */
+
+    function formatDateObject(date) {
+
+        if (
+            !date
+            ||
+            Number.isNaN(
+                date.getTime()
+            )
+        ) {
+
+            return "-";
+
+        }
+
+
+        return MeetBack.escapeHtml(
+            MeetBack.formatDateTime(
+                date
+            )
+        );
+
+    }
+
+
+
+    /* =========================================================
+   모임방 이동
+   ========================================================= */
+
+    function goRoom() {
+
+        if (!meetingId) {
+
+            window.location.href =
+                "/home";
+
+            return;
+        }
+
+
+        window.location.href =
+            "/meeting?meetingId="
+            + encodeURIComponent(meetingId);
+
+    }
+
+
 
     initialize();
 
 </script>
 
+
 </body>
+
 </html>
