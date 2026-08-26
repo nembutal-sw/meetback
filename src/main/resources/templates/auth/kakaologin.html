@@ -29,7 +29,7 @@
     </div>
 
 
-    <!-- 신규 카카오 회원 닉네임 설정 -->
+    <!-- 신규 카카오 회원 가입 -->
     <div
             id="kakaoSignupContainer"
             style="display: none;"
@@ -75,9 +75,24 @@
         <br>
 
 
+        <h3>
+            약관 동의
+        </h3>
+
+
+        <div id="kakaoTermsContainer"></div>
+
+
+        <div id="kakaoTermsMessage"></div>
+
+
+        <br>
+
+
         <button
                 type="button"
                 id="kakaoSignupButton"
+                disabled
         >
             가입 완료
         </button>
@@ -141,6 +156,18 @@
     const kakaoSignupMessage =
         document.getElementById(
             "kakaoSignupMessage"
+        );
+
+
+    const kakaoTermsContainer =
+        document.getElementById(
+            "kakaoTermsContainer"
+        );
+
+
+    const kakaoTermsMessage =
+        document.getElementById(
+            "kakaoTermsMessage"
         );
 
 
@@ -337,84 +364,370 @@
     }
 
 
-    // 기존 카카오 회원 로그인
-    if (
-        status ===
-        "LOGIN_SUCCESS"
-    )
+    // 카카오 신규 회원가입용 약관 조회
+    async function loadKakaoTerms()
     {
 
-        if (
-            accessToken
-            &&
-            refreshToken
-            &&
-            userId
-        )
+        kakaoTermsContainer.innerHTML =
+            "";
+
+
+        kakaoTermsMessage.innerText =
+            "";
+
+
+        kakaoSignupButton.disabled =
+            true;
+
+
+        try
         {
 
-            saveLoginData(
-                {
-                    accessToken: accessToken,
-                    refreshToken: refreshToken,
-                    userId: userId,
-                    role: role
-                }
+            const response =
+                await fetch(
+                    "/terms",
+                    {
+                        method: "GET"
+                    }
+                );
+
+
+            if (!response.ok)
+            {
+
+                kakaoTermsMessage.innerText =
+                    "약관 정보를 불러오지 못했습니다.";
+
+                return false;
+            }
+
+
+            const terms =
+                await response.json();
+
+
+            if (
+                !Array.isArray(
+                    terms
+                )
+                ||
+                terms.length === 0
+            )
+            {
+
+                kakaoTermsMessage.innerText =
+                    "현재 적용 중인 약관을 확인할 수 없습니다.";
+
+                return false;
+            }
+
+
+            for (const term of terms)
+            {
+
+                const wrapper =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                const label =
+                    document.createElement(
+                        "label"
+                    );
+
+
+                const checkbox =
+                    document.createElement(
+                        "input"
+                    );
+
+
+                checkbox.type =
+                    "checkbox";
+
+
+                checkbox.dataset.termId =
+                    String(
+                        term.termId
+                    );
+
+
+                checkbox.dataset.required =
+                    String(
+                        term.required === true
+                    );
+
+
+                label.appendChild(
+                    checkbox
+                );
+
+
+                const title =
+                    document.createElement(
+                        "span"
+                    );
+
+
+                title.textContent =
+                    (term.required
+                        ? "[필수] "
+                        : "[선택] ")
+                    + term.termName
+                    + " "
+                    + "(v"
+                    + term.version
+                    + ")";
+
+
+                label.appendChild(
+                    title
+                );
+
+
+                wrapper.appendChild(
+                    label
+                );
+
+
+                const details =
+                    document.createElement(
+                        "details"
+                    );
+
+
+                const summary =
+                    document.createElement(
+                        "summary"
+                    );
+
+
+                summary.textContent =
+                    "약관 내용 보기";
+
+
+                const content =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                content.style.whiteSpace =
+                    "pre-wrap";
+
+
+                content.textContent =
+                    term.content
+                    ||
+                    "약관 내용이 없습니다.";
+
+
+                details.appendChild(
+                    summary
+                );
+
+
+                details.appendChild(
+                    content
+                );
+
+
+                wrapper.appendChild(
+                    details
+                );
+
+
+                wrapper.appendChild(
+                    document.createElement(
+                        "br"
+                    )
+                );
+
+
+                kakaoTermsContainer.appendChild(
+                    wrapper
+                );
+            }
+
+
+            kakaoSignupButton.disabled =
+                false;
+
+
+            return true;
+
+        }
+        catch (error)
+        {
+
+            console.error(
+                "약관 조회 오류:",
+                error
             );
 
 
-            kakaoLoginMessage.innerText =
-                "카카오 로그인에 성공했습니다.";
+            kakaoTermsMessage.innerText =
+                "약관 조회 중 오류가 발생했습니다.";
 
 
-            window.location.href =
-                "/home";
-
+            return false;
         }
-        else
-        {
-
-            kakaoLoginMessage.innerText =
-                "카카오 로그인 정보를 확인할 수 없습니다.";
-        }
-
     }
 
 
-    // 신규 카카오 회원
-    else if (
-        status ===
-        "NICKNAME_REQUIRED"
-    )
+    // 동의한 약관 ID 조회
+    function getAgreedTermIds()
     {
 
-        if (!signupToken)
+        const checkedTerms =
+            kakaoTermsContainer.querySelectorAll(
+                'input[data-term-id]:checked'
+            );
+
+
+        return Array.from(
+            checkedTerms
+        ).map(
+            checkbox =>
+                Number(
+                    checkbox.dataset.termId
+                )
+        );
+    }
+
+
+    // 필수 약관 모두 동의했는지 검사
+    function areRequiredTermsAgreed()
+    {
+
+        const requiredTerms =
+            kakaoTermsContainer.querySelectorAll(
+                'input[data-required="true"]'
+            );
+
+
+        if (
+            requiredTerms.length === 0
+        )
         {
-
-            kakaoLoginMessage.innerText =
-                "카카오 회원가입 정보를 확인할 수 없습니다.";
-
+            return false;
         }
-        else
+
+
+        for (const checkbox of requiredTerms)
         {
 
-            kakaoLoginMessage.innerText =
-                "카카오 인증이 완료되었습니다. 닉네임을 설정해주세요.";
+            if (!checkbox.checked)
+            {
+                return false;
+            }
+        }
+
+
+        return true;
+    }
+
+
+    // 카카오 로그인 결과 처리
+    async function handleKakaoLoginResult()
+    {
+
+        // 기존 카카오 회원 로그인
+        if (
+            status ===
+            "LOGIN_SUCCESS"
+        )
+        {
+
+            if (
+                accessToken
+                &&
+                refreshToken
+                &&
+                userId
+            )
+            {
+
+                saveLoginData(
+                    {
+                        accessToken: accessToken,
+                        refreshToken: refreshToken,
+                        userId: userId,
+                        role: role
+                    }
+                );
+
+
+                kakaoLoginMessage.innerText =
+                    "카카오 로그인에 성공했습니다.";
+
+
+                window.location.href =
+                    "/home";
+
+            }
+            else
+            {
+
+                kakaoLoginMessage.innerText =
+                    "카카오 로그인 정보를 확인할 수 없습니다.";
+            }
+
+
+            return;
+        }
+
+
+        // 신규 카카오 회원
+        if (
+            status ===
+            "NICKNAME_REQUIRED"
+        )
+        {
+
+            if (!signupToken)
+            {
+
+                kakaoLoginMessage.innerText =
+                    "카카오 회원가입 정보를 확인할 수 없습니다.";
+
+                return;
+            }
 
 
             kakaoSignupContainer.style.display =
                 "block";
+
+
+            const termsLoaded =
+                await loadKakaoTerms();
+
+
+            if (!termsLoaded)
+            {
+
+                kakaoLoginMessage.innerText =
+                    "카카오 인증은 완료되었지만 약관 정보를 불러오지 못했습니다.";
+
+                return;
+            }
+
+
+            kakaoLoginMessage.innerText =
+                "카카오 인증이 완료되었습니다. 닉네임과 필수 약관 동의를 완료해주세요.";
+
+
+            return;
         }
 
-    }
-
-
-    else
-    {
 
         kakaoLoginMessage.innerText =
             "카카오 로그인에 실패했습니다.";
     }
+
+
+    handleKakaoLoginResult();
 
 
     // 닉네임 변경 시 중복 확인 초기화
@@ -493,9 +806,7 @@
                             nickname
                         ),
                         {
-
                             method: "GET"
-
                         }
                     );
 
@@ -533,7 +844,7 @@
 
 
                     nicknameCheckMessage.innerText =
-                        "이미 사용 중인 닉네임입니다.";
+                        "이미 사용 중이거나 사용할 수 없는 닉네임입니다.";
                 }
 
             }
@@ -565,6 +876,10 @@
         {
 
             kakaoSignupMessage.innerText =
+                "";
+
+
+            kakaoTermsMessage.innerText =
                 "";
 
 
@@ -619,6 +934,22 @@
             }
 
 
+            if (
+                !areRequiredTermsAgreed()
+            )
+            {
+
+                kakaoTermsMessage.innerText =
+                    "필수 약관에 모두 동의해주세요.";
+
+                return;
+            }
+
+
+            const agreedTermIds =
+                getAgreedTermIds();
+
+
             try
             {
 
@@ -643,7 +974,10 @@
                                     signupToken,
 
                                     nickname:
-                                    nickname
+                                    nickname,
+
+                                    agreedTermIds:
+                                    agreedTermIds
 
                                 }
                             )

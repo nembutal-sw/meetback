@@ -59,6 +59,8 @@ public class SecurityConfig {
                                                 "/auth/password/reset/confirm",
                                                 "/auth/social/complete",
 
+                                                "/terms",
+
                                                 "/oauth/**",
 
                                                 "/ws",
