@@ -888,3 +888,113 @@ button:disabled {
     }
 
 }
+/* =========================================================
+   참가자 카드
+   ========================================================= */
+
+#participantList {
+    display: grid;
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(220px, 1fr)
+        );
+
+    gap: 12px;
+}
+
+
+.participant-card {
+    padding: 16px;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+
+    background: #ffffff;
+}
+
+
+.participant-card-top {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 12px;
+}
+
+
+.participant-nickname {
+    font-size: 15px;
+}
+
+
+.participant-card-bottom {
+    margin-top: 10px;
+
+    font-size: 13px;
+}
+
+
+/* =========================================================
+   ON / OFF
+   ========================================================= */
+
+.presence-badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 5px 9px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+.presence-dot {
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+}
+
+
+/* ONLINE */
+
+.presence-badge.online {
+    background:
+            #ecfdf5;
+
+    color:
+            #15803d;
+}
+
+
+.presence-badge.online
+.presence-dot {
+    background:
+            #22c55e;
+}
+
+
+/* OFFLINE */
+
+.presence-badge.offline {
+    background:
+            #fef2f2;
+
+    color:
+            #b91c1c;
+}
+
+
+.presence-badge.offline
+.presence-dot {
+    background:
+            #ef4444;
+}

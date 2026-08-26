@@ -99,4 +99,65 @@
 
     </select>
 
+    <!-- =========================================================
+     모임당 딱 한 번만 저장되는 SYSTEM 공지
+     ========================================================= -->
+
+    <insert id="insertSystemMessageOnce">
+
+        INSERT IGNORE INTO chat_messages
+        (
+            meeting_id,
+            participant_id,
+            message_type,
+            event_type,
+            event_key,
+            content,
+            created_at
+        )
+
+        VALUES
+        (
+            #{meetingId},
+            #{participantId},
+            'SYSTEM',
+            #{eventType},
+            #{eventKey},
+            #{content},
+            NOW()
+        )
+
+    </insert>
+
+
+    <select id="selectMessageByEventKey"
+            resultType="com.meetback.dev.dto.ChatMessageResponse">
+
+        SELECT
+            cm.message_id AS messageId,
+            cm.meeting_id AS meetingId,
+            cm.participant_id AS participantId,
+
+            mp.user_id AS userId,
+
+            u.nickname AS nickname,
+
+            cm.message_type AS messageType,
+            cm.event_type AS eventType,
+            cm.content AS content,
+            cm.created_at AS createdAt
+
+        FROM chat_messages cm
+
+        JOIN meeting_participants mp
+        ON cm.participant_id = mp.participant_id
+
+        JOIN users u
+        ON mp.user_id = u.user_id
+
+        WHERE cm.meeting_id = #{meetingId}
+        AND cm.event_key = #{eventKey}
+
+    </select>
+
 </mapper>

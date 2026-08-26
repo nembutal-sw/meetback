@@ -1,7 +1,9 @@
 package com.meetback.dev.repository;
 
 import com.meetback.dev.domain.MeetingParticipant;
+import com.meetback.dev.dto.ParticipantRoomResponse;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -21,4 +23,8 @@ public interface MeetingParticipantMapper {
     List<MeetingParticipant> findByMeetingId(Long meetingId);
 
     int resetInputToDraft(Long participantId);
+
+    List<ParticipantRoomResponse> findRoomParticipants(
+            @Param("meetingId") Long meetingId
+    );
 }

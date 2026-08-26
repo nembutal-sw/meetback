@@ -13,6 +13,7 @@
             meeting_id,
             participant_id,
             candidate_id,
+            vote_type,
             vote_change_count,
             created_at,
             updated_at
@@ -28,16 +29,20 @@
             useGeneratedKeys="true"
             keyProperty="voteId">
 
-        INSERT INTO place_votes (
+        INSERT INTO place_votes
+        (
             meeting_id,
             participant_id,
             candidate_id,
+            vote_type,
             vote_change_count
         )
-        VALUES (
+        VALUES
+        (
             #{meetingId},
             #{participantId},
             #{candidateId},
+            #{voteType},
             #{voteChangeCount}
         )
 
@@ -48,11 +53,15 @@
             parameterType="com.meetback.dev.domain.PlaceVote">
 
         UPDATE place_votes
+
         SET
             candidate_id = #{candidateId},
-            vote_change_count = vote_change_count + 1
+            vote_type = #{voteType},
+            vote_change_count = vote_change_count + 1,
+            updated_at = NOW()
+
         WHERE meeting_id = #{meetingId}
-            AND participant_id = #{participantId}
+        AND participant_id = #{participantId}
 
     </update>
 
@@ -79,6 +88,58 @@
 
         ORDER BY voteCount DESC,
             mc.candidate_id ASC
+
+    </select>
+
+    <select id="selectVoteVoters"
+            resultType="com.meetback.dev.dto.VoteVoterResponse">
+
+        SELECT
+            pv.candidate_id AS candidateId,
+            mp.participant_id AS participantId,
+            u.user_id AS userId,
+            u.nickname AS nickname
+
+        FROM place_votes pv
+
+        JOIN meeting_participants mp
+            ON pv.participant_id = mp.participant_id
+            AND pv.meeting_id = mp.meeting_id
+
+        JOIN users u
+        ON mp.user_id = u.user_id
+
+        JOIN meeting_candidates mc
+            ON pv.candidate_id = mc.candidate_id
+            AND pv.meeting_id = mc.meeting_id
+            AND mc.is_active = TRUE
+
+        WHERE pv.meeting_id = #{meetingId}
+
+        ORDER BY
+            pv.updated_at ASC,
+            pv.vote_id ASC
+
+    </select>
+
+    <select id="countVotesByMeetingId"
+            parameterType="long"
+            resultType="int">
+
+        SELECT COUNT(*)
+        FROM place_votes
+        WHERE meeting_id = #{meetingId}
+
+    </select>
+
+    <select id="countAbstainVotesByMeetingId"
+            parameterType="long"
+            resultType="int">
+
+        SELECT COUNT(*)
+        FROM place_votes
+        WHERE meeting_id = #{meetingId}
+            AND vote_type = 'ABSTAIN'
 
     </select>
 
