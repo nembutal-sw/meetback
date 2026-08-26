@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MeetBack 카카오 로그인</title>
+</head>
+
+<body>
+
+<div class="kakao-login-container">
+
+    <div id="kakaoLoginMessage">
+        카카오 로그인 처리 중입니다.
+    </div>
+
+
+    <div
+            id="kakaoLoginData"
+            th:data-status="${status}"
+            th:data-signup-token="${signupToken}"
+            th:data-access-token="${accessToken}"
+            th:data-refresh-token="${refreshToken}"
+            th:data-user-id="${userId}"
+            th:data-role="${role}"
+            style="display: none;"
+    >
+    </div>
+
+
+    <!-- 신규 카카오 회원 닉네임 설정 -->
+    <div
+            id="kakaoSignupContainer"
+            style="display: none;"
+    >
+
+        <h3>
+            닉네임 설정
+        </h3>
+
+        <p>
+            MeetBack에서 사용할 닉네임을 입력해주세요.
+        </p>
+
+
+        <div>
+
+            <label for="kakaoNickname">
+                닉네임
+            </label>
+
+            <input
+                    type="text"
+                    id="kakaoNickname"
+                    placeholder="닉네임을 입력하세요"
+            >
+
+            <button
+                    type="button"
+                    id="nicknameCheckButton"
+            >
+                중복 확인
+            </button>
+
+        </div>
+
+
+        <br>
+
+
+        <div id="nicknameCheckMessage"></div>
+
+
+        <br>
+
+
+        <button
+                type="button"
+                id="kakaoSignupButton"
+        >
+            가입 완료
+        </button>
+
+
+        <br>
+        <br>
+
+
+        <div id="kakaoSignupMessage"></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    const kakaoLoginData =
+        document.getElementById(
+            "kakaoLoginData"
+        );
+
+
+    const kakaoLoginMessage =
+        document.getElementById(
+            "kakaoLoginMessage"
+        );
+
+
+    const kakaoSignupContainer =
+        document.getElementById(
+            "kakaoSignupContainer"
+        );
+
+
+    const kakaoNickname =
+        document.getElementById(
+            "kakaoNickname"
+        );
+
+
+    const nicknameCheckButton =
+        document.getElementById(
+            "nicknameCheckButton"
+        );
+
+
+    const nicknameCheckMessage =
+        document.getElementById(
+            "nicknameCheckMessage"
+        );
+
+
+    const kakaoSignupButton =
+        document.getElementById(
+            "kakaoSignupButton"
+        );
+
+
+    const kakaoSignupMessage =
+        document.getElementById(
+            "kakaoSignupMessage"
+        );
+
+
+    const status =
+        kakaoLoginData.dataset.status;
+
+
+    const signupToken =
+        kakaoLoginData.dataset.signupToken;
+
+
+    const accessToken =
+        kakaoLoginData.dataset.accessToken;
+
+
+    const refreshToken =
+        kakaoLoginData.dataset.refreshToken;
+
+
+    const userId =
+        kakaoLoginData.dataset.userId;
+
+
+    const role =
+        kakaoLoginData.dataset.role;
+
+
+    let checkedNickname = null;
+
+
+    // 로그인 정보 저장
+    function saveLoginData(
+        data
+    )
+    {
+
+        localStorage.setItem(
+            "accessToken",
+            data.accessToken
+        );
+
+
+        localStorage.setItem(
+            "refreshToken",
+            data.refreshToken
+        );
+
+
+        localStorage.setItem(
+            "userId",
+            data.userId
+        );
+
+
+        localStorage.setItem(
+            "role",
+            data.role
+        );
+    }
+
+
+    // 기존 카카오 회원 로그인
+    if (
+        status ===
+        "LOGIN_SUCCESS"
+    )
+    {
+
+        if (
+            accessToken
+            &&
+            refreshToken
+            &&
+            userId
+        )
+        {
+
+            saveLoginData(
+                {
+                    accessToken: accessToken,
+                    refreshToken: refreshToken,
+                    userId: userId,
+                    role: role
+                }
+            );
+
+
+            kakaoLoginMessage.innerText =
+                "카카오 로그인에 성공했습니다.";
+
+
+            window.location.href =
+                "/home";
+
+        }
+        else
+        {
+
+            kakaoLoginMessage.innerText =
+                "카카오 로그인 정보를 확인할 수 없습니다.";
+        }
+
+    }
+
+
+    // 신규 카카오 회원
+    else if (
+        status ===
+        "NICKNAME_REQUIRED"
+    )
+    {
+
+        if (!signupToken)
+        {
+
+            kakaoLoginMessage.innerText =
+                "카카오 회원가입 정보를 확인할 수 없습니다.";
+
+        }
+        else
+        {
+
+            kakaoLoginMessage.innerText =
+                "카카오 인증이 완료되었습니다. 닉네임을 설정해주세요.";
+
+
+            kakaoSignupContainer.style.display =
+                "block";
+        }
+
+    }
+
+
+    else
+    {
+
+        kakaoLoginMessage.innerText =
+            "카카오 로그인에 실패했습니다.";
+    }
+
+
+    // 닉네임 변경 시 중복 확인 초기화
+    kakaoNickname.addEventListener(
+        "input",
+        function()
+        {
+
+            checkedNickname =
+                null;
+
+
+            nicknameCheckMessage.innerText =
+                "";
+        }
+    );
+
+
+    // 닉네임 중복 검사
+    nicknameCheckButton.addEventListener(
+        "click",
+        async function()
+        {
+
+            const nickname =
+                kakaoNickname.value.trim();
+
+
+            nicknameCheckMessage.innerText =
+                "";
+
+
+            checkedNickname =
+                null;
+
+
+            if (!nickname)
+            {
+
+                nicknameCheckMessage.innerText =
+                    "닉네임을 입력해주세요.";
+
+                return;
+            }
+
+
+            try
+            {
+
+                const response =
+                    await fetch(
+                        "/auth/nickname/check?nickname="
+                        + encodeURIComponent(
+                            nickname
+                        ),
+                        {
+
+                            method: "GET"
+
+                        }
+                    );
+
+
+                if (!response.ok)
+                {
+
+                    nicknameCheckMessage.innerText =
+                        "닉네임 중복 확인에 실패했습니다.";
+
+                    return;
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                if (data.available)
+                {
+
+                    checkedNickname =
+                        nickname;
+
+
+                    nicknameCheckMessage.innerText =
+                        "사용 가능한 닉네임입니다.";
+
+                }
+                else
+                {
+
+                    nicknameCheckMessage.innerText =
+                        "이미 사용 중인 닉네임입니다.";
+                }
+
+            }
+            catch (error)
+            {
+
+                console.error(
+                    "닉네임 중복 확인 오류:",
+                    error
+                );
+
+
+                nicknameCheckMessage.innerText =
+                    "닉네임 확인 중 오류가 발생했습니다.";
+            }
+
+        }
+    );
+
+
+    // 카카오 신규 회원가입 완료
+    kakaoSignupButton.addEventListener(
+        "click",
+        async function()
+        {
+
+            kakaoSignupMessage.innerText =
+                "";
+
+
+            const nickname =
+                kakaoNickname.value.trim();
+
+
+            if (!signupToken)
+            {
+
+                kakaoSignupMessage.innerText =
+                    "카카오 회원가입 정보가 없습니다.";
+
+                return;
+            }
+
+
+            if (!nickname)
+            {
+
+                kakaoSignupMessage.innerText =
+                    "닉네임을 입력해주세요.";
+
+                return;
+            }
+
+
+            if (
+                checkedNickname !==
+                nickname
+            )
+            {
+
+                kakaoSignupMessage.innerText =
+                    "닉네임 중복 확인을 해주세요.";
+
+                return;
+            }
+
+
+            try
+            {
+
+                const response =
+                    await fetch(
+                        "/auth/social/complete",
+                        {
+
+                            method: "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json"
+
+                            },
+
+                            body: JSON.stringify(
+                                {
+
+                                    signupToken:
+                                    signupToken,
+
+                                    nickname:
+                                    nickname
+
+                                }
+                            )
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok)
+                {
+
+                    kakaoSignupMessage.innerText =
+                        data.message
+                        ||
+                        "카카오 회원가입에 실패했습니다.";
+
+                    return;
+                }
+
+
+                if (
+                    data.status !==
+                    "LOGIN_SUCCESS"
+                )
+                {
+
+                    kakaoSignupMessage.innerText =
+                        "카카오 회원가입 결과를 확인할 수 없습니다.";
+
+                    return;
+                }
+
+
+                saveLoginData(
+                    data
+                );
+
+
+                checkedNickname =
+                    null;
+
+
+                kakaoSignupMessage.innerText =
+                    "회원가입 및 로그인에 성공했습니다.";
+
+
+                window.location.href =
+                    "/home";
+
+            }
+            catch (error)
+            {
+
+                console.error(
+                    "카카오 회원가입 요청 오류:",
+                    error
+                );
+
+
+                kakaoSignupMessage.innerText =
+                    "카카오 회원가입 처리 중 오류가 발생했습니다.";
+            }
+
+        }
+    );
+
+</script>
+
+</body>
+
+</html>

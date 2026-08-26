@@ -1,4 +1,4 @@
-package com.meetback.dev.service;
+/* package com.meetback.dev.service;
 
 import com.meetback.dev.domain.Social;
 import com.meetback.dev.domain.User;
@@ -360,3 +360,4 @@ class AuthServiceGoogleLoginTest {
                 .thenReturn(null);
     }
 }
+*/

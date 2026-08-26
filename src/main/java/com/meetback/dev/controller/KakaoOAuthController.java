@@ -1,7 +1,7 @@
 package com.meetback.dev.controller;
 
 import com.meetback.dev.dto.auth.KakaoLoginRequest;
-import com.meetback.dev.dto.auth.KakaoLoginResponse;
+import com.meetback.dev.dto.auth.SocialLoginResponse;
 import com.meetback.dev.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,10 +17,8 @@ public class KakaoOAuthController {
 
     private final AuthService authService;
 
-
     @Value("${kakao.client-id}")
     private String clientId;
-
 
     @Value("${kakao.redirect-uri}")
     private String redirectUri;
@@ -28,8 +26,7 @@ public class KakaoOAuthController {
 
     // 카카오 로그인 시작
     @GetMapping("/oauth/kakao/login")
-    public String kakaoLogin()
-    {
+    public String kakaoLogin() {
 
         String kakaoLoginUrl =
                 UriComponentsBuilder
@@ -55,7 +52,11 @@ public class KakaoOAuthController {
                         .build()
                         .toUriString();
 
-        System.out.println("카카오 로그인 URL = " + kakaoLoginUrl);
+        System.out.println(
+                "카카오 로그인 URL = "
+                        + kakaoLoginUrl
+        );
+
         return "redirect:"
                 + kakaoLoginUrl;
     }
@@ -66,48 +67,50 @@ public class KakaoOAuthController {
     public String kakaoCallback(
             @RequestParam("code") String code,
             Model model
-    )
-    {
+    ) {
 
         KakaoLoginRequest request =
                 new KakaoLoginRequest();
-
 
         request.setCode(
                 code
         );
 
-
-        KakaoLoginResponse response =
+        SocialLoginResponse response =
                 authService.kakaoLogin(
                         request
                 );
 
+        model.addAttribute(
+                "status",
+                response.getStatus()
+        );
+
+        model.addAttribute(
+                "signupToken",
+                response.getSignupToken()
+        );
 
         model.addAttribute(
                 "accessToken",
                 response.getAccessToken()
         );
 
-
         model.addAttribute(
                 "refreshToken",
                 response.getRefreshToken()
         );
-
 
         model.addAttribute(
                 "userId",
                 response.getUserId()
         );
 
-
         model.addAttribute(
                 "role",
                 response.getRole()
         );
 
-
-        return "kakaologin";
+        return "auth/kakaologin";
     }
 }

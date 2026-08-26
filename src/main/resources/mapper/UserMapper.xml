@@ -38,16 +38,16 @@
         INSERT INTO users
         (
         email,
-        nickname,
-        password_hash,
-        created_at,
-        updated_at
+            nickname,
+            password_hash,
+            created_at,
+            updated_at
         )
         VALUES
         (
-        #{email},
-        #{nickname},
-        #{passwordHash},
+            #{email},
+            #{nickname},
+            #{passwordHash},
         NOW(),
         NOW()
         )
@@ -77,27 +77,67 @@
     </select>
 
 
-    <!-- 이메일로 회원 조회 -->
+    <!-- 이메일 회원 조회 -->
     <select id="selectByEmail"
             resultMap="userResultMap">
 
         SELECT
-        user_id,
-        email,
-        nickname,
-        password_hash,
-        role,
-        token_version,
-        deleted_at,
-        created_at,
-        updated_at
+            user_id,
+            email,
+            nickname,
+            password_hash,
+            role,
+            token_version,
+            deleted_at,
+            created_at,
+            updated_at
         FROM users
         WHERE email = #{email}
 
     </select>
 
 
-    <!-- 회원탈퇴 요청 -->
+    <!-- 닉네임 회원 조회 -->
+    <select id="selectByNickname"
+            resultMap="userResultMap">
+
+        SELECT
+            user_id,
+            email,
+            nickname,
+            password_hash,
+            role,
+            token_version,
+            deleted_at,
+            created_at,
+            updated_at
+        FROM users
+        WHERE nickname = #{nickname}
+
+    </select>
+
+
+    <!-- UserId 회원 조회 -->
+    <select id="selectById"
+            resultMap="userResultMap">
+
+        SELECT
+            user_id,
+            email,
+            nickname,
+            password_hash,
+            role,
+            token_version,
+            deleted_at,
+            created_at,
+            updated_at
+        FROM users
+        WHERE user_id = #{userId}
+
+    </select>
+
+
+    <!-- 회원탈퇴 -->
     <update id="withdrawUser">
 
         UPDATE users
@@ -119,32 +159,23 @@
     </update>
 
 
-    <!-- UserId로 회원 조회 -->
-    <select id="selectById"
-            resultMap="userResultMap">
-
-        SELECT
-        user_id,
-        email,
-        nickname,
-        password_hash,
-        role,
-        token_version,
-        deleted_at,
-        created_at,
-        updated_at
-        FROM users
-        WHERE user_id = #{userId}
-
-    </select>
-
-
     <!-- Token Version 증가 -->
     <update id="increaseTokenVersion">
 
         UPDATE users
         SET token_version = token_version + 1,
         updated_at = NOW()
+        WHERE user_id = #{userId}
+
+    </update>
+
+
+    <!-- 비밀번호 변경 -->
+    <update id="updatePassword">
+
+        UPDATE users
+        SET password_hash = #{passwordHash},
+             updated_at = NOW()
         WHERE user_id = #{userId}
 
     </update>

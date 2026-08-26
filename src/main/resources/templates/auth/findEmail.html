@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MeetBack 아이디 찾기</title>
+</head>
+
+<body>
+
+<div class="find-email-container">
+
+    <h1>아이디 찾기</h1>
+
+    <p>
+        가입할 때 사용한 닉네임을 입력해주세요.
+    </p>
+
+
+    <form id="findEmailForm">
+
+        <div>
+
+            <label for="nickname">
+                닉네임
+            </label>
+
+            <input
+                    type="text"
+                    id="nickname"
+                    placeholder="닉네임을 입력하세요"
+                    required
+            >
+
+        </div>
+
+
+        <br>
+
+
+        <button type="submit">
+            아이디 찾기
+        </button>
+
+    </form>
+
+
+    <br>
+
+
+    <div id="findEmailMessage"></div>
+
+
+    <br>
+
+
+    <div>
+
+        <a th:href="@{/login}">
+            로그인으로 돌아가기
+        </a>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    const findEmailForm =
+        document.getElementById(
+            "findEmailForm"
+        );
+
+
+    const findEmailMessage =
+        document.getElementById(
+            "findEmailMessage"
+        );
+
+
+    findEmailForm.addEventListener(
+        "submit",
+        async function(event)
+        {
+
+            event.preventDefault();
+
+
+            findEmailMessage.innerText =
+                "";
+
+
+            const nickname =
+                document.getElementById(
+                    "nickname"
+                ).value.trim();
+
+
+            if (!nickname)
+            {
+
+                findEmailMessage.innerText =
+                    "닉네임을 입력해주세요.";
+
+                return;
+            }
+
+
+            try
+            {
+
+                const response =
+                    await fetch(
+                        "/auth/find-email",
+                        {
+
+                            method: "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json"
+
+                            },
+
+                            body: JSON.stringify(
+                                {
+
+                                    nickname:
+                                    nickname
+
+                                }
+                            )
+
+                        }
+                    );
+
+
+                if (!response.ok)
+                {
+
+                    findEmailMessage.innerText =
+                        "일치하는 회원 정보를 찾을 수 없습니다.";
+
+                    return;
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                findEmailMessage.innerText =
+                    "회원님의 이메일은 "
+                    + data.maskedEmail
+                    + " 입니다.";
+
+            }
+            catch (error)
+            {
+
+                console.error(
+                    "아이디 찾기 요청 오류:",
+                    error
+                );
+
+
+                findEmailMessage.innerText =
+                    "아이디 찾기 처리 중 오류가 발생했습니다.";
+            }
+
+        }
+    );
+
+</script>
+
+</body>
+
+</html>

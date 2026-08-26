@@ -8,30 +8,29 @@
 
     <title>MeetBack</title>
 
-    <link
-            rel="stylesheet"
-            href="/css/home.css">
+
+    <link rel="stylesheet" href="/css/home.css">
 
 </head>
+
 
 <body>
 
 
-<div
-        class="home-container"
-        id="homeContainer"
+<div class="home-container"
+     id="homeContainer"
 
-        th:attr="
-            data-login-url=@{/login},
-            data-check-url=@{/auth/check},
-            data-refresh-url=@{/auth/refresh},
-            data-logout-url=@{/auth/logout},
-            data-withdraw-url=@{/auth/withdraw},
-            data-withdraw-cancel-url=@{/auth/withdraw/cancel},
-            data-create-meeting-url=@{/meetings},
-            data-join-meeting-url=@{/meetings/join},
-            data-meeting-page-url=@{/meeting}
-        ">
+     th:attr="
+        data-login-url=@{/login},
+        data-check-url=@{/auth/check},
+        data-refresh-url=@{/auth/refresh},
+        data-logout-url=@{/auth/logout},
+        data-withdraw-url=@{/auth/withdraw},
+        data-withdraw-cancel-url=@{/auth/withdraw/cancel},
+        data-create-meeting-url=@{/meetings},
+        data-join-meeting-url=@{/meetings/join},
+        data-meeting-page-url=@{/meeting}
+     ">
 
 
     <!-- =====================================================
@@ -154,6 +153,8 @@
 
                 </button>
 
+
+                <!-- 생성 성공 결과 -->
 
                 <div
                         id="meetingCreateResult"
@@ -414,6 +415,10 @@
         homeContainer.dataset.withdrawCancelUrl;
 
 
+    // ============================================================
+    // ★ 모임 API
+    // ============================================================
+
     const createMeetingUrl =
         homeContainer.dataset.createMeetingUrl;
 
@@ -431,6 +436,7 @@
     // Token
     // ============================================================
 
+    // Access Token은 재발급될 수 있으므로 let
     let accessToken =
         localStorage.getItem(
             "accessToken"
@@ -495,6 +501,10 @@
             "cancelWithdrawalButton"
         );
 
+
+    // ============================================================
+    // 모임 DOM
+    // ============================================================
 
     const meetingTitleInput =
         document.getElementById(
@@ -649,6 +659,7 @@
             homeMessage.classList.add(
                 "message-success"
             );
+
         }
         else if (type === "error")
         {
@@ -656,6 +667,7 @@
             homeMessage.classList.add(
                 "message-error"
             );
+
         }
         else
         {
@@ -663,18 +675,15 @@
             homeMessage.classList.add(
                 "message-info"
             );
+
         }
+
     }
 
 
 
     // ============================================================
     // 로그인 정보 삭제
-    //
-    // pendingInviteCode는 삭제하지 않는다.
-    //
-    // 초대 링크로 들어온 사용자가 로그인이 필요해서
-    // /login으로 이동하는 경우 초대코드를 유지해야 하기 때문.
     // ============================================================
 
     function clearLoginStorage()
@@ -700,6 +709,9 @@
         );
 
 
+        /*
+         * 이전 채팅방 정보도 로그인 종료 시 제거
+         */
         localStorage.removeItem(
             "chatMeetingId"
         );
@@ -707,6 +719,7 @@
 
         accessToken =
             null;
+
     }
 
 
@@ -726,7 +739,9 @@
 
         if (!refreshToken)
         {
+
             return false;
+
         }
 
 
@@ -741,12 +756,14 @@
                         method:
                             "POST",
 
+
                         headers: {
 
                             "Content-Type":
                                 "application/json"
 
                         },
+
 
                         body:
                             JSON.stringify(
@@ -757,13 +774,16 @@
 
                                 }
                             )
+
                     }
                 );
 
 
             if (!response.ok)
             {
+
                 return false;
+
             }
 
 
@@ -788,6 +808,7 @@
 
 
             return true;
+
         }
         catch (error)
         {
@@ -799,13 +820,18 @@
 
 
             return false;
+
         }
+
     }
 
 
 
     // ============================================================
-    // JWT 포함 요청 공통
+    // JWT 포함 요청 공통 함수
+    //
+    // 모임 생성/참가 중 Access Token이 만료됐을 때도
+    // Refresh Token으로 한 번 재발급 후 다시 요청
     // ============================================================
 
     async function authenticatedFetch(
@@ -833,9 +859,9 @@
 
 
         /*
-         * 프로젝트 Security 설정에 따라
-         * 만료 토큰이 401 또는 403으로 올 수 있으므로
-         * 둘 다 Refresh 시도.
+         * 현재 프로젝트 Security 설정에 따라
+         * 만료 Token이 401 또는 403으로 올 수 있으므로
+         * 두 경우 모두 재발급 시도
          */
         if (
             response.status === 401
@@ -850,7 +876,9 @@
 
             if (!refreshed)
             {
+
                 return response;
+
             }
 
 
@@ -866,16 +894,18 @@
                     url,
                     options
                 );
+
         }
 
 
         return response;
+
     }
 
 
 
     // ============================================================
-    // 로그인 확인 요청
+    // Access Token 로그인 확인
     // ============================================================
 
     async function requestLoginCheck()
@@ -888,6 +918,7 @@
                 method:
                     "GET",
 
+
                 headers: {
 
                     "Authorization":
@@ -895,8 +926,10 @@
                         + accessToken
 
                 }
+
             }
         );
+
     }
 
 
@@ -926,7 +959,9 @@
 
 
                 return false;
+
             }
+
         }
 
 
@@ -955,6 +990,7 @@
 
 
                     return false;
+
                 }
 
 
@@ -973,7 +1009,9 @@
 
 
                     return false;
+
                 }
+
             }
 
 
@@ -991,6 +1029,10 @@
                 + data.role;
 
 
+            /*
+             * 서버에서 검증된 사용자 정보로
+             * localStorage 값도 맞춰줌
+             */
             localStorage.setItem(
                 "userId",
                 data.userId
@@ -1004,6 +1046,7 @@
 
 
             return true;
+
         }
         catch (error)
         {
@@ -1022,7 +1065,9 @@
 
 
             return false;
+
         }
+
     }
 
 
@@ -1240,6 +1285,7 @@
 
 
                 return;
+
             }
 
 
@@ -1253,6 +1299,7 @@
 
 
                 return;
+
             }
 
 
@@ -1269,6 +1316,17 @@
                 );
 
 
+                /*
+                 * userId는 Body로 보내지 않는다.
+                 *
+                 * Authorization Access Token
+                 *      ↓
+                 * JWT
+                 *      ↓
+                 * Spring Security Principal
+                 *      ↓
+                 * hostUserId 결정
+                 */
                 const response =
                     await authenticatedFetch(
                         createMeetingUrl,
@@ -1277,12 +1335,14 @@
                             method:
                                 "POST",
 
+
                             headers: {
 
                                 "Content-Type":
                                     "application/json"
 
                             },
+
 
                             body:
                                 JSON.stringify(
@@ -1296,6 +1356,7 @@
 
                                     }
                                 )
+
                         }
                     );
 
@@ -1311,6 +1372,7 @@
                         errorText
                         || "모임 생성에 실패했습니다."
                     );
+
                 }
 
 
@@ -1353,6 +1415,9 @@
                     );
 
 
+                /*
+                 * 이동 버튼에 meetingId 저장
+                 */
                 enterCreatedMeetingButton
                     .dataset
                     .meetingId =
@@ -1363,6 +1428,7 @@
                     "모임이 생성되었습니다. 초대코드를 참가자에게 전달해주세요.",
                     "success"
                 );
+
             }
             catch (error)
             {
@@ -1377,20 +1443,23 @@
                     error.message,
                     "error"
                 );
+
             }
             finally
             {
 
                 createMeetingButton.disabled =
                     false;
+
             }
+
         }
     );
 
 
 
     // ============================================================
-    // 생성한 모임방 이동
+    // ★ 생성한 모임방 이동
     // ============================================================
 
     enterCreatedMeetingButton.addEventListener(
@@ -1404,23 +1473,30 @@
 
             if (!meetingId)
             {
+
                 return;
+
             }
 
 
+            /*
+             * Query Parameter도 전달하고
+             * localStorage에도 저장해두는 방식.
+             */
             window.location.href =
                 meetingPageUrl
                 + "?meetingId="
                 + encodeURIComponent(
                     meetingId
                 );
+
         }
     );
 
 
 
     // ============================================================
-    // 수동 초대코드 참가
+    // ★ 초대코드로 모임 참가
     // ============================================================
 
     joinMeetingButton.addEventListener(
@@ -1444,6 +1520,7 @@
 
 
                 return;
+
             }
 
 
@@ -1464,6 +1541,50 @@
                     inviteCode,
                     false
                 );
+
+
+                localStorage.setItem(
+                    "chatMeetingId",
+                    meetingId
+                );
+
+
+                joinedMeetingId.innerText =
+                    meetingId;
+
+
+                meetingJoinResult
+                    .classList
+                    .add(
+                        "show"
+                    );
+
+
+                enterJoinedMeetingButton
+                    .dataset
+                    .meetingId =
+                    meetingId;
+
+
+                /*
+                 * 새 참가자인지,
+                 * 이미 참가 중이던 사용자인지 구분
+                 */
+                if (newlyJoined)
+                {
+                    showHomeMessage(
+                        "모임에 참가했습니다.",
+                        "success"
+                    );
+                }
+                else
+                {
+                    showHomeMessage(
+                        "이미 참가 중인 모임입니다.",
+                        "info"
+                    );
+                }
+
             }
             catch (error)
             {
@@ -1478,20 +1599,23 @@
                     error.message,
                     "error"
                 );
+
             }
             finally
             {
 
                 joinMeetingButton.disabled =
                     false;
+
             }
+
         }
     );
 
 
 
     // ============================================================
-    // 참가한 모임 이동
+    // ★ 참가한 모임 이동
     // ============================================================
 
     enterJoinedMeetingButton.addEventListener(
@@ -1505,7 +1629,9 @@
 
             if (!meetingId)
             {
+
                 return;
+
             }
 
 
@@ -1515,6 +1641,7 @@
                 + encodeURIComponent(
                     meetingId
                 );
+
         }
     );
 
@@ -1529,15 +1656,35 @@
         async function()
         {
 
+            if (logoutButton.disabled)
+            {
+
+                return;
+
+            }
+
+
+            logoutButton.disabled =
+                true;
+
+
             try
             {
 
+                /*
+                 * Access Token이 정상이라면 바로 로그아웃.
+                 *
+                 * Access Token만 만료된 경우에는
+                 * authenticatedFetch()에서 Refresh Token으로
+                 * 한 번 재발급한 뒤 다시 로그아웃 요청한다.
+                 */
                 const response =
                     await fetch(
                         logoutUrl,
                         {
 
                             method:
+
                                 "POST",
 
                             headers: {
@@ -1551,24 +1698,64 @@
                     );
 
 
-                if (!response.ok)
+                if (response.ok)
                 {
 
-                    showHomeMessage(
-                        "로그아웃 처리 중 오류가 발생했습니다.",
-                        "error"
-                    );
+                    /*
+                     * 서버에서
+                     * refresh_tokens 삭제
+                     * token_version 증가가 완료된 상태
+                     */
+                    clearLoginStorage();
+
+
+                    window.location.href =
+                        loginUrl;
 
 
                     return;
+
                 }
 
 
-                clearLoginStorage();
+                /*
+                 * 다른 기기에서 같은 계정으로 로그인한 경우
+                 *
+                 * 현재 기기의 Access Token은 tokenVersion 불일치,
+                 * Refresh Token도 DB의 새 Token과 불일치하므로
+                 * 재발급에 실패한다.
+                 *
+                 * 이 경우 다른 기기의 Refresh Token을
+                 * 삭제하면 안 되므로 현재 브라우저 정보만 삭제한다.
+                 */
+                if (
+                    response.status === 401
+                    ||
+                    response.status === 403
+                )
+                {
+
+                    clearLoginStorage();
 
 
-                window.location.href =
-                    loginUrl;
+                    window.location.href =
+                        loginUrl;
+
+
+                    return;
+
+                }
+
+
+                showHomeMessage(
+                    "로그아웃 처리 중 오류가 발생했습니다.",
+                    "error"
+                );
+
+
+                logoutButton.disabled =
+                    false;
+
             }
             catch (error)
             {
@@ -1583,7 +1770,13 @@
                     "로그아웃 처리 중 오류가 발생했습니다.",
                     "error"
                 );
+
+
+                logoutButton.disabled =
+                    false;
+
             }
+
         }
     );
 
@@ -1600,6 +1793,7 @@
 
             withdrawConfirm.style.display =
                 "block";
+
         }
     );
 
@@ -1616,6 +1810,7 @@
 
             withdrawConfirm.style.display =
                 "none";
+
         }
     );
 
@@ -1655,6 +1850,7 @@
 
 
                     return;
+
                 }
 
 
@@ -1666,6 +1862,7 @@
 
                 withdrawConfirm.style.display =
                     "none";
+
             }
             catch (error)
             {
@@ -1680,7 +1877,9 @@
                     "회원탈퇴 요청 중 오류가 발생했습니다.",
                     "error"
                 );
+
             }
+
         }
     );
 
@@ -1720,6 +1919,7 @@
 
 
                     return;
+
                 }
 
 
@@ -1727,6 +1927,7 @@
                     "회원탈퇴가 취소되었습니다.",
                     "success"
                 );
+
             }
             catch (error)
             {
@@ -1741,7 +1942,9 @@
                     "회원탈퇴 취소 중 오류가 발생했습니다.",
                     "error"
                 );
+
             }
+
         }
     );
 
@@ -1870,6 +2073,5 @@
 
 
 </body>
+
 </html>
-
-
