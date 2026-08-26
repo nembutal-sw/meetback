@@ -768,7 +768,6 @@
                 window.location.search
             );
 
-
         const inviteCode =
             params.get(
                 "inviteCode"
@@ -894,36 +893,7 @@
 
     }
 
-    // ============================================================
-    // 초대 링크로 들어온 경우 초대코드 보관
-    // ============================================================
 
-    function preserveInviteCode()
-    {
-
-        const params =
-            new URLSearchParams(
-                window.location.search
-            );
-
-
-        const inviteCode =
-            params.get(
-                "inviteCode"
-            );
-
-
-        if (!inviteCode)
-        {
-            return;
-        }
-
-
-        sessionStorage.setItem(
-            "pendingInviteCode",
-            inviteCode
-        );
-    }
 
     // ============================================================
     // 초대코드 또는 초대 URL에서 inviteCode 추출
@@ -1674,9 +1644,6 @@
                     );
 
 
-                /*
-                 * 이동 버튼에 meetingId 저장
-                 */
                 enterCreatedMeetingButton
                     .dataset
                     .meetingId =
@@ -1795,6 +1762,82 @@
                     "info"
                 );
 
+
+                /*
+                 * 이것도 userId를 Body로 보내지 않는다.
+                 *
+                 * JWT에서 로그인 사용자 확인
+                 */
+                const response =
+                    await authenticatedFetch(
+                        joinMeetingUrl,
+                        {
+
+                            method:
+                                "POST",
+
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json"
+
+                            },
+
+
+                            body:
+                                JSON.stringify(
+                                    {
+
+                                        inviteCode:
+                                        inviteCode
+
+                                    }
+                                )
+
+                        }
+                    );
+
+
+                if (!response.ok)
+                {
+
+                    const errorText =
+                        await response.text();
+
+
+                    throw new Error(
+                        errorText
+                        || "모임 참가에 실패했습니다."
+                    );
+
+                }
+
+                /*
+                 * MeetingJoinResponse
+                 *
+                 * {
+                 *     meetingId: 19,
+                 *     newlyJoined: true
+                 * }
+                 */
+
+                const data =
+                    await response.json();
+
+
+                const meetingId =
+                    data.meetingId;
+
+
+                const newlyJoined =
+                    data.newlyJoined;
+
+
+                console.log(
+                    "[MEETING JOIN]",
+                    data
+                );
 
                 await joinMeetingByInviteCode(
                     inviteCode,
