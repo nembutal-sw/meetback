@@ -220,6 +220,11 @@ public class CalculationService {
             );
 
 
+            result.setRouteMapObj(
+                    null
+            );
+
+
             result.setLastTrainDepartureAt(
                     null
             );
@@ -398,6 +403,11 @@ public class CalculationService {
 
         result.setTransferCount(
                 route.transferCount()
+        );
+
+
+        result.setRouteMapObj(
+                route.mapObj()
         );
 
 

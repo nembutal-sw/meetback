@@ -1,6 +1,8 @@
 package com.meetback.dev.transport.client;
 
 import com.meetback.dev.place.dto.PlaceDTO;
+import com.meetback.dev.transport.dto.RouteMapDTO;
+import com.meetback.dev.transport.dto.RoutePointDTO;
 import com.meetback.dev.transport.dto.TransitRouteDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -8,18 +10,25 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 import tools.jackson.databind.JsonNode;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Component
 public class OdsayTransitClient {
 
     private final RestClient restClient;
     private final String apiKey;
 
+
     public OdsayTransitClient(
             @Value("${odsay.base-url}") String baseUrl,
-            @Value("${odsay.api-key}") String apiKey) {
-        this.restClient = RestClient.builder()
-                .baseUrl(baseUrl)
-                .build();
+            @Value("${odsay.api-key}") String apiKey
+    ) {
+
+        this.restClient =
+                RestClient.builder()
+                        .baseUrl(baseUrl)
+                        .build();
 
         this.apiKey = apiKey;
     }
@@ -27,23 +36,49 @@ public class OdsayTransitClient {
 
     public TransitRouteDTO findSubwayRoute(
             PlaceDTO start,
-            PlaceDTO end) {
+            PlaceDTO end
+    ) {
 
         JsonNode response;
+
 
         try {
 
             response = restClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .pathSegment("searchPubTransPathT")
-                            .queryParam("SX", start.longitude())
-                            .queryParam("SY", start.latitude())
-                            .queryParam("EX", end.longitude())
-                            .queryParam("EY", end.latitude())
-                            .queryParam("OPT", 0)
-                            .queryParam("SearchType", 0)
-                            .queryParam("SearchPathType", 1)
-                            .queryParam("apiKey", "{apiKey}")
+                            .queryParam(
+                                    "SX",
+                                    start.longitude()
+                            )
+                            .queryParam(
+                                    "SY",
+                                    start.latitude()
+                            )
+                            .queryParam(
+                                    "EX",
+                                    end.longitude()
+                            )
+                            .queryParam(
+                                    "EY",
+                                    end.latitude()
+                            )
+                            .queryParam(
+                                    "OPT",
+                                    0
+                            )
+                            .queryParam(
+                                    "SearchType",
+                                    0
+                            )
+                            .queryParam(
+                                    "SearchPathType",
+                                    1
+                            )
+                            .queryParam(
+                                    "apiKey",
+                                    "{apiKey}"
+                            )
                             .build(apiKey))
                     .retrieve()
                     .body(JsonNode.class);
@@ -69,6 +104,7 @@ public class OdsayTransitClient {
 
 
         if (response == null) {
+
             throw new IllegalStateException(
                     "ODsay 응답이 없습니다."
             );
@@ -80,6 +116,7 @@ public class OdsayTransitClient {
          */
         JsonNode error =
                 response.path("error");
+
 
         if (!error.isMissingNode()
                 && !error.isNull()
@@ -94,6 +131,7 @@ public class OdsayTransitClient {
 
         JsonNode result =
                 response.path("result");
+
 
         JsonNode paths =
                 result.path("path");
@@ -122,6 +160,18 @@ public class OdsayTransitClient {
                         .asInt();
 
 
+        JsonNode mapObjNode =
+                path.path("info")
+                        .path("mapObj");
+
+
+        String mapObj =
+                mapObjNode.isMissingNode()
+                        || mapObjNode.isNull()
+                        ? null
+                        : mapObjNode.asString();
+
+
         JsonNode subPaths =
                 path.path("subPath");
 
@@ -134,6 +184,7 @@ public class OdsayTransitClient {
         String startStationName = null;
         String endStationName = null;
 
+
         StringBuilder summary =
                 new StringBuilder();
 
@@ -144,13 +195,20 @@ public class OdsayTransitClient {
                     subPath.path("trafficType")
                             .asInt();
 
+
             System.out.println(
-                    "[ODsay subPath] trafficType=" + trafficType
-                            + ", startName=" + subPath.path("startName").asString()
-                            + ", endName=" + subPath.path("endName").asString()
-                            + ", startID=" + subPath.path("startID").asString()
-                            + ", endID=" + subPath.path("endID").asString()
+                    "[ODsay subPath] trafficType="
+                            + trafficType
+                            + ", startName="
+                            + subPath.path("startName").asString()
+                            + ", endName="
+                            + subPath.path("endName").asString()
+                            + ", startID="
+                            + subPath.path("startID").asString()
+                            + ", endID="
+                            + subPath.path("endID").asString()
             );
+
 
             /*
              * trafficType
@@ -164,6 +222,7 @@ public class OdsayTransitClient {
                             subPath.path("startID")
                                     .asString();
 
+
                     startStationName =
                             subPath.path("startName")
                                     .asString();
@@ -173,6 +232,7 @@ public class OdsayTransitClient {
                 endStationId =
                         subPath.path("endID")
                                 .asString();
+
 
                 endStationName =
                         subPath.path("endName")
@@ -207,11 +267,14 @@ public class OdsayTransitClient {
             }
         }
 
+
         /*
          * 지하철 구간이 없으면
          * 철도/고속버스 등 현재 MVP 미지원 경로
          */
-        if (startStationId == null || endStationId == null) {
+        if (startStationId == null
+                || endStationId == null) {
+
             throw new IllegalStateException(
                     "현재 서비스는 버스·지하철 기반 귀가 경로만 지원합니다."
             );
@@ -238,7 +301,194 @@ public class OdsayTransitClient {
                 endStationId,
                 startStationName,
                 endStationName,
-                summary.toString()
+                summary.toString(),
+                mapObj
+        );
+    }
+
+
+    /*
+     * 저장해둔 mapObj를 이용해서
+     * 지도에 표시할 노선 좌표를 조회
+     */
+    public RouteMapDTO loadLane(
+            String mapObj
+    ) {
+
+        if (mapObj == null
+                || mapObj.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "경로 mapObj가 없습니다."
+            );
+        }
+
+
+        /*
+         * ODsay 공식 예제:
+         *
+         * searchPubTransPathT 결과
+         * mapObj = 2:2:237:238
+         *
+         * loadLane 호출
+         * mapObject = 0:0@2:2:237:238
+         */
+        String mapObject =
+                mapObj.startsWith("0:0@")
+                        ? mapObj
+                        : "0:0@" + mapObj;
+
+
+        JsonNode response;
+
+
+        try {
+
+            response = restClient.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .pathSegment("loadLane")
+                            .queryParam(
+                                    "mapObject",
+                                    mapObject
+                            )
+                            .queryParam(
+                                    "apiKey",
+                                    "{apiKey}"
+                            )
+                            .build(apiKey))
+                    .retrieve()
+                    .body(JsonNode.class);
+
+        } catch (RestClientResponseException e) {
+
+            throw new IllegalStateException(
+                    "ODsay 노선 그래픽 조회 실패: ["
+                            + e.getStatusCode()
+                            + "] "
+                            + e.getResponseBodyAsString()
+                            + " / mapObject="
+                            + mapObject,
+                    e
+            );
+        }
+
+
+        if (response == null) {
+
+            throw new IllegalStateException(
+                    "ODsay 노선 그래픽 응답이 없습니다."
+            );
+        }
+
+
+        /*
+         * HTTP 200으로 ODsay 오류 객체가 오는 경우 확인
+         */
+        JsonNode error =
+                response.path("error");
+
+
+        if (!error.isMissingNode()
+                && !error.isNull()
+                && !error.isEmpty()) {
+
+            throw new IllegalStateException(
+                    "ODsay 노선 그래픽 오류 응답: "
+                            + error.toString()
+            );
+        }
+
+
+        JsonNode lanes =
+                response.path("result")
+                        .path("lane");
+
+
+        if (!lanes.isArray()
+                || lanes.isEmpty()) {
+
+            throw new IllegalStateException(
+                    "ODsay 노선 그래픽 데이터가 없습니다. 응답: "
+                            + response.toString()
+            );
+        }
+
+
+        List<RoutePointDTO> points =
+                new ArrayList<>();
+
+
+        /*
+         * result
+         *  └─ lane[]
+         *      └─ section[]
+         *          └─ graphPos[]
+         *              ├─ x = 경도
+         *              └─ y = 위도
+         */
+        for (JsonNode lane : lanes) {
+
+            JsonNode sections =
+                    lane.path("section");
+
+
+            if (!sections.isArray()) {
+                continue;
+            }
+
+
+            for (JsonNode section : sections) {
+
+                JsonNode graphPositions =
+                        section.path("graphPos");
+
+
+                if (!graphPositions.isArray()) {
+                    continue;
+                }
+
+
+                for (JsonNode graphPos : graphPositions) {
+
+                    double longitude =
+                            graphPos.path("x")
+                                    .asDouble();
+
+
+                    double latitude =
+                            graphPos.path("y")
+                                    .asDouble();
+
+
+                    points.add(
+                            new RoutePointDTO(
+                                    longitude,
+                                    latitude
+                            )
+                    );
+                }
+            }
+        }
+
+
+        if (points.isEmpty()) {
+
+            throw new IllegalStateException(
+                    "ODsay 경로 좌표를 찾을 수 없습니다."
+            );
+        }
+
+
+        System.out.println(
+                "[ODsay loadLane 완료] mapObj="
+                        + mapObj
+                        + ", pointCount="
+                        + points.size()
+        );
+
+
+        return new RouteMapDTO(
+                points
         );
     }
 }
