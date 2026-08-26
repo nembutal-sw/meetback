@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.TermMapper">
+
+    <resultMap id="termResultMap"
+               type="com.meetback.dev.domain.Term">
+
+        <id property="termId"
+            column="term_id"/>
+
+        <result property="termCode"
+                column="term_code"/>
+
+        <result property="termName"
+                column="term_name"/>
+
+        <result property="content"
+                column="content"/>
+
+        <result property="version"
+                column="version"/>
+
+        <result property="kakaoTag"
+                column="kakao_tag"/>
+
+        <result property="required"
+                column="required"/>
+
+        <result property="active"
+                column="active"/>
+
+        <result property="effectiveAt"
+                column="effective_at"/>
+
+        <result property="createdAt"
+                column="created_at"/>
+
+        <result property="updatedAt"
+                column="updated_at"/>
+
+    </resultMap>
+
+    <select id="findAllActiveTerms"
+            resultMap="termResultMap">
+
+        SELECT
+            term_id,
+            term_code,
+            term_name,
+            content,
+            version,
+            kakao_tag,
+            required,
+            active,
+            effective_at,
+            created_at,
+            updated_at
+        FROM terms
+        WHERE active = TRUE
+            AND (
+                effective_at IS NULL
+                OR effective_at &lt;= NOW()
+        )
+        ORDER BY term_id ASC
+
+    </select>
+
+    <select id="findAllRequiredActiveTerms"
+            resultMap="termResultMap">
+
+        SELECT
+            term_id,
+            term_code,
+            term_name,
+            content,
+            version,
+            kakao_tag,
+            required,
+            active,
+            effective_at,
+            created_at,
+            updated_at
+        FROM terms
+        WHERE active = TRUE
+            AND required = TRUE
+                AND (
+                    effective_at IS NULL
+                    OR effective_at &lt;= NOW()
+        )
+        ORDER BY term_id ASC
+
+    </select>
+
+    <select id="findByTermId"
+            parameterType="long"
+            resultMap="termResultMap">
+
+        SELECT
+            term_id,
+            term_code,
+            term_name,
+            content,
+            version,
+            kakao_tag,
+            required,
+            active,
+            effective_at,
+            created_at,
+            updated_at
+        FROM terms
+        WHERE term_id = #{termId}
+
+    </select>
+
+    <select id="findByTermCode"
+            parameterType="string"
+            resultMap="termResultMap">
+
+        SELECT
+            term_id,
+            term_code,
+            term_name,
+            content,
+            version,
+            kakao_tag,
+            required,
+            active,
+            effective_at,
+            created_at,
+            updated_at
+        FROM terms
+        WHERE term_code = #{termCode}
+            AND active = TRUE
+            AND (
+             effective_at IS NULL
+             OR effective_at &lt;= NOW()
+        )
+        ORDER BY effective_at DESC,
+        term_id DESC
+        LIMIT 1
+
+    </select>
+
+    <select id="findByTermCodeAndVersion"
+            resultMap="termResultMap">
+
+        SELECT
+            term_id,
+            term_code,
+            term_name,
+            content,
+            version,
+            kakao_tag,
+            required,
+            active,
+            effective_at,
+            created_at,
+            updated_at
+        FROM terms
+        WHERE term_code = #{termCode}
+        AND version = #{version}
+        LIMIT 1
+
+    </select>
+
+    <insert id="insert"
+            parameterType="com.meetback.dev.domain.Term"
+            useGeneratedKeys="true"
+            keyProperty="termId"
+            keyColumn="term_id">
+
+        INSERT INTO terms (
+            term_code,
+            term_name,
+            content,
+            version,
+            kakao_tag,
+            required,
+            active,
+            effective_at,
+            created_at,
+            updated_at
+        )
+        VALUES (
+            #{termCode},
+            #{termName},
+            #{content},
+            #{version},
+            #{kakaoTag},
+            #{required},
+            #{active},
+            #{effectiveAt},
+            #{createdAt},
+            #{updatedAt}
+        )
+
+    </insert>
+
+    <update id="deactivateByTermCode">
+
+        UPDATE terms
+        SET
+        active = FALSE,
+        updated_at = NOW()
+        WHERE term_code = #{termCode}
+        AND active = TRUE
+
+    </update>
+
+</mapper>
