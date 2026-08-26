@@ -1,11 +1,16 @@
 package com.meetback.dev.transport.service;
 
+import com.meetback.dev.domain.CandidateReturnResult;
+import com.meetback.dev.domain.Meeting;
 import com.meetback.dev.domain.MeetingCandidate;
 import com.meetback.dev.domain.MeetingParticipant;
 import com.meetback.dev.place.dto.PlaceDTO;
+import com.meetback.dev.repository.CandidateReturnResultMapper;
 import com.meetback.dev.repository.MeetingCandidateMapper;
+import com.meetback.dev.repository.MeetingMapper;
 import com.meetback.dev.repository.MeetingParticipantMapper;
 import com.meetback.dev.transport.client.OdsayTransitClient;
+import com.meetback.dev.transport.dto.RouteMapDTO;
 import com.meetback.dev.transport.dto.TransitRouteDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +24,8 @@ public class RouteService {
     private final MeetingParticipantMapper meetingParticipantMapper;
     private final MeetingCandidateMapper meetingCandidateMapper;
     private final OdsayTransitClient odsayTransitClient;
+    private final MeetingMapper meetingMapper;
+    private final CandidateReturnResultMapper returnResultMapper;
 
 
     /*
@@ -250,6 +257,94 @@ public class RouteService {
         return odsayTransitClient.findSubwayRoute(
                 start,
                 end
+        );
+    }
+
+    public RouteMapDTO getRouteMap(
+            Long candidateId,
+            Long participantId
+    ) {
+
+        MeetingCandidate candidate =
+                meetingCandidateMapper.findById(
+                        candidateId
+                );
+
+        if (candidate == null) {
+            throw new IllegalArgumentException(
+                    "후보 장소를 찾을 수 없습니다."
+            );
+        }
+
+
+        MeetingParticipant participant =
+                meetingParticipantMapper.findById(
+                        participantId
+                );
+
+        if (participant == null) {
+            throw new IllegalArgumentException(
+                    "참가자를 찾을 수 없습니다."
+            );
+        }
+
+
+        if (!candidate.getMeetingId()
+                .equals(participant.getMeetingId())) {
+
+            throw new IllegalArgumentException(
+                    "후보 장소와 참가자의 모임이 일치하지 않습니다."
+            );
+        }
+
+
+        Meeting meeting =
+                meetingMapper.findById(
+                        candidate.getMeetingId()
+                );
+
+        if (meeting == null) {
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+
+        Integer calculationVersion =
+                meeting.getCalculationVersion();
+
+        if (calculationVersion == null) {
+            calculationVersion = 0;
+        }
+
+
+        CandidateReturnResult result =
+                returnResultMapper
+                        .findByCandidateAndParticipantAndVersion(
+                                candidateId,
+                                participantId,
+                                calculationVersion
+                        );
+
+
+        if (result == null) {
+            throw new IllegalStateException(
+                    "해당 참가자의 귀가 계산 결과가 없습니다."
+            );
+        }
+
+
+        if (result.getRouteMapObj() == null
+                || result.getRouteMapObj().isBlank()) {
+
+            throw new IllegalStateException(
+                    "해당 귀가 경로의 지도 정보가 없습니다."
+            );
+        }
+
+
+        return odsayTransitClient.loadLane(
+                result.getRouteMapObj()
         );
     }
 }

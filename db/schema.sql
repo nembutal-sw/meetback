@@ -539,3 +539,7 @@ ALTER TABLE meetings
         FOREIGN KEY (final_candidate_id)
             REFERENCES meeting_candidates(candidate_id)
             ON DELETE SET NULL;
+
+--경로 안내용 컬럼 추가 - 이래원
+ALTER TABLE candidate_return_results
+    ADD COLUMN route_map_obj TEXT NULL;

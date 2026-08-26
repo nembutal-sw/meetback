@@ -11,6 +11,8 @@
 
     <link rel="stylesheet" href="/css/home.css">
 
+    <script src="/js/auth-session-guard.js" defer></script>
+
 </head>
 
 
@@ -163,7 +165,7 @@
                     <div>
 
                         <strong>
-                            모임 ID
+                            모임 장소
                         </strong>
 
                         :
@@ -268,10 +270,9 @@
 
 
                     <div>
+                        닉네임 :
 
-                        모임 ID :
-
-                        <span id="joinedMeetingId">
+                        <span id="joinedNickname">
                             -
                         </span>
 
@@ -577,9 +578,9 @@
         );
 
 
-    const joinedMeetingId =
+    const joinedNickname =
         document.getElementById(
-            "joinedMeetingId"
+            "joinedNickname"
         );
 
 
@@ -768,6 +769,7 @@
                 window.location.search
             );
 
+
         const inviteCode =
             params.get(
                 "inviteCode"
@@ -893,6 +895,55 @@
 
     }
 
+    // ============================================================
+    // 초대코드 또는 초대 URL에서 inviteCode 추출
+    //
+    // 가능:
+    // A9E60F5C
+    //
+    // http://localhost:8080/home?inviteCode=A9E60F5C
+    // ============================================================
+
+    function extractInviteCode(
+        value
+    )
+    {
+
+        if (!value)
+        {
+            return "";
+        }
+
+
+        const text =
+            value.trim();
+
+
+        /*
+         * URL 안에 ?inviteCode= 또는 &inviteCode=가 있다면
+         * 코드 부분만 꺼낸다.
+         */
+        const match =
+            text.match(
+                /[?&]inviteCode=([^&#]+)/i
+            );
+
+
+        if (match)
+        {
+
+            return decodeURIComponent(
+                match[1]
+            ).trim();
+        }
+
+
+        /*
+         * URL이 아니라 그냥 초대코드를 입력한 경우
+         */
+        return text;
+    }
+
 
 
     // ============================================================
@@ -1011,6 +1062,21 @@
 
             const data =
                 await response.json();
+
+            localStorage.setItem(
+                "userId",
+                data.userId
+            );
+
+            localStorage.setItem(
+                "role",
+                data.role
+            );
+
+            localStorage.setItem(
+                "nickname",
+                data.nickname
+            );
 
 
             localStorage.setItem(
@@ -1250,6 +1316,9 @@
                 "권한 : "
                 + data.role;
 
+            currentNickname =
+                data.nickname;
+
 
             /*
              * 서버에서 검증된 사용자 정보로
@@ -1437,8 +1506,9 @@
          * 수동 참가의 경우
          * 기존 UI 유지.
          */
-        joinedMeetingId.innerText =
-            meetingId;
+        joinedNickname.innerText =
+            currentNickname
+            || "참가자";
 
 
         meetingJoinResult
@@ -2250,6 +2320,142 @@
         }
     );
 
+    // ============================================================
+    // Spring 백엔드 재시작 감지
+    // ============================================================
+
+    async function checkServerRestart()
+    {
+
+        try
+        {
+
+            const response =
+                await fetch(
+                    "/auth/server-instance"
+                );
+
+
+            if (!response.ok)
+            {
+
+                console.error(
+                    "[SERVER INSTANCE] 조회 실패",
+                    response.status
+                );
+
+
+                return false;
+            }
+
+
+            const data =
+                await response.json();
+
+
+            const currentServerInstanceId =
+                data.serverInstanceId;
+
+
+            const savedServerInstanceId =
+                localStorage.getItem(
+                    "serverInstanceId"
+                );
+
+
+            console.log(
+                "[SERVER INSTANCE]",
+                {
+                    current:
+                    currentServerInstanceId,
+
+                    saved:
+                    savedServerInstanceId
+                }
+            );
+
+
+            // =====================================================
+            // 최초 접속
+            // =====================================================
+
+            if (!savedServerInstanceId)
+            {
+
+                localStorage.setItem(
+                    "serverInstanceId",
+                    currentServerInstanceId
+                );
+
+
+                return false;
+            }
+
+
+            // =====================================================
+            // Spring 백엔드 재시작 감지
+            // =====================================================
+
+            if (
+                savedServerInstanceId
+                !== currentServerInstanceId
+            )
+            {
+
+                console.log(
+                    "[SERVER RESTART DETECTED]"
+                );
+
+
+                // 로그인 관련 값 삭제
+                localStorage.removeItem(
+                    "accessToken"
+                );
+
+                localStorage.removeItem(
+                    "refreshToken"
+                );
+
+                localStorage.removeItem(
+                    "userId"
+                );
+
+                localStorage.removeItem(
+                    "role"
+                );
+
+                localStorage.removeItem(
+                    "nickname"
+                );
+
+
+                // 새로운 실행 ID 저장
+                localStorage.setItem(
+                    "serverInstanceId",
+                    currentServerInstanceId
+                );
+
+
+                window.location.replace(
+                    "/login"
+                );
+
+                return true;
+            }
+            return false;
+
+        }
+        catch (error)
+        {
+
+            console.error(
+                "[SERVER INSTANCE CHECK ERROR]",
+                error
+            );
+            return false;
+        }
+    }
+
 
 
     // ============================================================
@@ -2258,6 +2464,8 @@
 
     async function initializeHome()
     {
+        const serverRestarted =
+            await checkServerRestart();
 
         /*
          * 중요:
@@ -2270,6 +2478,11 @@
          *      ↓
          * 로그인 필요하면 /login 이동
          */
+        if (serverRestarted)
+        {
+            return;
+        }
+
         preserveInviteCode();
 
 

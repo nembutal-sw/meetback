@@ -10,6 +10,7 @@ public class CandidateReturnResult {
     private Long meetingId;
     private Long candidateId;
     private Long participantId;
+    private String nickname;
     private Integer calculationVersion;
     private Integer returnMinutes;
     private Integer transferCount;
@@ -18,4 +19,5 @@ public class CandidateReturnResult {
     private LocalDateTime lastSafeDepartureAt;
     private Boolean canReturn;
     private LocalDateTime calculatedAt;
+    private String routeMapObj;
 }

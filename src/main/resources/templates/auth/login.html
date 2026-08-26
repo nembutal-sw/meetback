@@ -299,6 +299,175 @@
     let checkedNickname =
         null;
 
+    // ============================================================
+    // 이미 로그인 정보가 있다면 Home에서 검증
+    // ============================================================
+
+    function redirectAlreadyLoggedIn()
+    {
+
+        const accessToken =
+            localStorage.getItem(
+                "accessToken"
+            );
+
+
+        const refreshToken =
+            localStorage.getItem(
+                "refreshToken"
+            );
+
+
+        if (
+            accessToken
+            ||
+            refreshToken
+        )
+        {
+
+            window.location.replace(
+                "/home"
+            );
+        }
+    }
+
+
+    redirectAlreadyLoggedIn();
+
+
+    // 닉네임 정책
+    const nicknamePattern =
+        /^[가-힣A-Za-z0-9_]{2,12}$/;
+
+
+    const blockedNicknameWords =
+        [
+            "시발",
+            "씨발",
+            "시팔",
+            "씨팔",
+            "병신",
+            "븅신",
+            "개새끼",
+            "개새",
+            "새끼",
+            "미친",
+            "미친놈",
+            "미친년",
+            "좆",
+            "존나",
+            "졸라",
+            "지랄",
+            "염병",
+            "꺼져",
+            "닥쳐",
+            "fuck",
+            "fucking",
+            "shit",
+            "bitch"
+        ];
+
+
+    const reservedNicknames =
+        [
+            "admin",
+            "administrator",
+            "manager",
+            "master",
+            "root",
+            "meetback",
+            "관리자",
+            "운영자",
+            "매니저",
+            "마스터"
+        ];
+
+
+    // 닉네임 필터용 정규화
+    function normalizeNicknameForFilter(
+        nickname
+    )
+    {
+
+        return nickname
+            .toLowerCase()
+            .replaceAll(
+                "_",
+                ""
+            );
+    }
+
+
+    // 닉네임 사용 가능 형식 검사
+    function isValidNickname(
+        nickname
+    )
+    {
+
+        if (!nickname)
+        {
+            return false;
+        }
+
+
+        if (
+            !nicknamePattern.test(
+                nickname
+            )
+        )
+        {
+            return false;
+        }
+
+
+        const normalizedNickname =
+            normalizeNicknameForFilter(
+                nickname
+            );
+
+
+        for (const blockedWord of blockedNicknameWords)
+        {
+
+            const normalizedBlockedWord =
+                normalizeNicknameForFilter(
+                    blockedWord
+                );
+
+
+            if (
+                normalizedNickname.includes(
+                    normalizedBlockedWord
+                )
+            )
+            {
+                return false;
+            }
+        }
+
+
+        for (const reservedNickname of reservedNicknames)
+        {
+
+            const normalizedReservedNickname =
+                normalizeNicknameForFilter(
+                    reservedNickname
+                );
+
+
+            if (
+                normalizedNickname ===
+                normalizedReservedNickname
+            )
+            {
+                return false;
+            }
+        }
+
+
+        return true;
+    }
+
 
     // 닉네임 정책
     const nicknamePattern =
