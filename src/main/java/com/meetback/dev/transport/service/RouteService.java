@@ -28,10 +28,6 @@ public class RouteService {
     private final CandidateReturnResultMapper returnResultMapper;
 
 
-    /*
-     * 후보 장소와 귀가 장소가
-     * 700m 이내인지 확인
-     */
     public boolean isWithinWalkingDistance(
             Long participantId,
             Long candidateId
@@ -85,10 +81,6 @@ public class RouteService {
     }
 
 
-    /*
-     * 위도 / 경도를 이용한 직선거리 계산
-     * 반환 단위 = meter
-     */
     private double calculateDistanceMeters(
             double lat1,
             double lon1,
@@ -270,7 +262,9 @@ public class RouteService {
                         candidateId
                 );
 
+
         if (candidate == null) {
+
             throw new IllegalArgumentException(
                     "후보 장소를 찾을 수 없습니다."
             );
@@ -282,7 +276,9 @@ public class RouteService {
                         participantId
                 );
 
+
         if (participant == null) {
+
             throw new IllegalArgumentException(
                     "참가자를 찾을 수 없습니다."
             );
@@ -303,7 +299,9 @@ public class RouteService {
                         candidate.getMeetingId()
                 );
 
+
         if (meeting == null) {
+
             throw new IllegalArgumentException(
                     "모임을 찾을 수 없습니다."
             );
@@ -313,7 +311,9 @@ public class RouteService {
         Integer calculationVersion =
                 meeting.getCalculationVersion();
 
+
         if (calculationVersion == null) {
+
             calculationVersion = 0;
         }
 
@@ -328,6 +328,7 @@ public class RouteService {
 
 
         if (result == null) {
+
             throw new IllegalStateException(
                     "해당 참가자의 귀가 계산 결과가 없습니다."
             );
@@ -343,8 +344,16 @@ public class RouteService {
         }
 
 
-        return odsayTransitClient.loadLane(
-                result.getRouteMapObj()
+        RouteMapDTO routeMap =
+                odsayTransitClient.loadLane(
+                        result.getRouteMapObj()
+                );
+
+
+        return new RouteMapDTO(
+                candidate.getPlaceName(),
+                participant.getReturnName(),
+                routeMap.lines()
         );
     }
 }
