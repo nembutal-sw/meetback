@@ -1,479 +1,81 @@
-/* =========================================================
-   MeetBack Signup
-   로그인 / 홈 화면과 동일한 White + Violet 스타일
-   현재 signup.html 구조 그대로 사용
-   ========================================================= */
-
-:root {
-    --primary: #635bff;
-    --primary-dark: #5147f6;
-
-    --text: #17182c;
-    --text-soft: #6c7080;
-    --text-muted: #989baa;
-
-    --border: #dfe1ec;
-
-    --danger: #d95353;
-    --success: #2f8c59;
-}
-
-
-/* =========================================================
-   기본
-   ========================================================= */
-
-* {
-    box-sizing: border-box;
-}
-
-
-html,
-body {
-    margin: 0;
-    min-height: 100%;
-}
-
-
-body {
-    min-height: 100vh;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    padding: 40px 20px;
-
-    font-family:
-            Pretendard,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            "Noto Sans KR",
-            Arial,
-            sans-serif;
-
-    color: var(--text);
-
-    background:
-            radial-gradient(
-                    circle at 82% 12%,
-                    rgba(111, 93, 255, 0.18),
-                    transparent 35%
-            ),
-            radial-gradient(
-                    circle at 15% 20%,
-                    rgba(107, 169, 255, 0.09),
-                    transparent 32%
-            ),
-            linear-gradient(
-                    135deg,
-                    #ffffff 0%,
-                    #fafaff 45%,
-                    #f4f3ff 100%
-            );
-}
-
-
-/* =========================================================
-   회원가입 카드
-   ========================================================= */
-
 .signup-container {
-    position: relative;
-
-    width: 100%;
-    max-width: 500px;
-
-    padding: 44px;
-
-    overflow: hidden;
-
-    background:
-            rgba(255, 255, 255, 0.96);
-
-    border:
-            1px solid
-            #e5e5f0;
-
-    border-radius: 24px;
-
-    box-shadow:
-            0 24px 70px
-            rgba(54, 50, 108, 0.13);
+    width: min(100%, 650px);
 }
 
-
-/* 오른쪽 상단 배경 장식 */
-
-.signup-container::before {
-    content: "";
-
-    position: absolute;
-
-    top: -110px;
-    right: -100px;
-
-    width: 250px;
-    height: 250px;
-
-    border-radius: 50%;
-
-    background:
-            radial-gradient(
-                    circle,
-                    rgba(111, 93, 255, 0.17),
-                    rgba(111, 93, 255, 0.04) 55%,
-                    transparent 72%
-            );
-
-    pointer-events: none;
+#signupForm > div {
+    min-width: 0;
 }
 
-
-/* =========================================================
-   제목
-   ========================================================= */
-
-.signup-container > h1 {
-    position: relative;
-
-    margin: 0 0 38px;
-
-    padding-left: 34px;
-
-    font-size: 30px;
-    font-weight: 800;
-
-    letter-spacing: -1.2px;
+#signupForm > div:has(> #emailCheckButton),
+#signupForm > div:has(> #nicknameCheckButton) {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 9px;
 }
 
-
-/* MeetBack 위치 마커 느낌 */
-
-.signup-container > h1::before {
-    content: "";
-
-    position: absolute;
-
-    left: 0;
-    top: 7px;
-
-    width: 21px;
-    height: 21px;
-
-    border:
-            6px solid
-            var(--primary);
-
-    border-radius: 50%;
+#signupForm > div:has(> #emailCheckButton) label,
+#signupForm > div:has(> #nicknameCheckButton) label {
+    grid-column: 1 / -1;
 }
 
-
-/* 제목 끝 보라색 포인트 */
-
-.signup-container > h1::after {
-    content: ".";
-
-    color: var(--primary);
+#emailCheckButton,
+#nicknameCheckButton {
+    min-width: 96px;
+    color: var(--mb-blue);
 }
 
-
-/* =========================================================
-   기존 br 제거
-   HTML 수정 필요 없음
-   ========================================================= */
-
-.signup-container > br,
-#signupForm > br {
-    display: none;
-}
-
-
-/* =========================================================
-   회원가입 Form
-   ========================================================= */
-
-#signupForm {
-    display: flex;
-    flex-direction: column;
-
-    gap: 20px;
-}
-
-
-/* 이메일 / 닉네임 / 비밀번호 div */
-
-#signupForm > div:not(#signupMessage) {
-    width: 100%;
-}
-
-
-/* =========================================================
-   Label
-   ========================================================= */
-
-#signupForm label {
-    display: block;
-
-    margin-bottom: 9px;
-
-    color: #3d4052;
-
-    font-size: 14px;
-    font-weight: 700;
-}
-
-
-/* =========================================================
-   Input
-   ========================================================= */
-
-#signupForm input[type="email"],
-#signupForm input[type="text"],
-#signupForm input[type="password"] {
-    display: block;
-
-    width: 100%;
-    height: 50px;
-
-    padding: 0 15px;
-
-    color: var(--text);
-
-    background: #ffffff;
-
-    border:
-            1px solid
-            var(--border);
-
-    border-radius: 12px;
-
-    outline: none;
-
-    font-size: 14px;
-
-    transition:
-            border-color 0.18s ease,
-            box-shadow 0.18s ease,
-            background 0.18s ease;
-}
-
-
-#signupForm input::placeholder {
-    color: #adb0be;
-}
-
-
-#signupForm input[type="email"]:hover,
-#signupForm input[type="text"]:hover,
-#signupForm input[type="password"]:hover {
-    border-color: #c9cbd9;
-}
-
-
-#signupForm input[type="email"]:focus,
-#signupForm input[type="text"]:focus,
-#signupForm input[type="password"]:focus {
-    border-color: var(--primary);
-
-    background: #ffffff;
-
-    box-shadow:
-            0 0 0 4px
-            rgba(99, 91, 255, 0.10);
-}
-
-
-/* =========================================================
-   회원가입 메시지
-   ========================================================= */
-
-#signupMessage {
-    color: var(--danger);
-
-    font-size: 13px;
-
-    line-height: 1.5;
-}
-
-
+#emailCheckMessage:empty,
+#nicknameCheckMessage:empty,
+#passwordMessage:empty,
+#passwordConfirmMessage:empty,
+#termsMessage:empty,
 #signupMessage:empty {
-    display: none;
+    display: none !important;
 }
 
-
-/* =========================================================
-   회원가입 버튼
-   ========================================================= */
-
-#signupForm > button[type="submit"] {
-    width: 100%;
-    height: 50px;
-
-    margin-top: 2px;
-
-    color: #ffffff;
-
-    background:
-            linear-gradient(
-                    135deg,
-                    #6b63ff,
-                    #584df5
-            );
-
-    border: none;
-    border-radius: 12px;
-
-    font-size: 14px;
-    font-weight: 700;
-
-    cursor: pointer;
-
-    box-shadow:
-            0 12px 26px
-            rgba(99, 91, 255, 0.25);
-
-    transition:
-            transform 0.16s ease,
-            box-shadow 0.16s ease,
-            background 0.16s ease;
+#emailCheckMessage,
+#nicknameCheckMessage,
+#passwordMessage,
+#passwordConfirmMessage {
+    margin-top: -10px;
 }
 
-
-#signupForm > button[type="submit"]:hover {
-    transform: translateY(-1px);
-
-    background:
-            linear-gradient(
-                    135deg,
-                    #6057fb,
-                    #4f45ed
-            );
-
-    box-shadow:
-            0 15px 31px
-            rgba(99, 91, 255, 0.32);
+#signupForm h3 {
+    margin: 3px 0 0;
+    font-size: 18px;
 }
 
-
-#signupForm > button[type="submit"]:active {
-    transform: translateY(0);
+#termsContainer {
+    max-height: 360px;
+    overflow: auto;
+    padding-right: 4px;
 }
 
-
-/* =========================================================
-   로그인으로 돌아가기
-   signupForm 다음 div
-   ========================================================= */
-
-#signupForm ~ div {
-    margin-top: 23px;
-
+.auth-back-link {
+    margin-top: 24px;
     text-align: center;
-
     font-size: 13px;
 }
 
-
-#signupForm ~ div::before {
+.auth-back-link::before {
     content: "이미 계정이 있으신가요? ";
-
-    color: var(--text-soft);
+    color: var(--mb-muted);
 }
 
-
-#signupForm ~ div a {
-    color: var(--primary);
-
-    font-weight: 700;
-
+.auth-back-link a {
+    color: var(--mb-primary);
+    font-weight: 800;
     text-decoration: none;
 }
 
-
-#signupForm ~ div a:hover {
-    text-decoration: underline;
-}
-
-
-/* =========================================================
-   포커스
-   ========================================================= */
-
-a:focus-visible,
-button:focus-visible,
-input:focus-visible {
-    outline:
-            3px solid
-            rgba(99, 91, 255, 0.20);
-
-    outline-offset: 2px;
-}
-
-
-/* =========================================================
-   선택
-   ========================================================= */
-
-::selection {
-    color: #ffffff;
-
-    background: var(--primary);
-}
-
-
-/* =========================================================
-   모바일
-   ========================================================= */
-
-@media (max-width: 560px) {
-
-    body {
-        align-items: flex-start;
-
-        padding:
-                20px
-                14px
-                40px;
+@media (max-width: 520px) {
+    #signupForm > div:has(> #emailCheckButton),
+    #signupForm > div:has(> #nicknameCheckButton) {
+        grid-template-columns: 1fr;
     }
 
-
-    .signup-container {
-        margin-top: 16px;
-
-        padding:
-                32px
-                22px;
-
-        border-radius: 19px;
+    #signupForm > div:has(> #emailCheckButton) label,
+    #signupForm > div:has(> #nicknameCheckButton) label {
+        grid-column: auto;
     }
-
-
-    .signup-container > h1 {
-        padding-left: 29px;
-
-        margin-bottom: 31px;
-
-        font-size: 25px;
-    }
-
-
-    .signup-container > h1::before {
-        top: 6px;
-
-        width: 18px;
-        height: 18px;
-
-        border-width: 5px;
-    }
-
-
-    #signupForm input[type="email"],
-    #signupForm input[type="text"],
-    #signupForm input[type="password"],
-    #signupForm > button[type="submit"] {
-        height: 47px;
-    }
-
 }

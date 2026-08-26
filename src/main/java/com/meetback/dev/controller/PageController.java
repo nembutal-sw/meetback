@@ -27,9 +27,10 @@ public class PageController {
 
 
     @GetMapping("/")
-    public String home()
+    public String landing()
     {
-        return "redirect:/home";
+        // 공개 랜딩에서 서비스 소개 후 인증이 필요한 홈으로 안내한다.
+        return "auth/landing";
     }
 
 
