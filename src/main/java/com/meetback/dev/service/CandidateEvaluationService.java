@@ -511,6 +511,8 @@ public class CandidateEvaluationService {
 
                                         result.getParticipantId(),
 
+                                        result.getNickname(),
+
                                         result.getReturnMinutes(),
 
                                         result.getTransferCount(),
