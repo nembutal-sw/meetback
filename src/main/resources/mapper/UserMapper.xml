@@ -28,16 +28,16 @@
 
     </resultMap>
 
-
     <!-- 회원가입 -->
     <insert id="insertUser"
             parameterType="com.meetback.dev.domain.User"
             useGeneratedKeys="true"
-            keyProperty="userId">
+            keyProperty="userId"
+            keyColumn="user_id">
 
         INSERT INTO users
         (
-        email,
+            email,
             nickname,
             password_hash,
             created_at,

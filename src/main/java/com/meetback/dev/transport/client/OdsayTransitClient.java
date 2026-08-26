@@ -1,6 +1,7 @@
 package com.meetback.dev.transport.client;
 
 import com.meetback.dev.place.dto.PlaceDTO;
+import com.meetback.dev.transport.dto.RouteLineDTO;
 import com.meetback.dev.transport.dto.RouteMapDTO;
 import com.meetback.dev.transport.dto.RoutePointDTO;
 import com.meetback.dev.transport.dto.TransitRouteDTO;
@@ -307,10 +308,7 @@ public class OdsayTransitClient {
     }
 
 
-    /*
-     * 저장해둔 mapObj를 이용해서
-     * 지도에 표시할 노선 좌표를 조회
-     */
+
     public RouteMapDTO loadLane(
             String mapObj
     ) {
@@ -324,15 +322,6 @@ public class OdsayTransitClient {
         }
 
 
-        /*
-         * ODsay 공식 예제:
-         *
-         * searchPubTransPathT 결과
-         * mapObj = 2:2:237:238
-         *
-         * loadLane 호출
-         * mapObject = 0:0@2:2:237:238
-         */
         String mapObject =
                 mapObj.startsWith("0:0@")
                         ? mapObj
@@ -380,18 +369,12 @@ public class OdsayTransitClient {
             );
         }
 
-
-        /*
-         * HTTP 200으로 ODsay 오류 객체가 오는 경우 확인
-         */
         JsonNode error =
                 response.path("error");
-
 
         if (!error.isMissingNode()
                 && !error.isNull()
                 && !error.isEmpty()) {
-
             throw new IllegalStateException(
                     "ODsay 노선 그래픽 오류 응답: "
                             + error.toString()
@@ -408,25 +391,28 @@ public class OdsayTransitClient {
                 || lanes.isEmpty()) {
 
             throw new IllegalStateException(
-                    "ODsay 노선 그래픽 데이터가 없습니다. 응답: "
-                            + response.toString()
+                    "ODsay 노선 그래픽 데이터가 없습니다."
             );
         }
 
-
-        List<RoutePointDTO> points =
+        List<RouteLineDTO> lines =
                 new ArrayList<>();
 
 
-        /*
-         * result
-         *  └─ lane[]
-         *      └─ section[]
-         *          └─ graphPos[]
-         *              ├─ x = 경도
-         *              └─ y = 위도
-         */
         for (JsonNode lane : lanes) {
+
+            /*
+             * 지하철 노선 구분값
+             * 예: 1호선, 2호선 등
+             */
+            int type =
+                    lane.path("type")
+                            .asInt();
+
+
+            List<RoutePointDTO> points =
+                    new ArrayList<>();
+
 
             JsonNode sections =
                     lane.path("section");
@@ -468,10 +454,24 @@ public class OdsayTransitClient {
                     );
                 }
             }
+
+
+            /*
+             * 좌표가 실제로 있는 lane만 추가
+             */
+            if (!points.isEmpty()) {
+
+                lines.add(
+                        new RouteLineDTO(
+                                type,
+                                points
+                        )
+                );
+            }
         }
 
 
-        if (points.isEmpty()) {
+        if (lines.isEmpty()) {
 
             throw new IllegalStateException(
                     "ODsay 경로 좌표를 찾을 수 없습니다."
@@ -482,13 +482,13 @@ public class OdsayTransitClient {
         System.out.println(
                 "[ODsay loadLane 완료] mapObj="
                         + mapObj
-                        + ", pointCount="
-                        + points.size()
+                        + ", lineCount="
+                        + lines.size()
         );
 
 
         return new RouteMapDTO(
-                points
+                lines
         );
     }
 }

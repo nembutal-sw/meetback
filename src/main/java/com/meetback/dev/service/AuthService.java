@@ -124,6 +124,7 @@ public class AuthService {
             );
         }
 
+
         if (request.getEmail() == null
                 || request.getEmail().isBlank()) {
 
@@ -132,6 +133,7 @@ public class AuthService {
             );
         }
 
+
         if (request.getNickname() == null
                 || request.getNickname().isBlank()) {
 
@@ -139,6 +141,7 @@ public class AuthService {
                     "닉네임을 입력해주세요."
             );
         }
+
 
         if (request.getPassword() == null
                 || request.getPassword().isBlank()) {
@@ -167,6 +170,12 @@ public class AuthService {
 
         validateNickname(
                 request.getNickname()
+        );
+
+
+        // 필수 약관 동의 검사
+        termService.validateRequiredTerms(
+                request.getAgreedTermIds()
         );
 
 
@@ -227,6 +236,7 @@ public class AuthService {
         userMapper.insertUser(
                 user
         );
+
 
         // 회원 약관 동의 저장
         termService.saveAgreements(
@@ -774,8 +784,24 @@ public class AuthService {
         }
 
 
-        // 기존 회원이면 카카오 계정 연결
+        // 기존 회원 + 카카오 이메일 일치
         if (existingUser != null) {
+
+            if (!Boolean.TRUE.equals(
+                    kakaoUserInfo.getEmailVerified()
+            )) {
+
+                throw new IllegalStateException(
+                        "카카오 이메일 인증 여부를 확인할 수 없어 "
+                                + "기존 계정과 연결할 수 없습니다."
+                );
+            }
+
+
+            validateWithdrawalStatus(
+                    existingUser
+            );
+
 
             Social newSocial =
                     new Social();
@@ -816,17 +842,13 @@ public class AuthService {
             );
 
 
-            validateWithdrawalStatus(
-                    existingUser
-            );
-
-
             return createSocialLoginSuccessResponse(
                     existingUser
             );
         }
 
 
+        // 신규 카카오 사용자는 바로 저장하지 않는다
         String signupToken =
                 jwtProvider.createSocialSignupToken(
                         "KAKAO",
@@ -940,6 +962,7 @@ public class AuthService {
 
 
         // 기존 Google 정책 유지
+        // 동일 이메일의 기존 계정과 자동 연결하지 않는다.
         if (existingUser != null) {
 
             throw new IllegalStateException(
@@ -971,7 +994,8 @@ public class AuthService {
 
     public SocialLoginResponse completeSocialSignup(
             String signupToken,
-            String nickname
+            String nickname,
+            List<Long> agreedTermIds
     ) {
 
         if (signupToken == null
@@ -1071,6 +1095,12 @@ public class AuthService {
                     "소셜 사용자 정보가 없습니다."
             );
         }
+
+
+        // 필수 약관 동의 검사
+        termService.validateRequiredTerms(
+                agreedTermIds
+        );
 
 
         Social existingSocial =
@@ -1180,6 +1210,13 @@ public class AuthService {
 
         socialMapper.insertSocial(
                 social
+        );
+
+
+        // 소셜 회원 약관 동의 저장
+        termService.saveAgreements(
+                user.getUserId(),
+                agreedTermIds
         );
 
 
@@ -2034,6 +2071,8 @@ public class AuthService {
         );
 
 
+        // 새로운 로그인 시 tokenVersion 증가
+        // 기존 Access Token 무효화
         int updatedRows =
                 userMapper.increaseTokenVersion(
                         user.getUserId()
@@ -2300,6 +2339,7 @@ public class AuthService {
 
         } else {
 
+            // 사용자별 Refresh Token 1개 유지
             refreshTokenMapper.updateRefreshToken(
                     token
             );
