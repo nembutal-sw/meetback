@@ -10,24 +10,24 @@
             resultType="com.meetback.dev.domain.MeetingParticipant">
 
         SELECT
-        participant_id,
-        meeting_id,
-        user_id,
-        input_status,
+            participant_id,
+            meeting_id,
+            user_id,
+            input_status,
 
-        departure_name,
-        departure_address,
-        departure_latitude,
-        departure_longitude,
+            departure_name,
+            departure_address,
+            departure_latitude,
+            departure_longitude,
 
-        return_name,
-        return_address,
-        return_latitude,
-        return_longitude,
+            return_name,
+            return_address,
+            return_latitude,
+            return_longitude,
 
-        submitted_at,
-        created_at,
-        updated_at
+            submitted_at,
+            created_at,
+            updated_at
 
         FROM meeting_participants
 
@@ -108,27 +108,27 @@
             resultType="com.meetback.dev.domain.MeetingParticipant">
 
         SELECT
-        mp.participant_id,
-        mp.meeting_id,
-        mp.user_id,
+            mp.participant_id,
+            mp.meeting_id,
+            mp.user_id,
 
-        u.nickname AS nickname,
+            u.nickname AS nickname,
 
-        mp.input_status,
+            mp.input_status,
 
-        mp.departure_name,
-        mp.departure_address,
-        mp.departure_latitude,
-        mp.departure_longitude,
+            mp.departure_name,
+            mp.departure_address,
+            mp.departure_latitude,
+            mp.departure_longitude,
 
-        mp.return_name,
-        mp.return_address,
-        mp.return_latitude,
-        mp.return_longitude,
+            mp.return_name,
+            mp.return_address,
+            mp.return_latitude,
+            mp.return_longitude,
 
-        mp.submitted_at,
-        mp.created_at,
-        mp.updated_at
+            mp.submitted_at,
+            mp.created_at,
+            mp.updated_at
 
         FROM meeting_participants mp
 
@@ -145,9 +145,36 @@
     <update id="resetInputToDraft">
         UPDATE meeting_participants
         SET
-        input_status = 'DRAFT',
-        submitted_at = NULL,
-        updated_at = NOW()
+            input_status = 'DRAFT',
+            submitted_at = NULL,
+            updated_at = NOW()
         WHERE participant_id = #{participantId}
     </update>
+
+    <select id="findRoomParticipants"
+            resultType="com.meetback.dev.dto.ParticipantRoomResponse">
+
+        SELECT
+            mp.participant_id AS participantId,
+            mp.meeting_id AS meetingId,
+            mp.user_id AS userId,
+
+            u.nickname AS nickname,
+
+            mp.input_status AS inputStatus,
+
+            mp.departure_name AS departureName,
+            mp.return_name AS returnName
+
+        FROM meeting_participants mp
+
+        JOIN users u
+            ON u.user_id = mp.user_id
+
+        WHERE mp.meeting_id = #{meetingId}
+
+        ORDER BY mp.participant_id
+
+    </select>
+
 </mapper>

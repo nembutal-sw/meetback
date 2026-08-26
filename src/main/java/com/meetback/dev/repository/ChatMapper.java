@@ -44,4 +44,34 @@ public interface ChatMapper {
     List<ChatMessageResponse> selectMessages(
             @Param("meetingId") Long meetingId
     );
+
+    int insertSystemMessageOnce(
+
+            @Param("meetingId")
+            Long meetingId,
+
+            @Param("participantId")
+            Long participantId,
+
+            @Param("eventType")
+            String eventType,
+
+            @Param("eventKey")
+            String eventKey,
+
+            @Param("content")
+            String content
+
+    );
+
+
+    ChatMessageResponse selectMessageByEventKey(
+
+            @Param("meetingId")
+            Long meetingId,
+
+            @Param("eventKey")
+            String eventKey
+
+    );
 }

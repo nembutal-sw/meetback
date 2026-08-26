@@ -10,6 +10,7 @@ public class PlaceVote {
     private Long meetingId;
     private Long participantId;
     private Long candidateId;
+    private VoteType voteType;
     private Integer voteChangeCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

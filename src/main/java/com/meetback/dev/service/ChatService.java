@@ -174,4 +174,66 @@ public class ChatService {
                 message.getMessageId()
         );
     }
+
+    @Transactional
+    public ChatMessageResponse saveSystemMessageOnce(
+
+            Long meetingId,
+            Long userId,
+            String eventType,
+            String eventKey,
+            String content
+
+    ) {
+
+        MeetingParticipant participant =
+                participantMapper
+                        .findByMeetingAndUser(
+                                meetingId,
+                                userId
+                        );
+
+
+        if (participant == null) {
+
+            throw new IllegalArgumentException(
+                    "해당 모임의 참가자가 아닙니다."
+            );
+        }
+
+
+        /*
+         * UNIQUE(meeting_id, event_key)
+         *
+         * 이미 존재하면 INSERT IGNORE 결과 0
+         */
+        int inserted =
+                chatMapper.insertSystemMessageOnce(
+
+                        meetingId,
+
+                        participant.getParticipantId(),
+
+                        eventType,
+
+                        eventKey,
+
+                        content
+                );
+
+
+        /*
+         * 이미 공지된 이벤트
+         */
+        if (inserted == 0) {
+
+            return null;
+        }
+
+
+        return chatMapper.selectMessageByEventKey(
+                meetingId,
+                eventKey
+        );
+    }
 }
