@@ -271,12 +271,6 @@ public class CalculationService {
                 );
 
 
-        /*
-         * 실제 ODsay 호출 사이 간격은 유지
-         */
-        waitForOdsay();
-
-
         LocalDate meetingDate =
                 meeting.getDesiredEndAt()
                         .toLocalDate();
@@ -678,28 +672,6 @@ public class CalculationService {
 
             default -> 1;
         };
-    }
-
-
-    private void waitForOdsay() {
-
-        try {
-
-            Thread.sleep(
-                    1100
-            );
-
-        } catch (InterruptedException e) {
-
-            Thread.currentThread()
-                    .interrupt();
-
-
-            throw new IllegalStateException(
-                    "ODsay 호출 대기 중 오류가 발생했습니다.",
-                    e
-            );
-        }
     }
 
 
