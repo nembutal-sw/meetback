@@ -128,7 +128,7 @@ flowchart TB
 ```text
 meetback/
 ├── db/
-│   └── schema.sql                         # 전체 DB 스키마
+│   └── schema.sql                         # 최신 스키마 참고본
 ├── src/main/java/com/meetback/dev/
 │   ├── config/                            # 공통 설정
 │   ├── controller/                        # REST 및 화면 Controller
@@ -143,10 +143,14 @@ meetback/
 │   ├── service/                           # 핵심 업무 로직
 │   └── transport/                         # ODsay 교통 연동
 ├── src/main/resources/
+│   ├── db/migration/                      # Flyway 버전 마이그레이션
 │   ├── mapper/                            # MyBatis XML SQL
 │   ├── templates/                         # Thymeleaf 화면
 │   └── application.properties
 ├── src/test/                              # 단위 및 애플리케이션 테스트
+├── Dockerfile                             # JDK 17 애플리케이션 이미지
+├── compose.yaml                           # 애플리케이션·MySQL 실행 구성
+├── .dockerignore                          # Docker 빌드 제외 목록
 ├── .env.example                           # 환경 변수 예시
 ├── pom.xml
 └── README.md
@@ -158,6 +162,7 @@ meetback/
 
 - JDK 17 이상
 - MySQL 8.x 권장
+- Docker Engine 및 Docker Compose v2(컨테이너 실행 시)
 - Google OAuth Web Client ID
 - Kakao OAuth Client ID 및 Client Secret
 - Kakao Local REST API Key
@@ -178,19 +183,49 @@ cd meetback
 
 ### 데이터베이스 준비
 
-1. MySQL에 MeetBack용 데이터베이스를 생성합니다.
-2. [`db/schema.sql`](db/schema.sql)을 MySQL Workbench 또는 MySQL Client에서 실행합니다.
-3. 생성한 데이터베이스 접속 정보를 `.env`에 입력합니다.
+Docker Compose 사용을 권장합니다. MySQL 컨테이너는 빈 데이터 볼륨에서
+`meet_back` 데이터베이스를 만들고, 애플리케이션 시작 시 Flyway가
+`src/main/resources/db/migration`의 마이그레이션을 순서대로 적용합니다.
 
-예시 명령은 다음과 같습니다.
+먼저 `.env.example`을 `.env`로 복사하고 비밀번호와 외부 API 설정을 실제
+환경 값으로 채웁니다. Docker Compose는 DB 이름과 애플리케이션 DB 사용자를
+각각 `meet_back`, `meetback`으로 고정하며 MySQL root 계정은 앱에 전달하지 않습니다.
+
+```bash
+docker compose config --quiet
+docker compose up --build
+```
+
+최초 실행 결과는 다음과 같습니다.
+
+1. MySQL이 `meet_back` 데이터베이스와 애플리케이션 사용자를 생성합니다.
+2. MySQL healthcheck가 통과한 뒤 애플리케이션이 시작됩니다.
+3. Flyway가 `V1__initial_schema.sql`을 적용합니다.
+4. `flyway_schema_history`에 적용 이력이 기록됩니다.
+
+이후 스키마 변경은 이미 적용된 파일을 수정하지 않고 `V2__...sql`,
+`V3__...sql`처럼 새 마이그레이션으로 추가합니다.
+
+V1은 `db/schema.sql`에 있는 스키마만 생성하며 약관 문구를 임의로 넣지 않습니다.
+승인된 약관의 문구와 버전이 확정되면 별도 마이그레이션으로 추가합니다.
+
+로컬 MySQL을 직접 사용하는 경우에는 데이터베이스와 전용 사용자를 먼저 생성합니다.
 
 ```sql
 CREATE DATABASE meet_back
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
+
+CREATE USER IF NOT EXISTS 'meetback'@'localhost'
+    IDENTIFIED BY 'your-db-password';
+GRANT ALL PRIVILEGES ON meet_back.* TO 'meetback'@'localhost';
 ```
 
-그다음 `db/schema.sql`을 `meet_back` 데이터베이스에 적용합니다.
+접속 정보를 `.env`에 입력하고 애플리케이션을 시작하면 Flyway가 테이블을
+자동 생성합니다. `db/schema.sql`은 검토용 참고본이며 직접 실행하지 않습니다.
+
+기존에 수동으로 테이블을 만든 데이터베이스는 V1과 충돌할 수 있으므로,
+스키마 검증 후 운영자가 한 번만 Flyway baseline을 적용해야 합니다.
 
 ### 환경 변수 설정
 
@@ -214,8 +249,10 @@ cp .env.example .env
 DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=meet_back
-DB_USERNAME=your-db-user
+DB_USERNAME=meetback
 DB_PASSWORD=your-db-password
+MYSQL_ROOT_PASSWORD=your-root-password
+APP_PORT=8080
 
 JWT_SECRET=your-base64-encoded-jwt-secret
 JWT_ACCESS_TOKEN_EXPIRATION=900000
@@ -236,9 +273,11 @@ ODSAY_BASE_URL=your-odsay-base-url
 |---|---|
 | `DB_HOST` | MySQL 호스트 |
 | `DB_PORT` | MySQL 포트 |
-| `DB_NAME` | 사용할 데이터베이스 이름 |
-| `DB_USERNAME` | MySQL 사용자 |
+| `DB_NAME` | 로컬 직접 실행 시 사용할 DB 이름(Compose는 `meet_back` 고정) |
+| `DB_USERNAME` | 로컬 직접 실행 시 사용할 MySQL 사용자(Compose는 `meetback` 고정) |
 | `DB_PASSWORD` | MySQL 비밀번호 |
+| `MYSQL_ROOT_PASSWORD` | Docker MySQL 초기 root 비밀번호 |
+| `APP_PORT` | Docker에서 공개할 애플리케이션 포트(기본 8080) |
 | `JWT_SECRET` | MeetBack JWT의 HMAC 서명에 사용하는 Base64 Secret Key |
 | `JWT_ACCESS_TOKEN_EXPIRATION` | Access Token 유효시간(ms) |
 | `JWT_REFRESH_TOKEN_EXPIRATION` | Refresh Token 유효시간(ms) |
@@ -257,6 +296,27 @@ ODSAY_BASE_URL=your-odsay-base-url
 Google 로그인을 사용하는 개발자는 [Google Identity Services 공식 설정 문서](https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid)를 참고하여 Web Client ID와 Authorized JavaScript origins를 직접 설정합니다. 발급한 Client ID는 `.env`의 `GOOGLE_CLIENT_ID`에 입력합니다.
 
 ### 애플리케이션 실행
+
+Docker Compose:
+
+```bash
+docker compose config --quiet
+docker compose up --build
+```
+
+로그를 포함해 종료하려면 `Ctrl+C`를 누른 뒤 다음 명령을 실행합니다.
+
+```bash
+docker compose down
+```
+
+> `docker compose down -v`는 MySQL 데이터 볼륨까지 삭제합니다. 빈 DB 최초
+> 초기화를 다시 검증할 때만 사용합니다.
+
+> `MYSQL_DATABASE`, `MYSQL_USER`, 비밀번호는 빈 볼륨의 최초 기동 때만
+> 반영됩니다. 기존 볼륨의 `.env` 비밀번호만 바꿔도 DB 계정은 변경되지 않습니다.
+
+로컬 실행:
 
 Windows:
 

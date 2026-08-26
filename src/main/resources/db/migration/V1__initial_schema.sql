@@ -1,3 +1,6 @@
+-- Flyway V1: JDBC URL이 지정한 meet_back 데이터베이스에 최초 스키마를 생성한다.
+-- 데이터베이스 자체는 Docker/MySQL이 생성하므로 CREATE DATABASE와 USE는 넣지 않는다.
+
 -- =========================================
 -- meetBack 프로젝트 테이블 생성 스크립트 (MySQL)
 -- DB: meet_back
@@ -337,6 +340,9 @@ CREATE TABLE candidate_return_results (
                                           return_minutes INT,
                                           transfer_count INT,
 
+                                          -- 결과 화면에서 사용하는 대중교통 경로 응답 데이터
+                                          route_map_obj TEXT NULL,
+
                                           last_train_departure_at DATETIME,
                                           last_train_arrival_at DATETIME,
                                           last_safe_departure_at DATETIME,
@@ -539,7 +545,3 @@ ALTER TABLE meetings
         FOREIGN KEY (final_candidate_id)
             REFERENCES meeting_candidates(candidate_id)
             ON DELETE SET NULL;
-
--- 결과 화면에서 사용하는 대중교통 경로 응답 데이터를 저장한다.
-ALTER TABLE candidate_return_results
-    ADD COLUMN route_map_obj TEXT NULL;
