@@ -13,3 +13,6 @@ work
 .env
 .env.*
 !.env.example
+
+# 런타임 secret은 빌드 컨텍스트에 포함하지 않는다.
+secrets
