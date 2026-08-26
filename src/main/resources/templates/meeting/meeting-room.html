@@ -24,6 +24,25 @@
 <body>
 
 
+<!-- =========================================================
+     Toast
+     ========================================================= -->
+
+<div
+        id="toast"
+        class="toast"
+        aria-live="polite">
+
+    <div id="toastMessage"></div>
+
+    <div
+            id="toastActions"
+            class="toast-actions">
+    </div>
+
+</div>
+
+
 
 <!-- =========================================================
      상단
@@ -285,8 +304,309 @@
         0;
 
 
+    let participantCount =
+        0;
+
+
+    let isCalculating =
+        false;
+
+
     let stompClient =
         null;
+
+
+    let toastTimer =
+        null;
+
+
+
+    // ============================================================
+    // 일반 Toast
+    // ============================================================
+
+    function showToast(
+        message,
+        type = "info",
+        duration = 3000
+    )
+    {
+
+        const toast =
+            document.getElementById(
+                "toast"
+            );
+
+
+        const messageArea =
+            document.getElementById(
+                "toastMessage"
+            );
+
+
+        const actions =
+            document.getElementById(
+                "toastActions"
+            );
+
+
+        if (
+            !toast
+            ||
+            !messageArea
+            ||
+            !actions
+        )
+        {
+            return;
+        }
+
+
+        if (toastTimer)
+        {
+
+            clearTimeout(
+                toastTimer
+            );
+
+
+            toastTimer =
+                null;
+        }
+
+
+        messageArea.textContent =
+            message;
+
+
+        actions.innerHTML =
+            "";
+
+
+        toast.className =
+            "toast show " + type;
+
+
+        /*
+         * duration = 0
+         * 직접 변경 / 제거 전까지 유지
+         *
+         * 계산 중 토스트 등에 사용
+         */
+        if (duration > 0)
+        {
+
+            toastTimer =
+                setTimeout(
+                    () =>
+                    {
+
+                        hideToast();
+
+                    },
+                    duration
+                );
+        }
+    }
+
+
+
+    // ============================================================
+    // Confirm Toast
+    // ============================================================
+
+    function showConfirmToast(
+        message
+    )
+    {
+
+        return new Promise(
+            resolve =>
+            {
+
+                const toast =
+                    document.getElementById(
+                        "toast"
+                    );
+
+
+                const messageArea =
+                    document.getElementById(
+                        "toastMessage"
+                    );
+
+
+                const actions =
+                    document.getElementById(
+                        "toastActions"
+                    );
+
+
+                if (
+                    !toast
+                    ||
+                    !messageArea
+                    ||
+                    !actions
+                )
+                {
+
+                    resolve(
+                        false
+                    );
+
+
+                    return;
+                }
+
+
+                if (toastTimer)
+                {
+
+                    clearTimeout(
+                        toastTimer
+                    );
+
+
+                    toastTimer =
+                        null;
+                }
+
+
+                messageArea.textContent =
+                    message;
+
+
+                toast.className =
+                    "toast show confirm";
+
+
+                actions.innerHTML =
+                    `
+                    <button
+                            type="button"
+                            id="toastCancelButton"
+                            class="
+                                toast-action-button
+                                cancel-button
+                            ">
+
+                        취소
+
+                    </button>
+
+
+                    <button
+                            type="button"
+                            id="toastConfirmButton"
+                            class="
+                                toast-action-button
+                                confirm-button
+                            ">
+
+                        확인
+
+                    </button>
+                    `;
+
+
+                document.getElementById(
+                    "toastCancelButton"
+                ).onclick =
+                    () =>
+                    {
+
+                        hideToast();
+
+
+                        resolve(
+                            false
+                        );
+                    };
+
+
+                document.getElementById(
+                    "toastConfirmButton"
+                ).onclick =
+                    () =>
+                    {
+
+                        hideToast();
+
+
+                        resolve(
+                            true
+                        );
+                    };
+            }
+        );
+    }
+
+
+
+    // ============================================================
+    // Toast 숨기기
+    // ============================================================
+
+    function hideToast()
+    {
+
+        const toast =
+            document.getElementById(
+                "toast"
+            );
+
+
+        const messageArea =
+            document.getElementById(
+                "toastMessage"
+            );
+
+
+        const actions =
+            document.getElementById(
+                "toastActions"
+            );
+
+
+        if (!toast)
+        {
+            return;
+        }
+
+
+        toast.className =
+            "toast";
+
+
+        if (messageArea)
+        {
+
+            messageArea.textContent =
+                "";
+        }
+
+
+        if (actions)
+        {
+
+            actions.innerHTML =
+                "";
+        }
+
+
+        if (toastTimer)
+        {
+
+            clearTimeout(
+                toastTimer
+            );
+
+
+            toastTimer =
+                null;
+        }
+    }
 
 
 
@@ -314,13 +634,22 @@
         if (!meetingId)
         {
 
-            alert(
-                "잘못된 모임 ID입니다."
+            showToast(
+                "잘못된 모임 정보입니다.",
+                "error"
             );
 
 
-            location.href =
-                "/home";
+            setTimeout(
+                () =>
+                {
+
+                    location.href =
+                        "/home";
+
+                },
+                1200
+            );
 
 
             return;
@@ -367,9 +696,10 @@
                 await response.text();
 
 
-            alert(
+            showToast(
                 text
-                || "모임 조회 실패"
+                || "모임 정보를 불러오지 못했습니다.",
+                "error"
             );
 
 
@@ -431,19 +761,6 @@
 
     // ============================================================
     // 초대 URL 복사
-    //
-    // 현재 접속한 Origin을 사용한다.
-    //
-    // 예)
-    //
-    // http://10.128.0.13:8080
-    //
-    // 에 접속 중이라면:
-    //
-    // http://10.128.0.13:8080/home?inviteCode=ABC123
-    //
-    // localhost로 접속하면 localhost 링크가 생성되므로
-    // 팀 테스트 때는 LAN IP 또는 실제 도메인으로 접속할 것.
     // ============================================================
 
     async function copyInviteUrl()
@@ -455,6 +772,13 @@
             !currentMeeting.inviteCode
         )
         {
+
+            showToast(
+                "초대코드를 불러올 수 없습니다.",
+                "warning"
+            );
+
+
             return;
         }
 
@@ -467,24 +791,9 @@
             );
 
 
-        const button =
-            document.getElementById(
-                "inviteCodeButton"
-            );
-
-
-        const originalText =
-            "🔗 초대코드 "
-            + currentMeeting.inviteCode;
-
-
         try
         {
 
-            /*
-             * HTTPS / localhost 등
-             * Clipboard API 지원 환경
-             */
             if (
                 navigator.clipboard
                 &&
@@ -499,35 +808,17 @@
             else
             {
 
-                /*
-                 * HTTP LAN 환경 fallback
-                 */
                 copyTextFallback(
                     inviteUrl
                 );
             }
 
 
-            button.textContent =
-                "✓ 초대 링크 복사 완료";
-
-
-            setTimeout(
-                () =>
-                {
-
-                    button.textContent =
-                        originalText;
-
-                },
-                1500
+            showToast(
+                "초대 링크가 복사되었습니다.",
+                "success"
             );
 
-
-            console.log(
-                "[INVITE URL COPIED]",
-                inviteUrl
-            );
         }
         catch (error)
         {
@@ -546,20 +837,11 @@
                 );
 
 
-                button.textContent =
-                    "✓ 초대 링크 복사 완료";
-
-
-                setTimeout(
-                    () =>
-                    {
-
-                        button.textContent =
-                            originalText;
-
-                    },
-                    1500
+                showToast(
+                    "초대 링크가 복사되었습니다.",
+                    "success"
                 );
+
             }
             catch (fallbackError)
             {
@@ -570,9 +852,9 @@
                 );
 
 
-                alert(
-                    "초대 링크 복사에 실패했습니다.\n\n"
-                    + inviteUrl
+                showToast(
+                    "초대 링크 복사에 실패했습니다.",
+                    "error"
                 );
             }
         }
@@ -670,9 +952,6 @@
             await response.json();
 
 
-        /*
-         * 먼저 실제 저장된 장소 정보 조회
-         */
         const participantDetail =
             await loadMyPlaceInfo();
 
@@ -829,10 +1108,6 @@
         try
         {
 
-            // ----------------------------------------------------
-            // 출발지 / 귀가지
-            // ----------------------------------------------------
-
             const participantResponse =
                 await MeetBack.authenticatedFetch(
                     "/participants/"
@@ -857,11 +1132,6 @@
                     || "-";
             }
 
-
-
-            // ----------------------------------------------------
-            // 내가 등록한 희망 장소
-            // ----------------------------------------------------
 
             const candidateResponse =
                 await MeetBack.authenticatedFetch(
@@ -997,12 +1267,25 @@
 
         if (!response.ok)
         {
+
+            participantCount =
+                0;
+
+
             return;
         }
 
 
         const participants =
             await response.json();
+
+
+        participantCount =
+            Array.isArray(
+                participants
+            )
+                ? participants.length
+                : 0;
 
 
         const area =
@@ -1062,57 +1345,59 @@
 
                 card.innerHTML =
                     `
-                <div class="participant-card-top">
+                    <div class="participant-card-top">
 
-                    <strong class="participant-nickname">
+                        <strong class="participant-nickname">
 
-                        ${host ? "👑 " : ""}
+                            ${host ? "👑 " : ""}
 
-                        ${MeetBack.escapeHtml(
+                            ${MeetBack.escapeHtml(
                         nickname
                     )}
 
-                        ${me ? " (나)" : ""}
+                            ${me ? " (나)" : ""}
 
-                    </strong>
+                        </strong>
 
 
-                    <span
-                        id="presence-user-${participant.userId}"
-                        class="
-                            presence-badge
-                            ${participant.online
+                        <span
+                            id="presence-user-${participant.userId}"
+                            class="
+                                presence-badge
+                                ${participant.online
                         ? "online"
                         : "offline"}
-                        ">
+                            ">
 
-                        <span class="presence-dot"></span>
+                            <span class="presence-dot"></span>
 
-                        <span class="presence-text">
-                            ${participant.online
+                            <span class="presence-text">
+
+                                ${participant.online
                         ? "ON"
                         : "OFF"}
+
+                            </span>
+
                         </span>
 
-                    </span>
-
-                </div>
+                    </div>
 
 
-                <div class="participant-card-bottom">
+                    <div class="participant-card-bottom">
 
-                    <span
-                        class="
-                            participant-input-status
-                            ${status.className}
-                        ">
+                        <span
+                            class="
+                                participant-input-status
+                                ${status.className}
+                            ">
 
-                        ${status.text}
+                            ${status.text}
 
-                    </span>
+                        </span>
 
-                </div>
-                `;
+                    </div>
+                    `;
 
 
                 area.appendChild(
@@ -1125,17 +1410,12 @@
 
 
     // ============================================================
-    // 전원 입력 완료 확인
+    // 전원 입력 완료
     // ============================================================
 
     async function loadSubmittedStatus()
     {
 
-        /*
-         * 새 참가자 입장 직후에도
-         * 반드시 최신 DB 상태를 조회하도록
-         * 브라우저 캐시를 사용하지 않는다.
-         */
         const response =
             await MeetBack.authenticatedFetch(
                 "/participants/meeting/"
@@ -1232,8 +1512,9 @@
         if (!currentMeeting)
         {
 
-            alert(
-                "모임 정보를 불러오는 중입니다."
+            showToast(
+                "모임 정보를 불러오는 중입니다.",
+                "info"
             );
 
 
@@ -1247,8 +1528,9 @@
         )
         {
 
-            alert(
-                "투표가 시작된 이후에는 장소를 수정할 수 없습니다."
+            showToast(
+                "투표가 시작된 이후에는 장소를 수정할 수 없습니다.",
+                "warning"
             );
 
 
@@ -1281,8 +1563,9 @@
             if (!response.ok)
             {
 
-                alert(
-                    "수정 상태 변경 실패"
+                showToast(
+                    "수정 상태 변경에 실패했습니다.",
+                    "error"
                 );
 
 
@@ -1309,7 +1592,7 @@
 
 
     // ============================================================
-    // 채팅 오른쪽 상단 버튼
+    // 채팅 우측 버튼
     // ============================================================
 
     function renderChatAction()
@@ -1336,6 +1619,32 @@
         }
 
 
+        /*
+         * 계산 도중 WebSocket 이벤트가 와도
+         * 로딩 버튼 유지
+         */
+        if (isCalculating)
+        {
+
+            area.innerHTML =
+                `
+                <button
+                        type="button"
+                        class="primary loading-button"
+                        disabled>
+
+                    <span class="button-spinner"></span>
+
+                    계산 중...
+
+                </button>
+                `;
+
+
+            return;
+        }
+
+
         const isHost =
             Number(
                 currentMeeting.hostUserId
@@ -1346,15 +1655,6 @@
             );
 
 
-        /*
-         * 방장
-         * +
-         * INPUT_OPEN
-         * +
-         * 전원 장소 입력 완료
-         * +
-         * 후보 최소 1개
-         */
         if (
             currentMeeting.status
             === "INPUT_OPEN"
@@ -1439,18 +1739,26 @@
     async function startVoting()
     {
 
-        /*
-         * 클릭 순간에도 다시 검사한다.
-         */
+        if (isCalculating)
+        {
+            return;
+        }
+
+
+        // --------------------------------------------------------
+        // 후보 장소 최신 확인
+        // --------------------------------------------------------
+
         await loadCandidateCount();
 
 
         if (candidateCount === 0)
         {
 
-            alert(
-                "등록된 희망 장소가 없습니다.\n"
-                + "참가자 중 한 명 이상이 희망 장소를 등록해주세요."
+            showToast(
+                "등록된 희망 장소가 없습니다. 참가자 중 한 명 이상이 희망 장소를 등록해주세요.",
+                "warning",
+                4000
             );
 
 
@@ -1461,18 +1769,19 @@
         }
 
 
-        /*
-         * 참가자가 새로 들어왔을 수도 있으므로
-         * 전원 입력 완료 여부도 다시 검사한다.
-         */
+        // --------------------------------------------------------
+        // 전원 장소 입력 여부 최신 확인
+        // --------------------------------------------------------
+
         await loadSubmittedStatus();
 
 
         if (!allSubmitted)
         {
 
-            alert(
-                "아직 장소 입력을 완료하지 않은 참가자가 있습니다."
+            showToast(
+                "아직 장소 입력을 완료하지 않은 참가자가 있습니다.",
+                "warning"
             );
 
 
@@ -1483,81 +1792,173 @@
         }
 
 
-        if (
-            !confirm(
+        // --------------------------------------------------------
+        // Confirm Toast
+        // --------------------------------------------------------
+
+        const confirmed =
+            await showConfirmToast(
                 "장소 계산 후 투표를 시작할까요?"
-            )
-        )
+            );
+
+
+        if (!confirmed)
         {
 
             return;
         }
 
 
-        const calculation =
-            await MeetBack.authenticatedFetch(
-                "/calculations/meeting?meetingId="
-                + meetingId,
-                {
+        // --------------------------------------------------------
+        // 계산 시작
+        // --------------------------------------------------------
 
-                    method:
-                        "POST"
-
-                }
-            );
+        isCalculating =
+            true;
 
 
-        if (!calculation.ok)
+        renderChatAction();
+
+
+        showToast(
+            "후보 장소 "
+            + candidateCount
+            + "개 × 참가자 "
+            + participantCount
+            + "명의 귀가 경로를 계산 중입니다. 잠시만 기다려주세요.",
+            "loading",
+            0
+        );
+
+
+        try
         {
 
-            const text =
-                await calculation.text();
+            // ----------------------------------------------------
+            // 경로 계산
+            // ----------------------------------------------------
+
+            const calculation =
+                await MeetBack.authenticatedFetch(
+                    "/calculations/meeting?meetingId="
+                    + meetingId,
+                    {
+
+                        method:
+                            "POST"
+
+                    }
+                );
 
 
-            alert(
-                text
-                || "후보 계산 실패"
+            if (!calculation.ok)
+            {
+
+                const text =
+                    await calculation.text();
+
+
+                isCalculating =
+                    false;
+
+
+                renderChatAction();
+
+
+                showToast(
+                    text
+                    || "후보 장소 계산에 실패했습니다.",
+                    "error",
+                    4000
+                );
+
+
+                return;
+            }
+
+
+            showToast(
+                "경로 계산이 완료되었습니다. 투표를 시작합니다.",
+                "success",
+                0
             );
 
 
-            return;
+            // ----------------------------------------------------
+            // 투표 상태 변경
+            // ----------------------------------------------------
+
+            const voting =
+                await MeetBack.authenticatedFetch(
+                    "/meetings/"
+                    + meetingId
+                    + "/voting",
+                    {
+
+                        method:
+                            "PUT"
+
+                    }
+                );
+
+
+            if (!voting.ok)
+            {
+
+                const text =
+                    await voting.text();
+
+
+                isCalculating =
+                    false;
+
+
+                renderChatAction();
+
+
+                showToast(
+                    text
+                    || "투표 시작에 실패했습니다.",
+                    "error",
+                    4000
+                );
+
+
+                return;
+            }
+
+
+            // ----------------------------------------------------
+            // 투표 페이지
+            // ----------------------------------------------------
+
+            location.href =
+                "/meeting/vote?meetingId="
+                + meetingId;
+
         }
-
-
-        const voting =
-            await MeetBack.authenticatedFetch(
-                "/meetings/"
-                + meetingId
-                + "/voting",
-                {
-
-                    method:
-                        "PUT"
-
-                }
-            );
-
-
-        if (!voting.ok)
+        catch (error)
         {
 
-            const text =
-                await voting.text();
-
-
-            alert(
-                text
-                || "투표 시작 실패"
+            console.error(
+                "[CALCULATION ERROR]",
+                error
             );
 
 
-            return;
+            isCalculating =
+                false;
+
+
+            renderChatAction();
+
+
+            showToast(
+                "경로 계산 중 오류가 발생했습니다.",
+                "error",
+                4000
+            );
         }
-
-
-        location.href =
-            "/meeting/vote?meetingId="
-            + meetingId;
     }
 
 
@@ -1685,7 +2086,7 @@
 
 
                                 // ================================
-                                // 투표 갱신 이벤트
+                                // 투표 갱신
                                 // ================================
 
                                 if (
@@ -1903,7 +2304,7 @@
 
 
     // ============================================================
-    // SYSTEM 메시지 표시 문구
+    // SYSTEM 메시지 문구
     // ============================================================
 
     function getSystemMessageText(
@@ -2017,7 +2418,7 @@
 
 
     // ============================================================
-    // 모임 상태 전체 새로 조회
+    // 모임 상태 새로 조회
     // ============================================================
 
     async function refreshRoomState()
@@ -2026,6 +2427,7 @@
         console.log(
             "[ROOM REFRESH START]"
         );
+
 
         await loadMeeting();
 
@@ -2037,9 +2439,11 @@
 
         await loadCandidateCount();
 
+
         console.log(
             "[ROOM STATE]",
             {
+
                 meetingStatus:
                 currentMeeting?.status,
 
@@ -2047,7 +2451,11 @@
                 allSubmitted,
 
                 candidateCount:
-                candidateCount
+                candidateCount,
+
+                participantCount:
+                participantCount
+
             }
         );
 
@@ -2095,20 +2503,8 @@
             );
 
 
-        div.style.textAlign =
-            "center";
-
-
-        div.style.color =
-            "#888";
-
-
-        div.style.padding =
-            "8px";
-
-
-        div.style.fontSize =
-            "13px";
+        div.className =
+            "system-message";
 
 
         div.textContent =
@@ -2127,6 +2523,12 @@
                 area.scrollHeight;
         }
     }
+
+
+
+    // ============================================================
+    // 참가자 ON / OFF
+    // ============================================================
 
     function updateParticipantPresence(
         userId,
@@ -2208,8 +2610,9 @@
         )
         {
 
-            alert(
-                "채팅 연결 중입니다."
+            showToast(
+                "채팅 서버에 연결 중입니다.",
+                "info"
             );
 
 

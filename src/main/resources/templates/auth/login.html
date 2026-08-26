@@ -11,6 +11,7 @@
             async
             defer
     ></script>
+
     <link rel="stylesheet" th:href="@{/css/login_test.css}">
 </head>
 
@@ -332,6 +333,140 @@
 
 
     redirectAlreadyLoggedIn();
+
+
+    // 닉네임 정책
+    const nicknamePattern =
+        /^[가-힣A-Za-z0-9_]{2,12}$/;
+
+
+    const blockedNicknameWords =
+        [
+            "시발",
+            "씨발",
+            "시팔",
+            "씨팔",
+            "병신",
+            "븅신",
+            "개새끼",
+            "개새",
+            "새끼",
+            "미친",
+            "미친놈",
+            "미친년",
+            "좆",
+            "존나",
+            "졸라",
+            "지랄",
+            "염병",
+            "꺼져",
+            "닥쳐",
+            "fuck",
+            "fucking",
+            "shit",
+            "bitch"
+        ];
+
+
+    const reservedNicknames =
+        [
+            "admin",
+            "administrator",
+            "manager",
+            "master",
+            "root",
+            "meetback",
+            "관리자",
+            "운영자",
+            "매니저",
+            "마스터"
+        ];
+
+
+    // 닉네임 필터용 정규화
+    function normalizeNicknameForFilter(
+        nickname
+    )
+    {
+
+        return nickname
+            .toLowerCase()
+            .replaceAll(
+                "_",
+                ""
+            );
+    }
+
+
+    // 닉네임 사용 가능 형식 검사
+    function isValidNickname(
+        nickname
+    )
+    {
+
+        if (!nickname)
+        {
+            return false;
+        }
+
+
+        if (
+            !nicknamePattern.test(
+                nickname
+            )
+        )
+        {
+            return false;
+        }
+
+
+        const normalizedNickname =
+            normalizeNicknameForFilter(
+                nickname
+            );
+
+
+        for (const blockedWord of blockedNicknameWords)
+        {
+
+            const normalizedBlockedWord =
+                normalizeNicknameForFilter(
+                    blockedWord
+                );
+
+
+            if (
+                normalizedNickname.includes(
+                    normalizedBlockedWord
+                )
+            )
+            {
+                return false;
+            }
+        }
+
+
+        for (const reservedNickname of reservedNicknames)
+        {
+
+            const normalizedReservedNickname =
+                normalizeNicknameForFilter(
+                    reservedNickname
+                );
+
+
+            if (
+                normalizedNickname ===
+                normalizedReservedNickname
+            )
+            {
+                return false;
+            }
+        }
+
+
+        return true;
+    }
 
 
     // 로그인 정보 저장
@@ -688,7 +823,7 @@
         {
 
             const nickname =
-                socialNickname.value.trim();
+                socialNickname.value;
 
 
             nicknameCheckMessage.innerText =
@@ -708,6 +843,20 @@
 
                 nicknameCheckMessage.innerText =
                     "닉네임을 입력해주세요.";
+
+                return;
+            }
+
+
+            if (
+                !isValidNickname(
+                    nickname
+                )
+            )
+            {
+
+                nicknameCheckMessage.innerText =
+                    "사용할 수 없는 닉네임입니다. 2~12자의 한글, 영문, 숫자, 밑줄(_)만 사용할 수 있습니다.";
 
                 return;
             }
@@ -799,7 +948,7 @@
 
 
             const nickname =
-                socialNickname.value.trim();
+                socialNickname.value;
 
 
             if (!socialSignupToken)
@@ -817,6 +966,20 @@
 
                 socialSignupMessage.innerText =
                     "닉네임을 입력해주세요.";
+
+                return;
+            }
+
+
+            if (
+                !isValidNickname(
+                    nickname
+                )
+            )
+            {
+
+                socialSignupMessage.innerText =
+                    "사용할 수 없는 닉네임입니다.";
 
                 return;
             }
