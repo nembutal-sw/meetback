@@ -172,14 +172,17 @@ CREATE TABLE terms (
                        term_id BIGINT AUTO_INCREMENT PRIMARY KEY,
                        term_code VARCHAR(255),
                        term_name VARCHAR(255),
+                       content LONGTEXT,
+                       version VARCHAR(50),
                        kakao_tag VARCHAR(255),
                        required BOOLEAN,
                        active BOOLEAN,
+                       effective_at DATETIME,
                        created_at DATETIME,
                        updated_at DATETIME,
 
-                       CONSTRAINT uq_terms_term_code
-                           UNIQUE (term_code)
+                       CONSTRAINT uq_terms_code_version
+                           UNIQUE (term_code, version)
 );
 
 
@@ -536,3 +539,7 @@ ALTER TABLE meetings
         FOREIGN KEY (final_candidate_id)
             REFERENCES meeting_candidates(candidate_id)
             ON DELETE SET NULL;
+
+--경로 안내용 컬럼 추가 - 이래원
+ALTER TABLE candidate_return_results
+    ADD COLUMN route_map_obj TEXT NULL;

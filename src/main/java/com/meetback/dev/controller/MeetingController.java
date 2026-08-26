@@ -198,8 +198,8 @@ public class MeetingController {
                     notice
             );
         }
-//        // DB 상태
-//        // INPUT_OPEN -> VOTING
+        // DB 상태
+        // INPUT_OPEN -> VOTING
         meetingService.startVoting(
                 meetingId,
                 user.userId()

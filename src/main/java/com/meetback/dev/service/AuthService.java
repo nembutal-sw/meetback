@@ -24,6 +24,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -41,6 +42,7 @@ public class AuthService {
     private final KakaoOAuthProvider kakaoOAuthProvider;
     private final GoogleIdentityProvider googleIdentityProvider;
     private final MailService mailService;
+    private final TermService termService;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
@@ -55,6 +57,55 @@ public class AuthService {
     private static final Pattern PASSWORD_PATTERN =
             Pattern.compile(
                     "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[^A-Za-z0-9\\s])\\S{8,20}$"
+            );
+
+
+    private static final Pattern NICKNAME_PATTERN =
+            Pattern.compile(
+                    "^[가-힣A-Za-z0-9_]{2,12}$"
+            );
+
+
+    private static final List<String> BLOCKED_NICKNAME_WORDS =
+            List.of(
+                    "시발",
+                    "씨발",
+                    "시팔",
+                    "씨팔",
+                    "병신",
+                    "븅신",
+                    "개새끼",
+                    "개새",
+                    "새끼",
+                    "미친",
+                    "미친놈",
+                    "미친년",
+                    "좆",
+                    "존나",
+                    "졸라",
+                    "지랄",
+                    "염병",
+                    "꺼져",
+                    "닥쳐",
+                    "fuck",
+                    "fucking",
+                    "shit",
+                    "bitch"
+            );
+
+
+    private static final List<String> RESERVED_NICKNAMES =
+            List.of(
+                    "admin",
+                    "administrator",
+                    "manager",
+                    "master",
+                    "root",
+                    "meetback",
+                    "관리자",
+                    "운영자",
+                    "매니저",
+                    "마스터"
             );
 
 
@@ -111,6 +162,11 @@ public class AuthService {
 
         validatePassword(
                 request.getPassword()
+        );
+
+
+        validateNickname(
+                request.getNickname()
         );
 
 
@@ -171,6 +227,12 @@ public class AuthService {
         userMapper.insertUser(
                 user
         );
+
+        // 회원 약관 동의 저장
+        termService.saveAgreements(
+                user.getUserId(),
+                request.getAgreedTermIds()
+        );
     }
 
 
@@ -218,17 +280,16 @@ public class AuthService {
             String nickname
     ) {
 
-        if (nickname == null
-                || nickname.isBlank()) {
+        if (!isValidNickname(
+                nickname
+        )) {
 
-            throw new IllegalArgumentException(
-                    "닉네임을 입력해주세요."
-            );
+            return false;
         }
 
 
         return userMapper.existByNickname(
-                nickname.trim()
+                nickname
         ) == 0;
     }
 
@@ -931,6 +992,11 @@ public class AuthService {
         }
 
 
+        validateNickname(
+                nickname
+        );
+
+
         if (!jwtProvider.validateToken(
                 signupToken
         )) {
@@ -1023,7 +1089,7 @@ public class AuthService {
 
 
         String selectedNickname =
-                nickname.trim();
+                nickname;
 
 
         // 최종 가입 시 다시 닉네임 중복 검사
@@ -1729,6 +1795,164 @@ public class AuthService {
                     "비밀번호는 8~20자이며 대문자, 소문자, 숫자, 특수문자를 각각 1개 이상 포함해야 하며 공백은 사용할 수 없습니다."
             );
         }
+    }
+
+
+    // =========================================================
+    // 닉네임 사용 가능 여부 검사
+    // =========================================================
+
+    private boolean isValidNickname(
+            String nickname
+    ) {
+
+        if (nickname == null
+                || nickname.isBlank()) {
+
+            return false;
+        }
+
+
+        if (!NICKNAME_PATTERN.matcher(
+                nickname
+        ).matches()) {
+
+            return false;
+        }
+
+
+        String normalizedNickname =
+                normalizeNicknameForFilter(
+                        nickname
+                );
+
+
+        for (String blockedWord : BLOCKED_NICKNAME_WORDS) {
+
+            String normalizedBlockedWord =
+                    normalizeNicknameForFilter(
+                            blockedWord
+                    );
+
+
+            if (normalizedNickname.contains(
+                    normalizedBlockedWord
+            )) {
+
+                return false;
+            }
+        }
+
+
+        for (String reservedNickname : RESERVED_NICKNAMES) {
+
+            String normalizedReservedNickname =
+                    normalizeNicknameForFilter(
+                            reservedNickname
+                    );
+
+
+            if (normalizedNickname.equals(
+                    normalizedReservedNickname
+            )) {
+
+                return false;
+            }
+        }
+
+
+        return true;
+    }
+
+
+    // =========================================================
+    // 닉네임 정책 검사
+    // =========================================================
+
+    private void validateNickname(
+            String nickname
+    ) {
+
+        if (nickname == null
+                || nickname.isBlank()) {
+
+            throw new IllegalArgumentException(
+                    "닉네임을 입력해주세요."
+            );
+        }
+
+
+        if (!NICKNAME_PATTERN.matcher(
+                nickname
+        ).matches()) {
+
+            throw new IllegalArgumentException(
+                    "닉네임은 2~12자의 한글, 영문, 숫자, 밑줄(_)만 사용할 수 있습니다."
+            );
+        }
+
+
+        String normalizedNickname =
+                normalizeNicknameForFilter(
+                        nickname
+                );
+
+
+        for (String blockedWord : BLOCKED_NICKNAME_WORDS) {
+
+            String normalizedBlockedWord =
+                    normalizeNicknameForFilter(
+                            blockedWord
+                    );
+
+
+            if (normalizedNickname.contains(
+                    normalizedBlockedWord
+            )) {
+
+                throw new IllegalArgumentException(
+                        "사용할 수 없는 닉네임입니다."
+                );
+            }
+        }
+
+
+        for (String reservedNickname : RESERVED_NICKNAMES) {
+
+            String normalizedReservedNickname =
+                    normalizeNicknameForFilter(
+                            reservedNickname
+                    );
+
+
+            if (normalizedNickname.equals(
+                    normalizedReservedNickname
+            )) {
+
+                throw new IllegalArgumentException(
+                        "사용할 수 없는 닉네임입니다."
+                );
+            }
+        }
+    }
+
+
+    // =========================================================
+    // 닉네임 필터용 정규화
+    // =========================================================
+
+    private String normalizeNicknameForFilter(
+            String nickname
+    ) {
+
+        return nickname
+                .toLowerCase(
+                        Locale.ROOT
+                )
+                .replace(
+                        "_",
+                        ""
+                );
     }
 
 
