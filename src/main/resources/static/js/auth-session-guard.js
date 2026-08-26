@@ -11,14 +11,11 @@
     const CHECK_INTERVAL_MS =
         3000;
 
-
     let checking =
         false;
 
-
     let timerId =
         null;
-
 
     // =========================================================
     // 로그인 정보 삭제
@@ -56,129 +53,193 @@
     // =========================================================
     // 강제 로그아웃
     // =========================================================
+    let forceLogoutInProgress =
+        false;
+
+    // =========================================================
+// 강제 로그아웃
+// =========================================================
 
     function forceLogout()
     {
+
+        /*
+         * setInterval 때문에
+         * forceLogout()이 여러 번 실행되는 것 방지
+         */
+        if (forceLogoutInProgress)
+        {
+            return;
+        }
+
+
+        forceLogoutInProgress =
+            true;
+
 
         console.log(
             "[SESSION INVALIDATED]"
         );
 
 
+        // =====================================================
+        // 로그인 페이지에서도 이유를 보여줄 수 있도록 저장
+        // =====================================================
+
         sessionStorage.setItem(
             "authNotice",
-            "다른 기기에서 로그인되어 기존 로그인이 종료되었습니다."
+            "다른 기기에서 로그인되어 연결이 종료되었습니다."
         );
 
 
-        clearLoginStorage();
+        // =====================================================
+        // 더 이상 세션 검사하지 않음
+        // =====================================================
 
+        if (timerId)
+        {
 
-        window.location.replace(
-            "/login"
-        );
-    }
-
-
-    // =========================================================
-    // Refresh Token 재발급
-    //
-    // Access Token이 단순 만료된 경우에는
-    // 정상적으로 Refresh해서 로그인 유지
-    //
-    // 다른 기기 로그인 때문에 Refresh Token까지
-    // 무효화됐다면 false
-    // =========================================================
-
-    async function refreshTokens()
-    {
-
-        const refreshToken =
-            localStorage.getItem(
-                "refreshToken"
+            clearInterval(
+                timerId
             );
 
 
-        if (!refreshToken)
-        {
-            return false;
+            timerId =
+                null;
         }
 
 
-        try
-        {
+        // =====================================================
+        // 현재 페이지에 강제 로그아웃 안내 표시
+        // =====================================================
 
-            const response =
-                await fetch(
-                    "/auth/refresh",
-                    {
-
-                        method:
-                            "POST",
+        const overlay =
+            document.createElement(
+                "div"
+            );
 
 
-                        headers: {
+        overlay.style.position =
+            "fixed";
 
-                            "Content-Type":
-                                "application/json"
+        overlay.style.top =
+            "0";
 
-                        },
+        overlay.style.left =
+            "0";
+
+        overlay.style.width =
+            "100%";
+
+        overlay.style.height =
+            "100%";
+
+        overlay.style.background =
+            "rgba(0, 0, 0, 0.45)";
+
+        overlay.style.display =
+            "flex";
+
+        overlay.style.alignItems =
+            "center";
+
+        overlay.style.justifyContent =
+            "center";
+
+        overlay.style.zIndex =
+            "999999";
 
 
-                        body:
-                            JSON.stringify(
-                                {
-                                    refreshToken:
-                                    refreshToken
-                                }
-                            )
+        const messageBox =
+            document.createElement(
+                "div"
+            );
 
-                    }
+
+        messageBox.style.background =
+            "#ffffff";
+
+        messageBox.style.padding =
+            "28px 36px";
+
+        messageBox.style.borderRadius =
+            "14px";
+
+        messageBox.style.textAlign =
+            "center";
+
+        messageBox.style.boxShadow =
+            "0 10px 30px rgba(0, 0, 0, 0.25)";
+
+        messageBox.style.fontSize =
+            "16px";
+
+        messageBox.style.fontWeight =
+            "600";
+
+
+        messageBox.innerHTML =
+            `
+        <div
+            style="
+                font-size: 20px;
+                margin-bottom: 12px;
+            "
+        >
+            연결이 종료되었습니다.
+        </div>
+
+        <div
+            style="
+                color: #666;
+                font-size: 14px;
+                font-weight: 400;
+            "
+        >
+            다른 기기에서 동일한 계정으로 로그인했습니다.
+        </div>
+
+        <div
+            style="
+                color: #999;
+                font-size: 13px;
+                margin-top: 12px;
+                font-weight: 400;
+            "
+        >
+            잠시 후 로그인 화면으로 이동합니다.
+        </div>
+        `;
+
+
+        overlay.appendChild(
+            messageBox
+        );
+
+
+        document.body.appendChild(
+            overlay
+        );
+
+
+        // =====================================================
+        // 3초 동안 메시지를 보여준 후 로그아웃
+        // =====================================================
+
+        setTimeout(
+            () =>
+            {
+
+                clearLoginStorage();
+
+
+                window.location.replace(
+                    "/login"
                 );
 
-
-            if (!response.ok)
-            {
-                return false;
-            }
-
-
-            const data =
-                await response.json();
-
-
-            localStorage.setItem(
-                "accessToken",
-                data.accessToken
-            );
-
-
-            localStorage.setItem(
-                "refreshToken",
-                data.refreshToken
-            );
-
-
-            return true;
-
-        }
-        catch (error)
-        {
-
-            /*
-             * 단순 네트워크 장애 때문에
-             * 강제 로그아웃하지 않도록
-             * 여기서는 false만 반환
-             */
-
-            console.error(
-                "[SESSION REFRESH ERROR]",
-                error
-            );
-
-
-            return null;
-        }
+            },
+            3000
+        );
     }
 
 
