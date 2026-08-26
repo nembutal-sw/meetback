@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.AdminMeetingMapper">
+
+    <select id="findMeetings"
+            resultType="com.meetback.dev.dto.admin.AdminMeetingListItem">
+        SELECT
+            m.meeting_id AS meetingId,
+            m.title,
+            m.status,
+            u.nickname AS hostNickname,
+            COUNT(mp.participant_id) AS participantCount,
+            m.created_at AS createdAt
+        FROM meetings m
+        JOIN users u
+            ON u.user_id = m.host_user_id
+        LEFT JOIN meeting_participants mp
+            ON mp.meeting_id = m.meeting_id
+        <if test="query != null and query != ''">
+            WHERE m.title LIKE CONCAT('%', #{query}, '%')
+                OR u.nickname LIKE CONCAT('%', #{query}, '%')
+        </if>
+        GROUP BY
+            m.meeting_id,
+            m.title,
+            m.status,
+            u.nickname,
+            m.created_at
+        ORDER BY m.created_at DESC, m.meeting_id DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countMeetings" resultType="long">
+        SELECT COUNT(*)
+        FROM meetings m
+        JOIN users u
+            ON u.user_id = m.host_user_id
+        <if test="query != null and query != ''">
+            WHERE m.title LIKE CONCAT('%', #{query}, '%')
+                OR u.nickname LIKE CONCAT('%', #{query}, '%')
+        </if>
+    </select>
+
+    <select id="findMeetingDetail"
+            resultType="com.meetback.dev.dto.admin.AdminMeetingDetail">
+        SELECT
+            m.meeting_id AS meetingId,
+            m.host_user_id AS hostUserId,
+            u.nickname AS hostNickname,
+            m.title,
+            m.status,
+            m.invite_code AS inviteCode,
+            m.desired_end_at AS desiredEndAt,
+            COUNT(mp.participant_id) AS participantCount,
+            m.final_candidate_id AS finalCandidateId,
+            fc.place_name AS finalPlaceName,
+            fc.address AS finalAddress,
+            m.created_at AS createdAt,
+            m.updated_at AS updatedAt
+        FROM meetings m
+        JOIN users u
+            ON u.user_id = m.host_user_id
+        LEFT JOIN meeting_participants mp
+            ON mp.meeting_id = m.meeting_id
+        LEFT JOIN meeting_candidates fc
+            ON fc.candidate_id = m.final_candidate_id
+            AND fc.meeting_id = m.meeting_id
+        WHERE m.meeting_id = #{meetingId}
+        GROUP BY
+            m.meeting_id,
+            m.host_user_id,
+            u.nickname,
+            m.title,
+            m.status,
+            m.invite_code,
+            m.desired_end_at,
+            m.final_candidate_id,
+            fc.place_name,
+            fc.address,
+            m.created_at,
+            m.updated_at
+    </select>
+
+    <select id="findParticipants"
+            resultType="com.meetback.dev.dto.admin.AdminParticipant">
+        SELECT
+            mp.participant_id AS participantId,
+            mp.user_id AS userId,
+            u.nickname,
+            mp.input_status AS inputStatus,
+            mp.departure_name AS departureName,
+            mp.departure_address AS departureAddress,
+            mp.return_name AS returnName,
+            mp.return_address AS returnAddress,
+            mp.submitted_at AS submittedAt,
+            mp.created_at AS createdAt
+        FROM meeting_participants mp
+        JOIN users u
+            ON u.user_id = mp.user_id
+        WHERE mp.meeting_id = #{meetingId}
+        ORDER BY mp.participant_id
+    </select>
+
+    <select id="findCandidates"
+            resultType="com.meetback.dev.dto.admin.AdminCandidate">
+        SELECT
+            mc.candidate_id AS candidateId,
+            mc.place_name AS placeName,
+            mc.address,
+            mc.is_active AS active,
+            u.user_id AS proposerUserId,
+            u.nickname AS proposerNickname,
+            COUNT(pv.vote_id) AS voteCount
+        FROM meeting_candidates mc
+        JOIN meeting_participants mp
+            ON mp.participant_id = mc.proposer_participant_id
+            AND mp.meeting_id = mc.meeting_id
+        JOIN users u
+            ON u.user_id = mp.user_id
+        LEFT JOIN place_votes pv
+            ON pv.candidate_id = mc.candidate_id
+            AND pv.meeting_id = mc.meeting_id
+            AND pv.vote_type = 'CANDIDATE'
+        WHERE mc.meeting_id = #{meetingId}
+        GROUP BY
+            mc.candidate_id,
+            mc.place_name,
+            mc.address,
+            mc.is_active,
+            u.user_id,
+            u.nickname
+        ORDER BY voteCount DESC, mc.candidate_id
+    </select>
+
+    <select id="findVoteSummary"
+            resultType="com.meetback.dev.dto.admin.AdminVoteSummary">
+        SELECT
+            (SELECT COUNT(*)
+             FROM meeting_participants
+             WHERE meeting_id = #{meetingId}) AS totalParticipants,
+            (SELECT COUNT(*)
+             FROM place_votes
+             WHERE meeting_id = #{meetingId}) AS votedParticipants,
+            (SELECT COUNT(*)
+             FROM place_votes
+             WHERE meeting_id = #{meetingId}
+                 AND vote_type = 'ABSTAIN') AS abstainCount
+    </select>
+
+    <select id="findCandidateVotes"
+            resultType="com.meetback.dev.dto.admin.AdminCandidateVote">
+        SELECT
+            mc.candidate_id AS candidateId,
+            mc.place_name AS placeName,
+            COUNT(pv.vote_id) AS voteCount
+        FROM meeting_candidates mc
+        LEFT JOIN place_votes pv
+            ON pv.candidate_id = mc.candidate_id
+            AND pv.meeting_id = mc.meeting_id
+            AND pv.vote_type = 'CANDIDATE'
+        WHERE mc.meeting_id = #{meetingId}
+        GROUP BY mc.candidate_id, mc.place_name
+        ORDER BY voteCount DESC, mc.candidate_id
+    </select>
+
+    <select id="findChats"
+            resultType="com.meetback.dev.dto.admin.AdminChatMessage">
+        SELECT
+            cm.message_id AS messageId,
+            cm.meeting_id AS meetingId,
+            cm.participant_id AS participantId,
+            u.user_id AS userId,
+            COALESCE(u.nickname, 'SYSTEM') AS nickname,
+            cm.message_type AS messageType,
+            cm.event_type AS eventType,
+            cm.content,
+            cm.created_at AS createdAt
+        FROM chat_messages cm
+        LEFT JOIN meeting_participants mp
+            ON mp.participant_id = cm.participant_id
+            AND mp.meeting_id = cm.meeting_id
+        LEFT JOIN users u
+            ON u.user_id = mp.user_id
+        WHERE cm.meeting_id = #{meetingId}
+        ORDER BY cm.message_id DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countChats" resultType="long">
+        SELECT COUNT(*)
+        FROM chat_messages
+        WHERE meeting_id = #{meetingId}
+    </select>
+
+</mapper>

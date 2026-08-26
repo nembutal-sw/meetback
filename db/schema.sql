@@ -15,6 +15,7 @@ CREATE TABLE users (
     -- JWT 로그아웃 시 기존 Access / Refresh Token 무효화용
                        token_version INT NOT NULL DEFAULT 0,
                        role VARCHAR(255) DEFAULT 'USER',
+                       status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
                        deleted_at DATETIME,
                        created_at DATETIME,
                        updated_at DATETIME,
@@ -22,7 +23,10 @@ CREATE TABLE users (
                        CONSTRAINT uq_users_email
                            UNIQUE (email),
                        CONSTRAINT uq_users_nickname
-                           UNIQUE (nickname)
+                           UNIQUE (nickname),
+
+                       CONSTRAINT chk_users_status
+                           CHECK (status IN ('ACTIVE', 'SUSPENDED'))
 );
 
 
