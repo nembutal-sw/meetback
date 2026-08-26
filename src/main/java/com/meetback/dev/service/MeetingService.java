@@ -272,7 +272,8 @@ public class MeetingService {
                 meeting.getTitle(),
                 meeting.getInviteCode(),
                 meeting.getDesiredEndAt(),
-                meeting.getStatus()
+                meeting.getStatus(),
+                meeting.getFinalCandidateId()
         );
     }
 

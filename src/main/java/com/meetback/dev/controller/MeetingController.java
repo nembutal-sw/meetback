@@ -113,19 +113,58 @@ public class MeetingController {
 
     @PutMapping("/{meetingId}/final-candidate")
     public void confirmFinalCandidate(
-            @PathVariable Long meetingId,
 
-            // [TEMP-BKW-AUTH]
-            // 범석 Security 코드 병합 시 최종 Principal 타입으로 교체
-            @AuthenticationPrincipal AuthenticatedUser user,
-            @RequestBody FinalCandidateRequest request
-            )
-    {
+            @PathVariable
+            Long meetingId,
+
+            @AuthenticationPrincipal
+            AuthenticatedUser user,
+
+            @RequestBody
+            FinalCandidateRequest request
+
+    ) {
+
+        // =========================================================
+        // 1. 최종 후보 DB 확정
+        // =========================================================
+
         meetingService.confirmFinalCandidate(
                 meetingId,
                 user.userId(),
                 request
         );
+
+
+        // =========================================================
+        // 2. 최종 확정 공지
+        // =========================================================
+
+        ChatMessageResponse notice =
+                chatService.saveSystemMessageOnce(
+                        meetingId,
+                        user.userId(),
+                        "MEETING_CONFIRMED",
+                        "MEETING_CONFIRMED",
+                        "최종 장소가 확정되었습니다."
+                );
+
+
+        // =========================================================
+        // 3. 모든 참가자에게 Broadcast
+        // =========================================================
+
+        if (notice != null) {
+
+            messagingTemplate.convertAndSend(
+
+                    "/topic/meetings/"
+                            + meetingId
+                            + "/chat",
+
+                    notice
+            );
+        }
     }
 
     /*
@@ -141,6 +180,24 @@ public class MeetingController {
             @AuthenticationPrincipal AuthenticatedUser user
             ) {
 
+        ChatMessageResponse notice =
+                chatService.saveSystemMessageOnce(
+                        meetingId,
+                        user.userId(),
+                        "VOTING_STARTED",
+                        "VOTING_STARTED",
+                        "장소 투표가 시작되었습니다."
+                );
+
+        if(notice != null)
+        {
+            messagingTemplate.convertAndSend(
+                    "/topic/meetings/"
+                        + meetingId
+                        + "/chat",
+                    notice
+            );
+        }
         // DB 상태
         // INPUT_OPEN -> VOTING
         meetingService.startVoting(

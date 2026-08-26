@@ -4,6 +4,7 @@ import com.meetback.dev.domain.Meeting;
 import com.meetback.dev.domain.MeetingParticipant;
 import com.meetback.dev.domain.MeetingStatus;
 import com.meetback.dev.dto.ParticipantLocationRequestDTO;
+import com.meetback.dev.dto.ParticipantRoomResponse;
 import com.meetback.dev.place.client.KakaoLocalClient;
 import com.meetback.dev.place.dto.PlaceDTO;
 import com.meetback.dev.repository.CandidateReturnResultMapper;
@@ -26,6 +27,7 @@ public class MeetingParticipantService {
     private final CandidateReturnResultMapper returnResultMapper;
     private final KakaoLocalClient kakaoLocalClient;
     private final MeetingMapper meetingMapper;
+    private final MeetingPresenceService meetingPresenceService;
 
 
     public MeetingParticipant findById(
@@ -440,6 +442,30 @@ public class MeetingParticipantService {
                 participantId,
                 userId
         );
+    }
+
+    public List<ParticipantRoomResponse> findRoomParticipants(
+            Long meetingId
+    ) {
+        List<ParticipantRoomResponse> participants =
+                meetingParticipantMapper.findRoomParticipants(
+                        meetingId
+                );
+
+        participants.forEach(
+                participant -> {
+                    boolean online =
+                            meetingPresenceService.isOnline(
+                                    meetingId,
+                                    participant.getUserId()
+                            );
+
+                    participant.setOnline(
+                            online
+                    );
+                }
+        );
+        return participants;
     }
 
 }

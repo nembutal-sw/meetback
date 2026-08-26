@@ -375,7 +375,9 @@ CREATE TABLE place_votes (
 
                              meeting_id BIGINT NOT NULL,
                              participant_id BIGINT NOT NULL,
-                             candidate_id BIGINT NOT NULL,
+                             candidate_id BIGINT NULL,
+
+                             vote_type VARCHAR(20) NOT NULL DEFAULT 'CANDIDATE',
 
                              vote_change_count INT NOT NULL DEFAULT 0,
 
@@ -399,7 +401,25 @@ CREATE TABLE place_votes (
                              CONSTRAINT fk_vote_candidate
                                  FOREIGN KEY (candidate_id)
                                      REFERENCES meeting_candidates(candidate_id)
-                                     ON DELETE CASCADE
+                                     ON DELETE CASCADE,
+
+                             CONSTRAINT chk_place_votes_vote_type
+                                 CHECK (
+                                     vote_type IN ('CANDIDATE', 'ABSTAIN')
+                                     ),
+
+                             CONSTRAINT chk_place_votes_payload
+                                 CHECK (
+                                     (
+                                         vote_type = 'CANDIDATE'
+                                             AND candidate_id IS NOT NULL
+                                         )
+                                         OR
+                                     (
+                                         vote_type = 'ABSTAIN'
+                                             AND candidate_id IS NULL
+                                         )
+                                     )
 );
 
 
@@ -416,9 +436,14 @@ CREATE TABLE chat_messages (
                                message_type VARCHAR(20) NOT NULL,
                                event_type VARCHAR(50) NULL,
 
+                               event_key VARCHAR(100) NULL,
+
                                content VARCHAR(1000) NOT NULL,
 
                                created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+                               CONSTRAINT uq_chat_message_event_key
+                                   UNIQUE (meeting_id, event_key),
 
                                CONSTRAINT fk_chat_meeting
                                    FOREIGN KEY (meeting_id)
