@@ -168,7 +168,142 @@
         kakaoLoginData.dataset.role;
 
 
-    let checkedNickname = null;
+    let checkedNickname =
+        null;
+
+
+    // 닉네임 정책
+    const nicknamePattern =
+        /^[가-힣A-Za-z0-9_]{2,12}$/;
+
+
+    const blockedNicknameWords =
+        [
+            "시발",
+            "씨발",
+            "시팔",
+            "씨팔",
+            "미친",
+            "미친놈",
+            "미친년",
+            "병신",
+            "븅신",
+            "개새끼",
+            "개새",
+            "새끼",
+            "좆",
+            "존나",
+            "졸라",
+            "지랄",
+            "염병",
+            "꺼져",
+            "닥쳐",
+            "fuck",
+            "fucking",
+            "shit",
+            "bitch"
+        ];
+
+
+    const reservedNicknames =
+        [
+            "admin",
+            "administrator",
+            "manager",
+            "master",
+            "root",
+            "meetback",
+            "관리자",
+            "운영자",
+            "매니저",
+            "마스터"
+        ];
+
+
+    // 닉네임 필터용 정규화
+    function normalizeNicknameForFilter(
+        nickname
+    )
+    {
+
+        return nickname
+            .toLowerCase()
+            .replaceAll(
+                "_",
+                ""
+            );
+    }
+
+
+    // 닉네임 사용 가능 형식 검사
+    function isValidNickname(
+        nickname
+    )
+    {
+
+        if (!nickname)
+        {
+            return false;
+        }
+
+
+        if (
+            !nicknamePattern.test(
+                nickname
+            )
+        )
+        {
+            return false;
+        }
+
+
+        const normalizedNickname =
+            normalizeNicknameForFilter(
+                nickname
+            );
+
+
+        for (const blockedWord of blockedNicknameWords)
+        {
+
+            const normalizedBlockedWord =
+                normalizeNicknameForFilter(
+                    blockedWord
+                );
+
+
+            if (
+                normalizedNickname.includes(
+                    normalizedBlockedWord
+                )
+            )
+            {
+                return false;
+            }
+        }
+
+
+        for (const reservedNickname of reservedNicknames)
+        {
+
+            const normalizedReservedNickname =
+                normalizeNicknameForFilter(
+                    reservedNickname
+                );
+
+
+            if (
+                normalizedNickname ===
+                normalizedReservedNickname
+            )
+            {
+                return false;
+            }
+        }
+
+
+        return true;
+    }
 
 
     // 로그인 정보 저장
@@ -294,6 +429,10 @@
 
             nicknameCheckMessage.innerText =
                 "";
+
+
+            kakaoSignupMessage.innerText =
+                "";
         }
     );
 
@@ -305,10 +444,14 @@
         {
 
             const nickname =
-                kakaoNickname.value.trim();
+                kakaoNickname.value;
 
 
             nicknameCheckMessage.innerText =
+                "";
+
+
+            kakaoSignupMessage.innerText =
                 "";
 
 
@@ -321,6 +464,20 @@
 
                 nicknameCheckMessage.innerText =
                     "닉네임을 입력해주세요.";
+
+                return;
+            }
+
+
+            if (
+                !isValidNickname(
+                    nickname
+                )
+            )
+            {
+
+                nicknameCheckMessage.innerText =
+                    "사용할 수 없는 닉네임입니다. 2~12자의 한글, 영문, 숫자, 밑줄(_)만 사용할 수 있습니다.";
 
                 return;
             }
@@ -371,6 +528,10 @@
                 else
                 {
 
+                    checkedNickname =
+                        null;
+
+
                     nicknameCheckMessage.innerText =
                         "이미 사용 중인 닉네임입니다.";
                 }
@@ -378,6 +539,10 @@
             }
             catch (error)
             {
+
+                checkedNickname =
+                    null;
+
 
                 console.error(
                     "닉네임 중복 확인 오류:",
@@ -404,7 +569,7 @@
 
 
             const nickname =
-                kakaoNickname.value.trim();
+                kakaoNickname.value;
 
 
             if (!signupToken)
@@ -422,6 +587,20 @@
 
                 kakaoSignupMessage.innerText =
                     "닉네임을 입력해주세요.";
+
+                return;
+            }
+
+
+            if (
+                !isValidNickname(
+                    nickname
+                )
+            )
+            {
+
+                kakaoSignupMessage.innerText =
+                    "사용할 수 없는 닉네임입니다.";
 
                 return;
             }
