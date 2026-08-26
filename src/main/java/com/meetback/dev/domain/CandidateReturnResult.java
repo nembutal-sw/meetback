@@ -10,6 +10,7 @@ public class CandidateReturnResult {
     private Long meetingId;
     private Long candidateId;
     private Long participantId;
+    private String nickname;
     private Integer calculationVersion;
     private Integer returnMinutes;
     private Integer transferCount;

@@ -298,6 +298,41 @@
     let checkedNickname =
         null;
 
+    // ============================================================
+    // 이미 로그인 정보가 있다면 Home에서 검증
+    // ============================================================
+
+    function redirectAlreadyLoggedIn()
+    {
+
+        const accessToken =
+            localStorage.getItem(
+                "accessToken"
+            );
+
+
+        const refreshToken =
+            localStorage.getItem(
+                "refreshToken"
+            );
+
+
+        if (
+            accessToken
+            ||
+            refreshToken
+        )
+        {
+
+            window.location.replace(
+                "/home"
+            );
+        }
+    }
+
+
+    redirectAlreadyLoggedIn();
+
 
     // 로그인 정보 저장
     function saveLoginData(

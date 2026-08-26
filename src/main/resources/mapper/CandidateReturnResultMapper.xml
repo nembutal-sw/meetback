@@ -40,10 +40,34 @@
     <select id="findByCandidateId"
             resultType="com.meetback.dev.domain.CandidateReturnResult">
 
-        SELECT *
-        FROM candidate_return_results
-        WHERE candidate_id = #{candidateId}
-        ORDER BY participant_id
+        SELECT
+            crr.result_id AS resultId,
+            crr.meeting_id AS meetingId,
+            crr.candidate_id AS candidateId,
+            crr.participant_id AS participantId,
+
+            u.nickname AS nickname,
+
+            crr.calculation_version AS calculationVersion,
+            crr.return_minutes AS returnMinutes,
+            crr.transfer_count AS transferCount,
+            crr.last_train_departure_at AS lastTrainDepartureAt,
+            crr.last_train_arrival_at AS lastTrainArrivalAt,
+            crr.last_safe_departure_at AS lastSafeDepartureAt,
+            crr.can_return AS canReturn,
+            crr.calculated_at AS calculatedAt
+
+        FROM candidate_return_results crr
+
+        JOIN meeting_participants mp
+        ON mp.participant_id = crr.participant_id
+
+        JOIN users u
+        ON u.user_id = mp.user_id
+
+        WHERE crr.candidate_id = #{candidateId}
+
+        ORDER BY crr.participant_id ASC
 
     </select>
 
@@ -52,11 +76,34 @@
             resultType="com.meetback.dev.domain.CandidateReturnResult">
 
         SELECT
-        *
-        FROM candidate_return_results
-        WHERE candidate_id = #{candidateId}
-        AND calculation_version = #{calculationVersion}
-        ORDER BY participant_id ASC
+            crr.result_id AS resultId,
+            crr.meeting_id AS meetingId,
+            crr.candidate_id AS candidateId,
+            crr.participant_id AS participantId,
+
+            u.nickname AS nickname,
+
+            crr.calculation_version AS calculationVersion,
+            crr.return_minutes AS returnMinutes,
+            crr.transfer_count AS transferCount,
+            crr.last_train_departure_at AS lastTrainDepartureAt,
+            crr.last_train_arrival_at AS lastTrainArrivalAt,
+            crr.last_safe_departure_at AS lastSafeDepartureAt,
+            crr.can_return AS canReturn,
+            crr.calculated_at AS calculatedAt
+
+        FROM candidate_return_results crr
+
+        JOIN meeting_participants mp
+        ON mp.participant_id = crr.participant_id
+
+        JOIN users u
+        ON u.user_id = mp.user_id
+
+        WHERE crr.candidate_id = #{candidateId}
+        AND crr.calculation_version = #{calculationVersion}
+
+        ORDER BY crr.participant_id ASC
 
     </select>
 

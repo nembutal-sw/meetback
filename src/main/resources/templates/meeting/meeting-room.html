@@ -12,6 +12,7 @@
     </script>
 
     <script src="/js/meeting-common.js"></script>
+    <script src="/js/auth-session-guard.js" defer></script>
 
     <link
             rel="stylesheet"
@@ -1801,13 +1802,33 @@
                 );
             }
         );
+
+        area.scrollTop = area.scrollHeight;
     }
 
+    // ============================================================
+    // 현재 사용자가 채팅 맨 아래 근처를 보고 있는지 확인
+    // ============================================================
+
+    function isChatNearBottom(
+        area
+    )
+    {
+
+        const threshold =
+            80;
 
 
-    // ============================================================
-    // 일반 채팅
-    // ============================================================
+        const distanceFromBottom =
+            area.scrollHeight
+            - area.scrollTop
+            - area.clientHeight;
+
+
+        return distanceFromBottom
+            <= threshold;
+    }
+
 
     function addChat(
         message
@@ -1820,6 +1841,23 @@
             );
 
 
+        if (!area)
+        {
+            return;
+        }
+
+
+        // =========================================================
+        // 메시지를 추가하기 "전"에
+        // 사용자가 맨 아래를 보고 있었는지 확인
+        // =========================================================
+
+        const shouldAutoScroll =
+            isChatNearBottom(
+                area
+            );
+
+
         const div =
             document.createElement(
                 "div"
@@ -1828,19 +1866,17 @@
 
         div.innerHTML =
             `
-            <strong>
-
-                ${MeetBack.escapeHtml(
+        <strong>
+            ${MeetBack.escapeHtml(
                 message.nickname
                 || "참가자"
             )}
+        </strong>
 
-            </strong>
-
-            ${MeetBack.escapeHtml(
+        ${MeetBack.escapeHtml(
                 message.content
             )}
-            `;
+        `;
 
 
         area.appendChild(
@@ -1848,8 +1884,20 @@
         );
 
 
-        area.scrollTop =
-            area.scrollHeight;
+        // =========================================================
+        // 기존에 맨 아래를 보고 있던 경우에만
+        // 새 메시지를 따라 내려간다.
+        //
+        // 사용자가 위쪽 채팅을 보고 있으면
+        // scrollTop을 건드리지 않는다.
+        // =========================================================
+
+        if (shouldAutoScroll)
+        {
+
+            area.scrollTop =
+                area.scrollHeight;
+        }
     }
 
 
@@ -2035,6 +2083,12 @@
         }
 
 
+        const shouldAutoScroll =
+            isChatNearBottom(
+                area
+            );
+
+
         const div =
             document.createElement(
                 "div"
@@ -2066,8 +2120,12 @@
         );
 
 
-        area.scrollTop =
-            area.scrollHeight;
+        if (shouldAutoScroll)
+        {
+
+            area.scrollTop =
+                area.scrollHeight;
+        }
     }
 
     function updateParticipantPresence(

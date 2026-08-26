@@ -12,6 +12,7 @@
     </script>
 
     <script src="/js/meeting-common.js"></script>
+    <script src="/js/auth-session-guard.js" defer></script>
 
     <link
             rel="stylesheet"
@@ -769,74 +770,82 @@
                             participantResult.canReturn
                             === true;
 
+                        const participantName =
+                            participantResult.nickname
+                            || (
+                                "참가자 "
+                                + participantResult.participantId
+                            );
+
 
                         rows +=
                             `
-                            <div class="participant-result">
+                        <div class="participant-result">
 
-                                <strong>
-                                    참가자
-                                    ${MeetBack.escapeHtml(
-                                participantResult.participantId
+                            <strong>
+                                ${MeetBack.escapeHtml(
+                                participantName
                             )}
-                                </strong>
+                            </strong>
 
-                                &nbsp;
+                            &nbsp;
 
-                                <span
-                                    class="${
+                            <span
+                                class="${
                                 canReturn
                                     ? "return-possible"
                                     : "return-impossible"
                             }">
 
-                                    ${
+                                ${
                                 canReturn
                                     ? "귀가 가능"
                                     : "귀가 불가"
                             }
 
-                                </span>
+                            </span>
 
-                                <br>
+                            <br>
 
-                                귀가시간 :
-                                ${displayValue(
+                            귀가시간 :
+                            ${displayValue(
                                 participantResult.returnMinutes,
                                 "분"
                             )}
 
-                                <br>
+                            <br>
 
-                                환승 횟수 :
-                                ${displayValue(
+                            환승 횟수 :
+                            ${displayValue(
                                 participantResult.transferCount,
                                 "회"
                             )}
 
-                                <br>
+                            <br>
 
-                                안전 출발 마감 :
-                                ${displayDateTime(
+                            안전 출발 마감 :
+                            ${displayDateTime(
                                 participantResult.lastSafeDepartureAt
                             )}
 
-                                <br>
+                            <br>
 
-                                막차 출발 :
-                                ${displayDateTime(
+                            막차 출발 :
+                            ${displayDateTime(
                                 participantResult.lastTrainDepartureAt
                             )}
 
-                                <br>
+                            <br>
 
-                                막차 도착 :
-                                ${displayDateTime(
+                            막차 도착 :
+                            ${displayDateTime(
                                 participantResult.lastTrainArrivalAt
                             )}
 
-                            </div>
-                            `;
+                        </div>
+                        `;
+
+
                     }
                 );
 

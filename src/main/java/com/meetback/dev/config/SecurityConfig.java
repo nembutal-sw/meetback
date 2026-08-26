@@ -49,6 +49,8 @@ public class SecurityConfig {
                                                 "/auth/google",
                                                 "/auth/refresh",
 
+                                                "/auth/server-instance",
+
                                                 "/auth/email/check",
                                                 "/auth/nickname/check",
 
