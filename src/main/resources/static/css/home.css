@@ -858,3 +858,54 @@ button:disabled {
         margin: 7px 0 0;
     }
 }
+
+/* =========================================================
+   생성된 초대코드 버튼
+   ========================================================= */
+
+.created-invite-area {
+    margin-top: 12px;
+}
+
+
+.created-invite-button {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding: 10px 14px;
+
+    border: 1px solid #ddd;
+
+    border-radius: 10px;
+
+    background: #f8f8ff;
+
+    color: #444;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+            background 0.2s,
+            transform 0.2s;
+}
+
+
+.created-invite-button:hover:not(:disabled) {
+    background: #eeeeff;
+
+    transform: translateY(-1px);
+}
+
+
+.created-invite-button:disabled {
+    cursor: default;
+
+    opacity: 0.5;
+}

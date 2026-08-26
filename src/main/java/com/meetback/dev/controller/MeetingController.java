@@ -198,28 +198,28 @@ public class MeetingController {
                     notice
             );
         }
-//        // DB 상태
-//        // INPUT_OPEN -> VOTING
-//        meetingService.startVoting(
-//                meetingId,
-//                user.userId()
-//        );
-//
-//        ChatMessageResponse event =
-//                chatService.saveSystemMessage(
-//                        meetingId,
-//                        user.userId(),
-//                        "VOTING_STARTED",
-//                        "장소 투표를 시작합니다."
-//                );
-//
-//        messagingTemplate.convertAndSend(
-//                "/topic/meetings/"
-//                        + meetingId
-//                        + "/chat",
-//
-//                event
-//        );
+        // DB 상태
+        // INPUT_OPEN -> VOTING
+        meetingService.startVoting(
+                meetingId,
+                user.userId()
+        );
+
+        ChatMessageResponse event =
+                chatService.saveSystemMessage(
+                        meetingId,
+                        user.userId(),
+                        "VOTING_STARTED",
+                        "장소 투표를 시작합니다."
+                );
+
+        messagingTemplate.convertAndSend(
+                "/topic/meetings/"
+                        + meetingId
+                        + "/chat",
+
+                event
+        );
     }
 
     @GetMapping("/{meetingId}")
