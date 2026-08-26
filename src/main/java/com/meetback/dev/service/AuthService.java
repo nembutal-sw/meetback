@@ -42,6 +42,7 @@ public class AuthService {
     private final KakaoOAuthProvider kakaoOAuthProvider;
     private final GoogleIdentityProvider googleIdentityProvider;
     private final MailService mailService;
+    private final TermService termService;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
@@ -225,6 +226,12 @@ public class AuthService {
 
         userMapper.insertUser(
                 user
+        );
+
+        // 회원 약관 동의 저장
+        termService.saveAgreements(
+                user.getUserId(),
+                request.getAgreedTermIds()
         );
     }
 

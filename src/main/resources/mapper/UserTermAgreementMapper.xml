@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.UserTermAgreementMapper">
+
+    <resultMap id="userTermAgreementResultMap"
+               type="com.meetback.dev.domain.UserTermAgreement">
+
+        <id property="agreementId"
+            column="agreement_id"/>
+
+        <result property="userId"
+                column="user_id"/>
+
+        <result property="termId"
+                column="term_id"/>
+
+        <result property="agreed"
+                column="agreed"/>
+
+        <result property="agreedAt"
+                column="agreed_at"/>
+
+        <result property="revokedAt"
+                column="revoked_at"/>
+
+        <result property="createdAt"
+                column="created_at"/>
+
+    </resultMap>
+
+    <insert id="insert"
+            parameterType="com.meetback.dev.domain.UserTermAgreement"
+            useGeneratedKeys="true"
+            keyProperty="agreementId"
+            keyColumn="agreement_id">
+
+        INSERT INTO user_term_agreements (
+            user_id,
+            term_id,
+            agreed,
+            agreed_at,
+            revoked_at,
+            created_at
+        )
+        VALUES (
+            #{userId},
+            #{termId},
+            #{agreed},
+            #{agreedAt},
+            #{revokedAt},
+            #{createdAt}
+        )
+
+    </insert>
+
+    <select id="findByUserId"
+            resultMap="userTermAgreementResultMap">
+
+        SELECT
+            agreement_id,
+            user_id,
+            term_id,
+            agreed,
+            agreed_at,
+            revoked_at,
+            created_at
+        FROM user_term_agreements
+        WHERE user_id = #{userId}
+        ORDER BY agreement_id ASC
+
+    </select>
+
+    <select id="findByUserIdAndTermId"
+            resultMap="userTermAgreementResultMap">
+
+        SELECT
+            agreement_id,
+            user_id,
+            term_id,
+            agreed,
+            agreed_at,
+            revoked_at,
+            created_at
+        FROM user_term_agreements
+        WHERE user_id = #{userId}
+        AND term_id = #{termId}
+
+    </select>
+
+</mapper>
