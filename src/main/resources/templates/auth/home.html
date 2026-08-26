@@ -168,24 +168,30 @@
 
                         :
 
-                        <span id="createdMeetingId">
+                        <span id="createdMeetingTitle">
                             -
                         </span>
 
                     </div>
 
 
-                    <div>
+                    <div class="created-invite-area">
 
-                        <strong>
-                            초대코드
-                        </strong>
+                        <button
+                            type="button"
+                            id="createdInviteCodeButton"
+                            class="created-invite-button"
+                            onclick="copyCreatedInviteUrl()"
+                            disabled>
 
-                        :
+                            🔗 초대코드
 
-                        <span id="createdInviteCode">
+                            <span id="createdInviteCode">
                             -
-                        </span>
+                            </span>
+
+                        </button>
+
 
                     </div>
 
@@ -532,13 +538,18 @@
 
     const createdMeetingId =
         document.getElementById(
-            "createdMeetingId"
+            "createdMeetingTitle"
         );
 
 
     const createdInviteCode =
         document.getElementById(
             "createdInviteCode"
+        );
+
+    const createdInviteCodeButton =
+        document.getElementById(
+            "createdInviteCodeButton"
         );
 
 
@@ -577,6 +588,167 @@
             "enterJoinedMeetingButton"
         );
 
+
+    // ============================================================
+    // 생성된 모임 초대 링크 복사
+    // ============================================================
+
+    async function copyCreatedInviteUrl()
+    {
+
+        const button =
+            document.getElementById(
+                "createdInviteCodeButton"
+            );
+
+
+        const inviteCode =
+            button.dataset.inviteCode;
+
+
+        if (!inviteCode)
+        {
+
+            showHomeMessage(
+                "초대코드를 확인할 수 없습니다.",
+                "error"
+            );
+
+
+            return;
+        }
+
+
+        // =========================================================
+        // 초대 링크 생성
+        //
+        // 예:
+        //
+        // http://localhost:8080/home?inviteCode=97B390F1
+        // =========================================================
+
+        const inviteUrl =
+            window.location.origin
+            + "/home?inviteCode="
+            + encodeURIComponent(
+                inviteCode
+            );
+
+
+        const originalText =
+            "🔗 초대코드 "
+            + inviteCode;
+
+
+        try
+        {
+
+            await navigator.clipboard.writeText(
+                inviteUrl
+            );
+
+
+            button.textContent =
+                "✓ 초대 링크 복사 완료";
+
+
+            showHomeMessage(
+                "초대 링크가 복사되었습니다.",
+                "success"
+            );
+
+
+            setTimeout(
+                () =>
+                {
+
+                    button.innerHTML =
+                        `
+                    🔗 초대코드
+                    <span id="createdInviteCode">
+                        ${inviteCode}
+                    </span>
+                    `;
+
+                },
+                1500
+            );
+
+        }
+        catch (error)
+        {
+
+            console.error(
+                "[INVITE COPY ERROR]",
+                error
+            );
+
+
+            // =====================================================
+            // clipboard API가 동작하지 않을 경우 fallback
+            // =====================================================
+
+            const textarea =
+                document.createElement(
+                    "textarea"
+                );
+
+
+            textarea.value =
+                inviteUrl;
+
+
+            textarea.style.position =
+                "fixed";
+
+
+            textarea.style.opacity =
+                "0";
+
+
+            document.body.appendChild(
+                textarea
+            );
+
+
+            textarea.select();
+
+
+            document.execCommand(
+                "copy"
+            );
+
+
+            textarea.remove();
+
+
+            button.textContent =
+                "✓ 초대 링크 복사 완료";
+
+
+            showHomeMessage(
+                "초대 링크가 복사되었습니다.",
+                "success"
+            );
+
+
+            setTimeout(
+                () =>
+                {
+
+                    button.innerHTML =
+                        `
+                    🔗 초대코드
+                    <span id="createdInviteCode">
+                        ${inviteCode}
+                    </span>
+                    `;
+
+                },
+                1500
+            );
+        }
+    }
 
 
     // ============================================================
@@ -720,6 +892,86 @@
         accessToken =
             null;
 
+    }
+
+    // ============================================================
+    // 초대 링크로 들어온 경우 초대코드 보관
+    // ============================================================
+
+    function preserveInviteCode()
+    {
+
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+
+        const inviteCode =
+            params.get(
+                "inviteCode"
+            );
+
+
+        if (!inviteCode)
+        {
+            return;
+        }
+
+
+        sessionStorage.setItem(
+            "pendingInviteCode",
+            inviteCode
+        );
+    }
+
+    // ============================================================
+    // 초대코드 또는 초대 URL에서 inviteCode 추출
+    //
+    // 가능:
+    // A9E60F5C
+    //
+    // http://localhost:8080/home?inviteCode=A9E60F5C
+    // ============================================================
+
+    function extractInviteCode(
+        value
+    )
+    {
+
+        if (!value)
+        {
+            return "";
+        }
+
+
+        const text =
+            value.trim();
+
+
+        /*
+         * URL 안에 ?inviteCode= 또는 &inviteCode=가 있다면
+         * 코드 부분만 꺼낸다.
+         */
+        const match =
+            text.match(
+                /[?&]inviteCode=([^&#]+)/i
+            );
+
+
+        if (match)
+        {
+
+            return decodeURIComponent(
+                match[1]
+            ).trim();
+        }
+
+
+        /*
+         * URL이 아니라 그냥 초대코드를 입력한 경우
+         */
+        return text;
     }
 
 
@@ -1401,10 +1653,17 @@
 
 
                 createdMeetingId.innerText =
-                    meetingId;
+                    title;
 
 
                 createdInviteCode.innerText =
+                    inviteCode;
+
+                createdInviteCodeButton.disabled =
+                    false;
+
+
+                createdInviteCodeButton.dataset.inviteCode =
                     inviteCode;
 
 
@@ -1505,9 +1764,9 @@
         {
 
             const inviteCode =
-                inviteCodeInput
-                    .value
-                    .trim();
+                extractInviteCode(
+                    inviteCodeInput.value
+                );
 
 
             if (!inviteCode)
