@@ -18,4 +18,5 @@ public class CandidateReturnResult {
     private LocalDateTime lastSafeDepartureAt;
     private Boolean canReturn;
     private LocalDateTime calculatedAt;
+    private String routeMapObj;
 }

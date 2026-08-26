@@ -17,6 +17,7 @@
         calculation_version,
         return_minutes,
         transfer_count,
+        route_map_obj,
         last_train_departure_at,
         last_train_arrival_at,
         last_safe_departure_at,
@@ -29,6 +30,7 @@
         #{calculationVersion},
         #{returnMinutes},
         #{transferCount},
+        #{routeMapObj},
         #{lastTrainDepartureAt},
         #{lastTrainArrivalAt},
         #{lastSafeDepartureAt},
@@ -36,6 +38,7 @@
         )
 
     </insert>
+
 
     <select id="findByCandidateId"
             resultType="com.meetback.dev.domain.CandidateReturnResult">
@@ -51,8 +54,7 @@
     <select id="findByCandidateIdAndVersion"
             resultType="com.meetback.dev.domain.CandidateReturnResult">
 
-        SELECT
-        *
+        SELECT *
         FROM candidate_return_results
         WHERE candidate_id = #{candidateId}
         AND calculation_version = #{calculationVersion}
@@ -60,9 +62,12 @@
 
     </select>
 
+
     <delete id="deleteByCandidateId">
+
         DELETE FROM candidate_return_results
         WHERE candidate_id = #{candidateId}
+
     </delete>
 
 
@@ -77,6 +82,7 @@
         calculation_version,
         return_minutes,
         transfer_count,
+        route_map_obj,
         last_train_departure_at,
         last_train_arrival_at,
         last_safe_departure_at,
@@ -90,10 +96,12 @@
 
     </select>
 
+
     <delete id="deleteByParticipantId">
 
         DELETE FROM candidate_return_results
         WHERE participant_id = #{participantId}
 
     </delete>
+
 </mapper>

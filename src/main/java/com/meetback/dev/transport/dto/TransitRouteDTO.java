@@ -7,6 +7,7 @@ public record TransitRouteDTO(
         String endStationId,
         String startStationName,
         String endStationName,
-        String summary
+        String summary,
+        String mapObj
 ) {
 }
