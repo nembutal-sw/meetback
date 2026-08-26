@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class PageController {
@@ -18,11 +19,13 @@ public class PageController {
         this.googleClientId = googleClientId;
     }
 
+
     @GetMapping("/")
     public String home()
     {
         return "redirect:/login";
     }
+
 
     @GetMapping("/login")
     public String login(
@@ -40,19 +43,53 @@ public class PageController {
                 !googleClientId.isBlank()
         );
 
-        return "login";
+        return "auth/login";
     }
+
 
     @GetMapping("/signup")
     public String signup()
     {
-        return "signup";
+        return "auth/signup";
     }
+
+
+    // 아이디 찾기
+    @GetMapping("/find-email")
+    public String findEmail()
+    {
+        return "auth/findEmail";
+    }
+
+
+    // 비밀번호 찾기
+    @GetMapping("/forgot-password")
+    public String forgotPassword()
+    {
+        return "auth/forgotPassword";
+    }
+
+
+    // 비밀번호 재설정
+    @GetMapping("/reset-password")
+    public String resetPassword(
+            @RequestParam("token") String token,
+            Model model
+    )
+    {
+        model.addAttribute(
+                "token",
+                token
+        );
+
+        return "auth/resetPassword";
+    }
+
 
     @GetMapping("/home")
     public String homepage()
     {
-        return "home";
+        return "auth/home";
     }
 
     @GetMapping("/meeting/result")

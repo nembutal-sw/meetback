@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MeetBack 로그인</title>
+
+    <script
+            src="https://accounts.google.com/gsi/client"
+            async
+            defer
+    ></script>
+    <link rel="stylesheet" th:href="@{/css/login_test.css}">
+</head>
+
+<body>
+
+<div class="login-container">
+
+    <h1>MeetBack 로그인</h1>
+
+
+    <!-- 일반 로그인 -->
+    <form id="loginForm">
+
+        <div>
+            <label for="email">
+                이메일
+            </label>
+
+            <input
+                    type="email"
+                    id="email"
+                    placeholder="이메일을 입력하세요"
+                    autocomplete="email"
+                    required
+            >
+        </div>
+
+
+        <br>
+
+
+        <div>
+            <label for="password">
+                비밀번호
+            </label>
+
+            <input
+                    type="password"
+                    id="password"
+                    placeholder="비밀번호를 입력하세요"
+                    autocomplete="current-password"
+                    required
+            >
+        </div>
+
+
+        <br>
+
+
+        <div id="loginMessage"></div>
+
+
+        <br>
+
+
+        <button type="submit">
+            로그인
+        </button>
+
+    </form>
+
+
+    <br>
+
+
+    <!-- 회원가입 / 아이디 찾기 / 비밀번호 찾기 -->
+    <div>
+
+        <a th:href="@{/signup}">
+            회원가입
+        </a>
+
+        &nbsp; | &nbsp;
+
+        <a th:href="@{/find-email}">
+            아이디 찾기
+        </a>
+
+        &nbsp; | &nbsp;
+
+        <a th:href="@{/forgot-password}">
+            비밀번호 찾기
+        </a>
+
+    </div>
+
+
+    <br>
+
+
+    <!-- 소셜 로그인 -->
+    <div class="social-login-container">
+
+        <div>
+            소셜 로그인
+        </div>
+
+
+        <br>
+
+
+        <!-- 카카오 로그인 -->
+        <div>
+
+            <a th:href="@{/oauth/kakao/login}">
+                카카오 로그인
+            </a>
+
+        </div>
+
+
+        <br>
+
+
+        <!-- 구글 로그인 -->
+        <div th:if="${googleLoginEnabled}">
+
+            <div
+                    id="g_id_onload"
+                    th:attr="data-client_id=${googleClientId}"
+                    data-callback="handleGoogleCredentialResponse"
+                    data-auto_prompt="false"
+            >
+            </div>
+
+
+            <div>
+                <span>
+                    Google 로그인
+                </span>
+
+                <div
+                        class="g_id_signin"
+                        data-type="icon"
+                        data-shape="rectangular"
+                        data-theme="outline"
+                        data-size="large"
+                ></div>
+            </div>
+
+        </div>
+
+
+        <div th:unless="${googleLoginEnabled}">
+            Google 로그인을 사용하려면 GOOGLE_CLIENT_ID 설정이 필요합니다.
+        </div>
+
+
+        <br>
+
+
+        <div id="socialMessage"></div>
+
+    </div>
+
+
+    <br>
+
+
+    <!-- 신규 Google 회원 닉네임 설정 -->
+    <div
+            id="socialSignupContainer"
+            style="display: none;"
+    >
+
+        <h3>
+            닉네임 설정
+        </h3>
+
+        <p>
+            MeetBack에서 사용할 닉네임을 입력해주세요.
+        </p>
+
+
+        <div>
+
+            <label for="socialNickname">
+                닉네임
+            </label>
+
+            <input
+                    type="text"
+                    id="socialNickname"
+                    placeholder="닉네임을 입력하세요"
+            >
+
+            <button
+                    type="button"
+                    id="nicknameCheckButton"
+            >
+                중복 확인
+            </button>
+
+        </div>
+
+
+        <br>
+
+
+        <div id="nicknameCheckMessage"></div>
+
+
+        <br>
+
+
+        <button
+                type="button"
+                id="socialSignupButton"
+        >
+            가입 완료
+        </button>
+
+
+        <br>
+        <br>
+
+
+        <div id="socialSignupMessage"></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    const loginForm =
+        document.getElementById(
+            "loginForm"
+        );
+
+
+    const loginMessage =
+        document.getElementById(
+            "loginMessage"
+        );
+
+
+    const socialMessage =
+        document.getElementById(
+            "socialMessage"
+        );
+
+
+    const socialSignupContainer =
+        document.getElementById(
+            "socialSignupContainer"
+        );
+
+
+    const socialNickname =
+        document.getElementById(
+            "socialNickname"
+        );
+
+
+    const nicknameCheckButton =
+        document.getElementById(
+            "nicknameCheckButton"
+        );
+
+
+    const nicknameCheckMessage =
+        document.getElementById(
+            "nicknameCheckMessage"
+        );
+
+
+    const socialSignupButton =
+        document.getElementById(
+            "socialSignupButton"
+        );
+
+
+    const socialSignupMessage =
+        document.getElementById(
+            "socialSignupMessage"
+        );
+
+
+    let socialSignupToken =
+        null;
+
+
+    let checkedNickname =
+        null;
+
+
+    // 로그인 정보 저장
+    function saveLoginData(
+        data
+    )
+    {
+
+        localStorage.setItem(
+            "accessToken",
+            data.accessToken
+        );
+
+
+        localStorage.setItem(
+            "refreshToken",
+            data.refreshToken
+        );
+
+
+        localStorage.setItem(
+            "userId",
+            data.userId
+        );
+
+
+        localStorage.setItem(
+            "role",
+            data.role
+        );
+    }
+
+
+    // 일반 로그인
+    loginForm.addEventListener(
+        "submit",
+        async function(event)
+        {
+
+            event.preventDefault();
+
+
+            loginMessage.innerText =
+                "";
+
+
+            const email =
+                document.getElementById(
+                    "email"
+                ).value.trim();
+
+
+            const password =
+                document.getElementById(
+                    "password"
+                ).value;
+
+
+            if (!email)
+            {
+
+                loginMessage.innerText =
+                    "이메일을 입력해주세요.";
+
+                return;
+            }
+
+
+            if (!password)
+            {
+
+                loginMessage.innerText =
+                    "비밀번호를 입력해주세요.";
+
+                return;
+            }
+
+
+            try
+            {
+
+                const response =
+                    await fetch(
+                        "/auth/login",
+                        {
+
+                            method: "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json"
+
+                            },
+
+                            body: JSON.stringify(
+                                {
+
+                                    email:
+                                    email,
+
+                                    password:
+                                    password
+
+                                }
+                            )
+
+                        }
+                    );
+
+
+                if (!response.ok)
+                {
+
+                    loginMessage.innerText =
+                        "이메일 또는 비밀번호를 확인해주세요.";
+
+                    return;
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                saveLoginData(
+                    data
+                );
+
+
+                loginMessage.innerText =
+                    "로그인에 성공했습니다.";
+
+
+                window.location.href =
+                    "/home";
+
+            }
+            catch (error)
+            {
+
+                console.error(
+                    "로그인 요청 오류:",
+                    error
+                );
+
+
+                loginMessage.innerText =
+                    "로그인 처리 중 오류가 발생했습니다.";
+            }
+
+        }
+    );
+
+
+    // Google 로그인
+    window.handleGoogleCredentialResponse =
+        async function(
+            googleResponse
+        )
+        {
+
+            console.log(
+                "Google 응답:",
+                googleResponse
+            );
+
+
+            socialMessage.innerText =
+                "Google 로그인 처리 중입니다.";
+
+
+            if (
+                !googleResponse
+                ||
+                !googleResponse.credential
+            )
+            {
+
+                socialMessage.innerText =
+                    "Google 인증 정보를 받지 못했습니다.";
+
+                return;
+            }
+
+
+            console.log(
+                "Google credential 확인 완료"
+            );
+
+
+            try
+            {
+
+                const response =
+                    await fetch(
+                        "/auth/google",
+                        {
+
+                            method: "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json"
+
+                            },
+
+                            body: JSON.stringify(
+                                {
+
+                                    credential:
+                                    googleResponse.credential
+
+                                }
+                            )
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok)
+                {
+
+                    socialMessage.innerText =
+                        data.message
+                        ||
+                        "Google 로그인에 실패했습니다.";
+
+                    return;
+                }
+
+
+                // 신규 Google 회원
+                if (
+                    data.status ===
+                    "NICKNAME_REQUIRED"
+                )
+                {
+
+                    if (!data.signupToken)
+                    {
+
+                        socialMessage.innerText =
+                            "Google 회원가입 정보를 확인할 수 없습니다.";
+
+                        return;
+                    }
+
+
+                    socialSignupToken =
+                        data.signupToken;
+
+
+                    checkedNickname =
+                        null;
+
+
+                    socialNickname.value =
+                        "";
+
+
+                    nicknameCheckMessage.innerText =
+                        "";
+
+
+                    socialSignupMessage.innerText =
+                        "";
+
+
+                    socialSignupContainer.style.display =
+                        "block";
+
+
+                    socialMessage.innerText =
+                        "Google 인증이 완료되었습니다. 닉네임을 설정해주세요.";
+
+
+                    return;
+                }
+
+
+                // 기존 Google 회원
+                if (
+                    data.status !==
+                    "LOGIN_SUCCESS"
+                )
+                {
+
+                    socialMessage.innerText =
+                        "Google 로그인 결과를 확인할 수 없습니다.";
+
+                    return;
+                }
+
+
+                saveLoginData(
+                    data
+                );
+
+
+                socialMessage.innerText =
+                    "Google 로그인에 성공했습니다.";
+
+
+                window.location.href =
+                    "/home";
+
+            }
+            catch (error)
+            {
+
+                console.error(
+                    "Google 로그인 요청 오류:",
+                    error
+                );
+
+
+                socialMessage.innerText =
+                    "Google 로그인 처리 중 오류가 발생했습니다.";
+            }
+
+        };
+
+
+    // 닉네임 변경 시 중복 확인 상태 초기화
+    socialNickname.addEventListener(
+        "input",
+        function()
+        {
+
+            checkedNickname =
+                null;
+
+
+            nicknameCheckMessage.innerText =
+                "";
+
+
+            socialSignupMessage.innerText =
+                "";
+        }
+    );
+
+
+    // 닉네임 중복 검사
+    nicknameCheckButton.addEventListener(
+        "click",
+        async function()
+        {
+
+            const nickname =
+                socialNickname.value.trim();
+
+
+            nicknameCheckMessage.innerText =
+                "";
+
+
+            socialSignupMessage.innerText =
+                "";
+
+
+            checkedNickname =
+                null;
+
+
+            if (!nickname)
+            {
+
+                nicknameCheckMessage.innerText =
+                    "닉네임을 입력해주세요.";
+
+                return;
+            }
+
+
+            try
+            {
+
+                const response =
+                    await fetch(
+                        "/auth/nickname/check?nickname="
+                        + encodeURIComponent(
+                            nickname
+                        ),
+                        {
+
+                            method: "GET"
+
+                        }
+                    );
+
+
+                if (!response.ok)
+                {
+
+                    nicknameCheckMessage.innerText =
+                        "닉네임 중복 확인에 실패했습니다.";
+
+                    return;
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                if (data.available)
+                {
+
+                    checkedNickname =
+                        nickname;
+
+
+                    nicknameCheckMessage.innerText =
+                        "사용 가능한 닉네임입니다.";
+
+                }
+                else
+                {
+
+                    checkedNickname =
+                        null;
+
+
+                    nicknameCheckMessage.innerText =
+                        "이미 사용 중인 닉네임입니다.";
+                }
+
+            }
+            catch (error)
+            {
+
+                checkedNickname =
+                    null;
+
+
+                console.error(
+                    "닉네임 중복 확인 오류:",
+                    error
+                );
+
+
+                nicknameCheckMessage.innerText =
+                    "닉네임 확인 중 오류가 발생했습니다.";
+            }
+
+        }
+    );
+
+
+    // Google 신규 회원가입 완료
+    socialSignupButton.addEventListener(
+        "click",
+        async function()
+        {
+
+            socialSignupMessage.innerText =
+                "";
+
+
+            const nickname =
+                socialNickname.value.trim();
+
+
+            if (!socialSignupToken)
+            {
+
+                socialSignupMessage.innerText =
+                    "Google 회원가입 정보가 없습니다.";
+
+                return;
+            }
+
+
+            if (!nickname)
+            {
+
+                socialSignupMessage.innerText =
+                    "닉네임을 입력해주세요.";
+
+                return;
+            }
+
+
+            if (
+                checkedNickname !==
+                nickname
+            )
+            {
+
+                socialSignupMessage.innerText =
+                    "닉네임 중복 확인을 해주세요.";
+
+                return;
+            }
+
+
+            try
+            {
+
+                const response =
+                    await fetch(
+                        "/auth/social/complete",
+                        {
+
+                            method: "POST",
+
+                            headers: {
+
+                                "Content-Type":
+                                    "application/json"
+
+                            },
+
+                            body: JSON.stringify(
+                                {
+
+                                    signupToken:
+                                    socialSignupToken,
+
+                                    nickname:
+                                    nickname
+
+                                }
+                            )
+
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok)
+                {
+
+                    socialSignupMessage.innerText =
+                        data.message
+                        ||
+                        "Google 회원가입에 실패했습니다.";
+
+                    return;
+                }
+
+
+                if (
+                    data.status !==
+                    "LOGIN_SUCCESS"
+                )
+                {
+
+                    socialSignupMessage.innerText =
+                        "Google 회원가입 결과를 확인할 수 없습니다.";
+
+                    return;
+                }
+
+
+                saveLoginData(
+                    data
+                );
+
+
+                socialSignupToken =
+                    null;
+
+
+                checkedNickname =
+                    null;
+
+
+                socialSignupMessage.innerText =
+                    "회원가입 및 로그인에 성공했습니다.";
+
+
+                window.location.href =
+                    "/home";
+
+            }
+            catch (error)
+            {
+
+                console.error(
+                    "Google 회원가입 요청 오류:",
+                    error
+                );
+
+
+                socialSignupMessage.innerText =
+                    "Google 회원가입 처리 중 오류가 발생했습니다.";
+            }
+
+        }
+    );
+
+</script>
+
+</body>
+
+</html>

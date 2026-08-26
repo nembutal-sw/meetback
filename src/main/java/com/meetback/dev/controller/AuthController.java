@@ -19,7 +19,6 @@ public class AuthController {
 
 
     // 회원가입
-
     @PostMapping("/signup")
     public ResponseEntity<Void> signup(
             @RequestBody SignupRequest request
@@ -29,7 +28,6 @@ public class AuthController {
                 request
         );
 
-
         return ResponseEntity
                 .status(
                         HttpStatus.CREATED
@@ -38,8 +36,117 @@ public class AuthController {
     }
 
 
-    // 일반 로그인
+    // 이메일 중복 검사
+    @GetMapping("/email/check")
+    public ResponseEntity<EmailCheckResponse> checkEmail(
+            @RequestParam("email") String email
+    ) {
 
+        boolean available =
+                authService.isEmailAvailable(
+                        email
+                );
+
+        EmailCheckResponse response =
+                new EmailCheckResponse(
+                        available
+                );
+
+        return ResponseEntity.ok(
+                response
+        );
+    }
+
+
+    // 닉네임 중복 검사
+    @GetMapping("/nickname/check")
+    public ResponseEntity<NicknameCheckResponse> checkNickname(
+            @RequestParam("nickname") String nickname
+    ) {
+
+        boolean available =
+                authService.isNicknameAvailable(
+                        nickname
+                );
+
+        NicknameCheckResponse response =
+                new NicknameCheckResponse(
+                        available
+                );
+
+        return ResponseEntity.ok(
+                response
+        );
+    }
+
+
+    // 아이디 찾기
+    @PostMapping("/find-email")
+    public ResponseEntity<FindEmailResponse> findEmail(
+            @RequestBody FindEmailRequest request
+    ) {
+
+        String maskedEmail =
+                authService.findEmail(
+                        request.getNickname()
+                );
+
+        FindEmailResponse response =
+                new FindEmailResponse(
+                        maskedEmail
+                );
+
+        return ResponseEntity.ok(
+                response
+        );
+    }
+
+
+    // 비밀번호 재설정 이메일 요청
+    @PostMapping("/password/reset/request")
+    public ResponseEntity<Void> requestPasswordReset(
+            @RequestBody PasswordResetRequest request
+    ) {
+
+        authService.requestPasswordReset(
+                request.getEmail()
+        );
+
+        return ResponseEntity
+                .ok()
+                .build();
+    }
+
+
+    // 비밀번호 재설정 완료
+    @PostMapping("/password/reset/confirm")
+    public ResponseEntity<Void> confirmPasswordReset(
+            @RequestBody PasswordResetConfirmRequest request
+    ) {
+
+        if (request.getNewPassword() == null
+                || request.getNewPasswordConfirm() == null
+                || !request.getNewPassword().equals(
+                request.getNewPasswordConfirm()
+        )) {
+
+            throw new IllegalArgumentException(
+                    "새 비밀번호가 일치하지 않습니다."
+            );
+        }
+
+        authService.confirmPasswordReset(
+                request.getToken(),
+                request.getNewPassword()
+        );
+
+        return ResponseEntity
+                .ok()
+                .build();
+    }
+
+
+    // 일반 로그인
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @RequestBody LoginRequest request
@@ -50,7 +157,6 @@ public class AuthController {
                         request
                 );
 
-
         return ResponseEntity.ok(
                 response
         );
@@ -58,17 +164,15 @@ public class AuthController {
 
 
     // 카카오 로그인
-
     @PostMapping("/kakao")
-    public ResponseEntity<KakaoLoginResponse> kakaoLogin(
+    public ResponseEntity<SocialLoginResponse> kakaoLogin(
             @RequestBody KakaoLoginRequest request
     ) {
 
-        KakaoLoginResponse response =
+        SocialLoginResponse response =
                 authService.kakaoLogin(
                         request
                 );
-
 
         return ResponseEntity.ok(
                 response
@@ -77,20 +181,36 @@ public class AuthController {
 
 
     // 구글 로그인 / 간편 회원가입
-
     @PostMapping(
             value = "/google",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<LoginResponse> googleLogin(
+    public ResponseEntity<SocialLoginResponse> googleLogin(
             @RequestBody GoogleLoginRequest request
     ) {
 
-        LoginResponse response =
+        SocialLoginResponse response =
                 authService.googleLogin(
                         request
                 );
 
+        return ResponseEntity.ok(
+                response
+        );
+    }
+
+
+    // 소셜 신규 회원가입 완료
+    @PostMapping("/social/complete")
+    public ResponseEntity<SocialLoginResponse> completeSocialSignup(
+            @RequestBody SocialSignupCompleteRequest request
+    ) {
+
+        SocialLoginResponse response =
+                authService.completeSocialSignup(
+                        request.getSignupToken(),
+                        request.getNickname()
+                );
 
         return ResponseEntity.ok(
                 response
@@ -99,7 +219,6 @@ public class AuthController {
 
 
     // Refresh Token 재발급
-
     @PostMapping("/refresh")
     public ResponseEntity<TokenRefreshResponse> refresh(
             @RequestBody TokenRefreshRequest request
@@ -110,7 +229,6 @@ public class AuthController {
                         request
                 );
 
-
         return ResponseEntity.ok(
                 response
         );
@@ -118,7 +236,6 @@ public class AuthController {
 
 
     // 로그아웃
-
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser
@@ -128,7 +245,6 @@ public class AuthController {
                 authenticatedUser.userId()
         );
 
-
         return ResponseEntity
                 .ok()
                 .build();
@@ -136,7 +252,6 @@ public class AuthController {
 
 
     // 회원탈퇴 요청
-
     @DeleteMapping("/withdraw")
     public ResponseEntity<Void> withdraw(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser
@@ -146,7 +261,6 @@ public class AuthController {
                 authenticatedUser.userId()
         );
 
-
         return ResponseEntity
                 .ok()
                 .build();
@@ -154,7 +268,6 @@ public class AuthController {
 
 
     // 회원탈퇴 취소
-
     @PostMapping("/withdraw/cancel")
     public ResponseEntity<Void> cancelWithdrawal(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser
@@ -164,7 +277,6 @@ public class AuthController {
                 authenticatedUser.userId()
         );
 
-
         return ResponseEntity
                 .ok()
                 .build();
@@ -172,7 +284,6 @@ public class AuthController {
 
 
     // 로그인 상태 및 사용자 정보 확인
-
     @GetMapping("/check")
     public ResponseEntity<AuthCheckResponse> checkLogin(
             @AuthenticationPrincipal AuthenticatedUser authenticatedUser
@@ -182,7 +293,6 @@ public class AuthController {
                 authService.getCurrentUser(
                         authenticatedUser.userId()
                 );
-
 
         return ResponseEntity.ok(
                 response
