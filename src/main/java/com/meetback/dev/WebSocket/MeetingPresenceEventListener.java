@@ -1,0 +1,194 @@
+package com.meetback.dev.WebSocket;
+
+import com.meetback.dev.security.AuthenticatedUser;
+import com.meetback.dev.service.MeetingPresenceService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.event.EventListener;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+import org.springframework.web.socket.messaging.SessionSubscribeEvent;
+
+import java.security.Principal;
+import java.util.Map;
+
+@Component
+@RequiredArgsConstructor
+public class MeetingPresenceEventListener {
+
+    private final MeetingPresenceService presenceService;
+    private final SimpMessagingTemplate messagingTemplate;
+
+    /*
+     * ============================================================
+     * 모임 Topic 구독
+     * ============================================================
+     */
+    @EventListener
+    public void handleSubscribe(
+            SessionSubscribeEvent event
+    )
+    {
+        StompHeaderAccessor accessor =
+                StompHeaderAccessor.wrap(
+                        event.getMessage()
+                );
+
+        String destination = accessor.getDestination();
+
+        Long meetingId = extractMeetingId(
+                destination
+        );
+
+        /*
+         * MeetBack 모임 chat Topic이 아니면 무시
+         */
+        if(meetingId == null)
+        {
+            return;
+        }
+
+        Principal principal = event.getUser();
+
+        if(!(principal instanceof Authentication authentication))
+        {
+            return;
+        }
+
+        Object principalObject = authentication.getPrincipal();
+
+        if(!(principalObject instanceof AuthenticatedUser user))
+        {
+            return;
+        }
+
+        String sessionId = accessor.getSessionId();
+
+        if(sessionId == null)
+        {
+            return;
+        }
+
+        MeetingPresenceService.PresenceChange change =
+                presenceService.connect(
+                        sessionId,
+                        meetingId,
+                        user.userId()
+                );
+
+        /*
+         * 이미 ONLINE이었다면 방송할 필요 없음
+         */
+        if(change == null)
+        {
+            return;
+        }
+
+        broadcastPresence(
+                change
+        );
+    }
+
+    /*
+     * ============================================================
+     * WebSocket 종료
+     * ============================================================
+     */
+    @EventListener
+    public void handleDisconnect(
+            SessionDisconnectEvent event
+    )
+    {
+        MeetingPresenceService.PresenceChange change =
+                presenceService.disconnect(
+                        event.getSessionId()
+                );
+
+        /*
+         * 같은 사용자의 다른 탭이 살아있다면
+         * OFF가 아니므로 방송하지 않음
+         */
+        if(change == null)
+        {
+            return;
+        }
+
+        broadcastPresence(
+                change
+        );
+    }
+
+    private void broadcastPresence(
+            MeetingPresenceService.PresenceChange change
+    )
+    {
+        messagingTemplate.convertAndSend(
+                "/topic/meetings/"
+                        + change.meetingId()
+                        + "/chat",
+
+                (Object) Map.of(
+                        "messageType",
+                        "PRESENCE",
+
+                        "eventType",
+                        "PRESENCE_UPDATED",
+
+                        "userId",
+                        change.userId(),
+
+                        "online",
+                        change.online()
+                )
+        );
+    }
+    /*
+     * /topic/meetings/33/chat
+     *
+     *          ↓
+     *
+     * 33
+     */
+    private Long extractMeetingId(
+            String destination
+    )
+    {
+        if(destination == null)
+        {
+            return null;
+        }
+
+        String prefix = "/topic/meetings/";
+
+        String suffix = "/chat";
+
+        if(
+                !destination.startsWith(
+                        prefix
+                ) || !destination.endsWith(
+                        suffix
+                )
+        )
+        {
+            return null;
+        }
+
+        String text =
+                destination.substring(
+                        prefix.length(),
+                        destination.length()
+                            - suffix.length()
+                );
+
+        try{
+            return Long.valueOf(
+                    text
+            );
+        }catch(NumberFormatException e)
+        {
+            return null;
+        }
+    }
+}

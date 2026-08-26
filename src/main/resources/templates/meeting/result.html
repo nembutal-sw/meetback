@@ -269,83 +269,231 @@
        결과 조회
        ========================================================= */
 
-    async function loadResult() {
+    // ============================================================
+    // 결과 조회
+    //
+    // 추천 1위가 아니라
+    // 실제 투표 후 확정된 finalCandidateId를 기준으로 조회한다.
+    // ============================================================
 
-        const response =
+    async function loadResult()
+    {
+
+        // =========================================================
+        // 1. 모임 정보 조회
+        //
+        // 여기서:
+        //
+        // status
+        // finalCandidateId
+        //
+        // 를 확인한다.
+        // =========================================================
+
+        const meetingResponse =
+            await MeetBack.authenticatedFetch(
+                "/meetings/"
+                + meetingId
+            );
+
+
+        if (!meetingResponse.ok)
+        {
+
+            showResultError(
+                "모임 정보를 불러오지 못했습니다."
+            );
+
+
+            return;
+        }
+
+
+        const meeting =
+            await meetingResponse.json();
+
+
+        console.log(
+            "[RESULT MEETING]",
+            meeting
+        );
+
+
+        // =========================================================
+        // 2. 최종 확정 상태 확인
+        // =========================================================
+
+        if (
+            meeting.status
+            !== "CONFIRMED"
+        )
+        {
+
+            showResultError(
+                "아직 최종 장소가 확정되지 않았습니다."
+            );
+
+
+            return;
+        }
+
+
+        // =========================================================
+        // 3. 실제 투표 당첨 후보 ID 확인
+        // =========================================================
+
+        if (
+            meeting.finalCandidateId === null
+            ||
+            meeting.finalCandidateId === undefined
+        )
+        {
+
+            showResultError(
+                "최종 확정된 장소를 찾을 수 없습니다."
+            );
+
+
+            return;
+        }
+
+
+        // =========================================================
+        // 4. 계산 / 랭킹 결과 조회
+        //
+        // 화면에 Deadline, Golden Margin,
+        // 참가자별 귀가 결과 등을 보여주기 위해 필요하다.
+        // =========================================================
+
+        const rankingResponse =
             await MeetBack.authenticatedFetch(
                 "/calculations/meeting/ranking?meetingId="
                 + meetingId
             );
 
 
-        if (!response.ok) {
+        if (!rankingResponse.ok)
+        {
 
-            document.getElementById(
-                "finalPlaceArea"
-            ).textContent =
-                "결과를 불러오지 못했습니다.";
+            showResultError(
+                "결과를 불러오지 못했습니다."
+            );
 
-
-            document.getElementById(
-                "summaryArea"
-            ).textContent =
-                "결과를 불러오지 못했습니다.";
-
-
-            document.getElementById(
-                "participantResultArea"
-            ).textContent =
-                "결과를 불러오지 못했습니다.";
 
             return;
         }
 
 
         rankings =
-            await response.json();
+            await rankingResponse.json();
 
 
         if (
             !rankings
             ||
             rankings.length === 0
-        ) {
+        )
+        {
 
-            document.getElementById(
-                "finalPlaceArea"
-            ).textContent =
-                "결과가 없습니다.";
+            showResultError(
+                "결과가 없습니다."
+            );
 
-
-            document.getElementById(
-                "summaryArea"
-            ).textContent =
-                "결과가 없습니다.";
-
-
-            document.getElementById(
-                "participantResultArea"
-            ).textContent =
-                "결과가 없습니다.";
 
             return;
         }
 
 
+        // =========================================================
+        // 5. 핵심
+        //
+        // recommendationRank === 1 사용 ❌
+        //
+        // meetings.final_candidate_id와
+        // candidateId가 같은 후보 사용 ⭕
+        // =========================================================
+
         finalCandidate =
             rankings.find(
                 item =>
-                    item.recommendationRank === 1
-            )
-            || rankings[0];
+                    Number(item.candidateId)
+                    ===
+                    Number(meeting.finalCandidateId)
+            );
 
+
+        // =========================================================
+        // 6. finalCandidateId가 있는데
+        //    ranking 결과에서 해당 후보가 없다면
+        //    잘못된 상태이므로 임의의 후보를 보여주지 않는다.
+        // =========================================================
+
+        if (!finalCandidate)
+        {
+
+            console.error(
+                "[FINAL CANDIDATE NOT FOUND]",
+                {
+                    finalCandidateId:
+                    meeting.finalCandidateId,
+
+                    rankings:
+                    rankings
+                }
+            );
+
+
+            showResultError(
+                "최종 장소의 계산 결과를 찾을 수 없습니다."
+            );
+
+
+            return;
+        }
+
+
+        console.log(
+            "[FINAL CANDIDATE]",
+            finalCandidate
+        );
+
+
+        // =========================================================
+        // 7. 화면 출력
+        // =========================================================
 
         renderFinalPlace();
 
         renderSummary();
 
         renderParticipants();
+    }
 
+    // ============================================================
+    // 결과 조회 오류 공통 처리
+    // ============================================================
+
+    function showResultError(
+        message
+    )
+    {
+
+        document.getElementById(
+            "finalPlaceArea"
+        ).textContent =
+            message;
+
+
+        document.getElementById(
+            "summaryArea"
+        ).textContent =
+            message;
+
+
+        document.getElementById(
+            "participantResultArea"
+        ).textContent =
+            message;
     }
 
 
