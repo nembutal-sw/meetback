@@ -55,6 +55,12 @@
 			<version>2.9.0</version>
 		</dependency>
 
+		<!-- 비밀번호 재설정 이메일 전송 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
+
 		<!-- JWT -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>

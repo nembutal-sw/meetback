@@ -27,6 +27,12 @@ public interface UserMapper {
             @Param("email") String email
     );
 
+    // 닉네임 회원 조회
+    // 아이디 찾기에 사용
+    User selectByNickname(
+            @Param("nickname") String nickname
+    );
+
     // UserId로 회원 조회
     // JWT / RefreshToken 사용자 확인에 사용
     User selectById(
@@ -45,6 +51,12 @@ public interface UserMapper {
 
     int increaseTokenVersion(
             @Param("userId") Long userId
+    );
+
+    // 비밀번호 변경
+    int updatePassword(
+            @Param("userId") Long userId,
+            @Param("passwordHash") String passwordHash
     );
 
     User findById(Long userId);

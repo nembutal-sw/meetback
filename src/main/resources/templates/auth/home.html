@@ -660,6 +660,10 @@
             "chatMeetingId"
         );
 
+
+        accessToken =
+            null;
+
     }
 
 
@@ -770,7 +774,7 @@
     // ============================================================
     // JWT 포함 요청 공통 함수
     //
-    // 모임 생성/참가 중 Access Token이 만료됐을 때도
+    // Access Token이 만료됐을 때
     // Refresh Token으로 한 번 재발급 후 다시 요청
     // ============================================================
 
@@ -799,9 +803,8 @@
 
 
         /*
-         * 현재 프로젝트 Security 설정에 따라
-         * 만료 Token이 401 또는 403으로 올 수 있으므로
-         * 두 경우 모두 재발급 시도
+         * Access Token 만료 또는 인증 실패 시
+         * Refresh Token으로 한 번 재발급 시도
          */
         if (
             response.status === 401
@@ -1143,14 +1146,6 @@
                 );
 
 
-                /*
-                 * MeetingCreateResponse
-                 *
-                 * {
-                 *   meetingId: ...,
-                 *   inviteCode: ...
-                 * }
-                 */
                 const meetingId =
                     data.meetingId;
 
@@ -1180,9 +1175,6 @@
                     );
 
 
-                /*
-                 * 이동 버튼에 meetingId 저장
-                 */
                 enterCreatedMeetingButton
                     .dataset
                     .meetingId =
@@ -1244,10 +1236,6 @@
             }
 
 
-            /*
-             * Query Parameter도 전달하고
-             * localStorage에도 저장해두는 방식.
-             */
             window.location.href =
                 meetingPageUrl
                 + "?meetingId="
@@ -1302,11 +1290,6 @@
                 );
 
 
-                /*
-                 * 이것도 userId를 Body로 보내지 않는다.
-                 *
-                 * JWT에서 로그인 사용자 확인
-                 */
                 const response =
                     await authenticatedFetch(
                         joinMeetingUrl,
@@ -1492,37 +1475,53 @@
         async function()
         {
 
+            if (logoutButton.disabled)
+            {
+
+                return;
+
+            }
+
+
+            logoutButton.disabled =
+                true;
+
+
             try
             {
 
+                /*
+                 * Access Token이 정상이라면 바로 로그아웃.
+                 *
+                 * Access Token만 만료된 경우에는
+                 * authenticatedFetch()에서 Refresh Token으로
+                 * 한 번 재발급한 뒤 다시 로그아웃 요청한다.
+                 */
                 const response =
-                    await fetch(
+                    await authenticatedFetch(
                         logoutUrl,
                         {
 
                             method:
-                                "POST",
-
-
-                            headers: {
-
-                                "Authorization":
-                                    "Bearer "
-                                    + accessToken
-
-                            }
+                                "POST"
 
                         }
                     );
 
 
-                if (!response.ok)
+                if (response.ok)
                 {
 
-                    showHomeMessage(
-                        "로그아웃 처리 중 오류가 발생했습니다.",
-                        "error"
-                    );
+                    /*
+                     * 서버에서
+                     * refresh_tokens 삭제
+                     * token_version 증가가 완료된 상태
+                     */
+                    clearLoginStorage();
+
+
+                    window.location.href =
+                        loginUrl;
 
 
                     return;
@@ -1530,11 +1529,43 @@
                 }
 
 
-                clearLoginStorage();
+                /*
+                 * 다른 기기에서 같은 계정으로 로그인한 경우
+                 *
+                 * 현재 기기의 Access Token은 tokenVersion 불일치,
+                 * Refresh Token도 DB의 새 Token과 불일치하므로
+                 * 재발급에 실패한다.
+                 *
+                 * 이 경우 다른 기기의 Refresh Token을
+                 * 삭제하면 안 되므로 현재 브라우저 정보만 삭제한다.
+                 */
+                if (
+                    response.status === 401
+                    ||
+                    response.status === 403
+                )
+                {
+
+                    clearLoginStorage();
 
 
-                window.location.href =
-                    loginUrl;
+                    window.location.href =
+                        loginUrl;
+
+
+                    return;
+
+                }
+
+
+                showHomeMessage(
+                    "로그아웃 처리 중 오류가 발생했습니다.",
+                    "error"
+                );
+
+
+                logoutButton.disabled =
+                    false;
 
             }
             catch (error)
@@ -1550,6 +1581,10 @@
                     "로그아웃 처리 중 오류가 발생했습니다.",
                     "error"
                 );
+
+
+                logoutButton.disabled =
+                    false;
 
             }
 

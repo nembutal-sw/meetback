@@ -20,7 +20,9 @@ CREATE TABLE users (
                        updated_at DATETIME,
 
                        CONSTRAINT uq_users_email
-                           UNIQUE (email)
+                           UNIQUE (email),
+                       CONSTRAINT uq_users_nickname
+                           UNIQUE (nickname)
 );
 
 
