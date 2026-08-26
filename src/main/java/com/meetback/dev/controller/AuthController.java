@@ -47,10 +47,12 @@ public class AuthController {
                         email
                 );
 
+
         EmailCheckResponse response =
                 new EmailCheckResponse(
                         available
                 );
+
 
         return ResponseEntity.ok(
                 response
@@ -69,10 +71,12 @@ public class AuthController {
                         nickname
                 );
 
+
         NicknameCheckResponse response =
                 new NicknameCheckResponse(
                         available
                 );
+
 
         return ResponseEntity.ok(
                 response
@@ -91,10 +95,12 @@ public class AuthController {
                         request.getNickname()
                 );
 
+
         FindEmailResponse response =
                 new FindEmailResponse(
                         maskedEmail
                 );
+
 
         return ResponseEntity.ok(
                 response
@@ -111,6 +117,7 @@ public class AuthController {
         authService.requestPasswordReset(
                 request.getEmail()
         );
+
 
         return ResponseEntity
                 .ok()
@@ -135,10 +142,12 @@ public class AuthController {
             );
         }
 
+
         authService.confirmPasswordReset(
                 request.getToken(),
                 request.getNewPassword()
         );
+
 
         return ResponseEntity
                 .ok()
@@ -157,6 +166,7 @@ public class AuthController {
                         request
                 );
 
+
         return ResponseEntity.ok(
                 response
         );
@@ -173,6 +183,7 @@ public class AuthController {
                 authService.kakaoLogin(
                         request
                 );
+
 
         return ResponseEntity.ok(
                 response
@@ -194,6 +205,7 @@ public class AuthController {
                         request
                 );
 
+
         return ResponseEntity.ok(
                 response
         );
@@ -209,8 +221,10 @@ public class AuthController {
         SocialLoginResponse response =
                 authService.completeSocialSignup(
                         request.getSignupToken(),
-                        request.getNickname()
+                        request.getNickname(),
+                        request.getAgreedTermIds()
                 );
+
 
         return ResponseEntity.ok(
                 response
@@ -229,6 +243,7 @@ public class AuthController {
                         request
                 );
 
+
         return ResponseEntity.ok(
                 response
         );
@@ -244,6 +259,7 @@ public class AuthController {
         authService.logout(
                 authenticatedUser.userId()
         );
+
 
         return ResponseEntity
                 .ok()
@@ -261,6 +277,7 @@ public class AuthController {
                 authenticatedUser.userId()
         );
 
+
         return ResponseEntity
                 .ok()
                 .build();
@@ -276,6 +293,7 @@ public class AuthController {
         authService.cancelWithdrawal(
                 authenticatedUser.userId()
         );
+
 
         return ResponseEntity
                 .ok()
@@ -293,6 +311,7 @@ public class AuthController {
                 authService.getCurrentUser(
                         authenticatedUser.userId()
                 );
+
 
         return ResponseEntity.ok(
                 response
