@@ -77,8 +77,174 @@ window.MeetBack = (() => {
         }
     }
 
+    async function checkServerRestart()
+    {
+
+        try
+        {
+
+            const response =
+                await fetch(
+                    "/auth/server-instance",
+                    {
+                        cache:
+                            "no-store"
+                    }
+                );
+
+
+            if (!response.ok)
+            {
+
+                console.error(
+                    "[SERVER INSTANCE] 조회 실패",
+                    response.status
+                );
+
+
+                return false;
+            }
+
+
+            const data =
+                await response.json();
+
+
+            const currentServerInstanceId =
+                data.serverInstanceId;
+
+
+            const savedServerInstanceId =
+                localStorage.getItem(
+                    "serverInstanceId"
+                );
+
+
+            console.log(
+                "[SERVER INSTANCE]",
+                {
+                    current:
+                    currentServerInstanceId,
+
+                    saved:
+                    savedServerInstanceId
+                }
+            );
+
+
+            // =====================================================
+            // 처음 기능을 적용한 최초 접속
+            // =====================================================
+
+            if (!savedServerInstanceId)
+            {
+
+                localStorage.setItem(
+                    "serverInstanceId",
+                    currentServerInstanceId
+                );
+
+
+                return false;
+            }
+
+
+            // =====================================================
+            // Spring 백엔드 재시작 감지
+            // =====================================================
+
+            if (
+                savedServerInstanceId
+                !== currentServerInstanceId
+            )
+            {
+
+                console.log(
+                    "[SERVER RESTART DETECTED]"
+                );
+
+
+                /*
+                 * 로그인 관련 정보만 제거
+                 */
+                localStorage.removeItem(
+                    "accessToken"
+                );
+
+                localStorage.removeItem(
+                    "refreshToken"
+                );
+
+                localStorage.removeItem(
+                    "userId"
+                );
+
+                localStorage.removeItem(
+                    "role"
+                );
+
+                localStorage.removeItem(
+                    "nickname"
+                );
+
+
+                /*
+                 * 새 Spring 실행 ID는 저장
+                 */
+                localStorage.setItem(
+                    "serverInstanceId",
+                    currentServerInstanceId
+                );
+
+
+                /*
+                 * 현재 JS 메모리에 들고 있던
+                 * Access Token도 제거
+                 */
+                accessToken =
+                    null;
+
+
+                window.location.replace(
+                    "/login"
+                );
+
+
+                return true;
+            }
+
+
+            return false;
+
+        }
+        catch (error)
+        {
+
+            console.error(
+                "[SERVER INSTANCE CHECK ERROR]",
+                error
+            );
+
+
+            /*
+             * 백엔드가 잠깐 꺼져 있는 것만으로
+             * localStorage를 지우지는 않는다.
+             */
+            return false;
+        }
+    }
+
 
     async function checkLogin() {
+
+        const serverRestarted =
+            await checkServerRestart();
+
+
+        if (serverRestarted)
+        {
+            return null;
+        }
 
         if (!accessToken) {
 
@@ -157,121 +323,6 @@ window.MeetBack = (() => {
 
 
         return user;
-    }
-
-    async function checkServerRestart()
-    {
-
-        try
-        {
-
-            const response =
-                await fetch(
-                    "/auth/server-instance"
-                );
-
-
-            if (!response.ok)
-            {
-                return;
-            }
-
-
-            const data =
-                await response.json();
-
-
-            const currentServerInstanceId =
-                data.serverInstanceId;
-
-
-            const savedServerInstanceId =
-                localStorage.getItem(
-                    "serverInstanceId"
-                );
-
-
-            // =====================================================
-            // 처음 접속한 경우
-            // =====================================================
-
-            if (!savedServerInstanceId)
-            {
-
-                localStorage.setItem(
-                    "serverInstanceId",
-                    currentServerInstanceId
-                );
-
-
-                return;
-            }
-
-
-            // =====================================================
-            // Spring 백엔드 재시작 감지
-            // =====================================================
-
-            if (
-                savedServerInstanceId
-                !== currentServerInstanceId
-            )
-            {
-
-                console.log(
-                    "[SERVER RESTART DETECTED]"
-                );
-
-
-                /*
-                 * 로그인 정보 제거
-                 */
-                localStorage.removeItem(
-                    "accessToken"
-                );
-
-
-                localStorage.removeItem(
-                    "refreshToken"
-                );
-
-
-                localStorage.removeItem(
-                    "userId"
-                );
-
-
-                localStorage.removeItem(
-                    "role"
-                );
-
-
-                /*
-                 * 새로운 서버 ID 저장
-                 */
-                localStorage.setItem(
-                    "serverInstanceId",
-                    currentServerInstanceId
-                );
-
-
-                /*
-                 * 로그인 페이지 이동
-                 */
-                window.location.replace(
-                    "/login"
-                );
-            }
-
-        }
-        catch (error)
-        {
-
-            console.error(
-                "[SERVER INSTANCE CHECK ERROR]",
-                error
-            );
-        }
     }
 
 
