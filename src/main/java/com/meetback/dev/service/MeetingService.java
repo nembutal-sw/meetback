@@ -6,11 +6,9 @@ import com.meetback.dev.repository.CandidateMapper;
 import com.meetback.dev.repository.MeetingMapper;
 import com.meetback.dev.repository.ParticipantMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PathVariable;
-
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -310,6 +308,14 @@ public class MeetingService {
 
 
         return meeting;
+    }
+
+    public List<MyMeetingResponse> getMyMeetings(
+            Long userId
+    ) {
+        return meetingMapper.selectMyMeetings(
+                userId
+        );
     }
 
 }
