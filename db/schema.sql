@@ -543,3 +543,8 @@ ALTER TABLE meetings
 --경로 안내용 컬럼 추가 - 이래원
 ALTER TABLE candidate_return_results
     ADD COLUMN route_map_obj TEXT NULL;
+
+--최종경로 지도용 컬럼 추가 - 이래원
+ALTER TABLE candidate_return_results
+    ADD COLUMN route_map_data LONGTEXT NULL
+AFTER route_map_obj;
