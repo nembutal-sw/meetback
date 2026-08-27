@@ -27,4 +27,12 @@ public interface MeetingParticipantMapper {
     List<ParticipantRoomResponse> findRoomParticipants(
             @Param("meetingId") Long meetingId
     );
+
+    int kickParticipant(
+            @Param("participantId") Long participantId
+    );
+
+    int cancelKick(
+            @Param("participantId") Long participantId
+    );
 }

@@ -255,6 +255,7 @@ CREATE TABLE meeting_participants (
                                       meeting_id BIGINT NOT NULL,
                                       user_id BIGINT NOT NULL,
 
+                                      participant_status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
                                       input_status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
 
                                       departure_name VARCHAR(100),
@@ -543,12 +544,50 @@ ALTER TABLE meetings
     ADD CONSTRAINT fk_meetings_final_candidate
         FOREIGN KEY (final_candidate_id)
             REFERENCES meeting_candidates(candidate_id)
-<<<<<<< HEAD
             ON DELETE SET NULL;
 
--- 결과 화면에서 사용하는 대중교통 경로 응답 데이터를 저장한다.
-ALTER TABLE candidate_return_results
-    ADD COLUMN route_map_obj TEXT NULL;
-=======
-            ON DELETE SET NULL;
->>>>>>> origin/main
+
+-- ============================================================
+-- 18. MEETING_PARTICIPANT_KICK_HISTORY
+-- ============================================================
+
+CREATE TABLE meeting_participant_kick_history (
+    kick_history_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    meeting_id BIGINT NOT NULL,
+    participant_id BIGINT NOT NULL,
+    kicked_user_id BIGINT NOT NULL,
+    kicked_by_user_id BIGINT NOT NULL,
+    kicked_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    canceled_by_user_id BIGINT,
+
+    canceled_at DATETIME,
+    INDEX idx_kick_history_participant (
+    participant_id,
+    canceled_at
+    ),
+
+    CONSTRAINT fk_kick_history_meeting
+      FOREIGN KEY (meeting_id)
+          REFERENCES meetings(meeting_id)
+          ON DELETE CASCADE,
+
+    CONSTRAINT fk_kick_history_participant
+      FOREIGN KEY (participant_id)
+          REFERENCES meeting_participants(participant_id)
+          ON DELETE CASCADE,
+
+    CONSTRAINT fk_kick_history_kicked_user
+      FOREIGN KEY (kicked_user_id)
+          REFERENCES users(user_id)
+          ON DELETE RESTRICT,
+
+    CONSTRAINT fk_kick_history_kicked_by_user
+      FOREIGN KEY (kicked_by_user_id)
+          REFERENCES users(user_id)
+          ON DELETE RESTRICT,
+
+    CONSTRAINT fk_kick_history_canceled_by_user
+      FOREIGN KEY (canceled_by_user_id)
+          REFERENCES users(user_id)
+          ON DELETE RESTRICT
+);
