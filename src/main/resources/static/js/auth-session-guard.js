@@ -23,26 +23,21 @@
 
     function clearLoginStorage()
     {
-
         localStorage.removeItem(
             "accessToken"
         );
-
 
         localStorage.removeItem(
             "refreshToken"
         );
 
-
         localStorage.removeItem(
             "userId"
         );
 
-
         localStorage.removeItem(
             "role"
         );
-
 
         localStorage.removeItem(
             "chatMeetingId"
@@ -57,8 +52,8 @@
         false;
 
     // =========================================================
-// 강제 로그아웃
-// =========================================================
+    // 강제 로그아웃
+    // =========================================================
 
     function forceLogout()
     {
