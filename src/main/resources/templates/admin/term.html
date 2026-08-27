@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+
+    <title th:text="'MeetBack 관리자 - 약관 관리'">
+        MeetBack 관리자 - 약관 관리
+    </title>
+</head>
+
+<body>
+
+<h1>
+    약관 관리
+</h1>
+
+
+<div>
+
+    <button
+            type="button"
+            data-term-code="SERVICE"
+    >
+        서비스 이용약관
+    </button>
+
+
+    <button
+            type="button"
+            data-term-code="PRIVACY"
+    >
+        개인정보 수집·이용 동의
+    </button>
+
+
+    <button
+            type="button"
+            data-term-code="LOCATION"
+    >
+        위치정보 이용약관
+    </button>
+
+</div>
+
+
+<hr>
+
+
+<h2>
+    새 버전 등록
+</h2>
+
+
+<form id="termForm">
+
+    <div>
+
+        <label for="termCode">
+            약관 코드
+        </label>
+
+        <input
+                type="text"
+                id="termCode"
+                readonly
+        >
+
+    </div>
+
+
+    <br>
+
+
+    <div>
+
+        <label for="termName">
+            약관명
+        </label>
+
+        <input
+                type="text"
+                id="termName"
+        >
+
+    </div>
+
+
+    <br>
+
+
+    <div>
+
+        <label for="version">
+            새 버전
+        </label>
+
+        <input
+                type="text"
+                id="version"
+                placeholder="예: 1.1"
+        >
+
+    </div>
+
+
+    <br>
+
+
+    <div>
+
+        <label for="required">
+            동의 구분
+        </label>
+
+        <select id="required">
+
+            <option value="true">
+                필수
+            </option>
+
+            <option value="false">
+                선택
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <br>
+
+
+    <div>
+
+        <label for="effectiveAt">
+            시행일
+        </label>
+
+        <input
+                type="datetime-local"
+                id="effectiveAt"
+        >
+
+    </div>
+
+
+    <br>
+
+
+    <div>
+
+        <label for="content">
+            약관 내용
+        </label>
+
+        <br>
+
+        <textarea
+                id="content"
+                rows="25"
+                cols="100"
+        ></textarea>
+
+    </div>
+
+
+    <br>
+
+
+    <button
+            type="button"
+            id="resetButton"
+    >
+        입력 초기화
+    </button>
+
+
+    <button type="submit">
+        새 버전 등록
+    </button>
+
+</form>
+
+
+<div id="message"></div>
+
+
+<hr>
+
+
+<h2>
+    약관 버전 목록
+</h2>
+
+
+<table>
+
+    <thead>
+
+    <tr>
+
+        <th>
+            ID
+        </th>
+
+        <th>
+            약관
+        </th>
+
+        <th>
+            버전
+        </th>
+
+        <th>
+            구분
+        </th>
+
+        <th>
+            시행일
+        </th>
+
+        <th>
+            적용 상태
+        </th>
+
+        <th>
+            내용
+        </th>
+
+    </tr>
+
+    </thead>
+
+
+    <tbody id="historyBody">
+    </tbody>
+
+</table>
+
+
+<script>
+
+    const termForm =
+        document.getElementById(
+            "termForm"
+        );
+
+
+    const termCodeInput =
+        document.getElementById(
+            "termCode"
+        );
+
+
+    const termNameInput =
+        document.getElementById(
+            "termName"
+        );
+
+
+    const versionInput =
+        document.getElementById(
+            "version"
+        );
+
+
+    const requiredInput =
+        document.getElementById(
+            "required"
+        );
+
+
+    const effectiveAtInput =
+        document.getElementById(
+            "effectiveAt"
+        );
+
+
+    const contentInput =
+        document.getElementById(
+            "content"
+        );
+
+
+    const resetButton =
+        document.getElementById(
+            "resetButton"
+        );
+
+
+    const historyBody =
+        document.getElementById(
+            "historyBody"
+        );
+
+
+    const message =
+        document.getElementById(
+            "message"
+        );
+
+
+    let selectedTermCode =
+        "SERVICE";
+
+
+    function authenticatedFetch(
+        url,
+        options = {}
+    )
+    {
+
+        const accessToken =
+            localStorage.getItem(
+                "accessToken"
+            );
+
+
+        if (!accessToken)
+        {
+
+            window.location.href =
+                "/login";
+
+
+            return Promise.reject(
+                new Error(
+                    "Access Token이 없습니다."
+                )
+            );
+        }
+
+
+        const headers =
+            new Headers(
+                options.headers || {}
+            );
+
+
+        headers.set(
+            "Authorization",
+            "Bearer " + accessToken
+        );
+
+
+        return fetch(
+            url,
+            {
+                ...options,
+                headers: headers
+            }
+        );
+    }
+
+
+    document
+        .querySelectorAll(
+            "[data-term-code]"
+        )
+        .forEach(
+            button =>
+            {
+
+                button.addEventListener(
+                    "click",
+                    async function()
+                    {
+
+                        selectedTermCode =
+                            button.dataset.termCode;
+
+
+                        await loadCurrentTerm();
+
+
+                        await loadHistory();
+
+                    }
+                );
+
+            }
+        );
+
+
+    async function loadCurrentTerm()
+    {
+
+        message.innerText =
+            "";
+
+
+        try
+        {
+
+            const response =
+                await authenticatedFetch(
+                    "/admin/api/terms/"
+                    + encodeURIComponent(
+                        selectedTermCode
+                    )
+                );
+
+
+            if (response.status === 401)
+            {
+
+                localStorage.removeItem(
+                    "accessToken"
+                );
+
+
+                localStorage.removeItem(
+                    "refreshToken"
+                );
+
+
+                window.location.href =
+                    "/login";
+
+
+                return;
+            }
+
+
+            if (response.status === 403)
+            {
+
+                message.innerText =
+                    "관리자 권한이 없습니다.";
+
+                return;
+            }
+
+
+            if (!response.ok)
+            {
+
+                message.innerText =
+                    "현재 약관을 불러오지 못했습니다.";
+
+                return;
+            }
+
+
+            const term =
+                await response.json();
+
+
+            termCodeInput.value =
+                term.termCode;
+
+
+            termNameInput.value =
+                term.termName;
+
+
+            requiredInput.value =
+                String(
+                    term.required
+                );
+
+
+            contentInput.value =
+                term.content ?? "";
+
+
+            versionInput.value =
+                "";
+
+        }
+        catch (error)
+        {
+
+            console.error(
+                "현재 약관 조회 오류:",
+                error
+            );
+
+
+            if (
+                localStorage.getItem(
+                    "accessToken"
+                )
+            )
+            {
+
+                message.innerText =
+                    "현재 약관 조회 중 오류가 발생했습니다.";
+            }
+        }
+
+    }
+
+
+    async function loadHistory()
+    {
+
+        historyBody.innerHTML =
+            "";
+
+
+        try
+        {
+
+            const response =
+                await authenticatedFetch(
+                    "/admin/api/terms/"
+                    + encodeURIComponent(
+                        selectedTermCode
+                    )
+                    + "/history"
+                );
+
+
+            if (response.status === 401)
+            {
+
+                localStorage.removeItem(
+                    "accessToken"
+                );
+
+
+                localStorage.removeItem(
+                    "refreshToken"
+                );
+
+
+                window.location.href =
+                    "/login";
+
+
+                return;
+            }
+
+
+            if (response.status === 403)
+            {
+
+                message.innerText =
+                    "관리자 권한이 없습니다.";
+
+                return;
+            }
+
+
+            if (!response.ok)
+            {
+
+                message.innerText =
+                    "약관 이력을 불러오지 못했습니다.";
+
+                return;
+            }
+
+
+            const terms =
+                await response.json();
+
+
+            for (const term of terms)
+            {
+
+                const row =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                const status =
+                    term.active
+                        ? "적용중"
+                        : "이전 버전";
+
+
+                const required =
+                    term.required
+                        ? "필수"
+                        : "선택";
+
+
+                row.innerHTML =
+                    `
+                        <td>${term.termId}</td>
+                        <td>${escapeHtml(term.termName)}</td>
+                        <td>${escapeHtml(term.version)}</td>
+                        <td>${required}</td>
+                        <td>${term.effectiveAt ?? ""}</td>
+                        <td>${status}</td>
+                        <td>
+                            <button
+                                type="button"
+                                data-content-id="${term.termId}"
+                            >
+                                내용 보기
+                            </button>
+                        </td>
+                    `;
+
+
+                const contentButton =
+                    row.querySelector(
+                        "[data-content-id]"
+                    );
+
+
+                contentButton.addEventListener(
+                    "click",
+                    function()
+                    {
+
+                        termCodeInput.value =
+                            term.termCode;
+
+
+                        termNameInput.value =
+                            term.termName;
+
+
+                        requiredInput.value =
+                            String(
+                                term.required
+                            );
+
+
+                        contentInput.value =
+                            term.content ?? "";
+
+                    }
+                );
+
+
+                historyBody.appendChild(
+                    row
+                );
+            }
+
+        }
+        catch (error)
+        {
+
+            console.error(
+                "약관 이력 조회 오류:",
+                error
+            );
+
+
+            if (
+                localStorage.getItem(
+                    "accessToken"
+                )
+            )
+            {
+
+                message.innerText =
+                    "약관 이력 조회 중 오류가 발생했습니다.";
+            }
+        }
+
+    }
+
+
+    termForm.addEventListener(
+        "submit",
+        async function(event)
+        {
+
+            event.preventDefault();
+
+
+            message.innerText =
+                "";
+
+
+            const termCode =
+                termCodeInput.value;
+
+
+            const termName =
+                termNameInput.value;
+
+
+            const version =
+                versionInput.value;
+
+
+            const content =
+                contentInput.value;
+
+
+            const required =
+                requiredInput.value ===
+                "true";
+
+
+            const effectiveAt =
+                effectiveAtInput.value;
+
+
+            if (!termCode)
+            {
+
+                message.innerText =
+                    "약관을 선택해주세요.";
+
+                return;
+            }
+
+
+            if (!termName.trim())
+            {
+
+                message.innerText =
+                    "약관명을 입력해주세요.";
+
+                return;
+            }
+
+
+            if (!version.trim())
+            {
+
+                message.innerText =
+                    "새 버전을 입력해주세요.";
+
+                return;
+            }
+
+
+            if (!content.trim())
+            {
+
+                message.innerText =
+                    "약관 내용을 입력해주세요.";
+
+                return;
+            }
+
+
+            if (!effectiveAt)
+            {
+
+                message.innerText =
+                    "시행일을 입력해주세요.";
+
+                return;
+            }
+
+
+            try
+            {
+
+                const response =
+                    await authenticatedFetch(
+                        "/admin/api/terms",
+                        {
+
+                            method:
+                                "POST",
+
+                            headers:
+                                {
+
+                                    "Content-Type":
+                                        "application/json"
+
+                                },
+
+                            body:
+                                JSON.stringify(
+                                    {
+
+                                        termCode:
+                                        termCode,
+
+                                        termName:
+                                        termName,
+
+                                        version:
+                                        version,
+
+                                        content:
+                                        content,
+
+                                        required:
+                                        required,
+
+                                        effectiveAt:
+                                        effectiveAt
+
+                                    }
+                                )
+
+                        }
+                    );
+
+
+                if (response.status === 401)
+                {
+
+                    localStorage.removeItem(
+                        "accessToken"
+                    );
+
+
+                    localStorage.removeItem(
+                        "refreshToken"
+                    );
+
+
+                    window.location.href =
+                        "/login";
+
+
+                    return;
+                }
+
+
+                if (response.status === 403)
+                {
+
+                    message.innerText =
+                        "관리자 권한이 없습니다.";
+
+                    return;
+                }
+
+
+                if (!response.ok)
+                {
+
+                    let errorMessage =
+                        "약관 등록에 실패했습니다.";
+
+
+                    try
+                    {
+
+                        const errorData =
+                            await response.json();
+
+
+                        if (errorData.message)
+                        {
+
+                            errorMessage =
+                                errorData.message;
+                        }
+
+                    }
+                    catch (error)
+                    {
+
+                        console.error(
+                            "약관 등록 오류 응답 처리:",
+                            error
+                        );
+                    }
+
+
+                    message.innerText =
+                        errorMessage;
+
+
+                    return;
+                }
+
+
+                message.innerText =
+                    "새 약관 버전이 등록되었습니다.";
+
+
+                await loadCurrentTerm();
+
+
+                await loadHistory();
+
+            }
+            catch (error)
+            {
+
+                console.error(
+                    "약관 등록 요청 오류:",
+                    error
+                );
+
+
+                if (
+                    localStorage.getItem(
+                        "accessToken"
+                    )
+                )
+                {
+
+                    message.innerText =
+                        "약관 등록 처리 중 오류가 발생했습니다.";
+                }
+            }
+
+        }
+    );
+
+
+    resetButton.addEventListener(
+        "click",
+        async function()
+        {
+
+            message.innerText =
+                "";
+
+
+            await loadCurrentTerm();
+
+        }
+    );
+
+
+    function escapeHtml(
+        value
+    )
+    {
+
+        if (value == null)
+        {
+            return "";
+        }
+
+
+        return String(
+            value
+        )
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                "\"",
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
+    }
+
+
+    async function initializePage()
+    {
+
+        await loadCurrentTerm();
+
+
+        await loadHistory();
+
+    }
+
+
+    initializePage();
+
+</script>
+
+</body>
+
+</html>
