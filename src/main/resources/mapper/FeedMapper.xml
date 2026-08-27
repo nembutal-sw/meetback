@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.FeedMapper">
+
+    <resultMap id="feedResultMap"
+               type="com.meetback.dev.domain.Feed">
+
+        <id property="feedId"
+            column="feed_id"/>
+
+        <result property="userId"
+                column="user_id"/>
+
+        <result property="title"
+                column="title"/>
+
+        <result property="content"
+                column="content"/>
+
+        <result property="deletedAt"
+                column="deleted_at"/>
+
+        <result property="createdAt"
+                column="created_at"/>
+
+        <result property="updatedAt"
+                column="updated_at"/>
+
+    </resultMap>
+
+
+    <insert id="insert"
+            parameterType="com.meetback.dev.domain.Feed"
+            useGeneratedKeys="true"
+            keyProperty="feedId">
+
+        INSERT INTO feeds (
+            user_id,
+            title,
+            content,
+            deleted_at,
+            created_at,
+            updated_at
+        )
+        VALUES (
+            #{userId},
+            #{title},
+            #{content},
+        NULL,
+        NOW(),
+        NOW()
+        )
+
+    </insert>
+
+
+    <select id="findById"
+            resultMap="feedResultMap">
+
+        SELECT
+            feed_id,
+            user_id,
+            title,
+            content,
+            deleted_at,
+            created_at,
+            updated_at
+        FROM feeds
+        WHERE feed_id = #{feedId}
+        AND deleted_at IS NULL
+
+    </select>
+
+
+    <select id="findAll"
+            resultMap="feedResultMap">
+
+        SELECT
+            feed_id,
+            user_id,
+            title,
+            content,
+            deleted_at,
+            created_at,
+            updated_at
+        FROM feeds
+        WHERE deleted_at IS NULL
+        ORDER BY created_at DESC, feed_id DESC
+
+    </select>
+
+
+    <update id="update"
+            parameterType="com.meetback.dev.domain.Feed">
+
+        UPDATE feeds
+        SET
+            title = #{title},
+            content = #{content},
+            updated_at = NOW()
+        WHERE feed_id = #{feedId}
+            AND user_id = #{userId}
+            AND deleted_at IS NULL
+
+    </update>
+
+
+    <update id="softDelete">
+
+        UPDATE feeds
+        SET
+        deleted_at = NOW(),
+        updated_at = NOW()
+        WHERE feed_id = #{feedId}
+        AND user_id = #{userId}
+        AND deleted_at IS NULL
+
+    </update>
+
+</mapper>

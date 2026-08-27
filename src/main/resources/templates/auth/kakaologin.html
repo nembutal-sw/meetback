@@ -16,6 +16,10 @@
     </div>
 
 
+    <!-- ============================================================
+         카카오 로그인 결과
+         ============================================================ -->
+
     <div
             id="kakaoLoginData"
             th:data-status="${status}"
@@ -24,16 +28,18 @@
             th:data-refresh-token="${refreshToken}"
             th:data-user-id="${userId}"
             th:data-role="${role}"
-            style="display: none;"
-    >
+            th:data-redirect="${redirect}"
+            style="display: none;">
     </div>
 
 
-    <!-- 신규 카카오 회원 가입 -->
+    <!-- ============================================================
+         신규 카카오 회원 가입
+         ============================================================ -->
+
     <div
             id="kakaoSignupContainer"
-            style="display: none;"
-    >
+            style="display: none;">
 
         <h3>
             닉네임 설정
@@ -53,13 +59,11 @@
             <input
                     type="text"
                     id="kakaoNickname"
-                    placeholder="닉네임을 입력하세요"
-            >
+                    placeholder="닉네임을 입력하세요">
 
             <button
                     type="button"
-                    id="nicknameCheckButton"
-            >
+                    id="nicknameCheckButton">
                 중복 확인
             </button>
 
@@ -69,7 +73,8 @@
         <br>
 
 
-        <div id="nicknameCheckMessage"></div>
+        <div id="nicknameCheckMessage">
+        </div>
 
 
         <br>
@@ -80,10 +85,12 @@
         </h3>
 
 
-        <div id="kakaoTermsContainer"></div>
+        <div id="kakaoTermsContainer">
+        </div>
 
 
-        <div id="kakaoTermsMessage"></div>
+        <div id="kakaoTermsMessage">
+        </div>
 
 
         <br>
@@ -92,8 +99,7 @@
         <button
                 type="button"
                 id="kakaoSignupButton"
-                disabled
-        >
+                disabled>
             가입 완료
         </button>
 
@@ -102,7 +108,8 @@
         <br>
 
 
-        <div id="kakaoSignupMessage"></div>
+        <div id="kakaoSignupMessage">
+        </div>
 
     </div>
 
@@ -110,6 +117,10 @@
 
 
 <script>
+
+    // ============================================================
+    // DOM
+    // ============================================================
 
     const kakaoLoginData =
         document.getElementById(
@@ -195,11 +206,47 @@
         kakaoLoginData.dataset.role;
 
 
+    const loginRedirect =
+        kakaoLoginData.dataset.redirect;
+
+
     let checkedNickname =
         null;
 
 
+    function getKakaoRedirectUrl()
+    {
+
+        if (!loginRedirect)
+        {
+            return "/home";
+        }
+
+
+        /*
+         * Open Redirect 방지
+         *
+         * 우리 서비스 내부 상대경로만 허용
+         */
+        if (
+            !loginRedirect.startsWith("/")
+            ||
+            loginRedirect.startsWith("//")
+        )
+        {
+            return "/home";
+        }
+
+
+        return loginRedirect;
+    }
+
+
+
+    // ============================================================
     // 닉네임 정책
+    // ============================================================
+
     const nicknamePattern =
         /^[가-힣A-Za-z0-9_]{2,12}$/;
 
@@ -247,7 +294,11 @@
         ];
 
 
+
+    // ============================================================
     // 닉네임 필터용 정규화
+    // ============================================================
+
     function normalizeNicknameForFilter(
         nickname
     )
@@ -262,7 +313,11 @@
     }
 
 
+
+    // ============================================================
     // 닉네임 사용 가능 형식 검사
+    // ============================================================
+
     function isValidNickname(
         nickname
     )
@@ -320,8 +375,8 @@
 
 
             if (
-                normalizedNickname ===
-                normalizedReservedNickname
+                normalizedNickname
+                === normalizedReservedNickname
             )
             {
                 return false;
@@ -333,7 +388,11 @@
     }
 
 
+
+    // ============================================================
     // 로그인 정보 저장
+    // ============================================================
+
     function saveLoginData(
         data
     )
@@ -361,10 +420,23 @@
             "role",
             data.role
         );
+
+
+        if (data.nickname)
+        {
+            localStorage.setItem(
+                "nickname",
+                data.nickname
+            );
+        }
     }
 
 
+
+    // ============================================================
     // 카카오 신규 회원가입용 약관 조회
+    // ============================================================
+
     async function loadKakaoTerms()
     {
 
@@ -387,7 +459,8 @@
                 await fetch(
                     "/terms",
                     {
-                        method: "GET"
+                        method:
+                            "GET"
                     }
                 );
 
@@ -471,14 +544,21 @@
 
 
                 title.textContent =
-                    (term.required
-                        ? "[필수] "
-                        : "[선택] ")
-                    + term.termName
-                    + " "
-                    + "(v"
-                    + term.version
-                    + ")";
+                    (
+                        term.required
+                            ? "[필수] "
+                            : "[선택] "
+                    )
+                    +
+                    term.termName
+                    +
+                    " "
+                    +
+                    "(v"
+                    +
+                    term.version
+                    +
+                    ")";
 
 
                 label.appendChild(
@@ -576,7 +656,11 @@
     }
 
 
+
+    // ============================================================
     // 동의한 약관 ID 조회
+    // ============================================================
+
     function getAgreedTermIds()
     {
 
@@ -597,7 +681,11 @@
     }
 
 
+
+    // ============================================================
     // 필수 약관 모두 동의했는지 검사
+    // ============================================================
+
     function areRequiredTermsAgreed()
     {
 
@@ -629,14 +717,21 @@
     }
 
 
-    // 카카오 로그인 결과 처리
+
+    // ============================================================
+    // ★ 카카오 로그인 결과 처리
+    // ============================================================
+
     async function handleKakaoLoginResult()
     {
 
+        // ========================================================
         // 기존 카카오 회원 로그인
+        // ========================================================
+
         if (
-            status ===
-            "LOGIN_SUCCESS"
+            status
+            === "LOGIN_SUCCESS"
         )
         {
 
@@ -651,10 +746,17 @@
 
                 saveLoginData(
                     {
-                        accessToken: accessToken,
-                        refreshToken: refreshToken,
-                        userId: userId,
-                        role: role
+                        accessToken:
+                        accessToken,
+
+                        refreshToken:
+                        refreshToken,
+
+                        userId:
+                        userId,
+
+                        role:
+                        role
                     }
                 );
 
@@ -663,8 +765,16 @@
                     "카카오 로그인에 성공했습니다.";
 
 
-                window.location.href =
-                    "/home";
+                /*
+                 * 일반 로그인
+                 * → /home
+                 *
+                 * 초대 링크 로그인
+                 * → /home?inviteCode=...
+                 */
+                window.location.replace(
+                    getKakaoRedirectUrl()
+                );
 
             }
             else
@@ -679,10 +789,13 @@
         }
 
 
+        // ========================================================
         // 신규 카카오 회원
+        // ========================================================
+
         if (
-            status ===
-            "NICKNAME_REQUIRED"
+            status
+            === "NICKNAME_REQUIRED"
         )
         {
 
@@ -727,10 +840,11 @@
     }
 
 
-    handleKakaoLoginResult();
 
-
+    // ============================================================
     // 닉네임 변경 시 중복 확인 초기화
+    // ============================================================
+
     kakaoNickname.addEventListener(
         "input",
         function()
@@ -750,7 +864,11 @@
     );
 
 
+
+    // ============================================================
     // 닉네임 중복 검사
+    // ============================================================
+
     nicknameCheckButton.addEventListener(
         "click",
         async function()
@@ -802,11 +920,13 @@
                 const response =
                     await fetch(
                         "/auth/nickname/check?nickname="
-                        + encodeURIComponent(
+                        +
+                        encodeURIComponent(
                             nickname
                         ),
                         {
-                            method: "GET"
+                            method:
+                                "GET"
                         }
                     );
 
@@ -869,7 +989,11 @@
     );
 
 
-    // 카카오 신규 회원가입 완료
+
+    // ============================================================
+    // ★ 카카오 신규 회원가입 완료
+    // ============================================================
+
     kakaoSignupButton.addEventListener(
         "click",
         async function()
@@ -922,8 +1046,8 @@
 
 
             if (
-                checkedNickname !==
-                nickname
+                checkedNickname
+                !== nickname
             )
             {
 
@@ -958,7 +1082,8 @@
                         "/auth/social/complete",
                         {
 
-                            method: "POST",
+                            method:
+                                "POST",
 
                             headers: {
 
@@ -967,20 +1092,21 @@
 
                             },
 
-                            body: JSON.stringify(
-                                {
+                            body:
+                                JSON.stringify(
+                                    {
 
-                                    signupToken:
-                                    signupToken,
+                                        signupToken:
+                                        signupToken,
 
-                                    nickname:
-                                    nickname,
+                                        nickname:
+                                        nickname,
 
-                                    agreedTermIds:
-                                    agreedTermIds
+                                        agreedTermIds:
+                                        agreedTermIds
 
-                                }
-                            )
+                                    }
+                                )
 
                         }
                     );
@@ -1003,8 +1129,8 @@
 
 
                 if (
-                    data.status !==
-                    "LOGIN_SUCCESS"
+                    data.status
+                    !== "LOGIN_SUCCESS"
                 )
                 {
 
@@ -1028,8 +1154,13 @@
                     "회원가입 및 로그인에 성공했습니다.";
 
 
-                window.location.href =
-                    "/home";
+                /*
+                 * 신규 카카오 회원도
+                 * 원래 초대 URL로 복귀
+                 */
+                window.location.replace(
+                    getKakaoRedirectUrl()
+                );
 
             }
             catch (error)
@@ -1047,6 +1178,14 @@
 
         }
     );
+
+
+
+    // ============================================================
+    // 실행
+    // ============================================================
+
+    handleKakaoLoginResult();
 
 </script>
 
