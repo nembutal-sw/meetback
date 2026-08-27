@@ -12,5 +12,5 @@ public class Feed {
     private String content;
     private LocalDateTime deletedAt;
     private LocalDateTime createdAt;
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
 }
