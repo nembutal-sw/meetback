@@ -324,7 +324,6 @@ CREATE TABLE meeting_candidates (
 -- ============================================================
 -- 13. CANDIDATE_RETURN_RESULTS
 -- ============================================================
-
 CREATE TABLE candidate_return_results (
                                           result_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
@@ -336,6 +335,9 @@ CREATE TABLE candidate_return_results (
 
                                           return_minutes INT,
                                           transfer_count INT,
+
+                                          route_map_obj TEXT NULL,
+                                          route_map_data LONGTEXT NULL,
 
                                           last_train_departure_at DATETIME,
                                           last_train_arrival_at DATETIME,
@@ -539,12 +541,3 @@ ALTER TABLE meetings
         FOREIGN KEY (final_candidate_id)
             REFERENCES meeting_candidates(candidate_id)
             ON DELETE SET NULL;
-
---경로 안내용 컬럼 추가 - 이래원
-ALTER TABLE candidate_return_results
-    ADD COLUMN route_map_obj TEXT NULL;
-
---최종경로 지도용 컬럼 추가 - 이래원
-ALTER TABLE candidate_return_results
-    ADD COLUMN route_map_data LONGTEXT NULL
-AFTER route_map_obj;
