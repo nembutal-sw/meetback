@@ -10,6 +10,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
 import tools.jackson.databind.JsonNode;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.web.client.RestClientException;
+
+import java.time.Duration;
+
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,12 +31,26 @@ public class OdsayTransitClient {
             @Value("${odsay.api-key}") String apiKey
     ) {
 
+        SimpleClientHttpRequestFactory requestFactory =
+                new SimpleClientHttpRequestFactory();
+
+        requestFactory.setConnectTimeout(Duration.ofSeconds(3));
+        requestFactory.setReadTimeout(Duration.ofSeconds(8));
+
+
         this.restClient =
                 RestClient.builder()
-                        .baseUrl(baseUrl)
+                        .requestFactory(
+                                requestFactory
+                        )
+                        .baseUrl(
+                                baseUrl
+                        )
                         .build();
 
-        this.apiKey = apiKey;
+
+        this.apiKey =
+                apiKey;
     }
 
 
@@ -101,6 +120,12 @@ public class OdsayTransitClient {
                             + end.latitude(),
                     e
             );
+        }catch (RestClientException e) {
+
+            throw new IllegalStateException(
+                    "ODsay 경로 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.",
+                    e
+            );
         }
 
 
@@ -112,9 +137,6 @@ public class OdsayTransitClient {
         }
 
 
-        /*
-         * ODsay가 HTTP 200으로 오류 JSON을 줄 경우도 확인
-         */
         JsonNode error =
                 response.path("error");
 
@@ -148,9 +170,6 @@ public class OdsayTransitClient {
         }
 
 
-        /*
-         * 우선 첫 번째 추천 경로 사용
-         */
         JsonNode path =
                 paths.get(0);
 
@@ -211,10 +230,7 @@ public class OdsayTransitClient {
             );
 
 
-            /*
-             * trafficType
-             * 1 = 지하철
-             */
+
             if (trafficType == 1) {
 
                 if (startStationId == null) {
@@ -269,10 +285,7 @@ public class OdsayTransitClient {
         }
 
 
-        /*
-         * 지하철 구간이 없으면
-         * 철도/고속버스 등 현재 MVP 미지원 경로
-         */
+
         if (startStationId == null
                 || endStationId == null) {
 
@@ -282,12 +295,7 @@ public class OdsayTransitClient {
         }
 
 
-        /*
-         * 지하철 구간이
-         * 1개 → 환승 0회
-         * 2개 → 환승 1회
-         * 3개 → 환승 2회
-         */
+
         int transferCount =
                 Math.max(
                         subwaySectionCount - 1,
@@ -401,10 +409,6 @@ public class OdsayTransitClient {
 
         for (JsonNode lane : lanes) {
 
-            /*
-             * 지하철 노선 구분값
-             * 예: 1호선, 2호선 등
-             */
             int type =
                     lane.path("type")
                             .asInt();
@@ -456,9 +460,7 @@ public class OdsayTransitClient {
             }
 
 
-            /*
-             * 좌표가 실제로 있는 lane만 추가
-             */
+
             if (!points.isEmpty()) {
 
                 lines.add(
