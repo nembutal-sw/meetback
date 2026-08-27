@@ -4,27 +4,15 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MeetBack 회원가입</title>
-    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
-    <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/signup.css}">
 </head>
 
-<body class="auth-page">
+<body>
 
-<div class="signup-container auth-card">
+<div class="signup-container">
 
-    <a class="mb-brand" th:href="@{/}">
-        <img th:src="@{/images/favicon.svg}" alt="">
-        <span>MeetBack</span>
-    </a>
-
-    <div class="auth-heading">
-        <div class="mb-eyebrow">Account gate · 02</div>
-        <h1>회원가입</h1>
-        <p>참가자별 지하철 막차와 귀가 가능 시간을 확인할 계정을 만드세요.</p>
-    </div>
+    <h1>MeetBack 회원가입</h1>
 
 
     <form id="signupForm">
@@ -57,7 +45,7 @@
         <br>
 
 
-        <div id="emailCheckMessage" role="status" aria-live="polite"></div>
+        <div id="emailCheckMessage"></div>
 
 
         <br>
@@ -90,7 +78,7 @@
         <br>
 
 
-        <div id="nicknameCheckMessage" role="status" aria-live="polite"></div>
+        <div id="nicknameCheckMessage"></div>
 
 
         <br>
@@ -119,8 +107,6 @@
 
         <div
                 id="passwordMessage"
-                role="status"
-                aria-live="polite"
                 style="display: none;"
         ></div>
 
@@ -149,7 +135,7 @@
         <br>
 
 
-        <div id="passwordConfirmMessage" role="status" aria-live="polite"></div>
+        <div id="passwordConfirmMessage"></div>
 
 
         <br>
@@ -164,7 +150,7 @@
 
             <div id="termsContainer"></div>
 
-            <div id="termsMessage" role="status" aria-live="polite"></div>
+            <div id="termsMessage"></div>
 
         </div>
 
@@ -172,7 +158,7 @@
         <br>
 
 
-        <div id="signupMessage" role="status" aria-live="polite"></div>
+        <div id="signupMessage"></div>
 
 
         <br>
@@ -192,7 +178,7 @@
     <br>
 
 
-    <div class="auth-back-link">
+    <div>
 
         <a th:href="@{/login}">
             로그인으로 돌아가기
