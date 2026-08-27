@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.AdminUserMapper">
+
+    <sql id="userFilters">
+        <where>
+            <choose>
+                <when test="deleted != null and deleted">
+                    deleted_at IS NOT NULL
+                </when>
+                <otherwise>
+                    deleted_at IS NULL
+                    <if test="status != null">
+                        AND status = #{status}
+                    </if>
+                </otherwise>
+            </choose>
+            <if test="query != null and query != ''">
+                AND (
+                    nickname LIKE CONCAT('%', #{query}, '%')
+                    OR email LIKE CONCAT('%', #{query}, '%')
+                )
+            </if>
+        </where>
+    </sql>
+
+    <select id="findUsers"
+            resultType="com.meetback.dev.dto.admin.AdminUserListItem">
+        SELECT
+            user_id AS userId,
+            email,
+            nickname,
+            role,
+            status,
+            deleted_at AS deletedAt,
+            created_at AS createdAt
+        FROM users
+        <include refid="userFilters"/>
+        ORDER BY created_at DESC, user_id DESC
+        LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <select id="countUsers" resultType="long">
+        SELECT COUNT(*)
+        FROM users
+        <include refid="userFilters"/>
+    </select>
+
+    <select id="findUserDetail"
+            resultType="com.meetback.dev.dto.admin.AdminUserDetail">
+        SELECT
+            user_id AS userId,
+            email,
+            nickname,
+            role,
+            status,
+            deleted_at AS deletedAt,
+            created_at AS createdAt,
+            updated_at AS updatedAt
+        FROM users
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 상태 변경 직전의 사용자 행을 잠근다. -->
+    <select id="findUserForUpdate"
+            resultType="com.meetback.dev.domain.User">
+        SELECT
+            user_id,
+            email,
+            nickname,
+            password_hash,
+            role,
+            status,
+            token_version,
+            deleted_at,
+            created_at,
+            updated_at
+        FROM users
+        WHERE user_id = #{userId}
+        FOR UPDATE
+    </select>
+
+    <update id="suspendUser">
+        UPDATE users
+        SET status = 'SUSPENDED',
+            token_version = token_version + 1,
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+            AND status = 'ACTIVE'
+            AND deleted_at IS NULL
+    </update>
+
+    <update id="activateUser">
+        UPDATE users
+        SET status = 'ACTIVE',
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+            AND status = 'SUSPENDED'
+            AND deleted_at IS NULL
+    </update>
+
+    <!-- 입력된 관리자 계정 항목만 변경한다. -->
+    <update id="updateAdminAccount">
+        UPDATE users
+        <set>
+            <if test="loginId != null">
+                email = #{loginId},
+            </if>
+            <if test="nickname != null">
+                nickname = #{nickname},
+            </if>
+            <if test="passwordHash != null">
+                password_hash = #{passwordHash},
+            </if>
+            <if test="increaseTokenVersion">
+                token_version = token_version + 1,
+            </if>
+            updated_at = NOW()
+        </set>
+        WHERE user_id = #{userId}
+            AND role IN ('ADMIN', 'ROLE_ADMIN')
+            AND deleted_at IS NULL
+    </update>
+
+</mapper>

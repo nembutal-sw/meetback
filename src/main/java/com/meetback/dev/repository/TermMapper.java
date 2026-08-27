@@ -4,16 +4,28 @@ import com.meetback.dev.domain.Term;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
 public interface TermMapper {
+
+    // 약관 적용 시각을 DB 기준으로 맞춘다.
+    LocalDateTime findCurrentDateTime();
 
     // 현재 적용 중인 약관 전체 조회
     List<Term> findAllActiveTerms();
 
     // 현재 적용 중인 필수 약관 조회
     List<Term> findAllRequiredActiveTerms();
+
+    // 관리자 화면에서 모든 버전을 조회한다.
+    List<Term> findAllForAdmin();
+
+    // 같은 코드의 버전 등록을 직렬화한다.
+    List<Term> findByTermCodeForUpdate(
+            @Param("termCode") String termCode
+    );
 
     // 약관 ID로 조회
     Term findByTermId(Long termId);

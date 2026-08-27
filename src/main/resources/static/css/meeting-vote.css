@@ -1178,3 +1178,421 @@ body > hr {
     color: #666;
     line-height: 1.7;
 }
+
+/* Figma 야간 대중교통 테마 */
+:root {
+    --primary: #f5a623;
+    --primary-dark: #dc8e12;
+    --primary-light: rgba(245, 166, 35, 0.12);
+    --text-main: #e8f0fe;
+    --text-sub: #8ba3cc;
+    --text-light: #60789f;
+    --background: #071428;
+    --card: #0d1f3c;
+    --border: rgba(255, 255, 255, 0.1);
+    --success: #4ade80;
+    --success-bg: rgba(74, 222, 128, 0.1);
+    --danger: #f87171;
+    --danger-bg: rgba(248, 113, 113, 0.1);
+    --fair: #a78bfa;
+    --fair-bg: rgba(167, 139, 250, 0.1);
+    --shadow: 0 18px 50px rgba(0, 0, 0, 0.24);
+    --shadow-hover: 0 24px 62px rgba(0, 0, 0, 0.32);
+}
+
+html {
+    background: #071428;
+}
+
+body {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    color: #e8f0fe;
+    background-color: #071428;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        radial-gradient(circle at 70% 12%, rgba(167, 139, 250, 0.1), transparent 30%);
+    background-size: 48px 48px, 48px 48px, auto;
+}
+
+.meeting-session-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: rgba(7, 20, 40, 0.9);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px);
+}
+
+.meeting-session-header__inner {
+    display: flex;
+    width: min(1180px, 100%);
+    min-height: 72px;
+    margin: 0 auto;
+    padding: 10px 24px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.meeting-session-header__actions,
+.meeting-session-user {
+    display: flex;
+    align-items: center;
+}
+
+.meeting-session-header__actions {
+    gap: 16px;
+}
+
+.meeting-session-step {
+    color: #8ba3cc;
+    font-family: var(--mb-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+}
+
+.meeting-session-user {
+    gap: 10px;
+    padding-left: 16px;
+    border-left: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.meeting-session-avatar {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    color: #071428;
+    background: #f5a623;
+    border-radius: 10px;
+    font-family: var(--mb-mono);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.meeting-session-user > span:last-child {
+    display: grid;
+    line-height: 1.25;
+}
+
+.meeting-session-user strong {
+    color: #e8f0fe;
+    font-size: 13px;
+}
+
+.meeting-session-user small {
+    color: #8ba3cc;
+    font-size: 11px;
+}
+
+.meeting-session-home {
+    min-height: 38px;
+    padding: 7px 13px;
+}
+
+.meeting-page {
+    width: min(1080px, 100%);
+    margin: 0 auto;
+    padding: 52px 24px 96px;
+}
+
+.vote-page-intro {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+.meeting-page-eyebrow {
+    display: block;
+    margin-bottom: 10px;
+    color: #a78bfa;
+    font-family: var(--mb-mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+}
+
+.meeting-page-intro h1 {
+    margin: 0 0 10px;
+    color: #e8f0fe;
+    font-size: clamp(32px, 6vw, 46px);
+    line-height: 1.15;
+    letter-spacing: -0.04em;
+}
+
+.meeting-page-intro h1::before {
+    display: none;
+}
+
+.meeting-page-intro p {
+    max-width: 650px;
+    margin: 0;
+    color: #8ba3cc;
+    font-size: 15px;
+}
+
+button {
+    color: #e8f0fe;
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.16);
+}
+
+button:hover {
+    color: #e8f0fe;
+    background: rgba(77, 136, 255, 0.1);
+    border-color: rgba(77, 136, 255, 0.62);
+}
+
+.primary,
+.primary:hover {
+    color: #071428;
+    background: #f5a623;
+    border: 1px solid #f5a623;
+    box-shadow: 0 10px 28px rgba(245, 166, 35, 0.2);
+}
+
+.meeting-page > hr {
+    margin: 0 0 22px;
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vote-progress-area {
+    margin-bottom: 20px;
+    padding: 18px 20px;
+    color: #e8f0fe;
+    background: rgba(77, 136, 255, 0.08);
+    border: 1px solid rgba(77, 136, 255, 0.24);
+    border-radius: 12px;
+}
+
+.vote-progress-title {
+    color: #e8f0fe;
+}
+
+.vote-progress-complete {
+    color: #4ade80;
+}
+
+.vote-progress-waiting,
+.vote-progress-detail {
+    color: #8ba3cc;
+}
+
+#rankingArea {
+    display: grid;
+    gap: 18px;
+}
+
+.candidate {
+    padding: 28px;
+    color: #e8f0fe;
+    background: rgba(13, 31, 60, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+}
+
+.candidate:hover {
+    border-color: rgba(77, 136, 255, 0.42);
+    box-shadow: var(--shadow-hover);
+}
+
+.candidate.top {
+    background:
+        linear-gradient(135deg, rgba(245, 166, 35, 0.08), rgba(13, 31, 60, 0.96) 45%);
+    border-color: rgba(245, 166, 35, 0.42);
+}
+
+.candidate.top::before {
+    background: linear-gradient(90deg, #f5a623, #4d88ff, #a78bfa);
+}
+
+.candidate.top::after {
+    color: #071428;
+    background: #f5a623;
+}
+
+.candidate-title h2,
+.candidate.top .candidate-title h2 {
+    color: #e8f0fe;
+}
+
+.candidate-address {
+    color: #8ba3cc;
+}
+
+.badge {
+    border: 1px solid transparent;
+}
+
+.badge-top {
+    color: #f5a623;
+    background: rgba(245, 166, 35, 0.1);
+    border-color: rgba(245, 166, 35, 0.24);
+}
+
+.badge-fair {
+    color: #a78bfa;
+    background: rgba(167, 139, 250, 0.1);
+}
+
+.badge-return {
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.1);
+}
+
+.info {
+    color: #e8f0fe;
+    background: #0a1930;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.info::after {
+    background: rgba(77, 136, 255, 0.18);
+}
+
+.info strong {
+    color: #e8f0fe;
+}
+
+.info-label {
+    color: #8ba3cc;
+}
+
+.participant-results {
+    color: #c7d5ec;
+    background: #08172b;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.participant-result {
+    border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+.participant-result strong {
+    color: #e8f0fe;
+}
+
+.return-possible {
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.1);
+}
+
+.return-impossible {
+    color: #f87171;
+    background: rgba(248, 113, 113, 0.1);
+}
+
+.abstain-area,
+.host-area {
+    margin-top: 18px;
+    color: #e8f0fe;
+    background: rgba(13, 31, 60, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+}
+
+.abstain-area p,
+.host-area p {
+    color: #8ba3cc;
+}
+
+.abstain-button {
+    color: #f87171;
+    border-color: rgba(248, 113, 113, 0.3);
+}
+
+.host-area::after {
+    background: radial-gradient(circle, rgba(167, 139, 250, 0.15), transparent 68%);
+}
+
+.host-area h2 {
+    color: #e8f0fe;
+}
+
+.host-area h2::before {
+    background: #a78bfa;
+    box-shadow: 0 0 0 6px rgba(167, 139, 250, 0.1);
+}
+
+.confirm-overlay {
+    background: rgba(2, 9, 20, 0.78);
+    backdrop-filter: blur(8px);
+}
+
+.confirm-modal {
+    color: #e8f0fe;
+    background: #0d1f3c;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 28px 80px rgba(0, 0, 0, 0.46);
+}
+
+.confirm-modal::before {
+    border-color: rgba(245, 166, 35, 0.2);
+}
+
+.confirm-title {
+    color: #e8f0fe;
+}
+
+.confirm-title::before {
+    background: #f5a623;
+    box-shadow: 0 0 0 6px rgba(245, 166, 35, 0.1);
+}
+
+.confirm-message {
+    color: #8ba3cc;
+}
+
+.toast {
+    color: #e8f0fe;
+    background: #0d1f3c;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.38);
+}
+
+@media (max-width: 760px) {
+    .meeting-session-step {
+        display: none;
+    }
+
+    .meeting-session-header__inner {
+        padding-inline: 16px;
+    }
+
+    .meeting-session-user {
+        padding-left: 0;
+        border-left: 0;
+    }
+
+    .meeting-session-home,
+    .meeting-session-user small {
+        display: none;
+    }
+
+    .meeting-page {
+        padding: 38px 16px 72px;
+    }
+
+    .vote-page-intro {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .vote-page-intro > button {
+        width: 100%;
+    }
+
+    .candidate,
+    .abstain-area,
+    .host-area {
+        padding: 22px 18px;
+    }
+}
