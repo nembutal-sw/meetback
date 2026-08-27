@@ -20,4 +20,5 @@ public class CandidateReturnResult {
     private Boolean canReturn;
     private LocalDateTime calculatedAt;
     private String routeMapObj;
+    private String routeMapData;
 }

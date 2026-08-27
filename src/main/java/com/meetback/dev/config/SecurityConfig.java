@@ -19,7 +19,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http
-    ) {
+    ) throws Exception {
 
         return http
                 .csrf(
@@ -34,6 +34,16 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         auth ->
                                 auth
+
+                                        // 관리자 API
+                                        .requestMatchers(
+                                                "/admin/api/**"
+                                        )
+                                        .hasAuthority(
+                                                "ROLE_admin"
+                                        )
+
+                                        // 공개 페이지 / 공개 API
                                         .requestMatchers(
                                                 "/",
                                                 "/login",
@@ -43,17 +53,17 @@ public class SecurityConfig {
                                                 "/reset-password",
                                                 "/home",
 
+                                                // 관리자 HTML 페이지
+                                                "/admin/terms",
+
                                                 "/auth/login",
                                                 "/auth/signup",
                                                 "/auth/kakao",
                                                 "/auth/google",
                                                 "/auth/refresh",
-
                                                 "/auth/server-instance",
-
                                                 "/auth/email/check",
                                                 "/auth/nickname/check",
-
                                                 "/auth/find-email",
                                                 "/auth/password/reset/request",
                                                 "/auth/password/reset/confirm",
@@ -80,6 +90,7 @@ public class SecurityConfig {
                                         )
                                         .permitAll()
 
+                                        // 로그인 사용자 전용
                                         .requestMatchers(
                                                 "/auth/check",
                                                 "/auth/logout",

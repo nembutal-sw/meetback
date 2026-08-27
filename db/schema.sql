@@ -13,8 +13,9 @@ CREATE TABLE users (
                        nickname VARCHAR(255),
                        password_hash VARCHAR(255),
     -- JWT 로그아웃 시 기존 Access / Refresh Token 무효화용
-                       token_version BIGINT NOT NULL DEFAULT 0,
-                       role VARCHAR(255) DEFAULT "USER",
+                       token_version INT NOT NULL DEFAULT 0,
+                       role VARCHAR(255) DEFAULT 'USER',
+                       status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
                        deleted_at DATETIME,
                        created_at DATETIME,
                        updated_at DATETIME,
@@ -22,7 +23,9 @@ CREATE TABLE users (
                        CONSTRAINT uq_users_email
                            UNIQUE (email),
                        CONSTRAINT uq_users_nickname
-                           UNIQUE (nickname)
+                           UNIQUE (nickname),
+                       CONSTRAINT chk_users_status
+                           CHECK (status IN ('ACTIVE', 'SUSPENDED'))
 );
 
 
@@ -324,7 +327,6 @@ CREATE TABLE meeting_candidates (
 -- ============================================================
 -- 13. CANDIDATE_RETURN_RESULTS
 -- ============================================================
-
 CREATE TABLE candidate_return_results (
                                           result_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
@@ -336,6 +338,9 @@ CREATE TABLE candidate_return_results (
 
                                           return_minutes INT,
                                           transfer_count INT,
+
+                                          route_map_obj TEXT NULL,
+                                          route_map_data LONGTEXT NULL,
 
                                           last_train_departure_at DATETIME,
                                           last_train_arrival_at DATETIME,
@@ -538,8 +543,12 @@ ALTER TABLE meetings
     ADD CONSTRAINT fk_meetings_final_candidate
         FOREIGN KEY (final_candidate_id)
             REFERENCES meeting_candidates(candidate_id)
+<<<<<<< HEAD
             ON DELETE SET NULL;
 
---경로 안내용 컬럼 추가 - 이래원
+-- 결과 화면에서 사용하는 대중교통 경로 응답 데이터를 저장한다.
 ALTER TABLE candidate_return_results
     ADD COLUMN route_map_obj TEXT NULL;
+=======
+            ON DELETE SET NULL;
+>>>>>>> origin/main
