@@ -20,9 +20,7 @@ public interface CandidateReturnResultMapper {
             @Param("calculationVersion") Integer calculationVersion
     );
 
-
     void deleteByCandidateId(Long candidateId);
-
 
     CandidateReturnResult findByCandidateAndParticipantAndVersion(
             @Param("candidateId") Long candidateId,
@@ -32,5 +30,8 @@ public interface CandidateReturnResultMapper {
 
     void deleteByParticipantId(Long participantId);
 
-
+    void updateRouteMapData(
+            @Param("resultId") Long resultId,
+            @Param("routeMapData") String routeMapData
+    );
 }

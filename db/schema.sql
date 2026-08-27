@@ -327,7 +327,6 @@ CREATE TABLE meeting_candidates (
 -- ============================================================
 -- 13. CANDIDATE_RETURN_RESULTS
 -- ============================================================
-
 CREATE TABLE candidate_return_results (
                                           result_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
@@ -339,6 +338,9 @@ CREATE TABLE candidate_return_results (
 
                                           return_minutes INT,
                                           transfer_count INT,
+
+                                          route_map_obj TEXT NULL,
+                                          route_map_data LONGTEXT NULL,
 
                                           last_train_departure_at DATETIME,
                                           last_train_arrival_at DATETIME,
@@ -541,8 +543,12 @@ ALTER TABLE meetings
     ADD CONSTRAINT fk_meetings_final_candidate
         FOREIGN KEY (final_candidate_id)
             REFERENCES meeting_candidates(candidate_id)
+<<<<<<< HEAD
             ON DELETE SET NULL;
 
 -- 결과 화면에서 사용하는 대중교통 경로 응답 데이터를 저장한다.
 ALTER TABLE candidate_return_results
     ADD COLUMN route_map_obj TEXT NULL;
+=======
+            ON DELETE SET NULL;
+>>>>>>> origin/main
