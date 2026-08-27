@@ -56,9 +56,9 @@ html {
             );
 }
 
+
 body {
     width: min(1000px, calc(100% - 40px));
-
     min-height: 100vh;
 
     margin: 0 auto;
@@ -92,6 +92,7 @@ p {
     margin-top: 0;
 }
 
+
 button {
     min-height: 42px;
 
@@ -120,6 +121,7 @@ button {
             transform 0.18s ease;
 }
 
+
 button:hover {
     border-color: #aaa2ff;
 
@@ -130,9 +132,11 @@ button:hover {
     transform: translateY(-1px);
 }
 
+
 button:active {
     transform: translateY(1px);
 }
+
 
 button:disabled {
     cursor: default;
@@ -164,6 +168,7 @@ button:disabled {
     box-shadow:
             0 6px 17px rgba(101, 87, 246, 0.22);
 }
+
 
 .primary:hover {
     border: none;
@@ -216,6 +221,7 @@ button:disabled {
     box-shadow: var(--shadow);
 }
 
+
 .result-header::before {
     content: "";
 
@@ -235,6 +241,7 @@ button:disabled {
     pointer-events: none;
 }
 
+
 .result-header::after {
     content: "";
 
@@ -252,11 +259,13 @@ button:disabled {
     pointer-events: none;
 }
 
+
 .result-header > * {
     position: relative;
 
     z-index: 1;
 }
+
 
 .result-label {
     display: inline-block;
@@ -271,6 +280,7 @@ button:disabled {
     letter-spacing: 1.5px;
 }
 
+
 .result-header h1 {
     margin:
             0 0
@@ -283,6 +293,7 @@ button:disabled {
 
     letter-spacing: -1.2px;
 }
+
 
 .result-header h1::before {
     content: "";
@@ -303,6 +314,7 @@ button:disabled {
 
     vertical-align: 5px;
 }
+
 
 .result-header p {
     margin: 0;
@@ -325,6 +337,7 @@ button:disabled {
 
     gap: 10px;
 }
+
 
 #whatIfButton {
     min-width: 150px;
@@ -357,6 +370,7 @@ button:disabled {
             box-shadow 0.2s ease;
 }
 
+
 .result-card:hover {
     border-color: #dedbf6;
 
@@ -379,6 +393,7 @@ button:disabled {
     margin-bottom: 22px;
 }
 
+
 .section-title h2 {
     margin:
             3px 0
@@ -391,6 +406,7 @@ button:disabled {
 
     letter-spacing: -0.5px;
 }
+
 
 .section-title h2::before {
     content: "";
@@ -413,6 +429,7 @@ button:disabled {
 
     vertical-align: -2px;
 }
+
 
 .section-small {
     color: var(--primary);
@@ -444,6 +461,7 @@ button:disabled {
             0 12px 35px rgba(101, 87, 246, 0.12);
 }
 
+
 .final-card::after {
     content: "";
 
@@ -462,6 +480,7 @@ button:disabled {
 
     pointer-events: none;
 }
+
 
 .final-card > * {
     position: relative;
@@ -482,6 +501,7 @@ button:disabled {
     gap: 18px;
 }
 
+
 .final-desired-end {
     display: flex;
 
@@ -492,12 +512,14 @@ button:disabled {
     gap: 5px;
 }
 
+
 .final-desired-end span {
     color: var(--text-sub);
 
     font-size: 10px;
     font-weight: 600;
 }
+
 
 .final-desired-end strong {
     color: #35334e;
@@ -557,6 +579,7 @@ button:disabled {
             rgba(255, 255, 255, 0.72);
 }
 
+
 .final-place-name {
     margin-bottom: 7px;
 
@@ -567,6 +590,7 @@ button:disabled {
 
     letter-spacing: -0.8px;
 }
+
 
 .final-place-address {
     color: var(--text-sub);
@@ -584,10 +608,11 @@ button:disabled {
     display: grid;
 
     grid-template-columns:
-        repeat(3, minmax(0, 1fr));
+            repeat(3, minmax(0, 1fr));
 
     gap: 11px;
 }
+
 
 .summary-item {
     position: relative;
@@ -609,6 +634,7 @@ button:disabled {
             );
 }
 
+
 .summary-item::after {
     content: "";
 
@@ -626,6 +652,7 @@ button:disabled {
             rgba(101, 87, 246, 0.055);
 }
 
+
 .summary-item span {
     position: relative;
 
@@ -640,6 +667,7 @@ button:disabled {
     font-size: 11px;
     font-weight: 600;
 }
+
 
 .summary-item strong {
     position: relative;
@@ -669,6 +697,7 @@ button:disabled {
     font-size: 13px;
 }
 
+
 .participant-result {
     padding: 18px;
 
@@ -677,6 +706,7 @@ button:disabled {
 
     background: #fafafe;
 }
+
 
 .participant-result-header {
     display: flex;
@@ -689,10 +719,68 @@ button:disabled {
     margin-bottom: 15px;
 }
 
+
 .participant-result-header strong {
     color: #373744;
 
     font-size: 14px;
+}
+
+
+.participant-result-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+}
+
+
+/* =========================================================
+   지도 버튼 / 도보
+   ========================================================= */
+
+.route-map-button {
+    min-height: 34px;
+
+    padding: 0 13px;
+
+    border: 1px solid #dcd7ff;
+    border-radius: 9px;
+
+    background: #ffffff;
+
+    color: var(--primary);
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+.route-map-button:hover {
+    background: #f1efff;
+
+    border-color: #bfb6ff;
+}
+
+
+.walking-route-label {
+    display: inline-flex;
+
+    align-items: center;
+
+    min-height: 28px;
+
+    padding: 0 10px;
+
+    border-radius: 9px;
+
+    background: #f3f2f8;
+
+    color: #777788;
+
+    font-size: 11px;
+    font-weight: 700;
 }
 
 
@@ -716,6 +804,7 @@ button:disabled {
     font-weight: 700;
 }
 
+
 .possible {
     border: 1px solid #ccebd7;
 
@@ -723,6 +812,7 @@ button:disabled {
 
     color: var(--success);
 }
+
 
 .impossible {
     border: 1px solid #efc9cc;
@@ -741,10 +831,11 @@ button:disabled {
     display: grid;
 
     grid-template-columns:
-        repeat(4, minmax(0, 1fr));
+            repeat(4, minmax(0, 1fr));
 
     gap: 9px;
 }
+
 
 .participant-info-grid > div {
     padding: 13px;
@@ -754,6 +845,7 @@ button:disabled {
 
     background: #ffffff;
 }
+
 
 .participant-info-grid span {
     display: block;
@@ -766,10 +858,393 @@ button:disabled {
     font-weight: 600;
 }
 
+
 .participant-info-grid strong {
     color: #444452;
 
     font-size: 12px;
+}
+
+
+/* =========================================================
+   지도 모달
+   ========================================================= */
+
+.route-map-modal {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 9999;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 30px;
+
+    background:
+            rgba(20, 20, 35, 0.55);
+
+    backdrop-filter: blur(3px);
+}
+
+
+.route-map-modal.open {
+    display: flex;
+}
+
+
+.route-map-modal-content {
+    width: min(900px, 100%);
+
+    max-height: 90vh;
+
+    padding: 24px;
+
+    overflow-y: auto;
+
+    border-radius: 22px;
+
+    background: #ffffff;
+
+    box-shadow:
+            0 24px 70px rgba(30, 25, 70, 0.22);
+}
+
+
+.route-map-modal-header {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 18px;
+}
+
+
+.route-map-modal-header h2 {
+    margin: 5px 0 0;
+}
+
+
+.route-map-close {
+    width: 42px;
+    height: 42px;
+
+    min-height: 42px;
+
+    padding: 0;
+
+    border: none;
+    border-radius: 50%;
+
+    background: #f3f2f8;
+
+    color: #55556a;
+
+    font-size: 26px;
+    line-height: 1;
+}
+
+
+.route-map-close:hover {
+    border: none;
+
+    background: #e9e7f3;
+
+    color: #55556a;
+
+    transform: none;
+}
+
+
+/* =========================================================
+   지도
+   ========================================================= */
+
+.route-map {
+    display: none;
+
+    width: 100%;
+    height: 420px;
+
+    overflow: hidden;
+
+    border: 1px solid #e8e7f1;
+    border-radius: 16px;
+}
+
+
+.route-map-loading {
+    display: flex;
+
+    width: 100%;
+    height: 420px;
+
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #e8e7f1;
+    border-radius: 16px;
+
+    background: #f8f8fd;
+
+    color: #777788;
+}
+
+
+/* =========================================================
+   지도 하단 귀가 정보
+   ========================================================= */
+
+.route-map-info {
+    display: flex;
+
+    align-items: center;
+
+    gap: 28px;
+
+    margin-top: 16px;
+
+    padding: 0 2px;
+
+    color: #777788;
+
+    font-size: 14px;
+}
+
+
+.route-map-info strong {
+    margin-left: 5px;
+
+    color: #191924;
+
+    font-size: 15px;
+}
+
+
+/* =========================================================
+   간단 노선 안내
+   ========================================================= */
+
+.route-guide {
+    display: none;
+
+    margin-top: 14px;
+
+    padding: 13px 16px;
+
+    border: 1px solid #e8e7f1;
+    border-radius: 13px;
+
+    background: #fafaff;
+}
+
+
+.route-guide-content {
+    display: flex;
+
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 8px;
+}
+
+
+.route-guide-label {
+    margin-right: 4px;
+
+    color: #777788;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+.route-guide-line-chip {
+    display: inline-flex;
+
+    align-items: center;
+
+    padding: 5px 9px;
+
+    border-radius: 8px;
+
+    background: #eeecff;
+
+    color: var(--primary);
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+.route-guide-transfer-station {
+    color: #191924;
+
+    font-size: 13px;
+    font-weight: 800;
+}
+
+
+.route-guide-transfer-badge {
+    padding: 4px 7px;
+
+    border-radius: 7px;
+
+    background: #fff2e8;
+
+    color: #e16a2d;
+
+    font-size: 11px;
+    font-weight: 800;
+}
+
+
+.route-guide-arrow {
+    color: #a5a1ba;
+
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* =========================================================
+   지도 위 역 마커
+   ========================================================= */
+
+.route-station-marker {
+    --marker-color: #6557f6;
+    --marker-next-color: var(--marker-color);
+
+    position: relative;
+
+    min-width: 105px;
+
+    padding: 8px 11px;
+
+    border: 2px solid var(--marker-color);
+    border-radius: 11px;
+
+    background: #ffffff;
+
+    box-shadow:
+            0 4px 14px rgba(30, 25, 70, 0.20);
+
+    transform:
+            translate(-50%, -100%);
+
+    text-align: center;
+
+    white-space: nowrap;
+
+    pointer-events: none;
+}
+
+
+.route-station-marker::after {
+    position: absolute;
+
+    left: 50%;
+    bottom: -8px;
+
+    width: 12px;
+    height: 12px;
+
+    content: "";
+
+    background: #ffffff;
+
+    border-right: 2px solid var(--marker-color);
+    border-bottom: 2px solid var(--marker-color);
+
+    transform:
+            translateX(-50%)
+            rotate(45deg);
+}
+
+
+.route-station-marker-header {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 6px;
+}
+
+
+.route-station-marker-badge {
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 3px 7px;
+
+    border-radius: 6px;
+
+    background: var(--marker-color);
+
+    color: #ffffff;
+
+    font-size: 10px;
+    font-weight: 800;
+}
+
+
+/*
+ * 환승은 이전 호선 → 다음 호선 색상을
+ * 둘 다 보여준다.
+ */
+.route-station-marker.transfer
+.route-station-marker-badge {
+    background:
+            linear-gradient(
+                    135deg,
+                    var(--marker-color) 0%,
+                    var(--marker-color) 48%,
+                    var(--marker-next-color) 52%,
+                    var(--marker-next-color) 100%
+            );
+}
+
+
+.route-station-marker-name {
+    color: #191924;
+
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+.route-station-marker-line {
+    margin-top: 6px;
+
+    color: var(--marker-color);
+
+    font-size: 10px;
+    font-weight: 800;
+}
+
+
+/*
+ * 환승역은 두 번째 호선 색상도 같이 표현
+ */
+.route-station-marker.transfer
+.route-station-marker-line {
+    background:
+            linear-gradient(
+                    90deg,
+                    var(--marker-color),
+                    var(--marker-next-color)
+            );
+
+    background-clip: text;
+    -webkit-background-clip: text;
+
+    color: transparent;
 }
 
 
@@ -788,11 +1263,12 @@ button:disabled {
     max-width:
             calc(100vw - 40px);
 
-    z-index: 9999;
+    z-index: 10000;
 
     transform:
             translateX(-50%);
 }
+
 
 .toast {
     display: none;
@@ -806,6 +1282,7 @@ button:disabled {
 
     font-size: 13px;
     font-weight: 600;
+
     line-height: 1.5;
 
     white-space: pre-line;
@@ -814,12 +1291,14 @@ button:disabled {
             0 10px 30px rgba(35, 32, 61, 0.15);
 }
 
+
 .toast.show {
     display: block;
 
     animation:
             toast-in 0.22s ease;
 }
+
 
 @keyframes toast-in {
 
@@ -836,8 +1315,8 @@ button:disabled {
         transform:
                 translateY(0);
     }
-
 }
+
 
 .toast-error {
     border-color: #efc5c9;
@@ -847,6 +1326,7 @@ button:disabled {
     color: var(--danger);
 }
 
+
 .toast-success {
     border-color: #c7e8d3;
 
@@ -854,6 +1334,7 @@ button:disabled {
 
     color: var(--success);
 }
+
 
 .toast-info {
     border-color: #d9d5ff;
@@ -880,15 +1361,14 @@ button:disabled {
 
     .summary-grid {
         grid-template-columns:
-            repeat(2, 1fr);
+                repeat(2, 1fr);
     }
 
 
     .participant-info-grid {
         grid-template-columns:
-            repeat(2, 1fr);
+                repeat(2, 1fr);
     }
-
 }
 
 
@@ -986,4 +1466,65 @@ button:disabled {
         font-size: 22px;
     }
 
+
+    .route-map-modal {
+        padding: 12px;
+    }
+
+
+    .route-map-modal-content {
+        padding: 18px;
+    }
+
+
+    .route-map,
+    .route-map-loading {
+        height: 390px;
+    }
+
+
+    .route-map-info {
+        gap: 16px;
+
+        font-size: 12px;
+    }
+
+
+    .route-guide {
+        padding: 12px;
+    }
+
+
+    .route-guide-content {
+        gap: 6px;
+    }
+
+
+    .route-station-marker {
+        min-width: 90px;
+
+        padding: 6px 8px;
+    }
+
+
+    .route-station-marker-name {
+        font-size: 11px;
+    }
+
+
+    .route-station-marker-line {
+        font-size: 9px;
+    }
+
+    .route-station-marker.start {
+        transform: translate(-80%, -100%);
+    }
+
+    .route-station-marker.transfer {
+        transform: translate(-20%, -85%);
+    }
+
+    .route-station-marker.end {
+        transform: translate(-50%, -100%);
+    }
 }

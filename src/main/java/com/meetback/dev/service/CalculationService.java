@@ -16,6 +16,9 @@ import com.meetback.dev.transport.dto.TransitRouteDTO;
 import com.meetback.dev.transport.service.RouteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.meetback.dev.transport.dto.RouteMapDTO;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,6 +40,7 @@ public class CalculationService {
     private final CandidateEvaluationService candidateEvaluationService;
     private final RouteService routeService;
     private final OdsaySubwayClient odsaySubwayClient;
+    private final ObjectMapper objectMapper;
 
 
     public CandidateReturnResult calculateReturn(
@@ -408,6 +412,31 @@ public class CalculationService {
         result.setRouteMapObj(
                 route.mapObj()
         );
+
+        try {
+
+            RouteMapDTO initialRouteMap =
+                    new RouteMapDTO(
+                            candidate.getPlaceName(),
+                            participant.getReturnName(),
+                            List.of(),
+                            route.steps()
+                    );
+
+
+            result.setRouteMapData(
+                    objectMapper.writeValueAsString(
+                            initialRouteMap
+                    )
+            );
+
+        } catch (JacksonException e) {
+
+            throw new IllegalStateException(
+                    "귀가 경로 정보를 저장할 수 없습니다.",
+                    e
+            );
+        }
 
 
         result.setLastTrainDepartureAt(
