@@ -2,10 +2,14 @@ package com.meetback.dev.transport.client;
 
 import com.meetback.dev.transport.dto.LastTrainDTO;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
 import tools.jackson.databind.JsonNode;
+
+import java.time.Duration;
 
 @Component
 public class OdsaySubwayClient {
@@ -19,7 +23,14 @@ public class OdsaySubwayClient {
     ) {
         this.apiKey = apiKey;
 
+        SimpleClientHttpRequestFactory requestFactory =
+                new SimpleClientHttpRequestFactory();
+
+        requestFactory.setConnectTimeout(Duration.ofSeconds(5));
+        requestFactory.setReadTimeout(Duration.ofSeconds(15));
+
         this.restClient = RestClient.builder()
+                .requestFactory(requestFactory)
                 .baseUrl(baseUrl)
                 .build();
     }
@@ -29,11 +40,9 @@ public class OdsaySubwayClient {
             String endStationId,
             int day
     ) {
-
         JsonNode response;
 
         try {
-
             response = restClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .pathSegment("subwayPathSchedule")
@@ -48,12 +57,17 @@ public class OdsaySubwayClient {
                     .body(JsonNode.class);
 
         } catch (RestClientResponseException e) {
-
             throw new IllegalStateException(
                     "ODsay 막차 조회 실패: ["
                             + e.getStatusCode()
                             + "] "
                             + e.getResponseBodyAsString(),
+                    e
+            );
+
+        } catch (RestClientException e) {
+            throw new IllegalStateException(
+                    "ODsay 막차 서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.",
                     e
             );
         }
@@ -84,7 +98,7 @@ public class OdsaySubwayClient {
             );
         }
 
-        // 우선 첫 번째 막차 경로 사용
+        // 첫 번째 막차 경로 사용
         JsonNode info =
                 paths.get(0).path("info");
 

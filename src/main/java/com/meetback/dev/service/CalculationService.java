@@ -16,7 +16,6 @@ import com.meetback.dev.transport.dto.TransitRouteDTO;
 import com.meetback.dev.transport.service.RouteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -440,7 +439,6 @@ public class CalculationService {
     }
 
 
-    @Transactional
     public List<CandidateReturnResult> calculateCandidate(
             Long candidateId
     ) {
@@ -561,7 +559,6 @@ public class CalculationService {
     }
 
 
-    @Transactional
     public List<CandidateEvaluation> calculateMeeting(
             Long meetingId
     ) {

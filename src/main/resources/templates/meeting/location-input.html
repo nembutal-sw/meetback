@@ -19,8 +19,6 @@
 
     <script src="/js/auth-session-guard.js" defer></script>
 
-
-
 </head>
 
 <body>
@@ -87,7 +85,6 @@
     </div>
 
 
-
     <!-- 귀가 장소 -->
 
     <div class="field">
@@ -126,7 +123,6 @@
         </div>
 
     </div>
-
 
 
     <!-- 희망 장소 -->
@@ -206,24 +202,41 @@
 </div>
 
 
-
 <script>
 
-    let meetingId = null;
+    // =========================================================
+    // 상태
+    // =========================================================
 
-    let participant = null;
+    let meetingId =
+        null;
 
-    let pageMode = "create";
+    let currentUser =
+        null;
 
-    let selectedDeparture = null;
+    let participant =
+        null;
 
-    let selectedReturn = null;
+    let pageMode =
+        "create";
 
-    let selectedCandidate = null;
 
-    let candidateTouched = false;
+    let selectedDeparture =
+        null;
 
-    let toastTimer = null;
+    let selectedReturn =
+        null;
+
+    let selectedCandidate =
+        null;
+
+
+    let candidateTouched =
+        false;
+
+
+    let toastTimer =
+        null;
 
 
     const searchTimers = {
@@ -233,8 +246,8 @@
         return: null,
 
         candidate: null
-
     };
+
 
     const searchRequestVersion = {
 
@@ -243,59 +256,86 @@
         return: 0,
 
         candidate: 0
-
     };
+
+
+    // =========================================================
+    // Toast
+    // =========================================================
+
     function showToast(
         message,
         type = "info"
     ) {
+
         const toast =
             document.getElementById(
                 "toastMessage"
             );
+
+
         if (toastTimer) {
 
             clearTimeout(
                 toastTimer
             );
         }
+
+
         toast.textContent =
             message;
+
+
         toast.className =
             "toast show";
+
+
         if (type === "error") {
+
             toast.classList.add(
                 "toast-error"
             );
         }
         else if (type === "success") {
+
             toast.classList.add(
                 "toast-success"
             );
         }
         else {
+
             toast.classList.add(
                 "toast-info"
             );
         }
+
+
         toastTimer =
             setTimeout(
                 () => {
+
                     toast.classList.remove(
                         "show"
                     );
+
                 },
                 4000
             );
     }
+
+
+    // =========================================================
+    // 초기화
+    // =========================================================
+
     async function initialize() {
 
         currentUser =
             await MeetBack.checkLogin();
 
 
-        if (!currentUser)
-        {
+        if (!currentUser) {
+
             return;
         }
 
@@ -304,22 +344,18 @@
             MeetBack.getMeetingId();
 
 
-        if (!meetingId)
-        {
+        if (!meetingId) {
 
             location.href =
                 "/home";
-
 
             return;
         }
 
 
-        // =========================================================
-        // ★ Presence 연결
-        //
-        // 반드시 meetingId를 구한 "뒤"에 호출
-        // =========================================================
+        // =====================================================
+        // Presence 연결
+        // =====================================================
 
         MeetBackPresence.connect(
             meetingId
@@ -330,36 +366,61 @@
             new URLSearchParams(
                 location.search
             );
+
+
         pageMode =
             params.get("mode")
             || "create";
+
+
         if (pageMode === "edit") {
+
             document.getElementById(
                 "backToRoomButton"
             ).textContent =
                 "수정 취소하고 모임방으로";
-
         }
+
+
+        // =====================================================
+        // 현재 참가자 조회
+        // =====================================================
+
         const response =
             await MeetBack.authenticatedFetch(
                 "/participants/meetings/"
                 + meetingId
                 + "/participants/me"
             );
+
+
         if (!response.ok) {
+
             showToast(
                 "참가자 정보를 찾을 수 없습니다.",
                 "error"
             );
+
             return;
         }
+
+
         participant =
             await response.json();
 
 
+        // 기존 출발지/귀가지
         await loadSavedLocation();
 
+
+        // 기존 희망 장소
+        await loadSavedCandidate();
     }
+
+
+    // =========================================================
+    // 기존 출발지 / 귀가지 불러오기
+    // =========================================================
 
     async function loadSavedLocation() {
 
@@ -368,16 +429,30 @@
                 "/participants/"
                 + participant.participantId
             );
+
+
         if (!response.ok) {
+
             return;
         }
+
+
         const data =
             await response.json();
+
+
+        // =====================================================
+        // 출발 장소
+        // =====================================================
+
         if (data.departureName) {
+
             document.getElementById(
                 "departureQuery"
             ).value =
                 data.departureName;
+
+
             document.getElementById(
                 "departureSelected"
             ).textContent =
@@ -387,21 +462,37 @@
                         ? " / " + data.departureAddress
                         : ""
                 );
+
+
             selectedDeparture = {
+
                 name:
                 data.departureName,
-                address:
-                data.departureAddress
 
+                address:
+                data.departureAddress,
+
+                longitude:
+                data.departureLongitude,
+
+                latitude:
+                data.departureLatitude
             };
         }
 
 
+        // =====================================================
+        // 귀가 장소
+        // =====================================================
+
         if (data.returnName) {
+
             document.getElementById(
                 "returnQuery"
             ).value =
                 data.returnName;
+
+
             document.getElementById(
                 "returnSelected"
             ).textContent =
@@ -414,66 +505,212 @@
 
 
             selectedReturn = {
+
                 name:
                 data.returnName,
+
                 address:
-                data.returnAddress
+                data.returnAddress,
+
+                longitude:
+                data.returnLongitude,
+
+                latitude:
+                data.returnLatitude
             };
         }
     }
 
-    function handlePlaceInputChange(type) {
+
+    // =========================================================
+    // 기존 희망 장소 불러오기
+    // =========================================================
+
+    async function loadSavedCandidate() {
+
+        const response =
+            await MeetBack.authenticatedFetch(
+                "/participants/meeting/"
+                + meetingId
+                + "/candidates"
+            );
+
+
+        if (!response.ok) {
+
+            return;
+        }
+
+
+        const candidates =
+            await response.json();
+
+
+        if (
+            !Array.isArray(
+                candidates
+            )
+        ) {
+
+            return;
+        }
+
+
+        const myCandidate =
+            candidates.find(
+                candidate =>
+
+                    Number(
+                        candidate.proposerParticipantId
+                    )
+                    ===
+                    Number(
+                        participant.participantId
+                    )
+
+                    &&
+
+                    candidate.isActive !== false
+            );
+
+
+        if (!myCandidate) {
+
+            return;
+        }
+
+
+        selectedCandidate = {
+
+            name:
+            myCandidate.placeName,
+
+            address:
+            myCandidate.address,
+
+            longitude:
+            myCandidate.longitude,
+
+            latitude:
+            myCandidate.latitude
+        };
+
+
+        document.getElementById(
+            "candidateQuery"
+        ).value =
+            myCandidate.placeName
+            || "";
+
+
+        document.getElementById(
+            "candidateSelected"
+        ).textContent =
+            (myCandidate.placeName || "")
+            + (
+                myCandidate.address
+                    ? " / " + myCandidate.address
+                    : ""
+            );
+
+
+        /*
+         * 기존 값을 불러온 것뿐이므로
+         * 사용자가 희망 장소를 수정한 것은 아님
+         */
+        candidateTouched =
+            false;
+    }
+
+
+    // =========================================================
+    // 입력 변경 감지
+    // =========================================================
+
+    function handlePlaceInputChange(
+        type
+    ) {
+
         if (type === "departure") {
 
             selectedDeparture =
                 null;
+
+
             document.getElementById(
                 "departureSelected"
             ).textContent =
                 "선택된 장소 없음";
         }
         else if (type === "return") {
+
             selectedReturn =
                 null;
+
+
             document.getElementById(
                 "returnSelected"
             ).textContent =
                 "선택된 장소 없음";
         }
         else {
+
             selectedCandidate =
                 null;
+
+
             candidateTouched =
                 true;
+
+
             document.getElementById(
                 "candidateSelected"
             ).textContent =
                 "선택된 장소 없음";
         }
+
+
         if (searchTimers[type]) {
+
             clearTimeout(
                 searchTimers[type]
             );
         }
+
+
         const input =
             document.getElementById(
                 type + "Query"
             );
+
+
         const resultArea =
             document.getElementById(
                 type + "Results"
             );
+
+
         const query =
             input.value.trim();
 
+
         if (query.length < 2) {
+
             searchRequestVersion[type]++;
+
+
             resultArea.innerHTML =
                 "";
+
+
             resultArea.style.display =
                 "none";
+
+
             return;
         }
+
+
         searchTimers[type] =
             setTimeout(
                 () => {
@@ -487,44 +724,72 @@
                 350
             );
     }
+
+
+    // =========================================================
+    // 장소 검색
+    // =========================================================
+
     async function searchPlace(
         type,
         autoSearch = false
     ) {
+
         const input =
             document.getElementById(
                 type + "Query"
             );
+
+
         const resultArea =
             document.getElementById(
                 type + "Results"
             );
+
+
         const query =
             input.value.trim();
+
+
         if (!query) {
+
             if (!autoSearch) {
+
                 showToast(
                     "검색어를 입력해주세요.",
                     "info"
                 );
             }
+
+
             return;
         }
+
+
         if (
             !autoSearch
             &&
             searchTimers[type]
         ) {
+
             clearTimeout(
                 searchTimers[type]
             );
         }
+
+
         const requestVersion =
             ++searchRequestVersion[type];
+
+
         resultArea.style.display =
             "block";
+
+
         resultArea.textContent =
             "검색 중...";
+
+
         const response =
             await MeetBack.authenticatedFetch(
                 "/places?query="
@@ -532,69 +797,107 @@
                     query
                 )
             );
+
+
         if (
             requestVersion
             !==
             searchRequestVersion[type]
         ) {
+
             return;
         }
 
+
         if (
             input.value.trim()
-            !== query
+            !==
+            query
         ) {
 
             return;
         }
+
+
         if (!response.ok) {
+
             resultArea.style.display =
                 "none";
 
+
             if (!autoSearch) {
+
                 const text =
                     await response.text();
+
+
                 showToast(
                     text
                     || "장소 검색에 실패했습니다.",
                     "error"
                 );
             }
+
+
             return;
         }
+
+
         const places =
             await response.json();
+
+
         resultArea.innerHTML =
             "";
+
+
         if (
             !places
             ||
             places.length === 0
         ) {
+
             resultArea.style.display =
                 "block";
+
+
             resultArea.textContent =
                 "검색 결과가 없습니다.";
+
+
             return;
         }
+
+
         resultArea.style.display =
             "block";
+
+
         places.forEach(
             place => {
+
                 const div =
                     document.createElement(
                         "div"
                     );
+
+
                 div.className =
                     "result";
+
+
                 const name =
                     place.name
                     || place.placeName
                     || "장소명 없음";
+
+
                 const address =
                     place.roadAddress
                     || place.address
                     || "";
+
+
                 div.innerHTML =
                     `
                     <strong>
@@ -602,62 +905,91 @@
                         name
                     )}
                     </strong>
+
                     <br>
+
                     ${MeetBack.escapeHtml(
                         address
                     )}
                     `;
+
+
                 div.onclick =
-                    () =>
+                    () => {
+
                         selectPlace(
                             type,
                             place
                         );
+                    };
+
+
                 resultArea.appendChild(
                     div
                 );
-
             }
         );
     }
+
+
+    // =========================================================
+    // 검색 결과 선택
+    // =========================================================
+
     function selectPlace(
         type,
         place
     ) {
+
         if (searchTimers[type]) {
+
             clearTimeout(
                 searchTimers[type]
             );
-
         }
+
+
         searchRequestVersion[type]++;
+
+
         const name =
             place.name
             || place.placeName;
+
+
         const address =
             place.roadAddress
             || place.address
             || "";
+
+
         if (type === "departure") {
+
             selectedDeparture =
                 place;
-
         }
         else if (type === "return") {
+
             selectedReturn =
                 place;
-
         }
         else {
+
             selectedCandidate =
                 place;
+
+
             candidateTouched =
                 true;
         }
+
+
         document.getElementById(
             type + "Query"
         ).value =
             name;
+
+
         document.getElementById(
             type + "Selected"
         ).textContent =
@@ -667,80 +999,152 @@
                     ? " / " + address
                     : ""
             );
+
+
         const resultArea =
             document.getElementById(
                 type + "Results"
             );
+
+
         resultArea.innerHTML =
             "";
+
+
         resultArea.style.display =
             "none";
-
     }
+
+
+    // =========================================================
+    // 희망 장소 초기화
+    // =========================================================
+
     function resetCandidate() {
 
         selectedCandidate =
             null;
+
+
         candidateTouched =
             true;
+
+
         if (searchTimers.candidate) {
+
             clearTimeout(
                 searchTimers.candidate
             );
-
         }
+
+
         searchRequestVersion.candidate++;
+
+
         document.getElementById(
             "candidateQuery"
         ).value =
             "";
+
+
         document.getElementById(
             "candidateSelected"
         ).textContent =
             "선택된 장소 없음";
+
+
         const results =
             document.getElementById(
                 "candidateResults"
             );
+
+
         results.innerHTML =
             "";
+
+
         results.style.display =
             "none";
+
+
         showToast(
             "희망 장소가 초기화되었습니다.\n장소 입력 완료 버튼을 눌러 저장해주세요.",
             "info"
         );
     }
+
+
+    // =========================================================
+    // 장소 저장
+    // =========================================================
+
     async function saveLocation() {
+
+        // =====================================================
+        // 출발 장소 검사
+        // =====================================================
+
         if (!selectedDeparture) {
+
             showToast(
                 "출발 장소를 검색 후 선택해주세요.",
                 "error"
             );
+
+
             return;
         }
+
+
+        // =====================================================
+        // 귀가 장소 검사
+        // =====================================================
+
         if (!selectedReturn) {
+
             showToast(
                 "귀가 장소를 검색 후 선택해주세요.",
                 "error"
             );
+
+
             return;
         }
+
+
+        // =====================================================
+        // 희망 장소 검사
+        // =====================================================
+
         const candidateInput =
             document.getElementById(
                 "candidateQuery"
             ).value.trim();
+
+
         if (
             candidateInput
             &&
             !selectedCandidate
         ) {
+
             showToast(
                 "희망 장소는 검색 후 선택해주세요.",
                 "error"
             );
+
+
             return;
         }
+
+
+        // =====================================================
+        // 출발지 + 귀가지 저장
+        //
+        // 카카오에서 사용자가 실제로 선택한
+        // 이름 / 주소 / 경도 / 위도를 그대로 서버에 전달
+        // =====================================================
+
         const locationResponse =
             await MeetBack.authenticatedFetch(
                 "/participants/"
@@ -749,49 +1153,85 @@
                 {
                     method:
                         "PUT",
+
                     headers: {
+
                         "Content-Type":
                             "application/json"
-
                     },
+
                     body:
                         JSON.stringify(
                             {
-                                departureQuery:
+                                departureName:
                                     selectedDeparture.name
                                     || selectedDeparture.placeName,
-                                returnQuery:
-                                    selectedReturn.name
-                                    || selectedReturn.placeName
 
+                                departureAddress:
+                                    selectedDeparture.roadAddress
+                                    || selectedDeparture.address
+                                    || "",
+
+                                departureLongitude:
+                                selectedDeparture.longitude,
+
+                                departureLatitude:
+                                selectedDeparture.latitude,
+
+
+                                returnName:
+                                    selectedReturn.name
+                                    || selectedReturn.placeName,
+
+                                returnAddress:
+                                    selectedReturn.roadAddress
+                                    || selectedReturn.address
+                                    || "",
+
+                                returnLongitude:
+                                selectedReturn.longitude,
+
+                                returnLatitude:
+                                selectedReturn.latitude
                             }
                         )
                 }
             );
+
+
         if (!locationResponse.ok) {
+
             const text =
                 await locationResponse.text();
+
+
             showToast(
                 text
                 || "장소 저장에 실패했습니다.",
                 "error"
             );
+
+
             return;
         }
+
+
+        // =====================================================
+        // 희망 장소 저장
+        //
+        // 최초 입력:
+        // 항상 처리
+        //
+        // 수정:
+        // 희망 장소를 실제로 건드렸을 때만 처리
+        // =====================================================
+
         if (
             pageMode === "create"
             ||
             candidateTouched
         ) {
-            let candidateQuery =
-                "";
-            if (selectedCandidate) {
-                candidateQuery =
-                    selectedCandidate.name
-                    || selectedCandidate.placeName
-                    || "";
 
-            }
             const candidateResponse =
                 await MeetBack.authenticatedFetch(
                     "/participants/"
@@ -805,20 +1245,38 @@
 
                             "Content-Type":
                                 "application/json"
-
                         },
+
                         body:
                             JSON.stringify(
-                                {
+                                selectedCandidate
+                                    ? {
+                                        name:
+                                            selectedCandidate.name
+                                            || selectedCandidate.placeName,
 
-                                    candidateQuery:
-                                    candidateQuery
+                                        address:
+                                            selectedCandidate.roadAddress
+                                            || selectedCandidate.address
+                                            || "",
 
-                                }
+                                        longitude:
+                                        selectedCandidate.longitude,
+
+                                        latitude:
+                                        selectedCandidate.latitude
+                                    }
+                                    : {
+                                        name: null,
+                                        address: null,
+                                        longitude: null,
+                                        latitude: null
+                                    }
                             )
-
                     }
                 );
+
+
             if (!candidateResponse.ok) {
 
                 const text =
@@ -833,34 +1291,56 @@
 
 
                 return;
-
             }
-
         }
+
+
+        // =====================================================
+        // 저장 완료
+        // =====================================================
+
         sessionStorage.setItem(
             "meetbackToastMessage",
             pageMode === "edit"
                 ? "장소 정보가 수정되었습니다."
                 : "장소 입력이 완료되었습니다."
         );
+
+
         sessionStorage.setItem(
             "meetbackToastType",
             "success"
         );
-        returnToRoom();
 
+
+        returnToRoom();
     }
+
+
+    // =========================================================
+    // 모임방 이동
+    // =========================================================
+
     function returnToRoom() {
+
         location.href =
             "/meeting?meetingId="
             + meetingId;
     }
+
+
+    // =========================================================
+    // 뒤로가기 / 수정 취소
+    // =========================================================
+
     async function goRoom() {
+
         if (
             pageMode === "edit"
             &&
             participant
         ) {
+
             const response =
                 await MeetBack.authenticatedFetch(
                     "/participants/"
@@ -871,22 +1351,33 @@
                             "PUT"
                     }
                 );
+
+
             if (!response.ok) {
+
                 const text =
                     await response.text();
+
+
                 showToast(
                     text
                     || "수정 취소 처리에 실패했습니다.",
                     "error"
                 );
+
+
                 return;
             }
         }
+
+
         returnToRoom();
     }
+
     initialize();
 
 </script>
 
 </body>
+
 </html>
