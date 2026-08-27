@@ -8,20 +8,17 @@
 
     <title>MeetBack</title>
 
-
     <link rel="stylesheet" href="/css/home.css">
 
     <script src="/js/auth-session-guard.js" defer></script>
 
 </head>
 
-
 <body>
 
 
 <div class="home-container"
      id="homeContainer"
-
      th:attr="
         data-login-url=@{/login},
         data-check-url=@{/auth/check},
@@ -156,8 +153,6 @@
                 </button>
 
 
-                <!-- 생성 성공 결과 -->
-
                 <div
                         id="meetingCreateResult"
                         class="meeting-result">
@@ -180,20 +175,19 @@
                     <div class="created-invite-area">
 
                         <button
-                            type="button"
-                            id="createdInviteCodeButton"
-                            class="created-invite-button"
-                            onclick="copyCreatedInviteUrl()"
-                            disabled>
+                                type="button"
+                                id="createdInviteCodeButton"
+                                class="created-invite-button"
+                                onclick="copyCreatedInviteUrl()"
+                                disabled>
 
                             🔗 초대코드
 
                             <span id="createdInviteCode">
-                            -
+                                -
                             </span>
 
                         </button>
-
 
                     </div>
 
@@ -422,10 +416,6 @@
         homeContainer.dataset.withdrawCancelUrl;
 
 
-    // ============================================================
-    // ★ 모임 API
-    // ============================================================
-
     const createMeetingUrl =
         homeContainer.dataset.createMeetingUrl;
 
@@ -443,10 +433,15 @@
     // Token
     // ============================================================
 
-    // Access Token은 재발급될 수 있으므로 let
     let accessToken =
         localStorage.getItem(
             "accessToken"
+        );
+
+
+    let currentNickname =
+        localStorage.getItem(
+            "nickname"
         );
 
 
@@ -509,6 +504,7 @@
         );
 
 
+
     // ============================================================
     // 모임 DOM
     // ============================================================
@@ -547,6 +543,7 @@
         document.getElementById(
             "createdInviteCode"
         );
+
 
     const createdInviteCodeButton =
         document.getElementById(
@@ -590,6 +587,7 @@
         );
 
 
+
     // ============================================================
     // 생성된 모임 초대 링크 복사
     // ============================================================
@@ -615,30 +613,18 @@
                 "error"
             );
 
-
             return;
         }
 
 
-        // =========================================================
-        // 초대 링크 생성
-        //
-        // 예:
-        //
-        // http://localhost:8080/home?inviteCode=97B390F1
-        // =========================================================
-
         const inviteUrl =
             window.location.origin
-            + "/home?inviteCode="
-            + encodeURIComponent(
+            +
+            "/home?inviteCode="
+            +
+            encodeURIComponent(
                 inviteCode
             );
-
-
-        const originalText =
-            "🔗 초대코드 "
-            + inviteCode;
 
 
         try
@@ -665,11 +651,11 @@
 
                     button.innerHTML =
                         `
-                    🔗 초대코드
-                    <span id="createdInviteCode">
-                        ${inviteCode}
-                    </span>
-                    `;
+                        🔗 초대코드
+                        <span id="createdInviteCode">
+                            ${inviteCode}
+                        </span>
+                        `;
 
                 },
                 1500
@@ -684,10 +670,6 @@
                 error
             );
 
-
-            // =====================================================
-            // clipboard API가 동작하지 않을 경우 fallback
-            // =====================================================
 
             const textarea =
                 document.createElement(
@@ -739,11 +721,11 @@
 
                     button.innerHTML =
                         `
-                    🔗 초대코드
-                    <span id="createdInviteCode">
-                        ${inviteCode}
-                    </span>
-                    `;
+                        🔗 초대코드
+                        <span id="createdInviteCode">
+                            ${inviteCode}
+                        </span>
+                        `;
 
                 },
                 1500
@@ -752,13 +734,9 @@
     }
 
 
+
     // ============================================================
-    // ★ 초대 URL에서 inviteCode 보관
-    //
-    // /home?inviteCode=ABC123
-    //
-    // 로그인하지 않은 상태라면 잠시 뒤 /login 으로 이동하므로
-    // 그 전에 sessionStorage에 초대코드를 저장한다.
+    // 초대 URL에서 inviteCode 보관
     // ============================================================
 
     function preserveInviteCode()
@@ -809,6 +787,32 @@
 
 
     // ============================================================
+    // 로그인 페이지 이동
+    // 현재 페이지 주소를 redirect에 보존
+    // ============================================================
+
+    function redirectToLogin()
+    {
+
+        const currentPath =
+            window.location.pathname
+            +
+            window.location.search;
+
+
+        window.location.href =
+            loginUrl
+            +
+            "?redirect="
+            +
+            encodeURIComponent(
+                currentPath
+            );
+    }
+
+
+
+    // ============================================================
     // 메시지 출력
     // ============================================================
 
@@ -850,7 +854,6 @@
             );
 
         }
-
     }
 
 
@@ -882,9 +885,6 @@
         );
 
 
-        /*
-         * 이전 채팅방 정보도 로그인 종료 시 제거
-         */
         localStorage.removeItem(
             "chatMeetingId"
         );
@@ -892,16 +892,12 @@
 
         accessToken =
             null;
-
     }
+
+
 
     // ============================================================
     // 초대코드 또는 초대 URL에서 inviteCode 추출
-    //
-    // 가능:
-    // A9E60F5C
-    //
-    // http://localhost:8080/home?inviteCode=A9E60F5C
     // ============================================================
 
     function extractInviteCode(
@@ -919,10 +915,6 @@
             value.trim();
 
 
-        /*
-         * URL 안에 ?inviteCode= 또는 &inviteCode=가 있다면
-         * 코드 부분만 꺼낸다.
-         */
         const match =
             text.match(
                 /[?&]inviteCode=([^&#]+)/i
@@ -938,9 +930,6 @@
         }
 
 
-        /*
-         * URL이 아니라 그냥 초대코드를 입력한 경우
-         */
         return text;
     }
 
@@ -961,9 +950,7 @@
 
         if (!refreshToken)
         {
-
             return false;
-
         }
 
 
@@ -978,14 +965,12 @@
                         method:
                             "POST",
 
-
                         headers: {
 
                             "Content-Type":
                                 "application/json"
 
                         },
-
 
                         body:
                             JSON.stringify(
@@ -1003,24 +988,25 @@
 
             if (!response.ok)
             {
-
                 return false;
-
             }
 
 
             const data =
                 await response.json();
 
+
             localStorage.setItem(
                 "userId",
                 data.userId
             );
 
+
             localStorage.setItem(
                 "role",
                 data.role
             );
+
 
             localStorage.setItem(
                 "nickname",
@@ -1040,6 +1026,10 @@
             );
 
 
+            currentNickname =
+                data.nickname;
+
+
             accessToken =
                 data.accessToken;
 
@@ -1057,18 +1047,13 @@
 
 
             return false;
-
         }
-
     }
 
 
 
     // ============================================================
     // JWT 포함 요청 공통 함수
-    //
-    // 모임 생성/참가 중 Access Token이 만료됐을 때도
-    // Refresh Token으로 한 번 재발급 후 다시 요청
     // ============================================================
 
     async function authenticatedFetch(
@@ -1085,7 +1070,8 @@
             "Authorization"
             ] =
             "Bearer "
-            + accessToken;
+            +
+            accessToken;
 
 
         let response =
@@ -1095,11 +1081,6 @@
             );
 
 
-        /*
-         * 현재 프로젝트 Security 설정에 따라
-         * 만료 Token이 401 또는 403으로 올 수 있으므로
-         * 두 경우 모두 재발급 시도
-         */
         if (
             response.status === 401
             ||
@@ -1113,9 +1094,7 @@
 
             if (!refreshed)
             {
-
                 return response;
-
             }
 
 
@@ -1123,7 +1102,8 @@
                 "Authorization"
                 ] =
                 "Bearer "
-                + accessToken;
+                +
+                accessToken;
 
 
             response =
@@ -1131,12 +1111,10 @@
                     url,
                     options
                 );
-
         }
 
 
         return response;
-
     }
 
 
@@ -1155,18 +1133,17 @@
                 method:
                     "GET",
 
-
                 headers: {
 
                     "Authorization":
                         "Bearer "
-                        + accessToken
+                        +
+                        accessToken
 
                 }
 
             }
         );
-
     }
 
 
@@ -1190,15 +1167,10 @@
 
                 clearLoginStorage();
 
-
-                window.location.href =
-                    loginUrl;
-
+                redirectToLogin();
 
                 return false;
-
             }
-
         }
 
 
@@ -1221,13 +1193,9 @@
 
                     clearLoginStorage();
 
-
-                    window.location.href =
-                        loginUrl;
-
+                    redirectToLogin();
 
                     return false;
-
                 }
 
 
@@ -1240,15 +1208,10 @@
 
                     clearLoginStorage();
 
-
-                    window.location.href =
-                        loginUrl;
-
+                    redirectToLogin();
 
                     return false;
-
                 }
-
             }
 
 
@@ -1258,21 +1221,20 @@
 
             userIdDiv.innerText =
                 "사용자 ID : "
-                + data.userId;
+                +
+                data.userId;
 
 
             roleDiv.innerText =
                 "권한 : "
-                + data.role;
+                +
+                data.role;
+
 
             currentNickname =
                 data.nickname;
 
 
-            /*
-             * 서버에서 검증된 사용자 정보로
-             * localStorage 값도 맞춰줌
-             */
             localStorage.setItem(
                 "userId",
                 data.userId
@@ -1283,6 +1245,16 @@
                 "role",
                 data.role
             );
+
+
+            if (data.nickname)
+            {
+
+                localStorage.setItem(
+                    "nickname",
+                    data.nickname
+                );
+            }
 
 
             return true;
@@ -1299,25 +1271,16 @@
 
             clearLoginStorage();
 
-
-            window.location.href =
-                loginUrl;
-
+            redirectToLogin();
 
             return false;
-
         }
-
     }
 
 
 
     // ============================================================
-    // ★ 초대코드로 참가 공통 함수
-    //
-    // autoEnter
-    // false : 기존처럼 참가 완료 화면 표시
-    // true  : 초대 링크로 온 경우 바로 모임방으로 이동
+    // 초대코드로 참가 공통 함수
     // ============================================================
 
     async function joinMeetingByInviteCode(
@@ -1365,6 +1328,7 @@
 
                             }
                         )
+
                 }
             );
 
@@ -1378,19 +1342,12 @@
 
             throw new Error(
                 errorText
-                || "모임 참가에 실패했습니다."
+                ||
+                "모임 참가에 실패했습니다."
             );
         }
 
 
-        /*
-         * MeetingJoinResponse
-         *
-         * {
-         *     meetingId,
-         *     newlyJoined
-         * }
-         */
         const data =
             await response.json();
 
@@ -1418,9 +1375,6 @@
         }
 
 
-        /*
-         * 참가 성공했으므로 pending 코드 제거.
-         */
         sessionStorage.removeItem(
             "pendingInviteCode"
         );
@@ -1432,17 +1386,15 @@
         );
 
 
-        /*
-         * 초대 링크를 타고 온 경우
-         * 참가 성공 즉시 모임방 이동.
-         */
         if (autoEnter)
         {
 
             window.location.href =
                 meetingPageUrl
-                + "?meetingId="
-                + encodeURIComponent(
+                +
+                "?meetingId="
+                +
+                encodeURIComponent(
                     meetingId
                 );
 
@@ -1450,18 +1402,11 @@
             return data;
         }
 
-        localStorage.setItem(
-            "chatMeetingId",
-            meetingId
-        );
 
-        /*
-         * 수동 참가의 경우
-         * 기존 UI 유지.
-         */
         joinedNickname.innerText =
             currentNickname
-            || "참가자";
+            ||
+            "참가자";
 
 
         meetingJoinResult
@@ -1484,6 +1429,7 @@
                 "모임에 참가했습니다.",
                 "success"
             );
+
         }
         else
         {
@@ -1528,9 +1474,7 @@
                     "error"
                 );
 
-
                 return;
-
             }
 
 
@@ -1542,9 +1486,7 @@
                     "error"
                 );
 
-
                 return;
-
             }
 
 
@@ -1561,17 +1503,6 @@
                 );
 
 
-                /*
-                 * userId는 Body로 보내지 않는다.
-                 *
-                 * Authorization Access Token
-                 *      ↓
-                 * JWT
-                 *      ↓
-                 * Spring Security Principal
-                 *      ↓
-                 * hostUserId 결정
-                 */
                 const response =
                     await authenticatedFetch(
                         createMeetingUrl,
@@ -1580,14 +1511,12 @@
                             method:
                                 "POST",
 
-
                             headers: {
 
                                 "Content-Type":
                                     "application/json"
 
                             },
-
 
                             body:
                                 JSON.stringify(
@@ -1615,9 +1544,9 @@
 
                     throw new Error(
                         errorText
-                        || "모임 생성에 실패했습니다."
+                        ||
+                        "모임 생성에 실패했습니다."
                     );
-
                 }
 
 
@@ -1651,6 +1580,7 @@
 
                 createdInviteCode.innerText =
                     inviteCode;
+
 
                 createdInviteCodeButton.disabled =
                     false;
@@ -1699,16 +1629,14 @@
 
                 createMeetingButton.disabled =
                     false;
-
             }
-
         }
     );
 
 
 
     // ============================================================
-    // ★ 생성한 모임방 이동
+    // 생성한 모임방 이동
     // ============================================================
 
     enterCreatedMeetingButton.addEventListener(
@@ -1722,35 +1650,30 @@
 
             if (!meetingId)
             {
-
                 return;
-
             }
 
 
-            /*
-             * Query Parameter도 전달하고
-             * localStorage에도 저장해두는 방식.
-             */
             window.location.href =
                 meetingPageUrl
-                + "?meetingId="
-                + encodeURIComponent(
+                +
+                "?meetingId="
+                +
+                encodeURIComponent(
                     meetingId
                 );
-
         }
     );
 
 
 
     // ============================================================
-    // ★ 초대코드로 모임 참가
+    // 초대코드로 모임 참가
     // ============================================================
 
     joinMeetingButton.addEventListener(
         "click",
-        async function ()
+        async function()
         {
 
             const inviteCode =
@@ -1767,9 +1690,7 @@
                     "error"
                 );
 
-
                 return;
-
             }
 
 
@@ -1785,14 +1706,6 @@
                     "info"
                 );
 
-
-                // =================================================
-                // 모임 참가 공통 함수
-                //
-                // false
-                // = 참가 후 바로 이동하지 않고
-                //   참가 완료 UI를 보여준다.
-                // =================================================
 
                 await joinMeetingByInviteCode(
                     inviteCode,
@@ -1811,7 +1724,8 @@
 
                 showHomeMessage(
                     error.message
-                    || "모임 참가에 실패했습니다.",
+                    ||
+                    "모임 참가에 실패했습니다.",
                     "error"
                 );
 
@@ -1821,16 +1735,14 @@
 
                 joinMeetingButton.disabled =
                     false;
-
             }
-
         }
     );
 
 
 
     // ============================================================
-    // ★ 참가한 모임 이동
+    // 참가한 모임 이동
     // ============================================================
 
     enterJoinedMeetingButton.addEventListener(
@@ -1844,19 +1756,18 @@
 
             if (!meetingId)
             {
-
                 return;
-
             }
 
 
             window.location.href =
                 meetingPageUrl
-                + "?meetingId="
-                + encodeURIComponent(
+                +
+                "?meetingId="
+                +
+                encodeURIComponent(
                     meetingId
                 );
-
         }
     );
 
@@ -1873,9 +1784,7 @@
 
             if (logoutButton.disabled)
             {
-
                 return;
-
             }
 
 
@@ -1886,29 +1795,23 @@
             try
             {
 
-                /*
-                 * Access Token이 정상이라면 바로 로그아웃.
-                 *
-                 * Access Token만 만료된 경우에는
-                 * authenticatedFetch()에서 Refresh Token으로
-                 * 한 번 재발급한 뒤 다시 로그아웃 요청한다.
-                 */
                 const response =
                     await fetch(
                         logoutUrl,
                         {
 
                             method:
-
                                 "POST",
 
                             headers: {
 
                                 "Authorization":
                                     "Bearer "
-                                    + accessToken
+                                    +
+                                    accessToken
 
                             }
+
                         }
                     );
 
@@ -1916,33 +1819,15 @@
                 if (response.ok)
                 {
 
-                    /*
-                     * 서버에서
-                     * refresh_tokens 삭제
-                     * token_version 증가가 완료된 상태
-                     */
                     clearLoginStorage();
-
 
                     window.location.href =
                         loginUrl;
 
-
                     return;
-
                 }
 
 
-                /*
-                 * 다른 기기에서 같은 계정으로 로그인한 경우
-                 *
-                 * 현재 기기의 Access Token은 tokenVersion 불일치,
-                 * Refresh Token도 DB의 새 Token과 불일치하므로
-                 * 재발급에 실패한다.
-                 *
-                 * 이 경우 다른 기기의 Refresh Token을
-                 * 삭제하면 안 되므로 현재 브라우저 정보만 삭제한다.
-                 */
                 if (
                     response.status === 401
                     ||
@@ -1952,13 +1837,10 @@
 
                     clearLoginStorage();
 
-
                     window.location.href =
                         loginUrl;
 
-
                     return;
-
                 }
 
 
@@ -1989,9 +1871,7 @@
 
                 logoutButton.disabled =
                     false;
-
             }
-
         }
     );
 
@@ -2008,7 +1888,6 @@
 
             withdrawConfirm.style.display =
                 "block";
-
         }
     );
 
@@ -2025,7 +1904,6 @@
 
             withdrawConfirm.style.display =
                 "none";
-
         }
     );
 
@@ -2063,9 +1941,7 @@
                         "error"
                     );
 
-
                     return;
-
                 }
 
 
@@ -2092,9 +1968,7 @@
                     "회원탈퇴 요청 중 오류가 발생했습니다.",
                     "error"
                 );
-
             }
-
         }
     );
 
@@ -2132,9 +2006,7 @@
                         "error"
                     );
 
-
                     return;
-
                 }
 
 
@@ -2157,11 +2029,11 @@
                     "회원탈퇴 취소 중 오류가 발생했습니다.",
                     "error"
                 );
-
             }
-
         }
     );
+
+
 
     // ============================================================
     // Spring 백엔드 재시작 감지
@@ -2218,10 +2090,6 @@
             );
 
 
-            // =====================================================
-            // 최초 접속
-            // =====================================================
-
             if (!savedServerInstanceId)
             {
 
@@ -2235,10 +2103,6 @@
             }
 
 
-            // =====================================================
-            // Spring 백엔드 재시작 감지
-            // =====================================================
-
             if (
                 savedServerInstanceId
                 !== currentServerInstanceId
@@ -2250,41 +2114,58 @@
                 );
 
 
-                // 로그인 관련 값 삭제
                 localStorage.removeItem(
                     "accessToken"
                 );
+
 
                 localStorage.removeItem(
                     "refreshToken"
                 );
 
+
                 localStorage.removeItem(
                     "userId"
                 );
 
+
                 localStorage.removeItem(
                     "role"
                 );
+
 
                 localStorage.removeItem(
                     "nickname"
                 );
 
 
-                // 새로운 실행 ID 저장
                 localStorage.setItem(
                     "serverInstanceId",
                     currentServerInstanceId
                 );
 
 
+                const currentPath =
+                    window.location.pathname
+                    +
+                    window.location.search;
+
+
                 window.location.replace(
-                    "/login"
+                    loginUrl
+                    +
+                    "?redirect="
+                    +
+                    encodeURIComponent(
+                        currentPath
+                    )
                 );
+
 
                 return true;
             }
+
+
             return false;
 
         }
@@ -2295,6 +2176,8 @@
                 "[SERVER INSTANCE CHECK ERROR]",
                 error
             );
+
+
             return false;
         }
     }
@@ -2307,26 +2190,26 @@
 
     async function initializeHome()
     {
+
+        /*
+         * 초대 URL이면 가장 먼저 저장
+         *
+         * /home?inviteCode=ABC123
+         */
+        preserveInviteCode();
+
+
+        /*
+         * Spring 재시작 확인
+         */
         const serverRestarted =
             await checkServerRestart();
 
-        /*
-         * 중요:
-         *
-         * 로그인 확인보다 먼저 실행해야 한다.
-         *
-         * /home?inviteCode=ABC
-         *      ↓
-         * pendingInviteCode 저장
-         *      ↓
-         * 로그인 필요하면 /login 이동
-         */
+
         if (serverRestarted)
         {
             return;
         }
-
-        preserveInviteCode();
 
 
         /*
@@ -2343,8 +2226,10 @@
 
 
         /*
-         * 로그인 성공 후
-         * 로그인 전에 저장했던 초대코드 확인
+         * 일반 /home 접속이라면 여기서 끝.
+         *
+         * 초대 링크로 온 경우에만
+         * pendingInviteCode가 존재한다.
          */
         const pendingInviteCode =
             sessionStorage.getItem(
@@ -2358,10 +2243,6 @@
         }
 
 
-        /*
-         * 사용자에게도 현재 처리 중인
-         * 초대코드가 보이게 한다.
-         */
         inviteCodeInput.value =
             pendingInviteCode;
 
@@ -2381,13 +2262,13 @@
 
             /*
              * true
-             * =
-             * 성공하면 바로 모임방 이동
+             * → 참가 성공 즉시 모임방 이동
              */
             await joinMeetingByInviteCode(
                 pendingInviteCode,
                 true
             );
+
         }
         catch (error)
         {
@@ -2398,18 +2279,13 @@
             );
 
 
-            /*
-             * 실패할 경우 pendingInviteCode는 지우지 않는다.
-             *
-             * 입력창에 코드가 남아 있으므로
-             * 사용자가 직접 모임 참가 버튼을 눌러
-             * 다시 시도할 수 있다.
-             */
             showHomeMessage(
                 error.message
-                || "초대받은 모임 참가에 실패했습니다.",
+                ||
+                "초대받은 모임 참가에 실패했습니다.",
                 "error"
             );
+
         }
         finally
         {
@@ -2431,5 +2307,4 @@
 
 
 </body>
-
 </html>
