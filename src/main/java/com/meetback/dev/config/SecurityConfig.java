@@ -80,7 +80,6 @@ public class SecurityConfig {
                                                 "/js/**",
                                                 "/images/**",
 
-                                                // WebSocket 허가
                                                 "/meeting",
                                                 "/meeting/location-test",
                                                 "/meeting/location-test/**",
