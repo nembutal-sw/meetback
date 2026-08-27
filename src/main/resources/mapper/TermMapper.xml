@@ -115,6 +115,29 @@
 
     </select>
 
+    <select id="findAllByTermCode"
+            resultMap="termResultMap">
+
+        SELECT
+            term_id,
+            term_code,
+            term_name,
+            content,
+            version,
+            kakao_tag,
+            required,
+            active,
+            effective_at,
+            created_at,
+            updated_at
+        FROM terms
+        WHERE term_code = #{termCode}
+            ORDER BY
+            effective_at DESC,
+            term_id DESC
+
+    </select>
+
     <select id="findByTermCode"
             parameterType="string"
             resultMap="termResultMap">

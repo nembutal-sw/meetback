@@ -15,6 +15,11 @@ public interface TermMapper {
     // 현재 적용 중인 필수 약관 조회
     List<Term> findAllRequiredActiveTerms();
 
+    // 과거 버전 전체 조회
+    List<Term> findAllByTermCode(
+            @Param("termCode") String termCode
+    );
+
     // 약관 ID로 조회
     Term findByTermId(Long termId);
 
