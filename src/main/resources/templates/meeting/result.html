@@ -5,8 +5,12 @@
 <head>
     <meta charset="UTF-8">
 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>MeetBack 최종 결과</title>
 
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet"
           href="/css/meeting-result.css">
 
@@ -17,6 +21,8 @@
     <script src="/js/meeting-common.js"></script>
 
     <script src="/js/meeting-presence.js"></script>
+
+    <script src="/js/meeting-session-header.js"></script>
 
     <script src="/js/auth-session-guard.js" defer></script>
 
@@ -264,6 +270,30 @@
 
 <body>
 
+<header class="meeting-session-header">
+    <div class="meeting-session-header__inner">
+        <a class="mb-brand" href="/home" aria-label="MeetBack 홈">
+            <img src="/images/favicon.svg" alt="">
+            <span>MeetBack</span>
+        </a>
+
+        <div class="meeting-session-header__actions">
+            <span class="meeting-session-step">FINAL DESTINATION · RESULT</span>
+            <div class="meeting-session-user" aria-label="현재 로그인 사용자">
+                <span class="meeting-session-avatar" data-session-avatar>MB</span>
+                <span>
+                    <strong data-session-nickname>사용자</strong>
+                    <small data-session-role>일반 회원</small>
+                </span>
+            </div>
+            <button type="button" class="meeting-session-home" onclick="location.href='/home'">
+                홈으로
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="meeting-page meeting-result-page">
 
 <!-- =========================================================
      상단
@@ -282,7 +312,7 @@
         </h1>
 
         <p id="resultDescription">
-            최종 장소와 참가자별 귀가 정보를 확인해보세요.
+            모두의 지하철 막차를 계산한 함께 헤어질 시간입니다.
         </p>
 
     </div>
@@ -296,7 +326,7 @@
                 class="primary"
                 onclick="toggleWhatIf()">
 
-            +30분 결과 보기
+            What-if · 30분 더 놀기
 
         </button>
 
@@ -452,6 +482,9 @@
 
 
 
+</main>
+
+
 <!-- =========================================================
      참가자 귀가 경로 지도 모달
      ========================================================= -->
@@ -461,7 +494,11 @@
         class="route-map-modal"
         onclick="handleRouteMapBackground(event)">
 
-    <div class="route-map-modal-content">
+    <div
+            class="route-map-modal-content"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="routeMapTitle">
 
         <div class="route-map-modal-header">
 
@@ -524,6 +561,8 @@
 
     <div
             id="toastMessage"
+            role="status"
+            aria-live="polite"
             class="toast">
     </div>
 
@@ -561,6 +600,10 @@
         if (!currentUser) {
             return;
         }
+
+        window.MeetBackSessionHeader?.render(
+            currentUser
+        );
 
 
         meetingId =
@@ -2150,7 +2193,7 @@
         if (whatIfActive) {
 
             button.textContent =
-                "현재 결과 보기";
+                "기본 귀가 시간 보기";
 
 
             description.textContent =
@@ -2176,11 +2219,11 @@
         else {
 
             button.textContent =
-                "+30분 결과 보기";
+                "What-if · 30분 더 놀기";
 
 
             description.textContent =
-                "최종 장소와 참가자별 귀가 정보를 확인해보세요.";
+                "모두의 지하철 막차를 계산한 함께 헤어질 시간입니다.";
 
 
             summaryLabel.textContent =

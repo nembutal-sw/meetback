@@ -4,18 +4,26 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>MeetBack 아이디 찾기</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeetBack 이메일 찾기</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 
-<body>
+<body class="auth-page">
 
-<div class="find-email-container">
+<div class="find-email-container auth-card">
 
-    <h1>아이디 찾기</h1>
+    <a class="mb-brand" th:href="@{/}">
+        <img th:src="@{/images/favicon.svg}" alt="">
+        <span>MeetBack</span>
+    </a>
 
-    <p>
-        가입할 때 사용한 닉네임을 입력해주세요.
-    </p>
+    <div class="auth-heading">
+        <div class="mb-eyebrow">Account recovery</div>
+        <h1>이메일 찾기</h1>
+        <p>가입할 때 사용한 닉네임을 입력해주세요.</p>
+    </div>
 
 
     <form id="findEmailForm">
@@ -40,7 +48,7 @@
 
 
         <button type="submit">
-            아이디 찾기
+            이메일 찾기
         </button>
 
     </form>
@@ -49,13 +57,13 @@
     <br>
 
 
-    <div id="findEmailMessage"></div>
+    <div id="findEmailMessage" role="status" aria-live="polite"></div>
 
 
     <br>
 
 
-    <div>
+    <div class="auth-back-link">
 
         <a th:href="@{/login}">
             로그인으로 돌아가기
@@ -162,13 +170,13 @@
             {
 
                 console.error(
-                    "아이디 찾기 요청 오류:",
+                    "이메일 찾기 요청 오류:",
                     error
                 );
 
 
                 findEmailMessage.innerText =
-                    "아이디 찾기 처리 중 오류가 발생했습니다.";
+                    "이메일 찾기 처리 중 오류가 발생했습니다.";
             }
 
         }

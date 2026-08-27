@@ -5,12 +5,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -40,8 +42,10 @@ public class SecurityConfig {
                                                 "/signup",
                                                 "/find-email",
                                                 "/forgot-password",
-                                                "/reset-password",
-                                                "/home",
+                                                 "/reset-password",
+                                                 "/home",
+                                                 "/admin",
+                                                 "/admin/**",
 
                                                 "/auth/login",
                                                 "/auth/signup",
@@ -77,10 +81,15 @@ public class SecurityConfig {
                                                 "/meeting/location",
                                                 "/meeting/vote",
                                                 "/meeting/result"
-                                        )
-                                        .permitAll()
+                                         )
+                                         .permitAll()
 
-                                        .requestMatchers(
+                                         .requestMatchers(
+                                                 "/api/admin/**"
+                                         )
+                                         .hasRole("ADMIN")
+
+                                         .requestMatchers(
                                                 "/auth/check",
                                                 "/auth/logout",
                                                 "/auth/withdraw",

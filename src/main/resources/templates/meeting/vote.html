@@ -5,13 +5,19 @@
 
     <meta charset="UTF-8">
 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>MeetBack 장소 투표</title>
+
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <link rel="stylesheet" href="/css/common.css">
 
     <script
             src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js">
     </script>
 
     <script src="/js/meeting-common.js"></script>
+    <script src="/js/meeting-session-header.js"></script>
     <script src="/js/auth-session-guard.js" defer></script>
 
     <link
@@ -23,6 +29,29 @@
 
 <body>
 
+<header class="meeting-session-header">
+    <div class="meeting-session-header__inner">
+        <a class="mb-brand" href="/home" aria-label="MeetBack 홈">
+            <img src="/images/favicon.svg" alt="">
+            <span>MeetBack</span>
+        </a>
+
+        <div class="meeting-session-header__actions">
+            <span class="meeting-session-step">03 · VOTE &amp; CONFIRM</span>
+            <div class="meeting-session-user" aria-label="현재 로그인 사용자">
+                <span class="meeting-session-avatar" data-session-avatar>MB</span>
+                <span>
+                    <strong data-session-nickname>사용자</strong>
+                    <small data-session-role>일반 회원</small>
+                </span>
+            </div>
+            <button type="button" class="meeting-session-home" onclick="location.href='/home'">
+                홈으로
+            </button>
+        </div>
+    </div>
+</header>
+
 
 
 <!-- =========================================================
@@ -33,9 +62,14 @@
         id="finalConfirmOverlay"
         class="confirm-overlay">
 
-    <div class="confirm-modal">
+    <div
+            class="confirm-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="finalConfirmTitle"
+            aria-describedby="finalConfirmMessage">
 
-        <h3 class="confirm-title">
+        <h3 id="finalConfirmTitle" class="confirm-title">
             최종 장소 확정
         </h3>
 
@@ -86,6 +120,8 @@
 
     <div
             id="toastMessage"
+            role="status"
+            aria-live="polite"
             class="toast">
     </div>
 
@@ -93,15 +129,20 @@
 
 
 
+<main class="meeting-page meeting-vote-page">
+<section class="meeting-page-intro vote-page-intro">
+    <div>
+        <span class="meeting-page-eyebrow">VOTE &amp; CONFIRM · STEP 03</span>
 <h1>
     장소 투표
 </h1>
 
 
 <p>
-    귀가 가능 여부와 이동시간을 확인하고
+    지하철 막차 기준 귀가 가능 시간과 이동시간을 먼저 확인한 뒤
     원하는 장소에 투표해주세요.
 </p>
+    </div>
 
 
 <button
@@ -111,6 +152,7 @@
     모임방으로
 
 </button>
+</section>
 
 
 <hr>
@@ -182,7 +224,7 @@
     </h2>
 
 
-    <p id="voteStatus">
+    <p id="voteStatus" role="status" aria-live="polite">
         투표 상태 확인 중...
     </p>
 
@@ -201,6 +243,8 @@
 </div>
 
 
+
+</main>
 
 <script>
 
@@ -355,6 +399,10 @@
         {
             return;
         }
+
+        window.MeetBackSessionHeader?.render(
+            currentUser
+        );
 
 
         meetingId =

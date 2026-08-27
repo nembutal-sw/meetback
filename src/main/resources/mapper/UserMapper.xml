@@ -18,6 +18,8 @@
 
         <result property="role" column="role"/>
 
+        <result property="status" column="status"/>
+
         <result property="tokenVersion" column="token_version"/>
 
         <result property="deletedAt" column="deleted_at"/>
@@ -40,6 +42,7 @@
             email,
             nickname,
             password_hash,
+            status,
             created_at,
             updated_at
         )
@@ -48,6 +51,7 @@
             #{email},
             #{nickname},
             #{passwordHash},
+            #{status},
         NOW(),
         NOW()
         )
@@ -87,12 +91,35 @@
             nickname,
             password_hash,
             role,
+            status,
             token_version,
             deleted_at,
             created_at,
             updated_at
         FROM users
         WHERE email = #{email}
+
+    </select>
+
+
+    <!-- 로그인 처리 중 같은 사용자 행의 동시 변경을 막는다. -->
+    <select id="selectByEmailForUpdate"
+            resultMap="userResultMap">
+
+        SELECT
+            user_id,
+            email,
+            nickname,
+            password_hash,
+            role,
+            status,
+            token_version,
+            deleted_at,
+            created_at,
+            updated_at
+        FROM users
+        WHERE email = #{email}
+        FOR UPDATE
 
     </select>
 
@@ -107,6 +134,7 @@
             nickname,
             password_hash,
             role,
+            status,
             token_version,
             deleted_at,
             created_at,
@@ -127,6 +155,7 @@
             nickname,
             password_hash,
             role,
+            status,
             token_version,
             deleted_at,
             created_at,

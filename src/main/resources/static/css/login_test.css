@@ -1,603 +1,155 @@
-/* =========================================================
-   MeetBack Login
-   현재 login.html 구조 그대로 사용
-   ========================================================= */
-
-:root {
-    --primary: #635bff;
-    --primary-dark: #5147f6;
-
-    --text: #17182c;
-    --text-soft: #6c7080;
-    --text-muted: #989baa;
-
-    --border: #dfe1ec;
-
-    --danger: #d95353;
-}
-
-
-/* =========================================================
-   기본
-   ========================================================= */
-
-* {
-    box-sizing: border-box;
-}
-
-
-html,
-body {
-    margin: 0;
-    min-height: 100%;
-}
-
-
-body {
-    min-height: 100vh;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    padding: 40px 20px;
-
-    font-family:
-            Pretendard,
-            -apple-system,
-            BlinkMacSystemFont,
-            "Segoe UI",
-            "Noto Sans KR",
-            Arial,
-            sans-serif;
-
-    color: var(--text);
-
-    background:
-            radial-gradient(
-                    circle at 82% 12%,
-                    rgba(111, 93, 255, 0.18),
-                    transparent 35%
-            ),
-            radial-gradient(
-                    circle at 15% 20%,
-                    rgba(107, 169, 255, 0.09),
-                    transparent 32%
-            ),
-            linear-gradient(
-                    135deg,
-                    #ffffff 0%,
-                    #fafaff 45%,
-                    #f4f3ff 100%
-            );
-}
-
-
-/* =========================================================
-   로그인 전체 카드
-   ========================================================= */
-
 .login-container {
-    position: relative;
-
-    width: 100%;
-    max-width: 500px;
-
-    padding: 44px;
-
-    background: rgba(255, 255, 255, 0.96);
-
-    border: 1px solid #e5e5f0;
-    border-radius: 24px;
-
-    box-shadow:
-            0 24px 70px
-            rgba(54, 50, 108, 0.13);
-
-    overflow: hidden;
+    width: min(100%, 570px);
 }
-
-
-/* 우측 상단 보라색 장식 */
-
-.login-container::before {
-    content: "";
-
-    position: absolute;
-
-    top: -110px;
-    right: -100px;
-
-    width: 250px;
-    height: 250px;
-
-    border-radius: 50%;
-
-    background:
-            radial-gradient(
-                    circle,
-                    rgba(111, 93, 255, 0.17),
-                    rgba(111, 93, 255, 0.04) 55%,
-                    transparent 72%
-            );
-
-    pointer-events: none;
-}
-
-
-/* =========================================================
-   제목
-   ========================================================= */
-
-.login-container > h1 {
-    position: relative;
-
-    margin: 0 0 38px;
-
-    padding-left: 34px;
-
-    font-size: 30px;
-    font-weight: 800;
-
-    letter-spacing: -1.2px;
-}
-
-
-/* MeetBack 앞 위치 아이콘 느낌 */
-
-.login-container > h1::before {
-    content: "";
-
-    position: absolute;
-
-    left: 0;
-    top: 7px;
-
-    width: 21px;
-    height: 21px;
-
-    border: 6px solid var(--primary);
-    border-radius: 50%;
-}
-
-
-/* 제목 끝 보라색 점 */
-
-.login-container > h1::after {
-    content: ".";
-
-    color: var(--primary);
-}
-
-
-/* =========================================================
-   기존 br 제거
-   HTML 수정할 필요 없음
-   ========================================================= */
-
-.login-container > br,
-#loginForm > br,
-.social-login-container > br {
-    display: none;
-}
-
-
-/* =========================================================
-   로그인 Form
-   ========================================================= */
-
-#loginForm {
-    display: flex;
-    flex-direction: column;
-
-    gap: 20px;
-}
-
-
-/* 이메일 / 비밀번호 div */
 
 #loginForm > div:not(#loginMessage) {
     width: 100%;
 }
 
-
-/* =========================================================
-   Label
-   ========================================================= */
-
-#loginForm label {
-    display: block;
-
-    margin-bottom: 9px;
-
-    color: #3d4052;
-
-    font-size: 14px;
-    font-weight: 700;
-}
-
-
-/* =========================================================
-   Input
-   ========================================================= */
-
-#loginForm input[type="email"],
-#loginForm input[type="password"] {
-    display: block;
-
-    width: 100%;
-    height: 50px;
-
-    padding: 0 15px;
-
-    color: var(--text);
-
-    background: #ffffff;
-
-    border: 1px solid var(--border);
-    border-radius: 12px;
-
-    outline: none;
-
-    font-size: 14px;
-
-    transition:
-            border-color 0.18s ease,
-            box-shadow 0.18s ease;
-}
-
-
-#loginForm input::placeholder {
-    color: #adb0be;
-}
-
-
-#loginForm input[type="email"]:hover,
-#loginForm input[type="password"]:hover {
-    border-color: #c9cbd9;
-}
-
-
-#loginForm input[type="email"]:focus,
-#loginForm input[type="password"]:focus {
-    border-color: var(--primary);
-
-    box-shadow:
-            0 0 0 4px
-            rgba(99, 91, 255, 0.10);
-}
-
-
-/* =========================================================
-   로그인 메시지
-   ========================================================= */
-
-#loginMessage {
-    color: var(--danger);
-
-    font-size: 13px;
-
-    line-height: 1.5;
-}
-
-
-#loginMessage:empty {
+#loginMessage:empty,
+#socialMessage:empty,
+#socialSignupMessage:empty,
+#nicknameCheckMessage:empty,
+#socialTermsMessage:empty {
     display: none;
 }
 
-
-/* =========================================================
-   로그인 버튼
-   ========================================================= */
-
-#loginForm > button[type="submit"] {
-    width: 100%;
-    height: 50px;
-
-    margin-top: 2px;
-
-    color: #ffffff;
-
-    background:
-            linear-gradient(
-                    135deg,
-                    #6b63ff,
-                    #584df5
-            );
-
-    border: none;
-    border-radius: 12px;
-
-    font-size: 14px;
-    font-weight: 700;
-
-    cursor: pointer;
-
-    box-shadow:
-            0 12px 26px
-            rgba(99, 91, 255, 0.25);
-
-    transition:
-            transform 0.16s ease,
-            box-shadow 0.16s ease;
-}
-
-
-#loginForm > button[type="submit"]:hover {
-    transform: translateY(-1px);
-
-    box-shadow:
-            0 15px 31px
-            rgba(99, 91, 255, 0.32);
-}
-
-
-/* =========================================================
-   회원가입
-   form 바로 다음 br 다음 div 구조 대응
-   ========================================================= */
-
-#loginForm ~ div:not(.social-login-container) {
+.auth-link-row,
+.auth-back-link {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 13px;
     margin-top: 22px;
-
-    text-align: center;
-
+    color: var(--mb-faint);
     font-size: 13px;
 }
 
-
-/* 회원가입 div에만 안내문 생성 */
-
-#loginForm ~ div:not(.social-login-container):has(a[href*="signup"])::before {
-    content: "아직 계정이 없으신가요? ";
-
-    color: var(--text-soft);
-}
-
-
-#loginForm ~ div:not(.social-login-container) a {
-    color: var(--primary);
-
+.auth-link-row a,
+.auth-back-link a {
+    color: var(--mb-muted);
     font-weight: 700;
-
     text-decoration: none;
 }
 
-
-#loginForm ~ div:not(.social-login-container) a:hover {
-    text-decoration: underline;
+.auth-link-row a:hover,
+.auth-back-link a:hover {
+    color: var(--mb-primary);
 }
-
-
-/* =========================================================
-   소셜 로그인 영역
-   ========================================================= */
 
 .social-login-container {
-    margin-top: 30px;
-
-    padding-top: 28px;
-
-    border-top: 1px solid var(--border);
+    margin-top: 29px;
+    padding-top: 26px;
+    border-top: 1px solid var(--mb-border);
 }
-
-
-/* "소셜 로그인" */
 
 .social-login-container > div:first-child {
-    margin-bottom: 18px;
-
-    color: var(--text-muted);
-
-    font-size: 12px;
-    font-weight: 700;
-
+    margin-bottom: 16px;
+    color: var(--mb-muted);
+    font-family: var(--mb-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
     text-align: center;
+    text-transform: uppercase;
 }
 
-
-/* =========================================================
-   카카오 로그인
-   ========================================================= */
-
-.social-login-container > div:nth-of-type(2) {
-    width: 100%;
-
-    margin-bottom: 13px;
+.social-login-container > br {
+    display: none;
 }
-
 
 .social-login-container > div:nth-of-type(2) > a {
     display: flex;
-
     align-items: center;
     justify-content: center;
-
     width: 100%;
-    height: 48px;
-
-    color: #2d2926;
-
+    min-height: 47px;
+    margin-bottom: 12px;
+    color: #191600;
     background: #fee500;
-
-    border: 1px solid #f0da00;
-    border-radius: 11px;
-
+    border: 1px solid #fee500;
+    border-radius: 9px;
     font-size: 14px;
-    font-weight: 700;
-
+    font-weight: 800;
     text-decoration: none;
-
-    transition:
-            transform 0.16s ease,
-            box-shadow 0.16s ease;
 }
-
 
 .social-login-container > div:nth-of-type(2) > a::before {
-    content: "●";
-
+    content: "K";
+    display: grid;
+    width: 22px;
+    height: 22px;
     margin-right: 9px;
-
-    color: #3c1e1e;
-
-    font-size: 9px;
+    place-items: center;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: 50%;
+    font-family: var(--mb-mono);
+    font-size: 11px;
 }
-
-
-.social-login-container > div:nth-of-type(2) > a:hover {
-    transform: translateY(-1px);
-
-    box-shadow:
-            0 8px 18px
-            rgba(125, 108, 0, 0.12);
-}
-
-
-/* =========================================================
-   Google 로그인
-   ========================================================= */
 
 .g_id_signin {
     display: flex;
-
     justify-content: center;
-
-    width: 100%;
-
-    margin-top: 12px;
+    margin-top: 11px;
 }
-
 
 .social-login-container iframe {
     max-width: 100% !important;
 }
 
-
-/* =========================================================
-   Google 비활성 상태 문구
-   ========================================================= */
-
 .social-login-container > div[th\:unless] {
-    margin-top: 14px;
-
-    padding: 11px 13px;
-
-    color: #7b7e8f;
-
-    background: #f7f7fb;
-
-    border: 1px solid #e6e7ef;
-    border-radius: 10px;
-
+    margin-top: 12px;
+    padding: 11px;
+    color: var(--mb-muted);
+    background: rgba(7, 20, 40, 0.55);
+    border: 1px solid var(--mb-border);
+    border-radius: 8px;
     font-size: 12px;
-
-    line-height: 1.6;
-
     text-align: center;
 }
 
-
-/* Thymeleaf 처리 후에는 th:unless 속성이 사라질 수 있으므로
-   Google 설정 안내 div도 넓이 및 기본 정렬 유지 */
-
-.social-login-container > div {
-    max-width: 100%;
+.auth-inline-card {
+    margin-top: 26px;
+    padding: 22px;
+    background: #091a32;
+    border: 1px solid var(--mb-border);
+    border-radius: 11px;
 }
 
+.auth-inline-card h3 {
+    margin: 0 0 7px;
+}
 
-/* =========================================================
-   소셜 메시지
-   ========================================================= */
-
-#socialMessage {
-    margin-top: 14px;
-
-    color: #5b5995;
-
+.auth-inline-card p {
+    margin: 0 0 17px;
+    color: var(--mb-muted);
     font-size: 13px;
-
-    line-height: 1.5;
-
-    text-align: center;
 }
 
-
-#socialMessage:empty {
-    display: none;
+.auth-inline-card > div:has(> #socialNickname) {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 9px;
 }
 
-
-#socialMessage:not(:empty) {
-    padding: 10px 12px;
-
-    background: #f3f2ff;
-
-    border: 1px solid #dedbff;
-    border-radius: 9px;
+.auth-inline-card > div:has(> #socialNickname) label {
+    grid-column: 1 / -1;
 }
 
-
-/* =========================================================
-   포커스
-   ========================================================= */
-
-a:focus-visible,
-button:focus-visible,
-input:focus-visible {
-    outline:
-            3px solid
-            rgba(99, 91, 255, 0.20);
-
-    outline-offset: 2px;
+#nicknameCheckButton {
+    min-width: 94px;
+    color: var(--mb-blue);
 }
 
-
-/* =========================================================
-   모바일
-   ========================================================= */
-
-@media (max-width: 560px) {
-
-    body {
-        align-items: flex-start;
-
-        padding: 20px 14px 40px;
+@media (max-width: 520px) {
+    .auth-link-row {
+        gap: 9px;
     }
 
-
-    .login-container {
-        margin-top: 16px;
-
-        padding: 32px 22px;
-
-        border-radius: 19px;
+    .auth-inline-card > div:has(> #socialNickname) {
+        grid-template-columns: 1fr;
     }
 
-
-    .login-container > h1 {
-        padding-left: 29px;
-
-        margin-bottom: 31px;
-
-        font-size: 25px;
+    .auth-inline-card > div:has(> #socialNickname) label {
+        grid-column: auto;
     }
-
-
-    .login-container > h1::before {
-        top: 6px;
-
-        width: 18px;
-        height: 18px;
-
-        border-width: 5px;
-    }
-
-
-    #loginForm input[type="email"],
-    #loginForm input[type="password"],
-    #loginForm > button[type="submit"] {
-        height: 47px;
-    }
-
 }

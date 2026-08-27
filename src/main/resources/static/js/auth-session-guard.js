@@ -17,6 +17,107 @@
     let timerId =
         null;
 
+    let lastAuthError =
+        null;
+
+    // Refresh Token으로 Access Token을 한 번 갱신한다.
+    async function refreshTokens()
+    {
+        const refreshToken =
+            localStorage.getItem(
+                "refreshToken"
+            );
+
+        if (!refreshToken)
+        {
+            lastAuthError = null;
+            return false;
+        }
+
+        try
+        {
+            const response =
+                await fetch(
+                    "/auth/refresh",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+                        body: JSON.stringify(
+                            {
+                                refreshToken:
+                                    refreshToken
+                            }
+                        ),
+                        cache: "no-store"
+                    }
+                );
+
+            if ([400, 401, 403].includes(response.status))
+            {
+                lastAuthError =
+                    await readAuthError(
+                        response
+                    );
+
+                return false;
+            }
+
+            // 서버 오류와 요청 제한은 다음 검사 주기에 다시 시도한다.
+            if (!response.ok)
+            {
+                lastAuthError = null;
+                return null;
+            }
+
+            const data =
+                await response.json();
+
+            if (!data.accessToken
+                || !data.refreshToken)
+            {
+                lastAuthError = null;
+                return false;
+            }
+
+            localStorage.setItem(
+                "accessToken",
+                data.accessToken
+            );
+
+            localStorage.setItem(
+                "refreshToken",
+                data.refreshToken
+            );
+
+            lastAuthError = null;
+            return true;
+        }
+        catch (error)
+        {
+            console.error(
+                "[TOKEN REFRESH ERROR]",
+                error
+            );
+
+            return null;
+        }
+    }
+
+    async function readAuthError(response)
+    {
+        try
+        {
+            return await response.clone().json();
+        }
+        catch (error)
+        {
+            return null;
+        }
+    }
+
     // =========================================================
     // 로그인 정보 삭제
     // =========================================================
@@ -60,7 +161,7 @@
 // 강제 로그아웃
 // =========================================================
 
-    function forceLogout()
+    function forceLogout(authError)
     {
 
         /*
@@ -77,8 +178,27 @@
             true;
 
 
+        const suspended =
+            authError
+            && authError.code ===
+            "ACCOUNT_SUSPENDED";
+
+        const notice = suspended
+            ? "이용이 정지된 계정입니다. 관리자에게 문의해주세요."
+            : "다른 기기에서 로그인되어 연결이 종료되었습니다.";
+
+        const title = suspended
+            ? "계정 이용이 정지되었습니다."
+            : "연결이 종료되었습니다.";
+
+        const detail = suspended
+            ? "정지 상태에서는 MeetBack을 이용할 수 없습니다."
+            : "다른 기기에서 동일한 계정으로 로그인했습니다.";
+
         console.log(
-            "[SESSION INVALIDATED]"
+            suspended
+                ? "[ACCOUNT SUSPENDED]"
+                : "[SESSION INVALIDATED]"
         );
 
 
@@ -88,7 +208,7 @@
 
         sessionStorage.setItem(
             "authNotice",
-            "다른 기기에서 로그인되어 연결이 종료되었습니다."
+            notice
         );
 
 
@@ -186,7 +306,7 @@
                 margin-bottom: 12px;
             "
         >
-            연결이 종료되었습니다.
+            ${title}
         </div>
 
         <div
@@ -196,7 +316,7 @@
                 font-weight: 400;
             "
         >
-            다른 기기에서 동일한 계정으로 로그인했습니다.
+            ${detail}
         </div>
 
         <div
@@ -309,7 +429,9 @@
                 if (refreshed === false)
                 {
 
-                    forceLogout();
+                    forceLogout(
+                        lastAuthError
+                    );
 
 
                     return;
@@ -368,11 +490,28 @@
             // 따라서 Refresh Token으로 한 번 확인
             // =================================================
 
-            if (
-                response.status === 401
-                ||
-                response.status === 403
-            )
+            if (response.status === 403)
+            {
+                const authError =
+                    await readAuthError(
+                        response
+                    );
+
+                if (authError
+                    && authError.code ===
+                    "ACCOUNT_SUSPENDED")
+                {
+                    forceLogout(
+                        authError
+                    );
+
+                    return;
+                }
+            }
+
+
+            if (response.status === 401
+                || response.status === 403)
             {
 
                 const refreshed =
@@ -388,7 +527,9 @@
                 if (refreshed === false)
                 {
 
-                    forceLogout();
+                    forceLogout(
+                        lastAuthError
+                    );
 
 
                     return;
@@ -440,7 +581,11 @@
             if (!response.ok)
             {
 
-                forceLogout();
+                forceLogout(
+                    await readAuthError(
+                        response
+                    )
+                );
             }
 
         }

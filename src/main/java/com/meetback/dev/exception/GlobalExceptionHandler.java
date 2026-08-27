@@ -9,6 +9,21 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(AccountSuspendedException.class)
+    public ResponseEntity<Map<String, String>> handleAccountSuspended(
+            AccountSuspendedException e
+    ) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(
+                        Map.of(
+                                "code", "ACCOUNT_SUSPENDED",
+                                "message", e.getMessage()
+                        )
+                );
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>>
     handleIllegalArgument(

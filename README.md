@@ -1,8 +1,8 @@
 # MeetBack
 
-모임 구성원의 출발지와 귀가 조건을 바탕으로 모두가 안전하게 귀가할 수 있는 만남 장소를 추천하고, 투표를 통해 최종 장소를 결정하는 서비스입니다.
+**막차 걱정은 덜고, 오늘은 더 오래.**
 
-MeetBack은 장소 검색 결과만 보여주는 것이 아니라 참가자별 대중교통 경로, 막차 시각, 귀가 가능 여부, 평균 이동시간과 이동시간 편차를 계산해 후보 장소의 순위를 제공합니다.
+MeetBack은 참가자별 지하철 막차를 계산해 모두가 귀가 가능한 헤어질 시간을 안내하고, 더 머물고 싶을 때 What-if로 다시 계산하는 서비스입니다. 장소 후보 제안과 투표부터 참가자별 귀가 경로·막차 확인까지 하나의 모임 흐름으로 제공합니다.
 
 > 현재 저장소는 개발 진행 중인 팀 프로젝트입니다. 일부 화면과 경로 조회 API는 기능 검증용 페이지 및 엔드포인트를 포함합니다.
 
@@ -43,8 +43,8 @@ stateDiagram-v2
 ### 추천 계산
 
 - 후보 장소별 참가자 전원의 귀가 경로 계산
-- ODsay API 기반 대중교통 경로 및 막차 조회
-- 참가자별 귀가 가능 여부와 안전 출발 시각 계산
+- ODsay API 기반 지하철 귀가 경로 및 막차 조회
+- 참가자별 귀가 가능 여부와 최종 출발 시각 계산
 - 평균 귀가시간, 이동시간 편차, 공정성 점수 계산
 - 전체 귀가 가능 여부와 규칙 점수를 이용한 후보 순위 제공
 
@@ -119,7 +119,7 @@ flowchart TB
 - `dto`: API 요청과 응답 데이터
 - `oauth`: Kakao 및 Google 인증 제공자 연동
 - `place`: Kakao Local 장소 검색 연동
-- `transport`: ODsay 대중교통·막차 연동
+- `transport`: ODsay 지하철 귀가 경로·막차 연동
 - `security`: MeetBack JWT 생성 및 검증
 - `scheduler`: 만료된 Refresh Token 정리
 
@@ -128,7 +128,7 @@ flowchart TB
 ```text
 meetback/
 ├── db/
-│   └── schema.sql                         # 전체 DB 스키마
+│   └── schema.sql                         # 최신 스키마 참고본
 ├── src/main/java/com/meetback/dev/
 │   ├── config/                            # 공통 설정
 │   ├── controller/                        # REST 및 화면 Controller
@@ -143,10 +143,14 @@ meetback/
 │   ├── service/                           # 핵심 업무 로직
 │   └── transport/                         # ODsay 교통 연동
 ├── src/main/resources/
+│   ├── db/migration/                      # Flyway 버전 마이그레이션
 │   ├── mapper/                            # MyBatis XML SQL
 │   ├── templates/                         # Thymeleaf 화면
 │   └── application.properties
 ├── src/test/                              # 단위 및 애플리케이션 테스트
+├── Dockerfile                             # JDK 17 애플리케이션 이미지
+├── compose.yaml                           # 애플리케이션·MySQL 실행 구성
+├── .dockerignore                          # Docker 빌드 제외 목록
 ├── .env.example                           # 환경 변수 예시
 ├── pom.xml
 └── README.md
@@ -158,6 +162,7 @@ meetback/
 
 - JDK 17 이상
 - MySQL 8.x 권장
+- Docker Engine 및 Docker Compose v2(컨테이너 실행 시)
 - Google OAuth Web Client ID
 - Kakao OAuth Client ID 및 Client Secret
 - Kakao Local REST API Key
@@ -178,19 +183,55 @@ cd meetback
 
 ### 데이터베이스 준비
 
-1. MySQL에 MeetBack용 데이터베이스를 생성합니다.
-2. [`db/schema.sql`](db/schema.sql)을 MySQL Workbench 또는 MySQL Client에서 실행합니다.
-3. 생성한 데이터베이스 접속 정보를 `.env`에 입력합니다.
+Docker Compose 사용을 권장합니다. MySQL 컨테이너는 빈 데이터 볼륨에서
+`meet_back` 데이터베이스를 만들고, 애플리케이션 시작 시 Flyway가
+`src/main/resources/db/migration`의 마이그레이션을 순서대로 적용합니다.
 
-예시 명령은 다음과 같습니다.
+먼저 `.env.example`을 `.env`로 복사하고 비밀번호와 외부 API 설정을 실제
+환경 값으로 채웁니다. Docker Compose는 DB 이름과 애플리케이션 DB 사용자를
+각각 `meet_back`, `meetback`으로 고정합니다. 앱은 호스트의 `.env`를
+`/app/config/.env`에 읽기 전용으로 bind mount해 토큰을 읽습니다.
+MySQL root 비밀번호는 앱과 분리된 `secrets/mysql_root_password` 파일을 사용합니다.
+
+```bash
+docker compose config --quiet
+docker compose up --build
+```
+
+최초 실행 결과는 다음과 같습니다.
+
+1. MySQL이 `meet_back` 데이터베이스와 애플리케이션 사용자를 생성합니다.
+2. MySQL healthcheck가 통과한 뒤 애플리케이션이 시작됩니다.
+3. Flyway가 V1 스키마, V2 회원 상태, V3 초기 관리자 계정을 순서대로 적용합니다.
+4. `flyway_schema_history`에 적용 이력이 기록됩니다.
+
+빈 DB의 최초 관리자 로그인 ID와 비밀번호는 모두 `admin`입니다. 최초 로그인 후
+관리자 페이지의 **내 계정**에서 로그인 ID와 비밀번호를 즉시 변경합니다. 기존
+관리자 계정이 있거나 `admin` 값이 이미 사용 중이면 V3는 중복 계정을 만들지 않습니다.
+
+이후 스키마 변경은 이미 적용된 파일을 수정하지 않고 `V4__...sql`,
+`V5__...sql`처럼 새 마이그레이션으로 추가합니다.
+
+V1은 `db/schema.sql`에 있는 스키마만 생성하며 약관 문구를 임의로 넣지 않습니다.
+승인된 약관의 문구와 버전이 확정되면 별도 마이그레이션으로 추가합니다.
+
+로컬 MySQL을 직접 사용하는 경우에는 데이터베이스와 전용 사용자를 먼저 생성합니다.
 
 ```sql
 CREATE DATABASE meet_back
     CHARACTER SET utf8mb4
     COLLATE utf8mb4_unicode_ci;
+
+CREATE USER IF NOT EXISTS 'meetback'@'localhost'
+    IDENTIFIED BY 'your-db-password';
+GRANT ALL PRIVILEGES ON meet_back.* TO 'meetback'@'localhost';
 ```
 
-그다음 `db/schema.sql`을 `meet_back` 데이터베이스에 적용합니다.
+접속 정보를 `.env`에 입력하고 애플리케이션을 시작하면 Flyway가 테이블을
+자동 생성합니다. `db/schema.sql`은 검토용 참고본이며 직접 실행하지 않습니다.
+
+기존에 수동으로 테이블을 만든 데이터베이스는 V1과 충돌할 수 있으므로,
+스키마 검증 후 운영자가 한 번만 Flyway baseline을 적용해야 합니다.
 
 ### 환경 변수 설정
 
@@ -210,12 +251,22 @@ cp .env.example .env
 
 `.env`의 값을 각 개발 환경에 맞게 설정합니다.
 
+Docker를 사용하는 경우 `secrets/mysql_root_password`에는 MySQL root 비밀번호만
+한 줄로 저장합니다. `.env`와 `secrets`는 Git과 Docker 빌드 컨텍스트에서 제외됩니다.
+Linux/SUSE에서는 `APP_UID`를 `id -u` 결과와 맞추고 두 비밀 파일의 권한을
+소유자 읽기·쓰기만 허용하는 `0600`으로 설정합니다.
+
 ```env
+APP_UID=1000
+MEETBACK_ENV_FILE=./.env
+MYSQL_ROOT_PASSWORD_FILE=./secrets/mysql_root_password
+
 DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=meet_back
-DB_USERNAME=your-db-user
+DB_USERNAME=meetback
 DB_PASSWORD=your-db-password
+APP_PORT=8080
 
 JWT_SECRET=your-base64-encoded-jwt-secret
 JWT_ACCESS_TOKEN_EXPIRATION=900000
@@ -234,11 +285,15 @@ ODSAY_BASE_URL=your-odsay-base-url
 
 | 환경 변수 | 설명 |
 |---|---|
+| `APP_UID` | 컨테이너 앱 사용자의 UID. Linux/SUSE에서는 `id -u` 값 사용 |
+| `MEETBACK_ENV_FILE` | 컨테이너에 bind mount할 호스트 `.env` 경로 |
+| `MYSQL_ROOT_PASSWORD_FILE` | MySQL root 비밀번호가 담긴 별도 secret 파일 경로 |
 | `DB_HOST` | MySQL 호스트 |
 | `DB_PORT` | MySQL 포트 |
-| `DB_NAME` | 사용할 데이터베이스 이름 |
-| `DB_USERNAME` | MySQL 사용자 |
+| `DB_NAME` | 로컬 직접 실행 시 사용할 DB 이름(Compose는 `meet_back` 고정) |
+| `DB_USERNAME` | 로컬 직접 실행 시 사용할 MySQL 사용자(Compose는 `meetback` 고정) |
 | `DB_PASSWORD` | MySQL 비밀번호 |
+| `APP_PORT` | Docker에서 공개할 애플리케이션 포트(기본 8080) |
 | `JWT_SECRET` | MeetBack JWT의 HMAC 서명에 사용하는 Base64 Secret Key |
 | `JWT_ACCESS_TOKEN_EXPIRATION` | Access Token 유효시간(ms) |
 | `JWT_REFRESH_TOKEN_EXPIRATION` | Refresh Token 유효시간(ms) |
@@ -258,6 +313,38 @@ Google 로그인을 사용하는 개발자는 [Google Identity Services 공식 �
 
 ### 애플리케이션 실행
 
+Docker Compose:
+
+```bash
+docker compose config --quiet
+docker compose up --build
+```
+
+프로젝트 밖의 `.env`를 사용할 때는 호스트 경로와 Compose 치환 파일을 함께 지정합니다.
+
+```bash
+MEETBACK_ENV_FILE=/srv/meetback/.env \
+docker compose --env-file /srv/meetback/.env up --build
+```
+
+`.env`를 변경한 뒤에는 단순 재시작이 아니라 `docker compose up -d --force-recreate`
+명령으로 컨테이너를 다시 생성해야 새 값이 반영됩니다. 실제 값이 노출될 수 있으므로
+`docker compose config` 전체 출력은 공유하지 않고 `--quiet` 검증만 사용합니다.
+
+로그를 포함해 종료하려면 `Ctrl+C`를 누른 뒤 다음 명령을 실행합니다.
+
+```bash
+docker compose down
+```
+
+> `docker compose down -v`는 MySQL 데이터 볼륨까지 삭제합니다. 빈 DB 최초
+> 초기화를 다시 검증할 때만 사용합니다.
+
+> `MYSQL_DATABASE`, `MYSQL_USER`, 비밀번호는 빈 볼륨의 최초 기동 때만
+> 반영됩니다. 기존 볼륨의 `.env` 비밀번호만 바꿔도 DB 계정은 변경되지 않습니다.
+
+로컬 실행:
+
 Windows:
 
 ```powershell
@@ -273,7 +360,7 @@ macOS/Linux:
 서버가 시작되면 다음 주소로 접속합니다.
 
 ```text
-http://localhost:8080/login
+http://localhost:8080/
 ```
 
 ### 테스트 실행
@@ -303,7 +390,7 @@ Google 인증 서비스 테스트는 다음 시나리오를 검증합니다.
 
 | Method | Endpoint | 설명 |
 |---|---|---|
-| `GET` | `/` | 로그인 화면으로 이동 |
+| `GET` | `/` | 공개 메인 랜딩 화면 |
 | `GET` | `/login` | 로그인 화면 |
 | `GET` | `/signup` | 회원가입 화면 |
 | `GET` | `/home` | 로그인 후 홈 화면 |
@@ -389,7 +476,7 @@ Content-Type: application/json
 | Method | Endpoint | 설명 |
 |---|---|---|
 | `GET` | `/location-test` | 장소 입력과 계산 검증 화면 |
-| `GET` | `/routes/test?participantId={id}&candidateId={id}` | 대중교통 경로 계산 확인 |
+| `GET` | `/routes/test?participantId={id}&candidateId={id}` | 지하철 귀가 경로 계산 확인 |
 | `GET` | `/subway-test/last-train?sid={sid}&eid={eid}&day={day}` | ODsay 막차 조회 확인 |
 
 개발·검증용 엔드포인트는 운영 배포 전에 노출 여부를 다시 검토해야 합니다.

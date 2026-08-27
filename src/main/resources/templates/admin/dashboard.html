@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#071428">
+    <title>MeetBack 관리자 관제</title>
+
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/admin.css">
+
+    <script src="/js/auth-session-guard.js" defer></script>
+    <script src="/js/meeting-common.js" defer></script>
+    <script src="/js/meeting-session-header.js" defer></script>
+    <script src="/js/admin-dashboard.js" defer></script>
+</head>
+
+<body>
+<div id="adminAccessState"
+     class="admin-access-state"
+     role="status"
+     aria-live="polite">
+    <span class="admin-access-code" aria-hidden="true">ADM</span>
+    <strong>관리자 권한을 확인하고 있습니다.</strong>
+</div>
+
+<div id="adminPage" class="admin-shell app-shell" hidden>
+    <header class="admin-header site-header">
+        <a class="site-brand" href="/home" aria-label="MeetBack 홈">
+            <span class="brand-route-code" aria-hidden="true">MB</span>
+            <span class="brand-copy">
+                <strong class="brand-name">MeetBack</strong>
+                <span class="brand-caption">LAST TRAIN TIME GUIDE</span>
+            </span>
+        </a>
+
+        <div class="meeting-header-side admin-header-side">
+            <div class="meeting-session-header"
+                 data-session-header
+                 aria-label="관리자 로그인 상태">
+                <span class="meeting-session-initial"
+                      data-session-initial
+                      aria-hidden="true">MB</span>
+                <span class="meeting-session-copy">
+                    <strong class="meeting-session-nickname"
+                            data-session-nickname>로그인 확인 중</strong>
+                    <span class="meeting-session-role"
+                          data-session-role>권한 확인 중</span>
+                </span>
+            </div>
+
+            <div class="admin-header-actions">
+                <button type="button"
+                        id="adminAccountButton"
+                        class="admin-account-button">
+                    내 계정
+                </button>
+                <a class="admin-home-link" href="/home">
+                    홈으로
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="admin-main">
+        <section class="admin-intro" aria-labelledby="adminTitle">
+            <div>
+                <p class="route-kicker">CONTROL LINE · ADMIN</p>
+                <h1 id="adminTitle">서비스 운영 관제</h1>
+                <p class="admin-intro-copy">
+                    회원과 모임의 흐름을 확인하고 필요한 운영 작업을 안전하게 처리합니다.
+                    조회 정보와 변경 작업은 관리자 API의 응답을 기준으로 표시됩니다.
+                </p>
+            </div>
+
+            <div class="admin-route-map" aria-label="관리자 확인 순서">
+                <span class="admin-route-stop active">
+                    <b>01</b>
+                    <small>현황</small>
+                </span>
+                <i aria-hidden="true"></i>
+                <span class="admin-route-stop">
+                    <b>02</b>
+                    <small>검토</small>
+                </span>
+                <i aria-hidden="true"></i>
+                <span class="admin-route-stop destination">
+                    <b>03</b>
+                    <small>조치</small>
+                </span>
+            </div>
+        </section>
+
+        <div id="adminNotice"
+             class="admin-notice"
+             role="status"
+             aria-live="polite"
+             hidden></div>
+
+        <div class="admin-workspace">
+            <nav class="admin-nav"
+                 aria-label="관리자 메뉴">
+                <p class="admin-nav-title">OPERATIONS</p>
+
+                <div class="admin-tab-list"
+                     role="tablist"
+                     aria-orientation="vertical">
+                    <button type="button"
+                            id="adminDashboardTab"
+                            class="admin-tab active"
+                            role="tab"
+                            aria-selected="true"
+                            aria-controls="adminDashboardPanel"
+                            data-admin-tab="dashboard">
+                        <span>00</span>
+                        Dashboard
+                    </button>
+
+                    <button type="button"
+                            id="adminUsersTab"
+                            class="admin-tab"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="adminUsersPanel"
+                            tabindex="-1"
+                            data-admin-tab="users">
+                        <span>01</span>
+                        회원 관리
+                    </button>
+
+                    <button type="button"
+                            id="adminMeetingsTab"
+                            class="admin-tab"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="adminMeetingsPanel"
+                            tabindex="-1"
+                            data-admin-tab="meetings">
+                        <span>02</span>
+                        모임 관리
+                    </button>
+
+                    <button type="button"
+                            id="adminPlacesTab"
+                            class="admin-tab"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="adminPlacesPanel"
+                            tabindex="-1"
+                            data-admin-tab="places">
+                        <span>03</span>
+                        장소·투표
+                    </button>
+
+                    <button type="button"
+                            id="adminChatsTab"
+                            class="admin-tab"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="adminChatsPanel"
+                            tabindex="-1"
+                            data-admin-tab="chats">
+                        <span>04</span>
+                        채팅 관리
+                    </button>
+
+                    <button type="button"
+                            id="adminFeedTab"
+                            class="admin-tab"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="adminFeedPanel"
+                            tabindex="-1"
+                            data-admin-tab="feed">
+                        <span>05</span>
+                        피드 관리
+                    </button>
+
+                    <button type="button"
+                            id="adminOperationsTab"
+                            class="admin-tab"
+                            role="tab"
+                            aria-selected="false"
+                            aria-controls="adminOperationsPanel"
+                            tabindex="-1"
+                            data-admin-tab="operations">
+                        <span>06</span>
+                        운영 관리
+                    </button>
+                </div>
+
+                <p class="admin-nav-guide">
+                    변경 작업은 대상과 상태를 다시 확인한 뒤 진행하세요.
+                </p>
+            </nav>
+
+            <div class="admin-panels">
+                <section id="adminDashboardPanel"
+                         class="admin-panel"
+                         role="tabpanel"
+                         aria-labelledby="adminDashboardTab"
+                         data-admin-panel="dashboard">
+                    <div class="admin-panel-heading">
+                        <div>
+                            <p class="route-kicker">LIVE BOARD</p>
+                            <h2>운영 요약</h2>
+                        </div>
+                        <button type="button"
+                                id="refreshDashboardButton"
+                                class="admin-secondary-button">
+                            새로고침
+                        </button>
+                    </div>
+
+                    <div id="dashboardState"
+                         class="admin-state"
+                         role="status"
+                         aria-live="polite">
+                        운영 현황을 불러오는 중입니다.
+                    </div>
+
+                    <div id="dashboardContent" hidden>
+                        <div class="admin-summary-grid">
+                            <article class="admin-summary-card">
+                                <span class="admin-summary-code">USR</span>
+                                <strong id="summaryUsers">--</strong>
+                                <p>전체 회원</p>
+                            </article>
+                            <article class="admin-summary-card">
+                                <span class="admin-summary-code orange">MTG</span>
+                                <strong id="summaryMeetings">--</strong>
+                                <p>진행 중 모임</p>
+                            </article>
+                            <article class="admin-summary-card">
+                                <span class="admin-summary-code green">VOT</span>
+                                <strong id="summaryVotes">--</strong>
+                                <p>누적 투표</p>
+                            </article>
+                            <article class="admin-summary-card">
+                                <span class="admin-summary-code ink">CHT</span>
+                                <strong id="summaryChats">--</strong>
+                                <p>누적 채팅</p>
+                            </article>
+                        </div>
+
+                        <section class="admin-trend-card" aria-labelledby="trendTitle">
+                            <div class="admin-trend-heading">
+                                <div>
+                                    <span>7 DAY FLOW</span>
+                                    <h3 id="trendTitle">신규 회원·모임 추이</h3>
+                                </div>
+                                <div class="admin-trend-legend" aria-label="그래프 범례">
+                                    <span class="users">신규 회원</span>
+                                    <span class="meetings">신규 모임</span>
+                                </div>
+                            </div>
+                            <div id="trendChart"
+                                 class="admin-trend-chart"
+                                 role="list"
+                                 aria-label="최근 7일 신규 회원과 모임 수"></div>
+                        </section>
+
+                        <div class="admin-board-grid">
+                            <article class="admin-board-card">
+                                <span>ACCOUNT LINE</span>
+                                <h3>회원 운영</h3>
+                                <p id="summaryUserNote">확인이 필요한 회원 상태가 없습니다.</p>
+                            </article>
+                            <article class="admin-board-card">
+                                <span>MEETING LINE</span>
+                                <h3>모임 운영</h3>
+                                <p id="summaryMeetingNote">현재 모임 상태를 확인할 수 있습니다.</p>
+                            </article>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="adminUsersPanel"
+                         class="admin-panel"
+                         role="tabpanel"
+                         aria-labelledby="adminUsersTab"
+                         data-admin-panel="users"
+                         hidden>
+                    <div class="admin-panel-heading">
+                        <div>
+                            <p class="route-kicker">ACCOUNT LINE</p>
+                            <h2>회원 관리</h2>
+                        </div>
+                    </div>
+
+                    <form id="usersFilter" class="admin-filter">
+                        <label>
+                            <span>검색</span>
+                            <input id="userQuery"
+                                   type="search"
+                                   placeholder="이메일 또는 닉네임"
+                                   autocomplete="off">
+                        </label>
+                        <label>
+                            <span>상태</span>
+                            <select id="userStatus">
+                                <option value="">전체</option>
+                                <option value="ACTIVE">활성</option>
+                                <option value="SUSPENDED">정지</option>
+                                <option value="DELETED">탈퇴</option>
+                            </select>
+                        </label>
+                        <button type="submit" class="primary-button">조회</button>
+                        <button type="button"
+                                id="resetUsersButton"
+                                class="admin-secondary-button">초기화</button>
+                    </form>
+
+                    <div id="usersState"
+                         class="admin-state"
+                         role="status"
+                         aria-live="polite">
+                        회원 목록을 불러오는 중입니다.
+                    </div>
+
+                    <div id="usersTableWrap" class="admin-table-wrap" hidden>
+                        <table class="admin-table responsive-table">
+                            <caption class="visually-hidden">회원 목록</caption>
+                            <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">계정</th>
+                                <th scope="col">권한</th>
+                                <th scope="col">상태</th>
+                                <th scope="col">가입일</th>
+                                <th scope="col">확인</th>
+                            </tr>
+                            </thead>
+                            <tbody id="usersTableBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="admin-pagination" aria-label="회원 목록 페이지">
+                        <button type="button" id="usersPrevButton">이전</button>
+                        <span id="usersPageInfo">1 / 1</span>
+                        <button type="button" id="usersNextButton">다음</button>
+                    </div>
+                </section>
+
+                <section id="adminMeetingsPanel"
+                         class="admin-panel"
+                         role="tabpanel"
+                         aria-labelledby="adminMeetingsTab"
+                         data-admin-panel="meetings"
+                         hidden>
+                    <div class="admin-panel-heading">
+                        <div>
+                            <p class="route-kicker">MEETING LINE</p>
+                            <h2>모임 관리</h2>
+                        </div>
+                    </div>
+
+                    <form id="meetingsFilter" class="admin-filter admin-filter-compact">
+                        <label>
+                            <span>검색</span>
+                            <input id="meetingQuery"
+                                   type="search"
+                                   placeholder="모임 제목 또는 방장 닉네임"
+                                   autocomplete="off">
+                        </label>
+                        <button type="submit" class="primary-button">조회</button>
+                        <button type="button"
+                                id="resetMeetingsButton"
+                                class="admin-secondary-button">초기화</button>
+                    </form>
+
+                    <div id="meetingsState"
+                         class="admin-state"
+                         role="status"
+                         aria-live="polite">
+                        모임 목록을 불러오는 중입니다.
+                    </div>
+
+                    <div id="meetingsTableWrap" class="admin-table-wrap" hidden>
+                        <table class="admin-table responsive-table">
+                            <caption class="visually-hidden">모임 목록</caption>
+                            <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">모임</th>
+                                <th scope="col">상태</th>
+                                <th scope="col">방장</th>
+                                <th scope="col">참가자</th>
+                                <th scope="col">확인</th>
+                            </tr>
+                            </thead>
+                            <tbody id="meetingsTableBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="admin-pagination" aria-label="모임 목록 페이지">
+                        <button type="button" id="meetingsPrevButton">이전</button>
+                        <span id="meetingsPageInfo">1 / 1</span>
+                        <button type="button" id="meetingsNextButton">다음</button>
+                    </div>
+                </section>
+
+                <section id="adminPlacesPanel"
+                         class="admin-panel"
+                         role="tabpanel"
+                         aria-labelledby="adminPlacesTab"
+                         data-admin-panel="places"
+                         hidden>
+                    <div class="admin-panel-heading">
+                        <div>
+                            <p class="route-kicker">PLACE · VOTE LINE</p>
+                            <h2>장소·투표 조회</h2>
+                        </div>
+                        <span class="admin-readonly-badge">READ ONLY</span>
+                    </div>
+
+                    <form id="placesFilter" class="admin-id-filter">
+                        <label for="placesMeetingId">모임 ID</label>
+                        <input id="placesMeetingId"
+                               type="number"
+                               min="1"
+                               inputmode="numeric"
+                               placeholder="예: 12"
+                               required>
+                        <button type="submit" class="primary-button">조회</button>
+                    </form>
+
+                    <div class="admin-split-board">
+                        <article class="admin-data-card">
+                            <div class="admin-data-card-heading">
+                                <h3>후보 장소</h3>
+                                <span id="candidatesCount">0건</span>
+                            </div>
+                            <div id="candidatesState"
+                                 class="admin-state compact"
+                                 role="status"
+                                 aria-live="polite">
+                                모임 ID를 입력해 후보 장소를 조회하세요.
+                            </div>
+                            <div id="candidatesTableWrap" class="admin-table-wrap" hidden>
+                                <table class="admin-table responsive-table">
+                                    <caption class="visually-hidden">후보 장소 목록</caption>
+                                    <thead>
+                                    <tr>
+                                        <th scope="col">후보</th>
+                                        <th scope="col">장소</th>
+                                        <th scope="col">제안자</th>
+                                        <th scope="col">상태</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="candidatesTableBody"></tbody>
+                                </table>
+                            </div>
+                        </article>
+
+                        <article class="admin-data-card">
+                            <div class="admin-data-card-heading">
+                                <h3>투표 현황</h3>
+                                <span id="votesCount">0건</span>
+                            </div>
+                            <div id="votesState"
+                                 class="admin-state compact"
+                                 role="status"
+                                 aria-live="polite">
+                                모임 ID를 입력해 투표 현황을 조회하세요.
+                            </div>
+                            <div id="votesTableWrap" class="admin-table-wrap" hidden>
+                                <table class="admin-table responsive-table">
+                                    <caption class="visually-hidden">투표 현황</caption>
+                                    <thead>
+                                    <tr>
+                                        <th scope="col">후보</th>
+                                        <th scope="col">장소</th>
+                                        <th scope="col">득표</th>
+                                        <th scope="col">현황</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="votesTableBody"></tbody>
+                                </table>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="adminChatsPanel"
+                         class="admin-panel"
+                         role="tabpanel"
+                         aria-labelledby="adminChatsTab"
+                         data-admin-panel="chats"
+                         hidden>
+                    <div class="admin-panel-heading">
+                        <div>
+                            <p class="route-kicker">MESSAGE LINE</p>
+                            <h2>채팅 관리</h2>
+                        </div>
+                        <span class="admin-readonly-badge">READ ONLY</span>
+                    </div>
+
+                    <form id="chatsFilter" class="admin-id-filter">
+                        <label for="chatsMeetingId">모임 ID</label>
+                        <input id="chatsMeetingId"
+                               type="number"
+                               min="1"
+                               inputmode="numeric"
+                               placeholder="예: 12"
+                               required>
+                        <button type="submit" class="primary-button">조회</button>
+                    </form>
+
+                    <div id="chatsState"
+                         class="admin-state"
+                         role="status"
+                         aria-live="polite">
+                        모임 ID를 입력해 채팅 내역을 조회하세요.
+                    </div>
+
+                    <div id="chatsTableWrap" class="admin-table-wrap" hidden>
+                        <table class="admin-table responsive-table">
+                            <caption class="visually-hidden">채팅 메시지 목록</caption>
+                            <thead>
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">작성자</th>
+                                <th scope="col">메시지</th>
+                                <th scope="col">유형</th>
+                                <th scope="col">작성일</th>
+                            </tr>
+                            </thead>
+                            <tbody id="chatsTableBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="admin-pagination" aria-label="채팅 목록 페이지">
+                        <button type="button" id="chatsPrevButton">이전</button>
+                        <span id="chatsPageInfo">1 / 1</span>
+                        <button type="button" id="chatsNextButton">다음</button>
+                    </div>
+                </section>
+
+                <section id="adminFeedPanel"
+                         class="admin-panel"
+                         role="tabpanel"
+                         aria-labelledby="adminFeedTab"
+                         data-admin-panel="feed"
+                         hidden>
+                    <div class="admin-panel-heading">
+                        <div>
+                            <p class="route-kicker">COMMUNITY LINE</p>
+                            <h2>피드 관리</h2>
+                            <p class="admin-panel-description">
+                                피드와 댓글의 운영 상태를 확인할 관리 화면입니다.
+                                현재는 화면 구조만 제공하며 조회·수정·삭제 요청은 전송하지 않습니다.
+                            </p>
+                        </div>
+                        <span class="admin-readonly-badge">PREPARING</span>
+                    </div>
+
+                    <div id="feedPreparation"
+                         class="admin-coming-soon"
+                         role="status">
+                        <strong>준비 중</strong>
+                        <span>피드 관리 API 연결 후 검색과 관리 기능이 활성화됩니다.</span>
+                    </div>
+
+                    <div class="admin-filter admin-feed-filter"
+                         role="group"
+                         aria-label="피드 검색과 상태 필터 준비 영역"
+                         aria-describedby="feedPreparation">
+                        <label>
+                            <span>검색</span>
+                            <input type="search"
+                                   placeholder="작성자 또는 내용 검색"
+                                   disabled>
+                        </label>
+                        <label>
+                            <span>상태</span>
+                            <select disabled>
+                                <option>전체 상태</option>
+                            </select>
+                        </label>
+                        <button type="button" class="primary-button" disabled>조회</button>
+                    </div>
+
+                    <div class="admin-feed-board">
+                        <article class="admin-data-card">
+                            <div class="admin-data-card-heading">
+                                <h3>피드 목록</h3>
+                                <span>준비 중</span>
+                            </div>
+                            <div class="admin-table-wrap">
+                                <table class="admin-table responsive-table">
+                                    <caption class="visually-hidden">피드 관리 목록 준비 화면</caption>
+                                    <thead>
+                                    <tr>
+                                        <th scope="col">ID</th>
+                                        <th scope="col">작성자</th>
+                                        <th scope="col">내용 요약</th>
+                                        <th scope="col">이미지</th>
+                                        <th scope="col">좋아요</th>
+                                        <th scope="col">댓글</th>
+                                        <th scope="col">작성일</th>
+                                        <th scope="col">관리</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td colspan="8" data-label="상태" class="admin-table-empty">
+                                            준비 중 · 연결된 피드 데이터가 없습니다.
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </article>
+
+                        <article class="admin-data-card">
+                            <div class="admin-data-card-heading">
+                                <h3>댓글 목록</h3>
+                                <span>준비 중</span>
+                            </div>
+                            <div class="admin-table-wrap">
+                                <table class="admin-table responsive-table">
+                                    <caption class="visually-hidden">댓글 관리 목록 준비 화면</caption>
+                                    <thead>
+                                    <tr>
+                                        <th scope="col">ID</th>
+                                        <th scope="col">피드 ID</th>
+                                        <th scope="col">작성자</th>
+                                        <th scope="col">내용</th>
+                                        <th scope="col">작성일</th>
+                                        <th scope="col">관리</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td colspan="6" data-label="상태" class="admin-table-empty">
+                                            준비 중 · 연결된 댓글 데이터가 없습니다.
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="adminOperationsPanel"
+                         class="admin-panel"
+                         role="tabpanel"
+                         aria-labelledby="adminOperationsTab"
+                         data-admin-panel="operations"
+                         hidden>
+                    <div class="admin-panel-heading">
+                        <div>
+                            <p class="route-kicker">POLICY LINE</p>
+                            <h2>운영 관리</h2>
+                            <p class="admin-panel-description">
+                                회원가입에 적용할 약관을 새 버전으로 등록하고 기존 버전 이력을 확인합니다.
+                            </p>
+                        </div>
+                        <span class="admin-readonly-badge">VERSIONED</span>
+                    </div>
+
+                    <div class="admin-terms-board">
+                        <section class="admin-term-card" aria-labelledby="termFormTitle">
+                            <div class="admin-data-card-heading">
+                                <div>
+                                    <p class="route-kicker">NEW VERSION</p>
+                                    <h3 id="termFormTitle">약관 작성</h3>
+                                </div>
+                                <span>즉시 적용</span>
+                            </div>
+
+                            <p class="admin-term-note">
+                                등록한 버전은 바로 회원가입 화면에 적용됩니다.
+                                이전 버전은 직접 수정하거나 삭제하지 않습니다.
+                            </p>
+
+                            <div id="termFormState"
+                                 class="admin-state compact"
+                                 role="status"
+                                 aria-live="polite"
+                                 hidden></div>
+
+                            <form id="termForm" class="admin-term-form">
+                                <label>
+                                    <span>약관 코드</span>
+                                    <input id="termCode"
+                                           type="text"
+                                           maxlength="100"
+                                           pattern="[A-Za-z][A-Za-z0-9_]*"
+                                           title="영문으로 시작하고 영문, 숫자, 밑줄만 사용할 수 있습니다."
+                                           placeholder="TERMS_OF_SERVICE"
+                                           autocomplete="off"
+                                           required>
+                                </label>
+
+                                <label>
+                                    <span>약관명</span>
+                                    <input id="termName"
+                                           type="text"
+                                           maxlength="255"
+                                           placeholder="서비스 이용약관"
+                                           autocomplete="off"
+                                           required>
+                                </label>
+
+                                <label>
+                                    <span>버전</span>
+                                    <input id="termVersion"
+                                           type="text"
+                                           maxlength="50"
+                                           pattern="[A-Za-z0-9][A-Za-z0-9._-]*"
+                                           title="영문 또는 숫자로 시작하고 영문, 숫자, 점, 밑줄, 하이픈만 사용할 수 있습니다."
+                                           placeholder="2026.08.27"
+                                           autocomplete="off"
+                                           required>
+                                </label>
+
+                                <label>
+                                    <span>동의 구분</span>
+                                    <select id="termRequired" required>
+                                        <option value="true">필수</option>
+                                        <option value="false">선택</option>
+                                    </select>
+                                </label>
+
+                                <label class="admin-term-content-field">
+                                    <span>약관 본문</span>
+                                    <textarea id="termContent"
+                                              rows="14"
+                                              maxlength="1000000"
+                                              placeholder="회원에게 표시할 약관 내용을 입력해주세요."
+                                              required></textarea>
+                                    <small>입력한 줄바꿈을 유지한 일반 텍스트로 표시됩니다.</small>
+                                </label>
+
+                                <div class="admin-dialog-actions split">
+                                    <button type="reset"
+                                            id="termResetButton"
+                                            class="admin-secondary-button">
+                                        입력 초기화
+                                    </button>
+                                    <button type="submit"
+                                            id="termSubmitButton"
+                                            class="primary-button">
+                                        등록 검토
+                                    </button>
+                                </div>
+                            </form>
+                        </section>
+
+                        <section class="admin-term-card" aria-labelledby="termsListTitle">
+                            <div class="admin-data-card-heading">
+                                <div>
+                                    <p class="route-kicker">VERSION HISTORY</p>
+                                    <h3 id="termsListTitle">약관 버전 목록</h3>
+                                </div>
+                                <span id="termsCount">0건</span>
+                            </div>
+
+                            <div id="termsState"
+                                 class="admin-state compact"
+                                 role="status"
+                                 aria-live="polite">
+                                약관 목록을 불러오는 중입니다.
+                            </div>
+
+                            <div id="termsTableWrap" class="admin-table-wrap" hidden>
+                                <table class="admin-table responsive-table">
+                                    <caption class="visually-hidden">관리자 약관 버전 목록</caption>
+                                    <thead>
+                                    <tr>
+                                        <th scope="col">ID</th>
+                                        <th scope="col">약관</th>
+                                        <th scope="col">버전</th>
+                                        <th scope="col">구분</th>
+                                        <th scope="col">본문</th>
+                                        <th scope="col">적용 상태</th>
+                                        <th scope="col">등록일</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="termsTableBody"></tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <div class="admin-guide-band guide-band" aria-label="관리자 이용 안내">
+            <span class="guide-code">MB · ADMIN</span>
+            <span class="guide-copy">조회 결과를 확인한 뒤 필요한 운영 작업만 진행하세요.</span>
+        </div>
+    </main>
+</div>
+
+<dialog id="userDialog" class="admin-dialog" aria-labelledby="userDialogTitle">
+    <div class="admin-dialog-heading">
+        <div>
+            <p class="route-kicker">ACCOUNT DETAIL</p>
+            <h2 id="userDialogTitle">회원 상세</h2>
+        </div>
+        <button type="button" class="admin-dialog-close" data-close-dialog="userDialog">
+            닫기
+        </button>
+    </div>
+
+    <div id="userDetailState" class="admin-state compact" role="status">
+        회원 정보를 불러오는 중입니다.
+    </div>
+    <dl id="userDetailList" class="admin-detail-list" hidden></dl>
+
+    <div class="admin-dialog-actions">
+        <button type="button"
+                id="userAccountEditButton"
+                class="primary-button"
+                hidden>
+            관리자 정보 변경
+        </button>
+        <button type="button" id="userStatusActionButton" class="danger-button" hidden>
+            계정 정지
+        </button>
+    </div>
+</dialog>
+
+<dialog id="accountDialog" class="admin-dialog" aria-labelledby="accountDialogTitle">
+    <div class="admin-dialog-heading">
+        <div>
+            <p class="route-kicker">ADMIN ACCOUNT</p>
+            <h2 id="accountDialogTitle">관리자 정보 변경</h2>
+        </div>
+        <button type="button" class="admin-dialog-close" data-close-dialog="accountDialog">
+            닫기
+        </button>
+    </div>
+
+    <p id="accountTargetLabel" class="admin-account-target"></p>
+    <div id="accountState" class="admin-state compact" role="status" aria-live="polite" hidden></div>
+
+    <form id="accountForm" class="admin-account-form">
+        <label>
+            <span>로그인 ID</span>
+            <input id="accountLoginId"
+                   type="text"
+                   maxlength="255"
+                   pattern="\S+"
+                   title="공백 없이 입력해주세요."
+                   autocomplete="off"
+                   required>
+        </label>
+        <label>
+            <span>닉네임</span>
+            <input id="accountNickname"
+                   type="text"
+                   minlength="2"
+                   maxlength="12"
+                   pattern="[가-힣A-Za-z0-9_]{2,12}"
+                   title="한글, 영문, 숫자, 밑줄로 2~12자 입력해주세요."
+                   autocomplete="off"
+                   required>
+        </label>
+        <label>
+            <span>현재 관리자 비밀번호</span>
+            <input id="accountCurrentPassword"
+                   type="password"
+                   autocomplete="current-password"
+                   required>
+            <small>변경 대상이 아닌 현재 로그인한 관리자의 비밀번호를 입력합니다.</small>
+        </label>
+        <label>
+            <span>새 비밀번호 <em>선택</em></span>
+            <input id="accountNewPassword"
+                   type="password"
+                   minlength="8"
+                   maxlength="20"
+                   autocomplete="new-password"
+                   aria-describedby="accountPasswordGuide">
+            <small id="accountPasswordGuide">
+                공백 없이 8~20자이며 영문 대문자·소문자, 숫자, 특수문자를 각각 포함해야 합니다.
+            </small>
+        </label>
+        <label>
+            <span>새 비밀번호 확인 <em>선택</em></span>
+            <input id="accountNewPasswordConfirm"
+                   type="password"
+                   minlength="8"
+                   maxlength="20"
+                   autocomplete="new-password"
+                   aria-describedby="accountPasswordConfirmGuide">
+            <small id="accountPasswordConfirmGuide">
+                새 비밀번호를 입력한 경우 같은 값을 한 번 더 입력해주세요.
+            </small>
+        </label>
+
+        <div class="admin-dialog-actions split">
+            <button type="button" data-close-dialog="accountDialog">취소</button>
+            <button type="submit" id="accountSaveButton" class="primary-button">변경 저장</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="meetingDialog" class="admin-dialog admin-dialog-wide" aria-labelledby="meetingDialogTitle">
+    <div class="admin-dialog-heading">
+        <div>
+            <p class="route-kicker">MEETING DETAIL</p>
+            <h2 id="meetingDialogTitle">모임 참가자</h2>
+        </div>
+        <button type="button" class="admin-dialog-close" data-close-dialog="meetingDialog">
+            닫기
+        </button>
+    </div>
+
+    <div id="meetingDetailState" class="admin-state compact" role="status">
+        모임 정보를 불러오는 중입니다.
+    </div>
+    <dl id="meetingDetailList" class="admin-detail-list" hidden></dl>
+
+    <h3 class="admin-dialog-section-title">참가자</h3>
+    <div id="participantsState" class="admin-state compact" role="status">
+        참가자 목록을 불러오는 중입니다.
+    </div>
+    <div id="participantsTableWrap" class="admin-table-wrap" hidden>
+        <table class="admin-table responsive-table">
+            <caption class="visually-hidden">모임 참가자 목록</caption>
+            <thead>
+            <tr>
+                <th scope="col">참가자</th>
+                <th scope="col">회원</th>
+                <th scope="col">닉네임</th>
+                <th scope="col">입력 상태</th>
+                <th scope="col">등록일</th>
+            </tr>
+            </thead>
+            <tbody id="participantsTableBody"></tbody>
+        </table>
+    </div>
+</dialog>
+
+<dialog id="confirmDialog" class="admin-dialog admin-confirm-dialog" aria-labelledby="confirmDialogTitle">
+    <p class="route-kicker">CONFIRM ACTION</p>
+    <h2 id="confirmDialogTitle">회원 상태 변경</h2>
+    <p id="confirmDialogMessage" class="admin-confirm-copy"></p>
+    <ul id="confirmChangeList" class="admin-confirm-list" hidden></ul>
+    <div class="admin-dialog-actions split">
+        <button type="button" data-close-dialog="confirmDialog">취소</button>
+        <button type="button" id="confirmActionButton" class="danger-button">확인</button>
+    </div>
+</dialog>
+</body>
+</html>

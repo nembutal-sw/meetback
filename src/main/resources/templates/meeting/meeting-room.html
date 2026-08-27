@@ -5,13 +5,20 @@
 
     <meta charset="UTF-8">
 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>MeetBack 모임방</title>
+
+    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
+    <link rel="stylesheet" href="/css/common.css">
 
     <script
             src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js">
     </script>
 
     <script src="/js/meeting-common.js"></script>
+    <script src="/js/meeting-session-header.js"></script>
+    <script src="/js/meeting-room-tabs.js" defer></script>
     <script src="/js/auth-session-guard.js" defer></script>
 
     <link
@@ -23,6 +30,29 @@
 
 <body>
 
+<header class="meeting-session-header">
+    <div class="meeting-session-header__inner">
+        <a class="mb-brand" href="/home" aria-label="MeetBack 홈">
+            <img src="/images/favicon.svg" alt="">
+            <span>MeetBack</span>
+        </a>
+
+        <div class="meeting-session-header__actions">
+            <span class="meeting-session-step">MEETING ROOM · LIVE</span>
+            <div class="meeting-session-user" aria-label="현재 로그인 사용자">
+                <span class="meeting-session-avatar" data-session-avatar>MB</span>
+                <span>
+                    <strong data-session-nickname>사용자</strong>
+                    <small data-session-role>일반 회원</small>
+                </span>
+            </div>
+            <button type="button" class="meeting-session-home" onclick="location.href='/home'">
+                홈으로
+            </button>
+        </div>
+    </div>
+</header>
+
 
 <!-- =========================================================
      Toast
@@ -33,7 +63,7 @@
         class="toast"
         aria-live="polite">
 
-    <div id="toastMessage"></div>
+    <div id="toastMessage" role="status" aria-live="polite"></div>
 
     <div
             id="toastActions"
@@ -42,6 +72,7 @@
 
 </div>
 
+<main class="meeting-page meeting-room-page">
 
 
 <!-- =========================================================
@@ -73,6 +104,9 @@
 
         </div>
 
+        <p class="room-guidance">
+            막차 걱정은 덜고, 오늘은 더 오래. 모두가 함께 헤어질 시간을 준비하고 있어요.
+        </p>
 
         <button
                 type="button"
@@ -101,6 +135,38 @@
 
 </div>
 
+
+<div class="room-tabs" role="tablist" aria-label="모임방 보기 전환">
+    <button
+            type="button"
+            id="roomInfoTab"
+            class="room-tab"
+            role="tab"
+            aria-selected="true"
+            aria-controls="roomInfoPanel"
+            data-room-tab="info">
+        모임방 정보
+    </button>
+    <button
+            type="button"
+            id="roomChatTab"
+            class="room-tab"
+            role="tab"
+            aria-selected="false"
+            aria-controls="roomChatPanel"
+            tabindex="-1"
+            data-room-tab="chat">
+        실시간 채팅
+    </button>
+</div>
+
+
+<div
+        id="roomInfoPanel"
+        class="room-tab-panel"
+        role="tabpanel"
+        aria-labelledby="roomInfoTab"
+        data-room-panel="info">
 
 
 <!-- =========================================================
@@ -203,6 +269,16 @@
 
 </div>
 
+</div>
+
+
+<div
+        id="roomChatPanel"
+        class="room-tab-panel"
+        role="tabpanel"
+        aria-labelledby="roomChatTab"
+        data-room-panel="chat"
+        hidden>
 
 
 <!-- =========================================================
@@ -224,7 +300,7 @@
 
                 연결 상태 :
 
-                <strong id="chatStatus">
+                <strong id="chatStatus" role="status" aria-live="polite">
                     DISCONNECTED
                 </strong>
 
@@ -272,6 +348,8 @@
 
 </div>
 
+</div>
+</main>
 
 
 <script>
@@ -625,6 +703,10 @@
         {
             return;
         }
+
+        window.MeetBackSessionHeader?.render(
+            currentUser
+        );
 
 
         meetingId =
@@ -2146,6 +2228,60 @@
     // 채팅 기록
     // ============================================================
 
+    const chatColors =
+        Object.freeze(
+            [
+                "#F5A623",
+                "#7AA7FF",
+                "#4ADE80",
+                "#C4A8FF",
+                "#FB7185",
+                "#2DD4BF"
+            ]
+        );
+
+
+    // 사용자 식별값으로 동일한 채팅 색상을 유지한다.
+    function getChatColor(
+        message
+    )
+    {
+
+        const userKey =
+            String(
+                message.userId
+                ?? message.participantId
+                ?? message.nickname
+                ?? "participant"
+            );
+
+
+        let hash = 0;
+
+
+        for (
+            let index = 0;
+            index < userKey.length;
+            index++
+        )
+        {
+
+            hash =
+                (
+                    hash * 31
+                    + userKey.charCodeAt(
+                        index
+                    )
+                )
+                >>> 0;
+        }
+
+
+        return chatColors[
+            hash % chatColors.length
+        ];
+    }
+
     async function loadChatHistory()
     {
 
@@ -2263,6 +2399,18 @@
             document.createElement(
                 "div"
             );
+
+
+        div.className =
+            "chat-message";
+
+
+        div.style.setProperty(
+            "--chat-user-color",
+            getChatColor(
+                message
+            )
+        );
 
 
         div.innerHTML =
