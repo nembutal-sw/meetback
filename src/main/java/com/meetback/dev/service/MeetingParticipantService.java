@@ -5,8 +5,6 @@ import com.meetback.dev.domain.MeetingParticipant;
 import com.meetback.dev.domain.MeetingStatus;
 import com.meetback.dev.dto.ParticipantLocationRequestDTO;
 import com.meetback.dev.dto.ParticipantRoomResponse;
-import com.meetback.dev.place.client.KakaoLocalClient;
-import com.meetback.dev.place.dto.PlaceDTO;
 import com.meetback.dev.repository.CandidateReturnResultMapper;
 import com.meetback.dev.repository.MeetingMapper;
 import com.meetback.dev.repository.MeetingParticipantMapper;
@@ -16,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Objects;
 
@@ -25,7 +24,6 @@ public class MeetingParticipantService {
 
     private final MeetingParticipantMapper meetingParticipantMapper;
     private final CandidateReturnResultMapper returnResultMapper;
-    private final KakaoLocalClient kakaoLocalClient;
     private final MeetingMapper meetingMapper;
     private final MeetingPresenceService meetingPresenceService;
 
@@ -46,14 +44,17 @@ public class MeetingParticipantService {
             Long userId,
             ParticipantLocationRequestDTO request
     ) {
+
         // =====================================================
         // 1. 참가자 확인
         // =====================================================
 
-        MeetingParticipant participant = getOwnedParticipant(
-                participantId,
-                userId
-        );
+        MeetingParticipant participant =
+                getOwnedParticipant(
+                        participantId,
+                        userId
+                );
+
 
         // =====================================================
         // 2. 모임 상태 확인
@@ -73,7 +74,6 @@ public class MeetingParticipantService {
         }
 
 
-        // 투표 시작 후에는 장소 수정 금지
         if (
                 meeting.getStatus()
                         != MeetingStatus.INPUT_OPEN
@@ -86,111 +86,144 @@ public class MeetingParticipantService {
 
 
         // =====================================================
-        // 3. 여기부터 기존 장소 검색 코드
+        // 3. 요청값 확인
         // =====================================================
 
+        if (request == null) {
 
-
-        List<PlaceDTO> departureResults =
-                kakaoLocalClient.search(
-                        request.departureQuery()
-                );
-
-        List<PlaceDTO> returnResults =
-                kakaoLocalClient.search(
-                        request.returnQuery()
-                );
-
-
-        if (departureResults.isEmpty()) {
             throw new IllegalArgumentException(
-                    "출발 장소를 찾을 수 없습니다."
-            );
-        }
-
-        if (returnResults.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "귀가 장소를 찾을 수 없습니다."
+                    "장소 정보가 없습니다."
             );
         }
 
 
-        // 검색 결과 중 첫 번째 장소 사용
-        PlaceDTO departurePlace =
-                departureResults.get(0);
+        if (
+                request.departureName() == null
+                        ||
+                        request.departureName().isBlank()
+        ) {
 
-        PlaceDTO returnPlace =
-                returnResults.get(0);
+            throw new IllegalArgumentException(
+                    "출발 장소를 선택해주세요."
+            );
+        }
 
-        /*
-         * 새 출발 장소 데이터
-         */
+
+        if (
+                request.returnName() == null
+                        ||
+                        request.returnName().isBlank()
+        ) {
+
+            throw new IllegalArgumentException(
+                    "귀가 장소를 선택해주세요."
+            );
+        }
+
+
+        if (
+                request.departureLatitude() == null
+                        ||
+                        request.departureLongitude() == null
+        ) {
+
+            throw new IllegalArgumentException(
+                    "출발 장소 좌표가 올바르지 않습니다."
+            );
+        }
+
+
+        if (
+                request.returnLatitude() == null
+                        ||
+                        request.returnLongitude() == null
+        ) {
+
+            throw new IllegalArgumentException(
+                    "귀가 장소 좌표가 올바르지 않습니다."
+            );
+        }
+
+
+        // =====================================================
+        // 4. 사용자가 카카오 검색에서 선택한 장소 그대로 사용
+        //
+        // 서버에서 장소명으로 Kakao API를 다시 검색하지 않음
+        // =====================================================
+
         String newDepartureName =
-                departurePlace.name();
+                request.departureName().trim();
 
         String newDepartureAddress =
-                departurePlace.roadAddress() == null
-                        || departurePlace.roadAddress().isBlank()
-                        ? departurePlace.address()
-                        : departurePlace.roadAddress();
+                request.departureAddress();
 
         BigDecimal newDepartureLatitude =
                 BigDecimal.valueOf(
-                        departurePlace.latitude()
+                        request.departureLatitude()
                 );
 
         BigDecimal newDepartureLongitude =
                 BigDecimal.valueOf(
-                        departurePlace.longitude()
+                        request.departureLongitude()
                 );
 
 
-        /*
-         * 새 귀가 장소 데이터
-         */
         String newReturnName =
-                returnPlace.name();
+                request.returnName().trim();
 
         String newReturnAddress =
-                returnPlace.roadAddress() == null
-                        || returnPlace.roadAddress().isBlank()
-                        ? returnPlace.address()
-                        : returnPlace.roadAddress();
+                request.returnAddress();
 
         BigDecimal newReturnLatitude =
                 BigDecimal.valueOf(
-                        returnPlace.latitude()
+                        request.returnLatitude()
                 );
 
         BigDecimal newReturnLongitude =
                 BigDecimal.valueOf(
-                        returnPlace.longitude()
+                        request.returnLongitude()
                 );
 
 
-        /*
-         * 기존 값과 실제로 달라졌는지 확인
-         */
+        // =====================================================
+        // 5. 귀가지가 실제로 변경됐는지 확인
+        //
+        // 귀가지가 변경된 경우에만 기존 계산 결과 삭제
+        // =====================================================
+
         boolean returnChanged =
+
                 !Objects.equals(
                         participant.getReturnName(),
                         newReturnName
                 )
-                        || !Objects.equals(
-                        participant.getReturnAddress(),
-                        newReturnAddress
-                )
-                        || !sameBigDecimal(
-                        participant.getReturnLatitude(),
-                        newReturnLatitude
-                )
-                        || !sameBigDecimal(
-                        participant.getReturnLongitude(),
-                        newReturnLongitude
-                );
+
+                        ||
+
+                        !Objects.equals(
+                                participant.getReturnAddress(),
+                                newReturnAddress
+                        )
+
+                        ||
+
+                        !sameBigDecimal(
+                                participant.getReturnLatitude(),
+                                newReturnLatitude
+                        )
+
+                        ||
+
+                        !sameBigDecimal(
+                                participant.getReturnLongitude(),
+                                newReturnLongitude
+                        );
 
 
-        // 출발 장소
+        // =====================================================
+        // 6. 출발 장소 저장값 설정
+        // =====================================================
+
         participant.setDepartureName(
                 newDepartureName
         );
@@ -208,7 +241,10 @@ public class MeetingParticipantService {
         );
 
 
-        // 귀가 장소
+        // =====================================================
+        // 7. 귀가 장소 저장값 설정
+        // =====================================================
+
         participant.setReturnName(
                 newReturnName
         );
@@ -226,18 +262,22 @@ public class MeetingParticipantService {
         );
 
 
-        // 출발지 + 귀가지 저장
+        // =====================================================
+        // 8. DB 저장
+        // =====================================================
+
         meetingParticipantMapper.updateLocation(
                 participant
         );
 
 
-        /*
-         * 귀가지가 실제로 바뀌었다면(출발지 제외)
-         * 이 참가자의 기존 귀가 계산 결과만 삭제
-         *
-         * 다른 참가자 계산 결과는 그대로 재사용
-         */
+        // =====================================================
+        // 9. 귀가지 변경 시 기존 계산 결과 삭제
+        //
+        // 출발지는 귀가 계산에 사용하지 않으므로
+        // 출발지만 바뀐 경우 기존 계산 결과 재사용
+        // =====================================================
+
         if (returnChanged) {
 
             returnResultMapper.deleteByParticipantId(
@@ -246,14 +286,10 @@ public class MeetingParticipantService {
         }
 
 
-        /*
-         * 출발지 + 귀가지 등록 완료
-         *
-         * DRAFT -> SUBMITTED
-         *
-         * 희망 장소는 선택사항이므로
-         * 희망 장소 등록 여부와 상관없이 SUBMITTED 처리
-         */
+        // =====================================================
+        // 10. 입력 완료 처리
+        // =====================================================
+
         meetingParticipantMapper.submitInput(
                 participantId
         );
@@ -265,23 +301,37 @@ public class MeetingParticipantService {
             BigDecimal second
     ) {
 
-        if (first == null && second == null) {
+        if (
+                first == null
+                        &&
+                        second == null
+        ) {
+
             return true;
         }
 
-        if (first == null || second == null) {
+
+        if (
+                first == null
+                        ||
+                        second == null
+        ) {
+
             return false;
         }
 
-        return first.setScale(
-                7,
-                java.math.RoundingMode.HALF_UP
-        ).compareTo(
-                second.setScale(
+
+        return first
+                .setScale(
                         7,
-                        java.math.RoundingMode.HALF_UP
+                        RoundingMode.HALF_UP
                 )
-        ) == 0;
+                .compareTo(
+                        second.setScale(
+                                7,
+                                RoundingMode.HALF_UP
+                        )
+                ) == 0;
     }
 
 
@@ -305,8 +355,10 @@ public class MeetingParticipantService {
                                 meetingId
                         );
 
+
         return totalCount > 0
-                && totalCount == submittedCount;
+                &&
+                totalCount == submittedCount;
     }
 
 
@@ -364,12 +416,13 @@ public class MeetingParticipantService {
         );
     }
 
+
     @Transactional
     public void cancelEdit(
             Long participantId,
             Long userId
-    )
-    {
+    ) {
+
         getOwnedParticipant(
                 participantId,
                 userId
@@ -380,13 +433,14 @@ public class MeetingParticipantService {
                 participantId
         );
     }
+
 
     @Transactional
     public void submitInput(
             Long participantId,
             Long userId
-    )
-    {
+    ) {
+
         getOwnedParticipant(
                 participantId,
                 userId
@@ -398,19 +452,20 @@ public class MeetingParticipantService {
         );
     }
 
+
     private MeetingParticipant getOwnedParticipant(
             Long participantId,
             Long userId
-    )
-    {
+    ) {
+
         MeetingParticipant participant =
                 meetingParticipantMapper.findById(
                         participantId
                 );
 
 
-        if (participant == null)
-        {
+        if (participant == null) {
+
             throw new IllegalArgumentException(
                     "참가자를 찾을 수 없습니다."
             );
@@ -422,8 +477,8 @@ public class MeetingParticipantService {
                         participant.getUserId(),
                         userId
                 )
-        )
-        {
+        ) {
+
             throw new AccessDeniedException(
                     "본인의 참가자 정보만 사용할 수 있습니다."
             );
@@ -433,39 +488,46 @@ public class MeetingParticipantService {
         return participant;
     }
 
+
     public MeetingParticipant findOwnedById(
             Long participantId,
             Long userId
-    )
-    {
+    ) {
+
         return getOwnedParticipant(
                 participantId,
                 userId
         );
     }
 
+
     public List<ParticipantRoomResponse> findRoomParticipants(
             Long meetingId
     ) {
+
         List<ParticipantRoomResponse> participants =
                 meetingParticipantMapper.findRoomParticipants(
                         meetingId
                 );
 
+
         participants.forEach(
                 participant -> {
+
                     boolean online =
                             meetingPresenceService.isOnline(
                                     meetingId,
                                     participant.getUserId()
                             );
 
+
                     participant.setOnline(
                             online
                     );
                 }
         );
+
+
         return participants;
     }
-
 }
