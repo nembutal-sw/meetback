@@ -31,7 +31,7 @@ public class MeetingCandidateController {
         meetingCandidateService.saveCandidate(
                 participantId,
                 user.userId(),
-                request.candidateQuery()
+                request
         );
 
 
