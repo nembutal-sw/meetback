@@ -12,11 +12,17 @@ public class PageController {
     // Client ID는 공개 식별자이며, 브라우저의 Google 공식 버튼 초기화에 사용한다.
     private final String googleClientId;
 
+    // NAVER Maps Dynamic Map에서 사용하는 공개 Client ID
+    private final String naverMapsClientId;
+
+
     public PageController(
-            @Value("${google.client-id:}") String googleClientId
+            @Value("${google.client-id:}") String googleClientId,
+            @Value("${naver.maps.client-id:}") String naverMapsClientId
     ) {
 
         this.googleClientId = googleClientId;
+        this.naverMapsClientId = naverMapsClientId;
     }
 
 
@@ -92,9 +98,17 @@ public class PageController {
         return "auth/home";
     }
 
+
     @GetMapping("/meeting/result")
-    public String meetingResult()
+    public String meetingResult(
+            Model model
+    )
     {
+        model.addAttribute(
+                "naverMapsClientId",
+                naverMapsClientId
+        );
+
         return "meeting/result";
     }
 }
