@@ -1,6 +1,9 @@
 package com.meetback.dev.dto;
 
 public record CandidateRequestDTO(
-        String candidateQuery
+        String name,
+        String address,
+        Double longitude,
+        Double latitude
 ) {
 }

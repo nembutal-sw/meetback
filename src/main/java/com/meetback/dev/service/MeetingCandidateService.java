@@ -4,8 +4,7 @@ import com.meetback.dev.domain.Meeting;
 import com.meetback.dev.domain.MeetingCandidate;
 import com.meetback.dev.domain.MeetingParticipant;
 import com.meetback.dev.domain.MeetingStatus;
-import com.meetback.dev.place.client.KakaoLocalClient;
-import com.meetback.dev.place.dto.PlaceDTO;
+import com.meetback.dev.dto.CandidateRequestDTO;
 import com.meetback.dev.repository.CandidateReturnResultMapper;
 import com.meetback.dev.repository.MeetingCandidateMapper;
 import com.meetback.dev.repository.MeetingMapper;
@@ -27,7 +26,6 @@ public class MeetingCandidateService {
     private final MeetingCandidateMapper meetingCandidateMapper;
     private final MeetingParticipantMapper meetingParticipantMapper;
     private final CandidateReturnResultMapper returnResultMapper;
-    private final KakaoLocalClient kakaoLocalClient;
     private final MeetingMapper meetingMapper;
 
 
@@ -35,7 +33,7 @@ public class MeetingCandidateService {
     public void saveCandidate(
             Long participantId,
             Long userId,
-            String candidateQuery
+            CandidateRequestDTO request
     ) {
 
         MeetingParticipant participant =
@@ -51,30 +49,31 @@ public class MeetingCandidateService {
             );
         }
 
-        // ★ 추가
         if (
                 !Objects.equals(
                         participant.getUserId(),
                         userId
                 )
-        )
-        {
+        ) {
+
             throw new AccessDeniedException(
                     "본인의 희망 장소만 등록할 수 있습니다."
             );
         }
 
-        // ★ 여기에 MeetingStatus 검사
         Meeting meeting =
                 meetingMapper.findById(
                         participant.getMeetingId()
                 );
 
+
         if (
                 meeting == null
-                        || meeting.getStatus()
-                        != MeetingStatus.INPUT_OPEN
+                        ||
+                        meeting.getStatus()
+                                != MeetingStatus.INPUT_OPEN
         ) {
+
             throw new IllegalStateException(
                     "현재 희망 장소를 등록하거나 수정할 수 없습니다."
             );
@@ -89,17 +88,25 @@ public class MeetingCandidateService {
                         );
 
 
-        if (candidateQuery == null
-                || candidateQuery.isBlank()) {
+        if (
+                request == null
+                        ||
+                        request.name() == null
+                        ||
+                        request.name().isBlank()
+        ) {
 
             if (existingCandidate == null) {
                 return;
             }
 
 
-            if (Boolean.FALSE.equals(
-                    existingCandidate.getIsActive()
-            )) {
+            if (
+                    Boolean.FALSE.equals(
+                            existingCandidate.getIsActive()
+                    )
+            ) {
+
                 return;
             }
 
@@ -123,23 +130,16 @@ public class MeetingCandidateService {
         }
 
 
-        List<PlaceDTO> results =
-                kakaoLocalClient.search(
-                        candidateQuery.trim()
-                );
-
-
-        if (results.isEmpty()) {
+        if (
+                request.latitude() == null
+                        ||
+                        request.longitude() == null
+        ) {
 
             throw new IllegalArgumentException(
-                    "희망 장소를 찾을 수 없습니다."
+                    "희망 장소 좌표가 올바르지 않습니다."
             );
         }
-
-
-
-        PlaceDTO place =
-                results.get(0);
 
 
         MeetingCandidate candidate =
@@ -157,28 +157,25 @@ public class MeetingCandidateService {
 
 
         candidate.setPlaceName(
-                place.name()
+                request.name().trim()
         );
 
 
         candidate.setAddress(
-                place.roadAddress() == null
-                        || place.roadAddress().isBlank()
-                        ? place.address()
-                        : place.roadAddress()
+                request.address()
         );
 
 
         candidate.setLatitude(
                 BigDecimal.valueOf(
-                        place.latitude()
+                        request.latitude()
                 )
         );
 
 
         candidate.setLongitude(
                 BigDecimal.valueOf(
-                        place.longitude()
+                        request.longitude()
                 )
         );
 
@@ -186,7 +183,6 @@ public class MeetingCandidateService {
         candidate.setIsActive(
                 true
         );
-
 
 
         if (existingCandidate == null) {
@@ -198,8 +194,6 @@ public class MeetingCandidateService {
             return;
         }
 
-
-
         boolean sameCandidate =
 
                 Objects.equals(
@@ -207,29 +201,35 @@ public class MeetingCandidateService {
                         candidate.getPlaceName()
                 )
 
-                        && Objects.equals(
-                        existingCandidate.getAddress(),
-                        candidate.getAddress()
-                )
+                        &&
 
-                        && sameBigDecimal(
-                        existingCandidate.getLatitude(),
-                        candidate.getLatitude()
-                )
+                        Objects.equals(
+                                existingCandidate.getAddress(),
+                                candidate.getAddress()
+                        )
 
-                        && sameBigDecimal(
-                        existingCandidate.getLongitude(),
-                        candidate.getLongitude()
-                );
+                        &&
 
+                        sameBigDecimal(
+                                existingCandidate.getLatitude(),
+                                candidate.getLatitude()
+                        )
+
+                        &&
+
+                        sameBigDecimal(
+                                existingCandidate.getLongitude(),
+                                candidate.getLongitude()
+                        );
 
 
         if (sameCandidate) {
 
-
-            if (Boolean.FALSE.equals(
-                    existingCandidate.getIsActive()
-            )) {
+            if (
+                    Boolean.FALSE.equals(
+                            existingCandidate.getIsActive()
+                    )
+            ) {
 
                 existingCandidate.setIsActive(
                         true
@@ -256,26 +256,38 @@ public class MeetingCandidateService {
         );
 
 
+        // 장소가 변경됐으므로
+        // 기존 계산 결과 삭제
         returnResultMapper.deleteByCandidateId(
                 existingCandidate.getCandidateId()
         );
     }
 
 
+    // =========================================================
+    // BigDecimal 좌표 비교
+    // =========================================================
+
     private boolean sameBigDecimal(
             BigDecimal first,
             BigDecimal second
     ) {
 
-        if (first == null
-                && second == null) {
+        if (
+                first == null
+                        &&
+                        second == null
+        ) {
 
             return true;
         }
 
 
-        if (first == null
-                || second == null) {
+        if (
+                first == null
+                        ||
+                        second == null
+        ) {
 
             return false;
         }
@@ -293,6 +305,7 @@ public class MeetingCandidateService {
                         )
                 ) == 0;
     }
+
 
 
     public List<MeetingCandidate> findByMeetingId(
