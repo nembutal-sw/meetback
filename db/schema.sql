@@ -13,9 +13,8 @@ CREATE TABLE users (
                        nickname VARCHAR(255),
                        password_hash VARCHAR(255),
     -- JWT 로그아웃 시 기존 Access / Refresh Token 무효화용
-                       token_version INT NOT NULL DEFAULT 0,
-                       role VARCHAR(255) DEFAULT 'USER',
-                       status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
+                       token_version BIGINT NOT NULL DEFAULT 0,
+                       role VARCHAR(255) DEFAULT "USER",
                        deleted_at DATETIME,
                        created_at DATETIME,
                        updated_at DATETIME,
@@ -23,10 +22,7 @@ CREATE TABLE users (
                        CONSTRAINT uq_users_email
                            UNIQUE (email),
                        CONSTRAINT uq_users_nickname
-                           UNIQUE (nickname),
-
-                       CONSTRAINT chk_users_status
-                           CHECK (status IN ('ACTIVE', 'SUSPENDED'))
+                           UNIQUE (nickname)
 );
 
 
@@ -544,6 +540,6 @@ ALTER TABLE meetings
             REFERENCES meeting_candidates(candidate_id)
             ON DELETE SET NULL;
 
--- 결과 화면에서 사용하는 대중교통 경로 응답 데이터를 저장한다.
+--경로 안내용 컬럼 추가 - 이래원
 ALTER TABLE candidate_return_results
     ADD COLUMN route_map_obj TEXT NULL;

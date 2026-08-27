@@ -5,12 +5,8 @@
 
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>MeetBack 장소 입력</title>
 
-    <link rel="icon" type="image/svg+xml" href="/images/favicon.svg">
-    <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/location.css">
 
     <script
@@ -21,8 +17,6 @@
 
     <script src="/js/meeting-presence.js"></script>
 
-    <script src="/js/meeting-session-header.js"></script>
-
     <script src="/js/auth-session-guard.js" defer></script>
 
 
@@ -31,52 +25,23 @@
 
 <body>
 
-<header class="meeting-session-header">
-    <div class="meeting-session-header__inner">
-        <a class="mb-brand" href="/home" aria-label="MeetBack 홈">
-            <img src="/images/favicon.svg" alt="">
-            <span>MeetBack</span>
-        </a>
-
-        <div class="meeting-session-header__actions">
-            <span class="meeting-session-step">02 · ADD LOCATIONS</span>
-            <div class="meeting-session-user" aria-label="현재 로그인 사용자">
-                <span class="meeting-session-avatar" data-session-avatar>MB</span>
-                <span>
-                    <strong data-session-nickname>사용자</strong>
-                    <small data-session-role>일반 회원</small>
-                </span>
-            </div>
-            <button type="button" class="meeting-session-home" onclick="location.href='/home'">
-                홈으로
-            </button>
-        </div>
-    </div>
-</header>
-
 
 <div class="toast-container">
 
     <div
             id="toastMessage"
-            role="status"
-            aria-live="polite"
             class="toast">
     </div>
 
 </div>
 
-<main class="meeting-page meeting-location-page">
-<section class="meeting-page-intro">
-    <span class="meeting-page-eyebrow">ADD LOCATIONS · STEP 02</span>
 
 <h1>내 장소 입력</h1>
 
 <p>
-    모두의 지하철 막차를 계산할 출발지와 귀가지를 입력해주세요.
-    희망 만남 장소는 선택사항입니다.
+    출발 장소와 귀가 장소를 입력해주세요.
+    희망 장소는 선택사항입니다.
 </p>
-</section>
 
 
 <div class="card">
@@ -216,37 +181,35 @@
     </div>
 
 
-    <div class="location-actions">
-        <button
-                type="button"
-                class="primary"
-                onclick="saveLocation()">
+    <button
+            type="button"
+            class="primary"
+            onclick="saveLocation()">
 
-            장소 입력 완료
+        장소 입력 완료
 
-        </button>
+    </button>
 
 
-        <button
-                type="button"
-                id="backToRoomButton"
-                onclick="goRoom()">
+    <br><br>
 
-            모임방으로 돌아가기
 
-        </button>
-    </div>
+    <button
+            type="button"
+            id="backToRoomButton"
+            onclick="goRoom()">
+
+        모임방으로 돌아가기
+
+    </button>
 
 </div>
-</main>
 
 
 
 <script>
 
     let meetingId = null;
-
-    let currentUser = null;
 
     let participant = null;
 
@@ -335,10 +298,6 @@
         {
             return;
         }
-
-        window.MeetBackSessionHeader?.render(
-            currentUser
-        );
 
 
         meetingId =

@@ -4,7 +4,6 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MeetBack 로그인</title>
 
     <script
@@ -13,25 +12,14 @@
             defer
     ></script>
 
-    <link rel="icon" type="image/svg+xml" th:href="@{/images/favicon.svg}">
-    <link rel="stylesheet" th:href="@{/css/common.css}">
     <link rel="stylesheet" th:href="@{/css/login_test.css}">
 </head>
 
-<body class="auth-page">
+<body>
 
-<div class="login-container auth-card">
+<div class="login-container">
 
-    <a class="mb-brand" th:href="@{/}">
-        <img th:src="@{/images/favicon.svg}" alt="">
-        <span>MeetBack</span>
-    </a>
-
-    <div class="auth-heading">
-        <div class="mb-eyebrow">Account gate · 01</div>
-        <h1>로그인</h1>
-        <p>MeetBack 계정으로 모임 안내를 이어가세요.</p>
-    </div>
+    <h1>MeetBack 로그인</h1>
 
 
     <!-- 일반 로그인 -->
@@ -43,10 +31,10 @@
             </label>
 
             <input
-                    type="text"
+                    type="email"
                     id="email"
                     placeholder="이메일을 입력하세요"
-                    autocomplete="username"
+                    autocomplete="email"
                     required
             >
         </div>
@@ -73,7 +61,7 @@
         <br>
 
 
-        <div id="loginMessage" role="status" aria-live="polite"></div>
+        <div id="loginMessage"></div>
 
 
         <br>
@@ -89,8 +77,8 @@
     <br>
 
 
-    <!-- 회원가입 / 이메일 찾기 / 비밀번호 찾기 -->
-    <div class="auth-link-row">
+    <!-- 회원가입 / 아이디 찾기 / 비밀번호 찾기 -->
+    <div>
 
         <a th:href="@{/signup}">
             회원가입
@@ -99,7 +87,7 @@
         &nbsp; | &nbsp;
 
         <a th:href="@{/find-email}">
-            이메일 찾기
+            아이디 찾기
         </a>
 
         &nbsp; | &nbsp;
@@ -115,7 +103,7 @@
 
 
     <!-- 소셜 로그인 -->
-    <div class="social-login-container auth-social">
+    <div class="social-login-container">
 
         <div>
             소셜 로그인
@@ -175,7 +163,7 @@
         <br>
 
 
-        <div id="socialMessage" role="status" aria-live="polite"></div>
+        <div id="socialMessage"></div>
 
     </div>
 
@@ -186,7 +174,6 @@
     <!-- 신규 Google 회원 가입 -->
     <div
             id="socialSignupContainer"
-            class="auth-inline-card"
             style="display: none;"
     >
 
@@ -224,7 +211,7 @@
         <br>
 
 
-        <div id="nicknameCheckMessage" role="status" aria-live="polite"></div>
+        <div id="nicknameCheckMessage"></div>
 
 
         <br>
@@ -236,7 +223,7 @@
 
         <div id="socialTermsContainer"></div>
 
-        <div id="socialTermsMessage" role="status" aria-live="polite"></div>
+        <div id="socialTermsMessage"></div>
 
 
         <br>
@@ -255,7 +242,7 @@
         <br>
 
 
-        <div id="socialSignupMessage" role="status" aria-live="polite"></div>
+        <div id="socialSignupMessage"></div>
 
     </div>
 
