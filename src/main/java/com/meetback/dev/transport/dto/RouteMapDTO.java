@@ -5,7 +5,8 @@ import java.util.List;
 public record RouteMapDTO(
         String startName,
         String endName,
-        List<RouteLineDTO> lines
+        List<RouteLineDTO> lines,
+        List<RouteStepDTO> steps
 ) {
 
     public RouteMapDTO(
@@ -14,7 +15,8 @@ public record RouteMapDTO(
         this(
                 null,
                 null,
-                lines
+                lines,
+                List.of()
         );
     }
 }

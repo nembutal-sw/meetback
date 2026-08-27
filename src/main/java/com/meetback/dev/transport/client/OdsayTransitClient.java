@@ -12,7 +12,7 @@ import org.springframework.web.client.RestClientResponseException;
 import tools.jackson.databind.JsonNode;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClientException;
-
+import com.meetback.dev.transport.dto.RouteStepDTO;
 import java.time.Duration;
 
 
@@ -208,6 +208,8 @@ public class OdsayTransitClient {
         StringBuilder summary =
                 new StringBuilder();
 
+        List<RouteStepDTO> steps =
+                new ArrayList<>();
 
         for (JsonNode subPath : subPaths) {
 
@@ -277,6 +279,43 @@ public class OdsayTransitClient {
                     summary.append(
                             lineName
                     );
+
+
+                    Double startLongitude =
+                            subPath.path("startX").isMissingNode()
+                                    || subPath.path("startX").isNull()
+                                    ? null
+                                    : subPath.path("startX").asDouble();
+
+                    Double startLatitude =
+                            subPath.path("startY").isMissingNode()
+                                    || subPath.path("startY").isNull()
+                                    ? null
+                                    : subPath.path("startY").asDouble();
+
+                    Double endLongitude =
+                            subPath.path("endX").isMissingNode()
+                                    || subPath.path("endX").isNull()
+                                    ? null
+                                    : subPath.path("endX").asDouble();
+
+                    Double endLatitude =
+                            subPath.path("endY").isMissingNode()
+                                    || subPath.path("endY").isNull()
+                                    ? null
+                                    : subPath.path("endY").asDouble();
+
+                    steps.add(
+                            new RouteStepDTO(
+                                    subPath.path("startName").asString(),
+                                    subPath.path("endName").asString(),
+                                    lineName,
+                                    startLongitude,
+                                    startLatitude,
+                                    endLongitude,
+                                    endLatitude
+                            )
+                    );
                 }
 
 
@@ -311,7 +350,8 @@ public class OdsayTransitClient {
                 startStationName,
                 endStationName,
                 summary.toString(),
-                mapObj
+                mapObj,
+                steps
         );
     }
 

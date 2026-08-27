@@ -11,11 +11,14 @@ import com.meetback.dev.repository.MeetingMapper;
 import com.meetback.dev.repository.MeetingParticipantMapper;
 import com.meetback.dev.transport.client.OdsayTransitClient;
 import com.meetback.dev.transport.dto.RouteMapDTO;
+import com.meetback.dev.transport.dto.RouteStepDTO;
 import com.meetback.dev.transport.dto.TransitRouteDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +32,7 @@ public class RouteService {
     private final MeetingMapper meetingMapper;
     private final CandidateReturnResultMapper returnResultMapper;
     private final ObjectMapper objectMapper;
+
 
     public boolean isWithinWalkingDistance(
             Long participantId,
@@ -74,6 +78,7 @@ public class RouteService {
         return distance <= WALKING_DISTANCE_METERS;
     }
 
+
     private double calculateDistanceMeters(
             double lat1,
             double lon1,
@@ -105,6 +110,7 @@ public class RouteService {
 
         return EARTH_RADIUS * c;
     }
+
 
     public TransitRouteDTO testRoute(
             Long participantId,
@@ -159,6 +165,7 @@ public class RouteService {
         );
     }
 
+
     public TransitRouteDTO searchReturnRoute(
             Long participantId,
             Long candidateId
@@ -211,6 +218,7 @@ public class RouteService {
                 end
         );
     }
+
 
     public RouteMapDTO getRouteMap(
             Long candidateId,
@@ -275,27 +283,68 @@ public class RouteService {
             );
         }
 
-        // 이미 저장된 지도 경로가 있으면 ODsay 재호출 없이 사용
+
+        /*
+         * 일반 경로 계산 시 미리 저장해둔
+         * 역 / 호선 정보
+         */
+        List<RouteStepDTO> steps =
+                List.of();
+
+
+        /*
+         * route_map_data가 존재하는 경우
+         *
+         * 1. lines가 있으면
+         *    → 지도 좌표까지 저장된 완성 캐시
+         *    → ODsay 재호출 없이 그대로 사용
+         *
+         * 2. lines가 비어있으면
+         *    → 호선/역 정보만 저장된 상태
+         *    → steps만 꺼내고 loadLane 진행
+         */
         if (result.getRouteMapData() != null
                 && !result.getRouteMapData().isBlank()) {
 
             try {
+
                 RouteMapDTO savedRouteMap =
                         objectMapper.readValue(
                                 result.getRouteMapData(),
                                 RouteMapDTO.class
                         );
 
+
+                if (savedRouteMap.steps() != null) {
+
+                    steps =
+                            savedRouteMap.steps();
+                }
+
+
+                if (savedRouteMap.lines() != null
+                        && !savedRouteMap.lines().isEmpty()) {
+
+                    System.out.println(
+                            "[기존 지도 경로 재사용] candidateId="
+                                    + candidateId
+                                    + ", participantId="
+                                    + participantId
+                    );
+
+                    return savedRouteMap;
+                }
+
+
                 System.out.println(
-                        "[기존 지도 경로 재사용] candidateId="
+                        "[경로 안내 정보 재사용] candidateId="
                                 + candidateId
                                 + ", participantId="
                                 + participantId
                 );
 
-                return savedRouteMap;
-
             } catch (JacksonException e) {
+
                 throw new IllegalStateException(
                         "저장된 지도 경로 데이터를 읽을 수 없습니다.",
                         e
@@ -303,7 +352,11 @@ public class RouteService {
             }
         }
 
-        // 처음 조회할 때만 routeMapObj를 이용해 ODsay 호출
+
+        /*
+         * 지도 좌표가 아직 저장되지 않았다면
+         * routeMapObj를 이용해 loadLane 최초 1회 호출
+         */
         if (result.getRouteMapObj() == null
                 || result.getRouteMapObj().isBlank()) {
 
@@ -312,22 +365,40 @@ public class RouteService {
             );
         }
 
+
         RouteMapDTO routeMap =
                 odsayTransitClient.loadLane(
                         result.getRouteMapObj()
                 );
 
+
+        /*
+         * loadLane 지도 좌표
+         * +
+         * 일반 경로 조회에서 저장해둔
+         * 역 / 호선 안내 정보 결합
+         */
         RouteMapDTO response =
                 new RouteMapDTO(
                         candidate.getPlaceName(),
                         participant.getReturnName(),
-                        routeMap.lines()
+                        routeMap.lines(),
+                        steps
                 );
 
-        // ODsay에서 받은 지도 경로를 JSON 문자열로 DB 저장
+
+        /*
+         * 완성된 지도 경로를 다시 JSON으로 저장
+         *
+         * 이후 같은 후보 + 참가자 조회부터는
+         * loadLane 호출 없이 이 값을 그대로 사용
+         */
         try {
+
             String routeMapData =
-                    objectMapper.writeValueAsString(response);
+                    objectMapper.writeValueAsString(
+                            response
+                    );
 
             returnResultMapper.updateRouteMapData(
                     result.getResultId(),
@@ -342,11 +413,13 @@ public class RouteService {
             );
 
         } catch (JacksonException e) {
+
             throw new IllegalStateException(
                     "지도 경로 데이터를 JSON으로 변환할 수 없습니다.",
                     e
             );
         }
+
 
         return response;
     }
