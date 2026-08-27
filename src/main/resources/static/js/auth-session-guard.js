@@ -23,11 +23,6 @@
 
     function clearLoginStorage()
     {
-        // 사용자 정보 다 삭제
-        localStorage.clear();
-
-
-        // 필요한 값만 삭제
         localStorage.removeItem(
             "accessToken"
         );
