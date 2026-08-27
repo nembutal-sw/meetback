@@ -36,6 +36,3 @@ build/
 .env
 .env.*
 !.env.example
-
-# Docker runtime secrets
-secrets/
