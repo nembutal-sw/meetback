@@ -27,11 +27,6 @@ public interface UserMapper {
             @Param("email") String email
     );
 
-    // 로그인 검증과 token_version 변경을 같은 행 잠금에서 처리한다.
-    User selectByEmailForUpdate(
-            @Param("email") String email
-    );
-
     // 닉네임 회원 조회
     // 아이디 찾기에 사용
     User selectByNickname(

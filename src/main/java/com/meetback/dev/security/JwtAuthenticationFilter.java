@@ -1,7 +1,6 @@
 package com.meetback.dev.security;
 
 import com.meetback.dev.domain.User;
-import com.meetback.dev.domain.UserStatus;
 import com.meetback.dev.repository.UserMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -151,31 +150,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 );
 
 
-        if (user == null) {
-
-            rejectUnauthorized(
-                    response,
-                    "사용자 정보를 확인할 수 없습니다."
-            );
-
-            return;
-        }
-
-
-        // 상태가 없거나 ACTIVE가 아니면 인증 객체를 만들지 않는다.
-        if (user.getStatus() != UserStatus.ACTIVE) {
-
-            rejectForbidden(
-                    response,
-                    "ACCOUNT_SUSPENDED",
-                    "이용이 정지된 계정입니다."
-            );
-
-            return;
-        }
-
-
-        if (user.getTokenVersion() == null) {
+        if (user == null
+                || user.getTokenVersion() == null) {
 
             rejectUnauthorized(
                     response,
@@ -336,25 +312,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         response.getWriter().write(
                 "{\"message\":\""
-                        + message
-                        + "\"}"
-        );
-    }
-
-
-    private void rejectForbidden(
-            HttpServletResponse response,
-            String code,
-            String message
-    ) throws IOException {
-
-        SecurityContextHolder.clearContext();
-        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-        response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write(
-                "{\"code\":\""
-                        + code
-                        + "\",\"message\":\""
                         + message
                         + "\"}"
         );

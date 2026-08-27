@@ -43,13 +43,6 @@
 
     </resultMap>
 
-    <select id="findCurrentDateTime"
-            resultType="java.time.LocalDateTime">
-
-        SELECT NOW()
-
-    </select>
-
     <select id="findAllActiveTerms"
             resultMap="termResultMap">
 
@@ -98,51 +91,6 @@
                     OR effective_at &lt;= NOW()
         )
         ORDER BY term_id ASC
-
-    </select>
-
-    <select id="findAllForAdmin"
-            resultMap="termResultMap">
-
-        SELECT
-            term_id,
-            term_code,
-            term_name,
-            content,
-            version,
-            kakao_tag,
-            required,
-            active,
-            effective_at,
-            created_at,
-            updated_at
-        FROM terms
-        ORDER BY term_code ASC,
-            created_at DESC,
-            term_id DESC
-
-    </select>
-
-    <select id="findByTermCodeForUpdate"
-            resultMap="termResultMap">
-
-        SELECT
-            term_id,
-            term_code,
-            term_name,
-            content,
-            version,
-            kakao_tag,
-            required,
-            active,
-            effective_at,
-            created_at,
-            updated_at
-        FROM terms FORCE INDEX (uq_terms_code_version)
-        WHERE term_code = #{termCode}
-        ORDER BY version ASC,
-            term_id ASC
-        FOR UPDATE
 
     </select>
 

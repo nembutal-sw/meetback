@@ -3,9 +3,7 @@ package com.meetback.dev.service;
 import com.meetback.dev.domain.RefreshToken;
 import com.meetback.dev.domain.Social;
 import com.meetback.dev.domain.User;
-import com.meetback.dev.domain.UserStatus;
 import com.meetback.dev.dto.auth.*;
-import com.meetback.dev.exception.AccountSuspendedException;
 import com.meetback.dev.oauth.GoogleIdentityProvider;
 import com.meetback.dev.oauth.GoogleUserInfo;
 import com.meetback.dev.oauth.KakaoOAuthProvider;
@@ -232,12 +230,6 @@ public class AuthService {
         // 최초 가입 시 0
         user.setTokenVersion(
                 0
-        );
-
-
-        // 신규 계정은 정상 이용 상태로 시작한다.
-        user.setStatus(
-                UserStatus.ACTIVE
         );
 
 
@@ -615,19 +607,15 @@ public class AuthService {
         }
 
 
-        String loginId =
+        String normalizedEmail =
                 normalizeEmail(
                         request.getEmail()
                 );
 
 
-        User user =
-                userMapper.selectByEmailForUpdate(
-                        loginId
-                );
-
-
-        if (user == null) {
+        if (!EMAIL_PATTERN.matcher(
+                normalizedEmail
+        ).matches()) {
 
             throw new IllegalArgumentException(
                     "이메일 또는 비밀번호가 일치하지 않습니다."
@@ -635,9 +623,13 @@ public class AuthService {
         }
 
 
-        // 비이메일 로그인 ID는 관리자 계정에만 허용한다.
-        if (!EMAIL_PATTERN.matcher(loginId).matches()
-                && !isAdminRole(user.getRole())) {
+        User user =
+                userMapper.selectByEmail(
+                        normalizedEmail
+                );
+
+
+        if (user == null) {
 
             throw new IllegalArgumentException(
                     "이메일 또는 비밀번호가 일치하지 않습니다."
@@ -660,11 +652,6 @@ public class AuthService {
                     "이메일 또는 비밀번호가 일치하지 않습니다."
             );
         }
-
-
-        validateActiveStatus(
-                user
-        );
 
 
         LoginToken loginToken =
@@ -776,11 +763,6 @@ public class AuthService {
             );
 
 
-            validateActiveStatus(
-                    user
-            );
-
-
             return createSocialLoginSuccessResponse(
                     user
             );
@@ -817,11 +799,6 @@ public class AuthService {
 
 
             validateWithdrawalStatus(
-                    existingUser
-            );
-
-
-            validateActiveStatus(
                     existingUser
             );
 
@@ -960,11 +937,6 @@ public class AuthService {
 
 
             validateWithdrawalStatus(
-                    user
-            );
-
-
-            validateActiveStatus(
                     user
             );
 
@@ -1194,12 +1166,6 @@ public class AuthService {
 
         user.setTokenVersion(
                 0
-        );
-
-
-        // 소셜 신규 계정도 정상 이용 상태로 시작한다.
-        user.setStatus(
-                UserStatus.ACTIVE
         );
 
 
@@ -1480,11 +1446,6 @@ public class AuthService {
                     "사용자를 찾을 수 없습니다."
             );
         }
-
-
-        validateActiveStatus(
-                user
-        );
 
 
         if (user.getTokenVersion() == null
@@ -2262,11 +2223,6 @@ public class AuthService {
         }
 
 
-        validateActiveStatus(
-                user
-        );
-
-
         if (user.getRole() == null
                 || user.getRole().isBlank()) {
 
@@ -2282,36 +2238,6 @@ public class AuthService {
                     "사용자 Token Version 정보가 없습니다."
             );
         }
-    }
-
-
-    // =========================================================
-    // 계정 이용 상태 확인
-    // =========================================================
-
-    private void validateActiveStatus(
-            User user
-    ) {
-
-        if (user == null) {
-
-            throw new IllegalArgumentException(
-                    "사용자 정보를 확인할 수 없습니다."
-            );
-        }
-
-
-        if (user.getStatus() != UserStatus.ACTIVE) {
-
-            throw new AccountSuspendedException();
-        }
-    }
-
-
-    private boolean isAdminRole(String role) {
-        return role != null
-                && ("ADMIN".equalsIgnoreCase(role)
-                || "ROLE_ADMIN".equalsIgnoreCase(role));
     }
 
 
