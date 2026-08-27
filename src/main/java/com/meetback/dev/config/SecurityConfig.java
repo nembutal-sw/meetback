@@ -35,7 +35,7 @@ public class SecurityConfig {
                         auth ->
                                 auth
 
-                                        // 관리자 API
+                                        // 실제 관리자 API만 관리자 권한 필요
                                         .requestMatchers(
                                                 "/admin/api/**"
                                         )
@@ -43,7 +43,14 @@ public class SecurityConfig {
                                                 "ROLE_admin"
                                         )
 
-                                        // 공개 페이지 / 공개 API
+                                        // 관리자 HTML 페이지는 직접 접속 가능해야 함
+                                        .requestMatchers(
+                                                "/admin/terms",
+                                                "/admin/terms/",
+                                                "/error"
+                                        )
+                                        .permitAll()
+
                                         .requestMatchers(
                                                 "/",
                                                 "/login",
@@ -52,9 +59,6 @@ public class SecurityConfig {
                                                 "/forgot-password",
                                                 "/reset-password",
                                                 "/home",
-
-                                                // 관리자 HTML 페이지
-                                                "/admin/terms",
 
                                                 "/auth/login",
                                                 "/auth/signup",
@@ -80,7 +84,6 @@ public class SecurityConfig {
                                                 "/js/**",
                                                 "/images/**",
 
-                                                // WebSocket 허가
                                                 "/meeting",
                                                 "/meeting/location-test",
                                                 "/meeting/location-test/**",
@@ -90,7 +93,6 @@ public class SecurityConfig {
                                         )
                                         .permitAll()
 
-                                        // 로그인 사용자 전용
                                         .requestMatchers(
                                                 "/auth/check",
                                                 "/auth/logout",
@@ -102,6 +104,7 @@ public class SecurityConfig {
                                         .anyRequest()
                                         .authenticated()
                 )
+
                 .addFilterBefore(
                         jwtAuthenticationFilter,
                         UsernamePasswordAuthenticationFilter.class
