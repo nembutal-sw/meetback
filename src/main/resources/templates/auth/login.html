@@ -12,6 +12,10 @@
             defer
     ></script>
 
+    <script
+            src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js">
+    </script>
+
     <link rel="stylesheet" th:href="@{/css/login_test.css}">
 </head>
 
@@ -325,7 +329,6 @@
         null;
 
 
-    // 이미 로그인 정보가 있다면 Home에서 검증
     function redirectAlreadyLoggedIn()
     {
 
@@ -341,10 +344,36 @@
             );
 
 
+        const activeLoginSessionId =
+            localStorage.getItem(
+                "activeLoginSessionId"
+            );
+
+
+        const tabLoginSessionId =
+            sessionStorage.getItem(
+                "tabLoginSessionId"
+            );
+
+
+        // =========================================================
+        // 토큰도 있고
+        // 현재 탭이 마지막으로 로그인한 탭일 때만 Home 이동
+        // =========================================================
+
         if (
-            accessToken
-            ||
-            refreshToken
+            (
+                accessToken
+                ||
+                refreshToken
+            )
+            &&
+            activeLoginSessionId
+            &&
+            tabLoginSessionId
+            &&
+            activeLoginSessionId
+            === tabLoginSessionId
         )
         {
 
@@ -355,7 +384,7 @@
     }
 
 
-    redirectAlreadyLoggedIn();
+    //redirectAlreadyLoggedIn();
 
 
     // 닉네임 정책
@@ -492,7 +521,6 @@
     }
 
 
-    // 로그인 정보 저장
     function saveLoginData(
         data
     )
@@ -520,6 +548,32 @@
             "role",
             data.role
         );
+
+
+        // =========================================================
+        // ★ 이번 로그인을 구분하는 ID
+        //
+        // localStorage
+        // → 브라우저의 모든 탭이 공유
+        //
+        // sessionStorage
+        // → 현재 탭만 보관
+        // =========================================================
+
+        // const loginSessionId =
+        //     crypto.randomUUID();
+        //
+        //
+        // localStorage.setItem(
+        //     "activeLoginSessionId",
+        //     loginSessionId
+        // );
+        //
+        //
+        // sessionStorage.setItem(
+        //     "tabLoginSessionId",
+        //     loginSessionId
+        // );
     }
 
 
