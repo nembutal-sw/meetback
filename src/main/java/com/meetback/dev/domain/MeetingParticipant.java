@@ -10,6 +10,7 @@ public class MeetingParticipant {
     private Long participantId;
     private Long meetingId;
     private Long userId;
+    private ParticipantStatus participantStatus;
     private InputStatus inputStatus;
     private String departureName;
     private String departureAddress;

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.ParticipantKickHistoryMapper">
+
+    <insert id="insertKickHistory"
+            parameterType="com.meetback.dev.domain.ParticipantKickHistory"
+            useGeneratedKeys="true"
+            keyProperty="kickHistoryId">
+
+        INSERT INTO meeting_participant_kick_history
+        (
+            meeting_id,
+            participant_id,
+            kicked_user_id,
+            kicked_by_user_id
+        )
+        VALUES
+        (
+            #{meetingId},
+            #{participantId},
+            #{kickedUserId},
+            #{kickedByUserId}
+        )
+
+    </insert>
+
+    <update id="cancelLatestKickHistory">
+
+        UPDATE meeting_participant_kick_history
+
+        SET
+            canceled_by_user_id = #{canceledByUserId},
+            canceled_at = NOW()
+
+        WHERE participant_id = #{participantId}
+          AND canceled_at IS NULL
+
+        ORDER BY kick_history_id DESC
+
+        LIMIT 1
+
+    </update>
+
+</mapper>

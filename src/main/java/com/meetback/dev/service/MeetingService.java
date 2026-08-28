@@ -6,11 +6,11 @@ import com.meetback.dev.repository.CandidateMapper;
 import com.meetback.dev.repository.MeetingMapper;
 import com.meetback.dev.repository.ParticipantMapper;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PathVariable;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,6 +28,22 @@ public class MeetingService {
             Long hostUserId,
             MeetingCreateRequest request
     ){
+        LocalDateTime desiredEndAt =
+                request.getDesiredEndAt();
+
+        if (desiredEndAt == null)
+        {
+            throw new IllegalArgumentException(
+                    "희망 종료시간은 필수입니다."
+            );
+        }
+
+        if (!desiredEndAt.isAfter(LocalDateTime.now()))
+        {
+            throw new IllegalArgumentException(
+                    "희망 종료시간은 현재 시각 이후로 선택해주세요."
+            );
+        }
 
         String inviteCode = generateInviteCode();
 
@@ -46,6 +62,7 @@ public class MeetingService {
 
         participant.setMeetingId(meeting.getMeetingId());
         participant.setUserId(hostUserId);
+        participant.setParticipantStatus(ParticipantStatus.ACTIVE);
         participant.setInputStatus(InputStatus.DRAFT);
 
         participantMapper.insertParticipant(participant);
@@ -80,30 +97,45 @@ public class MeetingService {
             );
         }
 
-        // 3. 이미 참가 중인지 확인
-        if (
-                participantMapper.countParticipantByMeetingAndUser(
+        // 3. 기존 참가 이력 조회
+        MeetingParticipant existingParticipant =
+                participantMapper.findAnyByMeetingAndUser(
                         meeting.getMeetingId(),
                         userId
-                ) > 0
-        ) {
+                );
 
+        // 4. 강퇴된 참가자 재입장 차단
+        if(
+                existingParticipant != null
+                &&
+                existingParticipant.getParticipantStatus()
+                    == ParticipantStatus.KICKED
+        )
+        {
+            throw new IllegalStateException(
+                    "강퇴된 모임에는 다시 참가할 수 없습니다."
+            );
+        }
+
+        // 5. 이미 정상 참가 중인 사용자
+        if(existingParticipant != null)
+        {
             return new MeetingJoinResponse(
                     meeting.getMeetingId(),
                     false
             );
         }
 
-        // 4. 참가자 등록
-
+        // 6. 참가 이력이 없는 사용자 등록
         MeetingParticipant participant = new MeetingParticipant();
 
         participant.setMeetingId(meeting.getMeetingId());
         participant.setUserId(userId);
+        participant.setParticipantStatus(ParticipantStatus.ACTIVE);
         participant.setInputStatus(InputStatus.DRAFT);
-
         participantMapper.insertParticipant(participant);
 
+        // 7. 신규 참가 결과 반환
         return new MeetingJoinResponse(
                 meeting.getMeetingId(),
                 true
@@ -310,6 +342,14 @@ public class MeetingService {
 
 
         return meeting;
+    }
+
+    public List<MyMeetingResponse> getMyMeetings(
+            Long userId
+    ) {
+        return meetingMapper.selectMyMeetings(
+                userId
+        );
     }
 
 }
