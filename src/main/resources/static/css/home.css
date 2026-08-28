@@ -1816,3 +1816,26 @@ button:disabled {
     color:
             var(--mb-primary);
 }
+.quick-page-top {
+    display: flex;
+    justify-content: flex-end;
+
+    margin-bottom: 10px;
+}
+
+
+.quick-home-link {
+    color:
+            var(--mb-text-soft);
+
+    font-size: 13px;
+    font-weight: 700;
+
+    text-decoration: none;
+}
+
+
+.quick-home-link:hover {
+    color:
+            var(--mb-primary);
+}
