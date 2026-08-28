@@ -8,6 +8,7 @@ public record MeetingRoomResponse(
         String title,
         String inviteCode,
         LocalDateTime desiredEndAt,
+        MeetingType meetingType,
         MeetingStatus status,
         Long finalCandidateId
 ) {
