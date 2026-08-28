@@ -60,11 +60,6 @@ public class MeetingService {
 
         String inviteCode = generateInviteCode();
 
-        MeetingType meetingType =
-                request.getMeetingType() == null
-                ? MeetingType.FRIEND
-                : request.getMeetingType();
-
         Meeting meeting = new Meeting();
 
         meeting.setHostUserId(hostUserId);
