@@ -105,17 +105,6 @@ public class MeetingService {
             );
         }
 
-        /*
-         * 투표가 시작된 이후에는
-         * 새로운 참가 또는 재입장을 허용하지 않는다.
-         */
-        if(meeting.getStatus() != MeetingStatus.INPUT_OPEN)
-        {
-            throw new IllegalStateException(
-                    "참가할 수 있는 상태의 모임이 아닙니다."
-            );
-        }
-
         // 3. 기존 참가 이력 조회
         MeetingParticipant existingParticipant =
                 participantMapper.findAnyByMeetingAndUser(
@@ -124,6 +113,9 @@ public class MeetingService {
                 );
 
         // 4. 강퇴된 참가자 재입장 차단
+        /*
+         * 강퇴된 참가자는 재입장 불가
+         */
         if(
                 existingParticipant != null
                 &&
@@ -137,11 +129,67 @@ public class MeetingService {
         }
 
         // 5. 이미 정상 참가 중인 사용자
-        if(existingParticipant != null)
+        /*
+         * 이미 정상 참가 중
+         */
+        if(existingParticipant != null
+        && existingParticipant.getParticipantStatus() == ParticipantStatus.ACTIVE)
         {
             return new MeetingJoinResponse(
                     meeting.getMeetingId(),
                     false
+            );
+        }
+
+        /*
+         * 신규 참가와 LEFT 재입장은
+         * 현재 INPUT_OPEN 단계에서만 허용
+         */
+        if(
+                meeting.getStatus() != MeetingStatus.INPUT_OPEN
+        )
+        {
+            throw new IllegalStateException(
+                    "현재 새로운 참가자를 받고 있지 않습니다."
+            );
+        }
+
+        /*
+         * QUICK_VOTE에서 정상적으로 나갔던 사용자 재입장
+         */
+        if(
+                existingParticipant != null
+                &&
+                existingParticipant.getParticipantStatus()
+                == ParticipantStatus.LEFT
+        )
+        {
+            if(
+                    meeting.getMeetingType() != MeetingType.QUICK_VOTE
+            )
+            {
+                throw new IllegalStateException(
+                        "친구방의 참가 상태를 확인해주세요"
+                );
+            }
+
+            int updatedRows =
+                    participantMapper
+                            .reactivateLeftParticipant(
+                                    existingParticipant
+                                            .getParticipantId()
+                            );
+
+            if(updatedRows != 1)
+            {
+                throw new IllegalStateException(
+                  "모임 재입장 처리에 실패했습니다."
+                );
+            }
+
+            return new MeetingJoinResponse(
+                    meeting.getMeetingId(),
+                    true
             );
         }
 

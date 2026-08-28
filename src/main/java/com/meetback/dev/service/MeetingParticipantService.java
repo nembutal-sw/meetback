@@ -3,10 +3,7 @@ package com.meetback.dev.service;
 import com.meetback.dev.domain.*;
 import com.meetback.dev.dto.ParticipantLocationRequestDTO;
 import com.meetback.dev.dto.ParticipantRoomResponse;
-import com.meetback.dev.repository.CandidateReturnResultMapper;
-import com.meetback.dev.repository.MeetingMapper;
-import com.meetback.dev.repository.MeetingParticipantMapper;
-import com.meetback.dev.repository.ParticipantKickHistoryMapper;
+import com.meetback.dev.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -26,6 +23,7 @@ public class MeetingParticipantService {
     private final MeetingMapper meetingMapper;
     private final MeetingPresenceService meetingPresenceService;
     private final ParticipantKickHistoryMapper participantKickHistoryMapper;
+    private final MeetingCandidateMapper meetingCandidateMapper;
 
     public MeetingParticipant findById(
             Long participantId,
@@ -824,6 +822,222 @@ public class MeetingParticipantService {
                 participant.getUserId(),
                 participant.getNickname()
         );
+    }
+
+    @Transactional
+    public ParticipantLeaveResult leaveQuickVoteMeeting(
+            Long participantId,
+            Long userId
+    )
+    {
+        /*
+         * 1. 참가자 조회
+         */
+        MeetingParticipant participant =
+                meetingParticipantMapper.findById(
+                        participantId
+                );
+
+        if(participant == null)
+        {
+            throw new IllegalArgumentException(
+                    "참가자를 찾을 수 없습니다."
+            );
+        }
+
+        /*
+         * 2. 본인 참가자 정보인지 검사
+         */
+        if(
+                !Objects.equals(
+                        participant.getUserId(),
+                        userId
+                )
+        )
+        {
+            throw new AccessDeniedException(
+                    "본인만 모임에서 나갈 수 있습니다."
+            );
+        }
+
+        if (
+                participant.getParticipantStatus()
+                        != ParticipantStatus.ACTIVE
+        ) {
+            throw new IllegalStateException(
+                    "현재 참가 중인 사용자가 아닙니다."
+            );
+        }
+
+
+        /*
+         * 4. 모임 조회
+         */
+        Meeting meeting =
+                meetingMapper.findById(
+                        participant.getMeetingId()
+                );
+
+
+        if (meeting == null) {
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+
+        /*
+         * 5. QUICK_VOTE 방에서만 나가기 허용
+         *
+         * FRIEND는 WebSocket 연결이 끊겨도
+         * 참가자 상태를 ACTIVE로 유지한다.
+         */
+        if (
+                meeting.getMeetingType()
+                        != MeetingType.QUICK_VOTE
+        ) {
+            throw new IllegalStateException(
+                    "친구방에서는 참가자 상태가 유지됩니다."
+            );
+        }
+
+
+        /*
+         * 6. 방장은 나가기 불가
+         */
+        if (
+                Objects.equals(
+                        meeting.getHostUserId(),
+                        userId
+                )
+        ) {
+            throw new IllegalStateException(
+                    "방장은 모임에서 나갈 수 없습니다."
+            );
+        }
+
+
+        /*
+         * 7. 우선 INPUT_OPEN 단계만 지원
+         */
+        if (
+                meeting.getStatus()
+                        != MeetingStatus.INPUT_OPEN
+        ) {
+            throw new IllegalStateException(
+                    "투표가 시작된 이후에는 모임에서 나갈 수 없습니다."
+            );
+        }
+
+
+        /*
+         * 8. 참가자가 등록한 후보 조회
+         */
+        MeetingCandidate candidate =
+                meetingCandidateMapper
+                        .findByMeetingIdAndParticipantId(
+                                meeting.getMeetingId(),
+                                participantId
+                        );
+
+
+        /*
+         * 후보가 존재하면 삭제하지 않고 비활성화한다.
+         *
+         * 재입장 후 다시 장소를 등록하면
+         * 기존 후보 행을 재사용할 수 있다.
+         */
+        if (
+                candidate != null
+                        &&
+                        Boolean.TRUE.equals(
+                                candidate.getIsActive()
+                        )
+        ) {
+
+            candidate.setIsActive(false);
+
+            int candidateUpdatedRows =
+                    meetingCandidateMapper.update(
+                            candidate
+                    );
+
+
+            if (candidateUpdatedRows != 1) {
+                throw new IllegalStateException(
+                        "참가자의 후보 장소 비활성화에 실패했습니다."
+                );
+            }
+
+
+            /*
+             * 나간 참가자가 등록한 후보의 계산 결과 제거
+             */
+            returnResultMapper.deleteByCandidateId(
+                    candidate.getCandidateId()
+            );
+        }
+
+
+        /*
+         * 다른 후보에 대해 계산된
+         * 나간 참가자의 귀가 결과도 제거
+         */
+        returnResultMapper.deleteByParticipantId(
+                participantId
+        );
+
+
+        /*
+         * 기존 계산 결과를 현재 결과로 사용하지 않도록
+         * 계산 버전을 증가시킨다.
+         */
+        int currentVersion =
+                meeting.getCalculationVersion() == null
+                        ? 0
+                        : meeting.getCalculationVersion();
+
+
+        int versionUpdatedRows =
+                meetingMapper.updateCalculationVersion(
+                        meeting.getMeetingId(),
+                        currentVersion + 1
+                );
+
+
+        if (versionUpdatedRows != 1) {
+            throw new IllegalStateException(
+                    "모임 계산 버전 변경에 실패했습니다."
+            );
+        }
+
+
+        /*
+         * 9. ACTIVE → LEFT
+         * 위치 입력값도 함께 초기화
+         */
+        int participantUpdatedRows =
+                meetingParticipantMapper
+                        .leaveBeforeVoting(
+                                participantId
+                        );
+
+
+        if (participantUpdatedRows != 1) {
+            throw new IllegalStateException(
+                    "모임 나가기에 실패했습니다."
+            );
+        }
+
+
+        return new ParticipantLeaveResult(
+                participant.getMeetingId(),
+                participant.getParticipantId(),
+                participant.getUserId(),
+                participant.getNickname()
+        );
+
+
     }
 
 }
