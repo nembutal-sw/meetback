@@ -8,7 +8,7 @@ import com.meetback.dev.dto.feed.FeedResponse;
 import com.meetback.dev.dto.feed.FeedUpdateRequest;
 import com.meetback.dev.repository.FeedImageMapper;
 import com.meetback.dev.repository.FeedMapper;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,7 +24,6 @@ import java.util.Set;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 public class FeedService {
 
     private static final int MAX_IMAGE_COUNT = 5;
@@ -42,14 +41,27 @@ public class FeedService {
 
     private final FeedMapper feedMapper;
     private final FeedImageMapper feedImageMapper;
+    private final Path uploadDirectory;
 
-    private final Path uploadDirectory =
-            Paths.get(
-                            "uploads",
-                            "feed"
-                    )
-                    .toAbsolutePath()
-                    .normalize();
+    public FeedService(
+            FeedMapper feedMapper,
+            FeedImageMapper feedImageMapper,
+            @Value("${feed.image.upload-dir}") String uploadDirectory
+    ) {
+
+        this.feedMapper =
+                feedMapper;
+
+        this.feedImageMapper =
+                feedImageMapper;
+
+        this.uploadDirectory =
+                Paths.get(
+                                uploadDirectory
+                        )
+                        .toAbsolutePath()
+                        .normalize();
+    }
 
 
     @Transactional
@@ -63,14 +75,29 @@ public class FeedService {
         validateCreateRequest(request);
         validateImages(images);
 
-        Feed feed = new Feed();
+        Feed feed =
+                new Feed();
 
-        feed.setUserId(userId);
-        feed.setTitle(request.getTitle().trim());
-        feed.setContent(request.getContent().trim());
+        feed.setUserId(
+                userId
+        );
+
+        feed.setTitle(
+                request
+                        .getTitle()
+                        .trim()
+        );
+
+        feed.setContent(
+                request
+                        .getContent()
+                        .trim()
+        );
 
         int insertedFeedCount =
-                feedMapper.insert(feed);
+                feedMapper.insert(
+                        feed
+                );
 
         if (insertedFeedCount != 1) {
 
@@ -79,7 +106,8 @@ public class FeedService {
             );
         }
 
-        Long feedId = feed.getFeedId();
+        Long feedId =
+                feed.getFeedId();
 
         if (feedId == null) {
 
@@ -99,7 +127,10 @@ public class FeedService {
 
                 for (MultipartFile image : images) {
 
-                    if (image == null || image.isEmpty()) {
+                    if (
+                            image == null
+                                    || image.isEmpty()
+                    ) {
                         continue;
                     }
 
@@ -132,7 +163,9 @@ public class FeedService {
                 }
             }
 
-            return getFeed(feedId);
+            return getFeed(
+                    feedId
+            );
 
         } catch (RuntimeException e) {
 
@@ -158,7 +191,9 @@ public class FeedService {
         }
 
         Feed feed =
-                feedMapper.findById(feedId);
+                feedMapper.findById(
+                        feedId
+                );
 
         if (feed == null) {
 
@@ -214,7 +249,9 @@ public class FeedService {
             FeedUpdateRequest request
     ) {
 
-        validateUserId(userId);
+        validateUserId(
+                userId
+        );
 
         if (feedId == null) {
 
@@ -223,10 +260,14 @@ public class FeedService {
             );
         }
 
-        validateUpdateRequest(request);
+        validateUpdateRequest(
+                request
+        );
 
         Feed existingFeed =
-                feedMapper.findById(feedId);
+                feedMapper.findById(
+                        feedId
+                );
 
         if (existingFeed == null) {
 
@@ -235,28 +276,44 @@ public class FeedService {
             );
         }
 
-        if (!userId.equals(
-                existingFeed.getUserId()
-        )) {
+        if (
+                !userId.equals(
+                        existingFeed.getUserId()
+                )
+        ) {
 
             throw new IllegalArgumentException(
                     "본인이 작성한 후기만 수정할 수 있습니다."
             );
         }
 
-        Feed feed = new Feed();
+        Feed feed =
+                new Feed();
 
-        feed.setFeedId(feedId);
-        feed.setUserId(userId);
-        feed.setTitle(
-                request.getTitle().trim()
+        feed.setFeedId(
+                feedId
         );
+
+        feed.setUserId(
+                userId
+        );
+
+        feed.setTitle(
+                request
+                        .getTitle()
+                        .trim()
+        );
+
         feed.setContent(
-                request.getContent().trim()
+                request
+                        .getContent()
+                        .trim()
         );
 
         int updatedCount =
-                feedMapper.update(feed);
+                feedMapper.update(
+                        feed
+                );
 
         if (updatedCount != 1) {
 
@@ -265,7 +322,9 @@ public class FeedService {
             );
         }
 
-        return getFeed(feedId);
+        return getFeed(
+                feedId
+        );
     }
 
 
@@ -275,7 +334,9 @@ public class FeedService {
             Long feedId
     ) {
 
-        validateUserId(userId);
+        validateUserId(
+                userId
+        );
 
         if (feedId == null) {
 
@@ -285,7 +346,9 @@ public class FeedService {
         }
 
         Feed feed =
-                feedMapper.findById(feedId);
+                feedMapper.findById(
+                        feedId
+                );
 
         if (feed == null) {
 
@@ -294,9 +357,11 @@ public class FeedService {
             );
         }
 
-        if (!userId.equals(
-                feed.getUserId()
-        )) {
+        if (
+                !userId.equals(
+                        feed.getUserId()
+                )
+        ) {
 
             throw new IllegalArgumentException(
                     "본인이 작성한 후기만 삭제할 수 있습니다."
@@ -365,14 +430,17 @@ public class FeedService {
                             + extension;
 
             Path destination =
-                    uploadDirectory.resolve(
+                    uploadDirectory
+                            .resolve(
                                     storedName
                             )
                             .normalize();
 
-            if (!destination.startsWith(
-                    uploadDirectory
-            )) {
+            if (
+                    !destination.startsWith(
+                            uploadDirectory
+                    )
+            ) {
 
                 throw new IllegalArgumentException(
                         "올바르지 않은 이미지 저장 경로입니다."
@@ -509,7 +577,12 @@ public class FeedService {
             );
         }
 
-        if (title.trim().length() > 255) {
+        if (
+                title
+                        .trim()
+                        .length()
+                        > 255
+        ) {
 
             throw new IllegalArgumentException(
                     "제목은 255자 이하로 입력해주세요."
@@ -549,7 +622,10 @@ public class FeedService {
 
             imageCount++;
 
-            if (imageCount > MAX_IMAGE_COUNT) {
+            if (
+                    imageCount
+                            > MAX_IMAGE_COUNT
+            ) {
 
                 throw new IllegalArgumentException(
                         "이미지는 최대 "
@@ -558,7 +634,10 @@ public class FeedService {
                 );
             }
 
-            if (image.getSize() > MAX_IMAGE_SIZE) {
+            if (
+                    image.getSize()
+                            > MAX_IMAGE_SIZE
+            ) {
 
                 throw new IllegalArgumentException(
                         "이미지 한 장의 크기는 5MB를 초과할 수 없습니다."
@@ -634,7 +713,8 @@ public class FeedService {
 
         if (
                 dotIndex < 0
-                        || dotIndex == originalName.length() - 1
+                        || dotIndex
+                        == originalName.length() - 1
         ) {
 
             return "";

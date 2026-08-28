@@ -79,6 +79,7 @@ public class SecurityConfig {
                                                 "/css/**",
                                                 "/js/**",
                                                 "/images/**",
+                                                "/uploads/feed/**",
 
                                                 "/meeting",
                                                 "/meeting/location-test",
