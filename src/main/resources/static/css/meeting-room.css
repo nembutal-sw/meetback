@@ -1770,3 +1770,70 @@ button:disabled {
     }
 
 }
+
+.participant-card-bottom {
+    margin-top:
+            11px;
+
+    font-size:
+            13px;
+}
+
+.participant-card-bottom {
+    display:
+            flex;
+
+    justify-content:
+            space-between;
+
+    align-items:
+            center;
+
+    gap:
+            10px;
+
+    margin-top:
+            11px;
+
+    font-size:
+            13px;
+}
+
+
+.participant-kick-button {
+    min-height:
+            32px;
+
+    padding:
+            6px 10px;
+
+    border:
+            1px solid #ef4444;
+
+    border-radius:
+            8px;
+
+    background:
+            #ffffff;
+
+    color:
+            #dc2626;
+
+    font-size:
+            12px;
+
+    font-weight:
+            700;
+}
+
+
+.participant-kick-button:hover {
+    border-color:
+            #dc2626;
+
+    background:
+            #fef2f2;
+
+    color:
+            #b91c1c;
+}

@@ -990,3 +990,57 @@ button:disabled {
         border-radius: 12px;
     }
 }
+
+.message {
+    display:
+            none;
+
+    position:
+            fixed;
+
+    top:
+            24px;
+
+    left:
+            50%;
+
+    z-index:
+            9999;
+
+    min-width:
+            320px;
+
+    max-width:
+            calc(100vw - 32px);
+
+    margin:
+            0;
+
+    padding:
+            15px 18px;
+
+    border:
+            1px solid transparent;
+
+    border-radius:
+            13px;
+
+    font-size:
+            14px;
+
+    font-weight:
+            700;
+
+    line-height:
+            1.6;
+
+    text-align:
+            center;
+
+    box-shadow:
+            0 10px 30px
+            rgba(35, 32, 61, 0.15);
+
+    transform:
+            translateX(-50%);
+}
