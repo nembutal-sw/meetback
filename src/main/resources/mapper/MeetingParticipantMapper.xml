@@ -10,28 +10,35 @@
             resultType="com.meetback.dev.domain.MeetingParticipant">
 
         SELECT
-            participant_id,
-            meeting_id,
-            user_id,
-            input_status,
+            mp.participant_id AS participantId,
+            mp.meeting_id AS meetingId,
+            mp.user_id AS userId,
 
-            departure_name,
-            departure_address,
-            departure_latitude,
-            departure_longitude,
+            mp.participant_status AS participantStatus,
+            mp.input_status AS inputStatus,
 
-            return_name,
-            return_address,
-            return_latitude,
-            return_longitude,
+            mp.departure_name AS departureName,
+            mp.departure_address AS departureAddress,
+            mp.departure_latitude AS departureLatitude,
+            mp.departure_longitude AS departureLongitude,
 
-            submitted_at,
-            created_at,
-            updated_at
+            mp.return_name AS returnName,
+            mp.return_address AS returnAddress,
+            mp.return_latitude AS returnLatitude,
+            mp.return_longitude AS returnLongitude,
 
-        FROM meeting_participants
+            mp.submitted_at AS submittedAt,
+            mp.created_at AS createdAt,
+            mp.updated_at AS updatedAt,
 
-        WHERE participant_id = #{participantId}
+            u.nickname AS nickname
+
+        FROM meeting_participants mp
+
+        JOIN users u
+        ON u.user_id = mp.user_id
+
+        WHERE mp.participant_id = #{participantId}
 
     </select>
 
@@ -41,19 +48,20 @@
         UPDATE meeting_participants
 
         SET
-        departure_name = #{departureName},
-        departure_address = #{departureAddress},
-        departure_latitude = #{departureLatitude},
-        departure_longitude = #{departureLongitude},
+            departure_name = #{departureName},
+            departure_address = #{departureAddress},
+            departure_latitude = #{departureLatitude},
+            departure_longitude = #{departureLongitude},
 
-        return_name = #{returnName},
-        return_address = #{returnAddress},
-        return_latitude = #{returnLatitude},
-        return_longitude = #{returnLongitude},
+            return_name = #{returnName},
+            return_address = #{returnAddress},
+            return_latitude = #{returnLatitude},
+            return_longitude = #{returnLongitude},
 
-        updated_at = NOW()
+            updated_at = NOW()
 
         WHERE participant_id = #{participantId}
+          AND participant_status = 'ACTIVE'
 
     </update>
 
@@ -72,6 +80,7 @@
         updated_at = NOW()
 
         WHERE participant_id = #{participantId}
+          AND participant_status = 'ACTIVE'
 
     </update>
 
@@ -85,6 +94,7 @@
         FROM meeting_participants
 
         WHERE meeting_id = #{meetingId}
+          AND participant_status = 'ACTIVE'
 
     </select>
 
@@ -98,7 +108,8 @@
         FROM meeting_participants
 
         WHERE meeting_id = #{meetingId}
-        AND input_status = 'SUBMITTED'
+          AND input_status = 'SUBMITTED'
+          AND participant_status = 'ACTIVE'
 
     </select>
 
@@ -108,34 +119,36 @@
             resultType="com.meetback.dev.domain.MeetingParticipant">
 
         SELECT
-            mp.participant_id,
-            mp.meeting_id,
-            mp.user_id,
+            mp.participant_id AS participantId,
+            mp.meeting_id AS meetingId,
+            mp.user_id AS userId,
 
             u.nickname AS nickname,
 
-            mp.input_status,
+            mp.participant_status AS participantStatus,
+            mp.input_status AS inputStatus,
 
-            mp.departure_name,
-            mp.departure_address,
-            mp.departure_latitude,
-            mp.departure_longitude,
+            mp.departure_name AS departureName,
+            mp.departure_address AS departureAddress,
+            mp.departure_latitude AS departureLatitude,
+            mp.departure_longitude AS departureLongitude,
 
-            mp.return_name,
-            mp.return_address,
-            mp.return_latitude,
-            mp.return_longitude,
+            mp.return_name AS returnName,
+            mp.return_address AS returnAddress,
+            mp.return_latitude AS returnLatitude,
+            mp.return_longitude AS returnLongitude,
 
-            mp.submitted_at,
-            mp.created_at,
-            mp.updated_at
+            mp.submitted_at AS submittedAt,
+            mp.created_at AS createdAt,
+            mp.updated_at AS updatedAt
 
         FROM meeting_participants mp
 
         JOIN users u
-        ON mp.user_id = u.user_id
+        ON u.user_id = mp.user_id
 
         WHERE mp.meeting_id = #{meetingId}
+          AND mp.participant_status = 'ACTIVE'
 
         ORDER BY mp.participant_id
 
@@ -144,11 +157,14 @@
 
     <update id="resetInputToDraft">
         UPDATE meeting_participants
+
         SET
             input_status = 'DRAFT',
             submitted_at = NULL,
             updated_at = NOW()
+
         WHERE participant_id = #{participantId}
+          AND participant_status = 'ACTIVE'
     </update>
 
     <select id="findRoomParticipants"
@@ -172,9 +188,36 @@
             ON u.user_id = mp.user_id
 
         WHERE mp.meeting_id = #{meetingId}
+          AND mp.participant_status = 'ACTIVE'
 
         ORDER BY mp.participant_id
 
     </select>
+
+    <update id="kickParticipant">
+
+        UPDATE meeting_participants
+
+        SET
+            participant_status = 'KICKED',
+            updated_at = NOW()
+
+        WHERE participant_id = #{participantId}
+          AND participant_status = 'ACTIVE'
+
+    </update>
+
+    <update id="cancelKick">
+
+        UPDATE meeting_participants
+
+        SET
+            participant_status = 'ACTIVE',
+            updated_at = NOW()
+
+        WHERE participant_id = #{participantId}
+          AND participant_status = 'KICKED'
+
+    </update>
 
 </mapper>

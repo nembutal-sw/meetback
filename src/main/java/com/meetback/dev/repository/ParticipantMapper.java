@@ -33,4 +33,9 @@ public interface ParticipantMapper {
             @Param("meetingId") Long meetingId,
             @Param("userId") Long userId
     );
+
+    MeetingParticipant findAnyByMeetingAndUser(
+            @Param("meetingId") Long meetingId,
+            @Param("userId") Long userId
+    );
 }
