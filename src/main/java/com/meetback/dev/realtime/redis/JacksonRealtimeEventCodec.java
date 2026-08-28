@@ -6,17 +6,22 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.util.Objects;
 
+/**
+ * 공용 {@link ObjectMapper}로 Redis 전송 envelope 전체를 JSON과 상호 변환한다.
+ * Jackson 변환 오류는 {@link IllegalArgumentException}으로 감싸 발행·수신 경로가
+ * 동일한 예외 형태로 처리하도록 한다.
+ */
 public class JacksonRealtimeEventCodec
         implements RealtimeEventCodec {
 
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper mapper;
 
     public JacksonRealtimeEventCodec(
-            ObjectMapper objectMapper
+            ObjectMapper mapper
     ) {
-        this.objectMapper =
+        this.mapper =
                 Objects.requireNonNull(
-                        objectMapper,
+                        mapper,
                         "objectMapper는 필수입니다."
                 );
     }
@@ -28,7 +33,7 @@ public class JacksonRealtimeEventCodec
         Objects.requireNonNull(event, "event는 필수입니다.");
 
         try {
-            return objectMapper.writeValueAsString(event);
+            return mapper.writeValueAsString(event);
         }
         catch (JacksonException exception) {
             throw new IllegalArgumentException(
@@ -49,7 +54,7 @@ public class JacksonRealtimeEventCodec
         }
 
         try {
-            return objectMapper.readValue(
+            return mapper.readValue(
                     json,
                     RealtimeEventEnvelope.class
             );
