@@ -9,6 +9,7 @@ public class Meeting {
     private Long meetingId;
     private Long hostUserId;
     private String title;
+    private MeetingType meetingType;
     private MeetingStatus status;
     private LocalDateTime desiredEndAt;
     private Integer calculationVersion;
@@ -16,5 +17,4 @@ public class Meeting {
     private Long finalCandidateId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private MeetingType meetingType;
 }
