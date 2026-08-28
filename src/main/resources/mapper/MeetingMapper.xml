@@ -112,4 +112,9 @@
 
     </select>
 
+    <delete id="deleteExpiredMeetings">
+        DELETE FROM meetings
+        WHERE desired_end_at IS NOT NULL
+        AND desired_end_at &lt;= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+    </delete>
 </mapper>
