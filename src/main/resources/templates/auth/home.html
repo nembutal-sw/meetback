@@ -39,29 +39,63 @@
 
     <div class="home-header">
 
-        <div>
+        <div class="home-header-title">
 
             <h1>
                 MeetBack
             </h1>
 
             <div style="
-                margin-top: 6px;
-                color: #777;
-            ">
+            margin-top: 6px;
+            color: #777;
+        ">
                 모두가 집에 돌아갈 수 있는 모임을 만들어보세요.
             </div>
 
         </div>
 
 
-        <div class="user-info">
+        <div class="home-header-actions">
 
-            <div id="userId">
-                사용자 확인 중...
+
+            <!-- =====================================================
+                 내 모임
+                 ===================================================== -->
+
+            <div class="my-meeting-menu">
+
+                <button
+                        type="button"
+                        id="loadMyMeetingsButton"
+                        class="my-meeting-toggle-button">
+
+                    내 모임 보기
+
+                </button>
+
+
+                <div
+                        id="myMeetingList"
+                        class="my-meeting-list"
+                        style="display: none;">
+                </div>
+
             </div>
 
-            <div id="role">
+
+            <!-- =====================================================
+                 사용자 정보
+                 ===================================================== -->
+
+            <div class="user-info">
+
+                <div id="userId">
+                    사용자 확인 중...
+                </div>
+
+                <div id="role">
+                </div>
+
             </div>
 
         </div>
@@ -309,48 +343,6 @@
 
             </div>
 
-        </div>
-
-    </section>
-
-    <!-- =====================================================
-     내 모임
-     ===================================================== -->
-
-    <section class="section">
-
-        <div class="my-meeting-header">
-
-            <div>
-
-                <h2>
-                    내 모임
-                </h2>
-
-                <p class="section-description">
-                    현재 참여 중인 모임을 확인할 수 있습니다.
-                    초대코드를 누르면 해당 모임방으로 이동합니다.
-                </p>
-
-            </div>
-
-
-            <button
-                    type="button"
-                    id="loadMyMeetingsButton"
-                    class="primary-button">
-
-                내 모임 보기
-
-            </button>
-
-        </div>
-
-
-        <div
-                id="myMeetingList"
-                class="my-meeting-list"
-                style="display: none;">
         </div>
 
     </section>
