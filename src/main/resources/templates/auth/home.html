@@ -47,9 +47,9 @@
             </h1>
 
             <div style="
-            margin-top: 6px;
-            color: #777;
-        ">
+                margin-top: 6px;
+                color: #777;
+            ">
                 모두가 집에 돌아갈 수 있는 모임을 만들어보세요.
             </div>
 
@@ -104,7 +104,6 @@
     </div>
 
 
-
     <!-- =====================================================
          공통 메시지
          ===================================================== -->
@@ -113,7 +112,6 @@
             id="homeMessage"
             class="message">
     </div>
-
 
 
     <!-- =====================================================
@@ -151,25 +149,27 @@
                     기준으로 사용됩니다.
                 </div>
 
+
                 <div class="field">
 
                     <label for="meetingType">
                         방 종류
                     </label>
 
-                        <select id="meetingType">
+                    <select id="meetingType">
 
-                            <option value="FRIEND" selected>
-                                친구방 - 참가자가 고정되는 모임
-                            </option>
+                        <option value="FRIEND" selected>
+                            친구방 - 참가자가 고정되는 모임
+                        </option>
 
-                            <option value="QUICK_VOTE">
-                                번개방 - 자유롭게 참여하는 모임
-                            </option>
+                        <option value="QUICK_VOTE">
+                            번개방 - 자유롭게 참여하는 모임
+                        </option>
 
-                        </select>
+                    </select>
 
                 </div>
+
 
                 <div class="field">
 
@@ -183,6 +183,7 @@
                             placeholder="예: 금요일 건대 모임">
 
                 </div>
+
 
                 <div class="field">
 
@@ -262,7 +263,6 @@
                 </div>
 
             </div>
-
 
 
             <!-- =================================================
@@ -348,9 +348,10 @@
 
     </section>
 
+
     <!-- =====================================================
-     지금 바로 번개
-     ===================================================== -->
+         지금 바로 번개
+         ===================================================== -->
 
     <section class="section">
 
@@ -413,7 +414,6 @@
         </form>
 
     </section>
-
 
 
     <!-- =====================================================
@@ -500,7 +500,6 @@
 </div>
 
 
-
 <script>
 
     // ============================================================
@@ -544,6 +543,7 @@
     const joinMeetingUrl =
         homeContainer.dataset.joinMeetingUrl;
 
+
     const myMeetingsUrl =
         homeContainer.dataset.myMeetingsUrl;
 
@@ -551,9 +551,9 @@
     const meetingPageUrl =
         homeContainer.dataset.meetingPageUrl;
 
+
     const quickMeetingsUrl =
         homeContainer.dataset.quickMeetingsUrl;
-
 
 
     // ============================================================
@@ -570,7 +570,6 @@
         localStorage.getItem(
             "nickname"
         );
-
 
 
     // ============================================================
@@ -594,7 +593,10 @@
             "homeMessage"
         );
 
-    let homeMessageTimer = null;
+
+    let homeMessageTimer =
+        null;
+
 
     const logoutButton =
         document.getElementById(
@@ -632,7 +634,6 @@
         );
 
 
-
     // ============================================================
     // 모임 DOM
     // ============================================================
@@ -659,6 +660,7 @@
         document.getElementById(
             "meetingTitle"
         );
+
 
     const meetingTypeSelect =
         document.getElementById(
@@ -736,7 +738,6 @@
         document.getElementById(
             "enterJoinedMeetingButton"
         );
-
 
 
     // ============================================================
@@ -884,47 +885,63 @@
         }
     }
 
+
     // ============================================================
     // 선택 가능한 최소 시간을 현재 이후로 설정
     // ============================================================
 
     function setDesiredEndAtMinimum()
     {
-        /*
-         * 현재 분을 선택하면 저장 시점에는 이미 과거가 될 수 있으므로
-         * 다음 1분부터 선택할 수 있게 설정합니다.
-         */
-        const minimumDate = new Date();
 
-        minimumDate.setSeconds(0, 0);
-        minimumDate.setMinutes(
-            minimumDate.getMinutes() + 1
+        const minimumDate =
+            new Date();
+
+
+        minimumDate.setSeconds(
+            0,
+            0
         );
 
-        /*
-         * datetime-local은 UTC가 아니라 로컬 시간을 사용하므로
-         * 시간대 차이를 보정합니다.
-         */
+
+        minimumDate.setMinutes(
+            minimumDate.getMinutes()
+            +
+            1
+        );
+
+
         const timezoneOffset =
-            minimumDate.getTimezoneOffset() * 60000;
+            minimumDate.getTimezoneOffset()
+            *
+            60000;
+
 
         const localMinimumDate =
             new Date(
-                minimumDate.getTime() - timezoneOffset
+                minimumDate.getTime()
+                -
+                timezoneOffset
             );
+
 
         desiredEndAtInput.min =
             localMinimumDate
                 .toISOString()
-                .slice(0, 16);
+                .slice(
+                    0,
+                    16
+                );
     }
 
+
     setDesiredEndAtMinimum();
+
 
     desiredEndAtInput.addEventListener(
         "focus",
         setDesiredEndAtMinimum
     );
+
 
     // ============================================================
     // 초대 URL에서 inviteCode 보관
@@ -976,10 +993,8 @@
     }
 
 
-
     // ============================================================
     // 로그인 페이지 이동
-    // 현재 페이지 주소를 redirect에 보존
     // ============================================================
 
     function redirectToLogin()
@@ -988,7 +1003,6 @@
         window.location.href =
             loginUrl;
     }
-
 
 
     // ============================================================
@@ -1001,14 +1015,19 @@
         duration = 3000
     )
     {
-        if(homeMessageTimer)
+
+        if (homeMessageTimer)
         {
+
             clearTimeout(
                 homeMessageTimer
             );
 
-            homeMessageTimer = null;
+
+            homeMessageTimer =
+                null;
         }
+
 
         homeMessage.innerText =
             message;
@@ -1042,24 +1061,32 @@
             );
         }
 
-        if(duration > 0)
+
+        if (duration > 0)
         {
-            homeMessageTimer = setTimeout(
-                () =>
-                {
-                    homeMessage.classList.remove(
-                        "show"
-                    );
 
-                    homeMessage.innerText = "";
+            homeMessageTimer =
+                setTimeout(
+                    () =>
+                    {
 
-                    homeMessageTimer = null;
-                },
-                duration
-            );
+                        homeMessage.classList.remove(
+                            "show"
+                        );
+
+
+                        homeMessage.innerText =
+                            "";
+
+
+                        homeMessageTimer =
+                            null;
+
+                    },
+                    duration
+                );
         }
     }
-
 
 
     // ============================================================
@@ -1099,7 +1126,6 @@
     }
 
 
-
     // ============================================================
     // 초대코드 또는 초대 URL에서 inviteCode 추출
     // ============================================================
@@ -1136,7 +1162,6 @@
 
         return text;
     }
-
 
 
     // ============================================================
@@ -1255,7 +1280,6 @@
     }
 
 
-
     // ============================================================
     // JWT 포함 요청 공통 함수
     // ============================================================
@@ -1322,7 +1346,6 @@
     }
 
 
-
     // ============================================================
     // Access Token 로그인 확인
     // ============================================================
@@ -1349,7 +1372,6 @@
             }
         );
     }
-
 
 
     // ============================================================
@@ -1482,7 +1504,6 @@
     }
 
 
-
     // ============================================================
     // 초대코드로 참가 공통 함수
     // ============================================================
@@ -1543,26 +1564,41 @@
             const errorText =
                 await response.text();
 
-            let errorMessage = "모임 참가에 실패했습니다.";
 
-            if(errorText)
+            let errorMessage =
+                "모임 참가에 실패했습니다.";
+
+
+            if (errorText)
             {
+
                 try
                 {
+
                     const errorBody =
                         JSON.parse(
                             errorText
                         );
 
-                    errorMessage = errorBody.message || errorMessage;
 
-                }catch(error)
+                    errorMessage =
+                        errorBody.message
+                        ||
+                        errorMessage;
+
+                }
+                catch (error)
                 {
-                    errorMessage = errorText;
+
+                    errorMessage =
+                        errorText;
                 }
             }
 
-            throw new Error(errorMessage);
+
+            throw new Error(
+                errorMessage
+            );
         }
 
 
@@ -1663,7 +1699,6 @@
     }
 
 
-
     // ============================================================
     // 모임 생성
     // ============================================================
@@ -1672,13 +1707,16 @@
         "click",
         async function()
         {
+
             const title =
                 meetingTitleInput
                     .value
                     .trim();
 
+
             const meetingType =
                 meetingTypeSelect.value;
+
 
             const desiredEndAt =
                 desiredEndAtInput
@@ -1708,8 +1746,12 @@
                 return;
             }
 
+
             const selectedEndAt =
-                new Date(desiredEndAt);
+                new Date(
+                    desiredEndAt
+                );
+
 
             if (
                 Number.isNaN(
@@ -1717,16 +1759,22 @@
                 )
                 ||
                 selectedEndAt.getTime()
-                <= Date.now()
+                <=
+                Date.now()
             )
             {
+
                 showHomeMessage(
                     "희망 종료시간은 현재 시각 이후로 선택해주세요.",
                     "error"
                 );
 
+
                 setDesiredEndAtMinimum();
+
+
                 desiredEndAtInput.focus();
+
 
                 return;
             }
@@ -1879,7 +1927,6 @@
     );
 
 
-
     // ============================================================
     // 생성한 모임방 이동
     // ============================================================
@@ -1909,7 +1956,6 @@
                 );
         }
     );
-
 
 
     // ============================================================
@@ -1986,7 +2032,6 @@
     );
 
 
-
     // ============================================================
     // 참가한 모임 이동
     // ============================================================
@@ -2017,6 +2062,7 @@
         }
     );
 
+
     // ============================================================
     // 지금 바로 번개 목록
     // ============================================================
@@ -2045,6 +2091,7 @@
 
             if (!response.ok)
             {
+
                 throw new Error(
                     "번개 모임을 불러오지 못했습니다."
                 );
@@ -2283,6 +2330,7 @@
         }
     }
 
+
     // ============================================================
     // 내 모임 목록 조회
     // ============================================================
@@ -2296,9 +2344,6 @@
         async function()
         {
 
-            /*
-             * 이미 목록이 열린 상태라면 닫기
-             */
             if (
                 myMeetingsLoaded
                 &&
@@ -2318,10 +2363,6 @@
             }
 
 
-            /*
-             * 이미 한 번 불러온 목록이면
-             * API를 다시 호출하지 않고 다시 보여줌
-             */
             if (myMeetingsLoaded)
             {
 
@@ -2389,9 +2430,6 @@
                 myMeetingList.replaceChildren();
 
 
-                /*
-                 * 참여 중인 모임이 없는 경우
-                 */
                 if (
                     !Array.isArray(meetings)
                     ||
@@ -2434,9 +2472,6 @@
                 }
 
 
-                /*
-                 * 모임 카드 생성
-                 */
                 meetings.forEach(
                     meeting =>
                     {
@@ -2450,10 +2485,6 @@
                         item.className =
                             "my-meeting-item";
 
-
-                        // ---------------------------------------------
-                        // 모임 제목
-                        // ---------------------------------------------
 
                         const title =
                             document.createElement(
@@ -2470,10 +2501,6 @@
                             ||
                             "제목 없는 모임";
 
-
-                        // ---------------------------------------------
-                        // 초대코드 영역
-                        // ---------------------------------------------
 
                         const codeArea =
                             document.createElement(
@@ -2518,13 +2545,6 @@
                             ||
                             "-";
 
-
-                        // ---------------------------------------------
-                        // 초대코드 클릭 → 기존 모임으로 바로 입장
-                        //
-                        // 이미 참가 중인 방이므로
-                        // /meetings/join은 호출하지 않는다.
-                        // ---------------------------------------------
 
                         codeButton.addEventListener(
                             "click",
@@ -2632,7 +2652,6 @@
     );
 
 
-
     // ============================================================
     // 로그아웃
     // ============================================================
@@ -2726,7 +2745,6 @@
     );
 
 
-
     // ============================================================
     // 회원탈퇴 버튼
     // ============================================================
@@ -2742,7 +2760,6 @@
     );
 
 
-
     // ============================================================
     // 회원탈퇴 확인 취소
     // ============================================================
@@ -2756,7 +2773,6 @@
                 "none";
         }
     );
-
 
 
     // ============================================================
@@ -2823,7 +2839,6 @@
     );
 
 
-
     // ============================================================
     // 회원탈퇴 취소
     // ============================================================
@@ -2882,7 +2897,6 @@
             }
         }
     );
-
 
 
     // ============================================================
@@ -2955,7 +2969,8 @@
 
             if (
                 savedServerInstanceId
-                !== currentServerInstanceId
+                !==
+                currentServerInstanceId
             )
             {
 
@@ -3021,25 +3036,16 @@
     }
 
 
-
     // ============================================================
-    // ★ Home 초기화
+    // Home 초기화
     // ============================================================
 
     async function initializeHome()
     {
 
-        /*
-         * 초대 URL이면 가장 먼저 저장
-         *
-         * /home?inviteCode=ABC123
-         */
         preserveInviteCode();
 
 
-        /*
-         * Spring 재시작 확인
-         */
         const serverRestarted =
             await checkServerRestart();
 
@@ -3050,9 +3056,6 @@
         }
 
 
-        /*
-         * 로그인 확인
-         */
         const loggedIn =
             await checkLogin();
 
@@ -3062,15 +3065,10 @@
             return;
         }
 
+
         await loadQuickMeetings();
 
 
-        /*
-         * 일반 /home 접속이라면 여기서 끝.
-         *
-         * 초대 링크로 온 경우에만
-         * pendingInviteCode가 존재한다.
-         */
         const pendingInviteCode =
             sessionStorage.getItem(
                 "pendingInviteCode"
@@ -3100,10 +3098,6 @@
         try
         {
 
-            /*
-             * true
-             * → 참가 성공 즉시 모임방 이동
-             */
             await joinMeetingByInviteCode(
                 pendingInviteCode,
                 true
@@ -3134,6 +3128,7 @@
                 false;
         }
     }
+        await loadQuickMeetings();
 
 
 
