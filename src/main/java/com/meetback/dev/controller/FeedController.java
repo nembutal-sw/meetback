@@ -23,7 +23,7 @@ public class FeedController {
     private final FeedService feedService;
 
 
-    // 후기작성
+    // 후기 작성
     @PostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
@@ -39,7 +39,8 @@ public class FeedController {
                     required = false
             )
             List<MultipartFile> images
-    ){
+    ) {
+
         FeedResponse response =
                 feedService.createFeed(
                         authenticatedUser.userId(),
@@ -52,24 +53,31 @@ public class FeedController {
                 .body(response);
     }
 
-    //후기 전체 조회
+
+    // 후기 전체 조회
     @GetMapping
-    public ResponseEntity<List<FeedResponse>> getFeeds(){
+    public ResponseEntity<List<FeedResponse>> getFeeds(
+            @AuthenticationPrincipal
+            AuthenticatedUser authenticatedUser
+    ) {
 
         List<FeedResponse> response =
-                feedService.getFeeds();
+                feedService.getFeeds(
+                        authenticatedUser.userId()
+                );
 
         return ResponseEntity.ok(
                 response
         );
     }
 
+
     // 후기 상세 조회
     @GetMapping("/{feedId}")
     public ResponseEntity<FeedResponse> getFeed(
             @PathVariable
             Long feedId
-    ){
+    ) {
 
         FeedResponse response =
                 feedService.getFeed(
@@ -80,6 +88,7 @@ public class FeedController {
                 response
         );
     }
+
 
     // 후기 수정
     @PutMapping("/{feedId}")
@@ -102,8 +111,11 @@ public class FeedController {
                         request
                 );
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                response
+        );
     }
+
 
     // 후기 삭제
     @DeleteMapping("/{feedId}")
@@ -118,7 +130,7 @@ public class FeedController {
         feedService.deleteFeed(
                 authenticatedUser.userId(),
                 feedId
-                );
+        );
 
         return ResponseEntity
                 .noContent()
