@@ -624,10 +624,20 @@ public class MeetingService {
         return meetingMapper.deleteExpiredMeetings();
     }
 
-    public List<QuickMeetingResponse> getQuickVoteMeetings() {
+    public List<QuickMeetingResponse> getQuickVoteMeetings(
+            String keyword
+    ) {
+
+        String searchKeyword =
+                keyword == null
+                        ? ""
+                        : keyword.trim();
+
 
         return meetingMapper
-                .selectQuickVoteMeetings()
+                .selectQuickVoteMeetings(
+                        searchKeyword
+                )
                 .stream()
                 .map(meeting ->
                         new QuickMeetingResponse(

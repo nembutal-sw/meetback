@@ -129,16 +129,21 @@
         meeting_id,
         host_user_id,
         title,
-        invite_code,
-        desired_end_at,
         meeting_type,
         status,
+        desired_end_at,
+        invite_code,
         created_at
         FROM meetings
         WHERE meeting_type = 'QUICK_VOTE'
         AND status = 'INPUT_OPEN'
         AND desired_end_at IS NOT NULL
         AND desired_end_at > NOW()
+
+        <if test="keyword != null and keyword != ''">
+            AND title LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+
         ORDER BY created_at DESC
 
     </select>
