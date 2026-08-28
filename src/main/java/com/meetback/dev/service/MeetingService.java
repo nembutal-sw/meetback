@@ -462,7 +462,6 @@ public class MeetingService {
 
     @Transactional
     public int deleteExpiredMeetings() {
-
         return meetingMapper.deleteExpiredMeetings();
     }
 }
