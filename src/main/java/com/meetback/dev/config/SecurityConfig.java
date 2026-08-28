@@ -80,6 +80,9 @@ public class SecurityConfig {
                                                 "/js/**",
                                                 "/images/**",
                                                 "/uploads/feed/**",
+                                                "/feed",
+                                                "/feed/write",
+                                                "/feed/**",
 
                                                 "/meeting",
                                                 "/meeting/location-test",
