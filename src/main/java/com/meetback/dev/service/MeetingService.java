@@ -623,4 +623,30 @@ public class MeetingService {
     public int deleteExpiredMeetings() {
         return meetingMapper.deleteExpiredMeetings();
     }
+
+    public List<QuickMeetingResponse> getQuickVoteMeetings(
+            String keyword
+    ) {
+
+        String searchKeyword =
+                keyword == null
+                        ? ""
+                        : keyword.trim();
+
+
+        return meetingMapper
+                .selectQuickVoteMeetings(
+                        searchKeyword
+                )
+                .stream()
+                .map(meeting ->
+                        new QuickMeetingResponse(
+                                meeting.getMeetingId(),
+                                meeting.getTitle(),
+                                meeting.getInviteCode(),
+                                meeting.getDesiredEndAt()
+                        )
+                )
+                .toList();
+    }
 }

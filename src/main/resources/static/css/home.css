@@ -29,9 +29,14 @@
     --mb-info: #5d64a8;
     --mb-info-bg: #f0f1ff;
 
-    --mb-shadow-sm: 0 8px 24px rgba(59, 54, 118, 0.06);
-    --mb-shadow-md: 0 16px 40px rgba(59, 54, 118, 0.10);
-    --mb-shadow-button: 0 10px 24px rgba(99, 91, 255, 0.24);
+    --mb-shadow-sm:
+            0 8px 24px rgba(59, 54, 118, 0.06);
+
+    --mb-shadow-md:
+            0 16px 40px rgba(59, 54, 118, 0.10);
+
+    --mb-shadow-button:
+            0 10px 24px rgba(99, 91, 255, 0.24);
 
     --mb-radius-sm: 10px;
     --mb-radius-md: 16px;
@@ -47,15 +52,12 @@
     box-sizing: border-box;
 }
 
-
 html {
     scroll-behavior: smooth;
 }
 
-
 body {
     margin: 0;
-
     min-height: 100vh;
 
     font-family:
@@ -97,11 +99,17 @@ body {
    ========================================================= */
 
 .home-container {
-    width: min(1120px, calc(100% - 40px));
+    width: min(
+            1120px,
+            calc(100% - 40px)
+    );
 
     margin: 0 auto;
 
-    padding: 34px 0 70px;
+    padding:
+            34px
+            0
+            70px;
 }
 
 
@@ -111,6 +119,7 @@ body {
 
 .home-header {
     position: relative;
+    z-index: 100;
 
     display: flex;
 
@@ -121,16 +130,42 @@ body {
 
     margin-bottom: 28px;
 
-    padding: 20px 24px;
+    padding:
+            20px
+            24px;
 
-    background: rgba(255, 255, 255, 0.88);
+    background:
+            rgba(
+                    255,
+                    255,
+                    255,
+                    0.88
+            );
 
-    border: 1px solid rgba(229, 230, 240, 0.95);
+    border:
+            1px solid
+            rgba(
+                    229,
+                    230,
+                    240,
+                    0.95
+            );
+
     border-radius: 18px;
 
-    box-shadow: 0 10px 34px rgba(44, 43, 90, 0.06);
+    box-shadow:
+            0 10px 34px
+            rgba(
+                    44,
+                    43,
+                    90,
+                    0.06
+            );
 
-    backdrop-filter: blur(12px);
+    backdrop-filter:
+            blur(12px);
+
+    overflow: visible;
 }
 
 
@@ -144,7 +179,10 @@ body {
 
     margin-right: -10px;
 
-    border: 4px solid var(--mb-primary);
+    border:
+            4px solid
+            var(--mb-primary);
+
     border-radius: 50%;
 }
 
@@ -169,32 +207,70 @@ body {
 .home-header h1::after {
     content: " •";
 
-    color: var(--mb-primary);
+    color:
+            var(--mb-primary);
 }
 
 
 .home-header > div:first-child > div {
     margin-top: 5px !important;
 
-    color: var(--mb-text-soft) !important;
+    color:
+            var(--mb-text-soft) !important;
 
     font-size: 13px;
 }
 
 
+/* =========================================================
+   헤더 오른쪽
+   ========================================================= */
+
+.home-header-actions {
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   사용자 정보
+   ========================================================= */
+
 .user-info {
     min-width: 190px;
 
-    padding: 12px 16px;
+    padding:
+            12px
+            16px;
 
     background:
             linear-gradient(
                     135deg,
-                    rgba(242, 240, 255, 0.95),
-                    rgba(249, 248, 255, 0.95)
+                    rgba(
+                            242,
+                            240,
+                            255,
+                            0.95
+                    ),
+                    rgba(
+                            249,
+                            248,
+                            255,
+                            0.95
+                    )
             );
 
-    border: 1px solid #dfdcff;
+    border:
+            1px solid
+            #dfdcff;
+
     border-radius: 14px;
 
     color: #4b4e65;
@@ -204,7 +280,275 @@ body {
     line-height: 1.7;
 
     box-shadow:
-            inset 0 1px 0 rgba(255, 255, 255, 0.85);
+            inset 0 1px 0
+            rgba(
+                    255,
+                    255,
+                    255,
+                    0.85
+            );
+}
+
+
+/* =========================================================
+   내 모임 메뉴
+   ========================================================= */
+
+.my-meeting-menu {
+    position: relative;
+
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   내 모임 버튼
+   ========================================================= */
+
+.my-meeting-toggle-button {
+    width: auto;
+
+    min-width: 110px;
+    min-height: 42px;
+
+    padding:
+            10px
+            16px;
+
+    color: #ffffff;
+
+    background:
+            linear-gradient(
+                    135deg,
+                    #6b63ff 0%,
+                    #584ef6 100%
+            );
+
+    border: 0;
+
+    border-radius: 11px;
+
+    box-shadow:
+            0 8px 18px
+            rgba(
+                    99,
+                    91,
+                    255,
+                    0.20
+            );
+
+    white-space: nowrap;
+}
+
+
+.my-meeting-toggle-button:hover:not(:disabled) {
+    color: #ffffff;
+
+    background:
+            linear-gradient(
+                    135deg,
+                    #5e56fb 0%,
+                    #4e44ef 100%
+            );
+
+    border-color:
+            transparent;
+}
+
+
+/* =========================================================
+   내 모임 드롭다운
+   ========================================================= */
+
+.my-meeting-list {
+    position: absolute;
+
+    top:
+            calc(
+                    100% + 8px
+            );
+
+    right: 0;
+
+    width: 430px;
+
+    max-height: 320px;
+
+    margin: 0;
+    padding: 0;
+
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    background: #ffffff;
+
+    border:
+            1px solid
+            var(--mb-border-strong);
+
+    border-radius: 12px;
+
+    box-shadow:
+            0 14px 34px
+            rgba(
+                    44,
+                    43,
+                    90,
+                    0.16
+            );
+
+    z-index: 9999;
+}
+
+
+/* =========================================================
+   내 모임 아이템
+   ========================================================= */
+
+.my-meeting-item {
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+
+    padding:
+            14px
+            16px;
+
+    background: #ffffff;
+
+    border-bottom:
+            1px solid
+            var(--mb-border);
+
+    transition:
+            background
+            0.16s ease;
+}
+
+
+.my-meeting-item:last-child {
+    border-bottom: none;
+}
+
+
+.my-meeting-item:hover {
+    background: #f8f7ff;
+}
+
+
+/* =========================================================
+   내 모임 제목
+   ========================================================= */
+
+.my-meeting-title {
+    flex: 1;
+
+    min-width: 0;
+
+    color: #252638;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   내 모임 초대코드
+   ========================================================= */
+
+.my-meeting-code-area {
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    flex-shrink: 0;
+}
+
+
+.my-meeting-code-label {
+    color:
+            var(--mb-text-muted);
+
+    font-size: 11px;
+}
+
+
+.my-meeting-code-button {
+    min-height: 30px;
+
+    padding:
+            5px
+            9px;
+
+    color:
+            var(--mb-primary-strong);
+
+    background:
+            var(--mb-primary-pale);
+
+    border:
+            1px solid
+            #d9d5ff;
+
+    border-radius: 7px;
+
+    font-size: 11px;
+    font-weight: 700;
+}
+
+
+.my-meeting-code-button:hover:not(:disabled) {
+    color:
+            var(--mb-primary-strong);
+
+    background: #e8e5ff;
+
+    border-color: #c9c4ff;
+}
+
+
+/* =========================================================
+   내 모임 없음
+   ========================================================= */
+
+.my-meeting-empty {
+    padding: 20px;
+
+    color:
+            var(--mb-text-muted);
+
+    background: #ffffff;
+
+    font-size: 13px;
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   내 모임 스크롤바
+   ========================================================= */
+
+.my-meeting-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+
+.my-meeting-list::-webkit-scrollbar-thumb {
+    background: #d9d7e7;
+
+    border-radius: 999px;
 }
 
 
@@ -214,6 +558,7 @@ body {
 
 .section {
     position: relative;
+    z-index: 1;
 
     overflow: hidden;
 
@@ -221,12 +566,18 @@ body {
 
     padding: 30px;
 
-    background: var(--mb-surface);
+    background:
+            var(--mb-surface);
 
-    border: 1px solid var(--mb-border);
-    border-radius: var(--mb-radius-lg);
+    border:
+            1px solid
+            var(--mb-border);
 
-    box-shadow: var(--mb-shadow-sm);
+    border-radius:
+            var(--mb-radius-lg);
+
+    box-shadow:
+            var(--mb-shadow-sm);
 }
 
 
@@ -246,8 +597,18 @@ body {
     background:
             radial-gradient(
                     circle,
-                    rgba(115, 99, 255, 0.10) 0,
-                    rgba(115, 99, 255, 0.03) 48%,
+                    rgba(
+                            115,
+                            99,
+                            255,
+                            0.10
+                    ) 0,
+                    rgba(
+                            115,
+                            99,
+                            255,
+                            0.03
+                    ) 48%,
                     transparent 70%
             );
 
@@ -260,7 +621,10 @@ body {
 
     z-index: 1;
 
-    margin: 0 0 8px;
+    margin:
+            0
+            0
+            8px;
 
     font-size: 22px;
     font-weight: 800;
@@ -297,9 +661,13 @@ body {
 
     z-index: 1;
 
-    margin: 0 0 24px;
+    margin:
+            0
+            0
+            24px;
 
-    color: var(--mb-text-soft);
+    color:
+            var(--mb-text-soft);
 
     font-size: 14px;
 }
@@ -317,10 +685,13 @@ body {
     display: grid;
 
     grid-template-columns:
-            repeat(
-                    2,
-                    minmax(0, 1fr)
-            );
+        repeat(
+            2,
+            minmax(
+                    0,
+                    1fr
+            )
+        );
 
     gap: 22px;
 }
@@ -340,12 +711,20 @@ body {
                     #fcfcff 100%
             );
 
-    border: 1px solid var(--mb-border);
+    border:
+            1px solid
+            var(--mb-border);
+
     border-radius: 18px;
 
     box-shadow:
             0 10px 28px
-            rgba(55, 52, 108, 0.05);
+            rgba(
+                    55,
+                    52,
+                    108,
+                    0.05
+            );
 
     transition:
             transform 0.2s ease,
@@ -355,11 +734,14 @@ body {
 
 
 .meeting-card:hover {
-    transform: translateY(-2px);
+    transform:
+            translateY(-2px);
 
-    border-color: #d9d5ff;
+    border-color:
+            #d9d5ff;
 
-    box-shadow: var(--mb-shadow-md);
+    box-shadow:
+            var(--mb-shadow-md);
 }
 
 
@@ -385,7 +767,10 @@ body {
 
 
 .meeting-card h3 {
-    margin: 0 0 7px;
+    margin:
+            0
+            0
+            7px;
 
     font-size: 18px;
     font-weight: 800;
@@ -399,7 +784,8 @@ body {
 
     margin-bottom: 22px;
 
-    color: var(--mb-text-soft);
+    color:
+            var(--mb-text-soft);
 
     font-size: 13px;
 
@@ -415,16 +801,25 @@ body {
     margin-bottom: 18px;
 }
 
+
 .field select {
     width: 100%;
+
     min-height: 44px;
 
-    padding: 11px 13px;
+    padding:
+            11px
+            13px;
 
-    color: var(--mb-text);
+    color:
+            var(--mb-text);
+
     background: #ffffff;
 
-    border: 1px solid var(--mb-border-strong);
+    border:
+            1px solid
+            var(--mb-border-strong);
+
     border-radius: 11px;
 
     outline: none;
@@ -446,11 +841,17 @@ body {
 
 
 .field select:focus {
-    border-color: var(--mb-primary);
+    border-color:
+            var(--mb-primary);
 
     box-shadow:
             0 0 0 4px
-            rgba(99, 91, 255, 0.10);
+            rgba(
+                    99,
+                    91,
+                    255,
+                    0.10
+            );
 }
 
 
@@ -471,13 +872,19 @@ input {
 
     min-height: 44px;
 
-    padding: 11px 13px;
+    padding:
+            11px
+            13px;
 
-    color: var(--mb-text);
+    color:
+            var(--mb-text);
 
     background: #ffffff;
 
-    border: 1px solid var(--mb-border-strong);
+    border:
+            1px solid
+            var(--mb-border-strong);
+
     border-radius: 11px;
 
     outline: none;
@@ -502,13 +909,19 @@ input:hover {
 
 
 input:focus {
-    border-color: var(--mb-primary);
+    border-color:
+            var(--mb-primary);
 
     background: #ffffff;
 
     box-shadow:
             0 0 0 4px
-            rgba(99, 91, 255, 0.10);
+            rgba(
+                    99,
+                    91,
+                    255,
+                    0.10
+            );
 }
 
 
@@ -524,13 +937,18 @@ input[type="datetime-local"] {
 button {
     min-height: 42px;
 
-    padding: 10px 17px;
+    padding:
+            10px
+            17px;
 
     color: #393b4f;
 
     background: #ffffff;
 
-    border: 1px solid var(--mb-border-strong);
+    border:
+            1px solid
+            var(--mb-border-strong);
+
     border-radius: 11px;
 
     font: inherit;
@@ -549,7 +967,8 @@ button {
 
 
 button:hover:not(:disabled) {
-    transform: translateY(-1px);
+    transform:
+            translateY(-1px);
 
     background: #f9f9ff;
 
@@ -558,13 +977,20 @@ button:hover:not(:disabled) {
 
 
 button:active:not(:disabled) {
-    transform: translateY(0);
+    transform:
+            translateY(0);
 }
 
 
 button:focus-visible {
-    outline: 3px solid
-    rgba(99, 91, 255, 0.22);
+    outline:
+            3px solid
+            rgba(
+                    99,
+                    91,
+                    255,
+                    0.22
+            );
 
     outline-offset: 2px;
 }
@@ -595,7 +1021,8 @@ button:disabled {
                     #584ef6 100%
             );
 
-    border-color: transparent;
+    border-color:
+            transparent;
 
     box-shadow:
             var(--mb-shadow-button);
@@ -610,11 +1037,17 @@ button:disabled {
                     #4e44ef 100%
             );
 
-    border-color: transparent;
+    border-color:
+            transparent;
 
     box-shadow:
             0 12px 28px
-            rgba(99, 91, 255, 0.30);
+            rgba(
+                    99,
+                    91,
+                    255,
+                    0.30
+            );
 }
 
 
@@ -634,7 +1067,8 @@ button:disabled {
 .danger-button:hover:not(:disabled) {
     color: #bb3e3e;
 
-    background: var(--mb-danger-bg);
+    background:
+            var(--mb-danger-bg);
 
     border-color: #eebcbc;
 }
@@ -669,20 +1103,50 @@ button:disabled {
 .message {
     display: none;
 
-    margin-bottom: 20px;
+    position: fixed;
 
-    padding: 14px 16px;
+    top: 24px;
+    left: 50%;
 
-    border: 1px solid transparent;
+    z-index: 99999;
+
+    min-width: 320px;
+
+    max-width:
+            calc(
+                    100vw - 32px
+            );
+
+    margin: 0;
+
+    padding:
+            15px
+            18px;
+
+    border:
+            1px solid
+            transparent;
+
     border-radius: 13px;
 
     font-size: 14px;
+    font-weight: 700;
 
     line-height: 1.6;
 
+    text-align: center;
+
     box-shadow:
-            0 8px 20px
-            rgba(44, 43, 90, 0.04);
+            0 10px 30px
+            rgba(
+                    35,
+                    32,
+                    61,
+                    0.15
+            );
+
+    transform:
+            translateX(-50%);
 }
 
 
@@ -694,7 +1158,8 @@ button:disabled {
 .message-success {
     color: #267a4b;
 
-    background: var(--mb-success-bg);
+    background:
+            var(--mb-success-bg);
 
     border-color: #bde9d1;
 }
@@ -703,7 +1168,8 @@ button:disabled {
 .message-error {
     color: #bd4444;
 
-    background: var(--mb-danger-bg);
+    background:
+            var(--mb-danger-bg);
 
     border-color: #f2c2c2;
 }
@@ -712,7 +1178,8 @@ button:disabled {
 .message-info {
     color: #575d98;
 
-    background: var(--mb-info-bg);
+    background:
+            var(--mb-info-bg);
 
     border-color: #d8dafa;
 }
@@ -738,14 +1205,22 @@ button:disabled {
                     #f9f9ff
             );
 
-    border: 1px solid #ddd9ff;
+    border:
+            1px solid
+            #ddd9ff;
+
     border-radius: 13px;
 
     line-height: 1.8;
 
     box-shadow:
             inset 0 1px 0
-            rgba(255, 255, 255, 0.9);
+            rgba(
+                    255,
+                    255,
+                    255,
+                    0.9
+            );
 }
 
 
@@ -756,6 +1231,62 @@ button:disabled {
 
 .meeting-result strong {
     color: #323448;
+}
+
+
+/* =========================================================
+   생성된 초대코드 버튼
+   ========================================================= */
+
+.created-invite-area {
+    margin-top: 12px;
+}
+
+
+.created-invite-button {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    padding:
+            10px
+            14px;
+
+    border:
+            1px solid
+            #ddd;
+
+    border-radius: 10px;
+
+    background: #f8f8ff;
+
+    color: #444;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+            background 0.2s,
+            transform 0.2s;
+}
+
+
+.created-invite-button:hover:not(:disabled) {
+    background: #eeeeff;
+
+    transform:
+            translateY(-1px);
+}
+
+
+.created-invite-button:disabled {
+    cursor: default;
+
+    opacity: 0.5;
 }
 
 
@@ -776,7 +1307,10 @@ button:disabled {
 
     background: #fff8f8;
 
-    border: 1px solid #f0caca;
+    border:
+            1px solid
+            #f0caca;
+
     border-radius: 13px;
 }
 
@@ -793,7 +1327,8 @@ button:disabled {
 ::selection {
     color: #ffffff;
 
-    background: var(--mb-primary);
+    background:
+            var(--mb-primary);
 }
 
 
@@ -804,23 +1339,36 @@ button:disabled {
 @media (max-width: 900px) {
 
     .home-container {
-        width: min(
-                100% - 28px,
-                760px
-        );
+        width:
+                min(
+                        calc(100% - 28px),
+                        760px
+                );
 
         padding-top: 22px;
     }
 
 
     .meeting-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns:
+            1fr;
     }
 
 
     .meeting-card-description {
         min-height: 0;
     }
+
+
+    .home-header {
+        align-items: flex-start;
+    }
+
+
+    .home-header-actions {
+        align-items: stretch;
+    }
+
 }
 
 
@@ -831,9 +1379,15 @@ button:disabled {
 @media (max-width: 650px) {
 
     .home-container {
-        width: calc(100% - 22px);
+        width:
+                calc(
+                        100% - 22px
+                );
 
-        padding: 14px 0 40px;
+        padding:
+                14px
+                0
+                40px;
     }
 
 
@@ -856,13 +1410,49 @@ button:disabled {
     }
 
 
+    .home-header-actions {
+        width: 100%;
+
+        flex-direction: column;
+
+        align-items: stretch;
+    }
+
+
     .user-info {
         min-width: 0;
     }
 
 
+    .my-meeting-menu {
+        width: 100%;
+    }
+
+
+    .my-meeting-toggle-button {
+        width: 100%;
+    }
+
+
+    .my-meeting-list {
+        top:
+                calc(
+                        100% + 8px
+                );
+
+        right: 0;
+        left: auto;
+
+        width: 100%;
+
+        max-height: 280px;
+    }
+
+
     .section {
-        padding: 21px 17px;
+        padding:
+                21px
+                17px;
 
         border-radius: 17px;
     }
@@ -874,7 +1464,9 @@ button:disabled {
 
 
     .meeting-card {
-        padding: 20px 17px;
+        padding:
+                20px
+                17px;
 
         border-radius: 15px;
     }
@@ -893,192 +1485,455 @@ button:disabled {
     #withdrawConfirm button {
         width: 100%;
 
-        margin: 7px 0 0;
+        margin:
+                7px
+                0
+                0;
+    }
+
+
+    .my-meeting-item {
+        gap: 10px;
+
+        padding:
+                13px
+                14px;
+    }
+
+
+    .my-meeting-code-label {
+        display: none;
+    }
+
+}
+/* =========================================================
+   지금 바로 번개
+   ========================================================= */
+
+.quick-meeting-list {
+    display: flex;
+    gap: 14px;
+
+    overflow-x: auto;
+
+    padding:
+            8px
+            2px
+            14px;
+}
+
+
+.quick-meeting-card {
+    flex: 0 0 250px;
+
+    padding: 20px;
+
+    background: #ffffff;
+
+    border:
+            1px solid
+            #dddaf5;
+
+    border-radius: 16px;
+
+    box-shadow:
+            0 8px 20px
+            rgba(59, 54, 118, 0.08);
+}
+
+
+.quick-meeting-title {
+    margin-bottom: 8px;
+
+    color:
+            var(--mb-text);
+
+    font-size: 16px;
+    font-weight: 800;
+
+    letter-spacing: -0.3px;
+}
+
+
+.quick-meeting-end {
+    margin-bottom: 16px;
+
+    color:
+            var(--mb-text-soft);
+
+    font-size: 12px;
+}
+
+
+.quick-meeting-join-button {
+    width: 100%;
+
+    color: #ffffff;
+
+    background:
+            var(--mb-primary);
+
+    border-color:
+            var(--mb-primary);
+}
+
+
+.quick-meeting-join-button:hover:not(:disabled) {
+    color: #ffffff;
+
+    background:
+            var(--mb-primary-strong);
+
+    border-color:
+            var(--mb-primary-strong);
+}
+
+
+.quick-meeting-empty {
+    width: 100%;
+
+    padding: 24px;
+
+    color:
+            var(--mb-text-muted);
+
+    background:
+            var(--mb-surface-soft);
+
+    border:
+            1px dashed
+            var(--mb-border-strong);
+
+    border-radius: 14px;
+
+    text-align: center;
+
+    font-size: 13px;
+}
+
+/* =========================================================
+   번개 모임 전체보기
+   ========================================================= */
+
+.quick-meeting-list {
+    display: flex;
+    gap: 14px;
+
+    overflow-x: auto;
+.quick-search-area {
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 24px;
+}
+
+
+.quick-search-input {
+    flex: 1;
+
+    min-width: 0;
+}
+
+
+.quick-search-button {
+    flex: 0 0 auto;
+
+    min-width: 90px;
+
+    width: auto;
+
+    color: #ffffff;
+
+    background:
+            var(--mb-primary);
+
+    border-color:
+            var(--mb-primary);
+}
+
+
+.quick-search-button:hover:not(:disabled) {
+    color: #ffffff;
+
+    background:
+            var(--mb-primary-strong);
+
+    border-color:
+            var(--mb-primary-strong);
+}
+
+
+.quick-meeting-grid {
+    display: grid;
+
+    grid-template-columns:
+            repeat(
+                    3,
+                    minmax(0, 1fr)
+            );
+
+    gap: 22px;
+
+    width: 100%;
+}
+
+
+.quick-meeting-grid .quick-meeting-card {
+    width: 100%;
+
+    min-width: 0;
+
+    padding: 24px;
+
+    background: #ffffff;
+
+    border:
+            1px solid
+            var(--mb-border);
+
+    border-radius: 18px;
+
+    box-shadow:
+            0 10px 28px
+            rgba(55, 52, 108, 0.07);
+
+    transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease,
+            border-color 0.2s ease;
+}
+
+
+.quick-meeting-grid .quick-meeting-card:hover {
+    transform:
+            translateY(-2px);
+
+    border-color:
+            #d9d5ff;
+
+    box-shadow:
+            var(--mb-shadow-md);
+}
+
+
+.quick-meeting-grid .quick-meeting-title {
+    margin-bottom: 12px;
+
+    font-size: 18px;
+
+    font-weight: 800;
+}
+
+
+.quick-meeting-grid .quick-meeting-end {
+    margin-bottom: 20px;
+
+    font-size: 13px;
+}
+
+
+.quick-meeting-grid .quick-meeting-join-button {
+    width: 100%;
+}
+
+
+/* =========================================================
+   태블릿
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .quick-meeting-grid {
+        grid-template-columns:
+                repeat(
+                        2,
+                        minmax(0, 1fr)
+                );
+    }
+
+}
+
+
+/* =========================================================
+   모바일
+   ========================================================= */
+
+@media (max-width: 650px) {
+
+    .quick-search-area {
+        flex-direction: column;
+
+        align-items: stretch;
+    }
+
+
+    .quick-search-button {
+        width: 100%;
+    }
+
+
+    .quick-meeting-grid {
+        grid-template-columns:
+                1fr;
     }
 }
 
 /* =========================================================
-   생성된 초대코드 버튼
+   홈 번개 전체보기 링크
    ========================================================= */
 
-.created-invite-area {
-    margin-top: 12px;
-}
-
-
-.created-invite-button {
-    display: inline-flex;
+.quick-section-header {
+    display: flex;
 
     align-items: center;
+    justify-content: space-between;
 
-    gap: 6px;
-
-    padding: 10px 14px;
-
-    border: 1px solid #ddd;
-
-    border-radius: 10px;
-
-    background: #f8f8ff;
-
-    color: #444;
-
-    font-size: 14px;
-
-    font-weight: 600;
-
-    cursor: pointer;
-
-    transition:
-            background 0.2s,
-            transform 0.2s;
+    gap: 16px;
 }
 
 
-.created-invite-button:hover:not(:disabled) {
-    background: #eeeeff;
-
-    transform: translateY(-1px);
+.quick-section-header h2 {
+    margin-bottom: 8px;
 }
 
 
-.created-invite-button:disabled {
-    cursor: default;
+.quick-all-link {
+    position: relative;
 
-    opacity: 0.5;
+    z-index: 2;
 
-    /* =========================================================
-   내 모임
-   ========================================================= */
+    flex-shrink: 0;
 
-    .my-meeting-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-    }
+    color:
+            var(--mb-text-soft);
 
-    .my-meeting-header h2 {
-        margin-bottom: 8px;
-    }
+    font-size: 13px;
+    font-weight: 700;
 
-    .my-meeting-list {
-        margin-top: 22px;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-    }
-
-    .my-meeting-item {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
-
-        padding: 18px 20px;
-
-        background: #ffffff;
-        border: 1px solid #e8e7f1;
-        border-radius: 14px;
-    }
-
-    .my-meeting-title {
-        font-size: 16px;
-        font-weight: 700;
-        color: #191924;
-    }
-
-    .my-meeting-code-area {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .my-meeting-code-label {
-        font-size: 13px;
-        color: #777788;
-    }
-
-    .my-meeting-code-button {
-        padding: 8px 12px;
-
-        border: 1px solid #6557f6;
-        border-radius: 8px;
-
-        background: #f1efff;
-        color: #5143df;
-
-        font-weight: 700;
-        cursor: pointer;
-    }
-
-    .my-meeting-code-button:hover {
-        background: #e7e3ff;
-    }
-
-    .my-meeting-empty {
-        padding: 20px;
-
-        text-align: center;
-
-        color: #777788;
-
-        background: #f8f8fd;
-        border: 1px solid #e8e7f1;
-        border-radius: 12px;
-    }
+    text-decoration: none;
 }
 
-.message {
-    display:
-            none;
 
-    position:
-            fixed;
+.quick-all-link:hover {
+    color:
+            var(--mb-primary);
+}
+.quick-page-top {
+    display: flex;
+    justify-content: flex-end;
 
-    top:
-            24px;
+    margin-bottom: 10px;
+}
 
-    left:
-            50%;
 
-    z-index:
-            9999;
+.quick-home-link {
+    color:
+            var(--mb-text-soft);
 
-    min-width:
-            320px;
+    font-size: 13px;
+    font-weight: 700;
 
-    max-width:
-            calc(100vw - 32px);
-
-    margin:
-            0;
+    text-decoration: none;
+}
 
     padding:
-            15px 18px;
+            8px
+            2px
+            14px;
+}
+
+
+.quick-meeting-card {
+    flex: 0 0 250px;
+
+    padding: 20px;
+
+    background: #ffffff;
 
     border:
-            1px solid transparent;
+            1px solid
+            #dddaf5;
 
-    border-radius:
-            13px;
-
-    font-size:
-            14px;
-
-    font-weight:
-            700;
-
-    line-height:
-            1.6;
-
-    text-align:
-            center;
+    border-radius: 16px;
 
     box-shadow:
-            0 10px 30px
-            rgba(35, 32, 61, 0.15);
+            0 8px 20px
+            rgba(59, 54, 118, 0.08);
+}
 
-    transform:
-            translateX(-50%);
+
+.quick-meeting-title {
+    margin-bottom: 8px;
+
+    color:
+            var(--mb-text);
+
+    font-size: 16px;
+    font-weight: 800;
+
+    letter-spacing: -0.3px;
+}
+
+
+.quick-meeting-end {
+    margin-bottom: 16px;
+
+    color:
+            var(--mb-text-soft);
+
+    font-size: 12px;
+}
+
+
+.quick-meeting-join-button {
+    width: 100%;
+
+    color: #ffffff;
+
+    background:
+            var(--mb-primary);
+
+    border-color:
+            var(--mb-primary);
+}
+
+
+.quick-meeting-join-button:hover:not(:disabled) {
+    color: #ffffff;
+
+    background:
+            var(--mb-primary-strong);
+
+    border-color:
+            var(--mb-primary-strong);
+}
+
+
+.quick-meeting-empty {
+    width: 100%;
+
+    padding: 24px;
+
+    color:
+            var(--mb-text-muted);
+
+    background:
+            var(--mb-surface-soft);
+
+    border:
+            1px dashed
+            var(--mb-border-strong);
+
+    border-radius: 14px;
+
+    text-align: center;
+
+    font-size: 13px;
+
+.quick-home-link:hover {
+    color:
+            var(--mb-primary);
 }

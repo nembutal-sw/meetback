@@ -52,6 +52,7 @@ public class SecurityConfig {
                                                 "/forgot-password",
                                                 "/reset-password",
                                                 "/home",
+                                                "/quick-meetings",
 
                                                 // 관리자 HTML 페이지
                                                 "/admin/terms",
