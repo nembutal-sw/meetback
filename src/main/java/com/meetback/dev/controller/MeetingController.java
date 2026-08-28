@@ -229,6 +229,12 @@ public class MeetingController {
         );
     }
 
+    @GetMapping("/quick")
+    public List<QuickMeetingResponse> getQuickVoteMeetings() {
+
+        return meetingService.getQuickVoteMeetings();
+    }
+
     @GetMapping("/{meetingId}")
     public MeetingRoomResponse getMeeting(
             @PathVariable Long meetingId,

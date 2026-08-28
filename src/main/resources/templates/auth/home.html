@@ -29,6 +29,7 @@
         data-create-meeting-url=@{/meetings},
         data-join-meeting-url=@{/meetings/join},
         data-my-meetings-url=@{/meetings/my},
+        data-quick-meetings-url=@{/meetings/quick},
         data-meeting-page-url=@{/meeting}
      ">
 
@@ -39,29 +40,63 @@
 
     <div class="home-header">
 
-        <div>
+        <div class="home-header-title">
 
             <h1>
                 MeetBack
             </h1>
 
             <div style="
-                margin-top: 6px;
-                color: #777;
-            ">
+            margin-top: 6px;
+            color: #777;
+        ">
                 모두가 집에 돌아갈 수 있는 모임을 만들어보세요.
             </div>
 
         </div>
 
 
-        <div class="user-info">
+        <div class="home-header-actions">
 
-            <div id="userId">
-                사용자 확인 중...
+
+            <!-- =====================================================
+                 내 모임
+                 ===================================================== -->
+
+            <div class="my-meeting-menu">
+
+                <button
+                        type="button"
+                        id="loadMyMeetingsButton"
+                        class="my-meeting-toggle-button">
+
+                    내 모임 보기
+
+                </button>
+
+
+                <div
+                        id="myMeetingList"
+                        class="my-meeting-list"
+                        style="display: none;">
+                </div>
+
             </div>
 
-            <div id="role">
+
+            <!-- =====================================================
+                 사용자 정보
+                 ===================================================== -->
+
+            <div class="user-info">
+
+                <div id="userId">
+                    사용자 확인 중...
+                </div>
+
+                <div id="role">
+                </div>
+
             </div>
 
         </div>
@@ -314,43 +349,24 @@
     </section>
 
     <!-- =====================================================
-     내 모임
+     지금 바로 번개
      ===================================================== -->
 
     <section class="section">
 
-        <div class="my-meeting-header">
+        <h2>
+            지금 바로 번개
+        </h2>
 
-            <div>
-
-                <h2>
-                    내 모임
-                </h2>
-
-                <p class="section-description">
-                    현재 참여 중인 모임을 확인할 수 있습니다.
-                    초대코드를 누르면 해당 모임방으로 이동합니다.
-                </p>
-
-            </div>
-
-
-            <button
-                    type="button"
-                    id="loadMyMeetingsButton"
-                    class="primary-button">
-
-                내 모임 보기
-
-            </button>
-
-        </div>
+        <p class="section-description">
+            현재 참여 가능한 번개 모임을 확인해보세요.
+        </p>
 
 
         <div
-                id="myMeetingList"
-                class="my-meeting-list"
-                style="display: none;">
+                id="quickMeetingList"
+                class="quick-meeting-list">
+
         </div>
 
     </section>
@@ -525,6 +541,9 @@
     const meetingPageUrl =
         homeContainer.dataset.meetingPageUrl;
 
+    const quickMeetingsUrl =
+        homeContainer.dataset.quickMeetingsUrl;
+
 
 
     // ============================================================
@@ -617,6 +636,12 @@
     const myMeetingList =
         document.getElementById(
             "myMeetingList"
+        );
+
+
+    const quickMeetingList =
+        document.getElementById(
+            "quickMeetingList"
         );
 
 
@@ -1983,6 +2008,272 @@
     );
 
     // ============================================================
+    // 지금 바로 번개 목록
+    // ============================================================
+
+    async function loadQuickMeetings()
+    {
+
+        if (!quickMeetingList)
+        {
+            return;
+        }
+
+
+        try
+        {
+
+            const response =
+                await authenticatedFetch(
+                    quickMeetingsUrl,
+                    {
+                        method:
+                            "GET"
+                    }
+                );
+
+
+            if (!response.ok)
+            {
+                throw new Error(
+                    "번개 모임을 불러오지 못했습니다."
+                );
+            }
+
+
+            const meetings =
+                await response.json();
+
+
+            quickMeetingList.replaceChildren();
+
+
+            if (
+                !Array.isArray(meetings)
+                ||
+                meetings.length === 0
+            )
+            {
+
+                const empty =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                empty.className =
+                    "quick-meeting-empty";
+
+
+                empty.textContent =
+                    "현재 참여 가능한 번개 모임이 없습니다.";
+
+
+                quickMeetingList.appendChild(
+                    empty
+                );
+
+
+                return;
+            }
+
+
+            meetings.forEach(
+                meeting =>
+                {
+
+                    const card =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    card.className =
+                        "quick-meeting-card";
+
+
+                    const title =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    title.className =
+                        "quick-meeting-title";
+
+
+                    title.textContent =
+                        meeting.title
+                        ||
+                        "제목 없는 번개";
+
+
+                    const endAt =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    endAt.className =
+                        "quick-meeting-end";
+
+
+                    if (meeting.desiredEndAt)
+                    {
+
+                        const date =
+                            new Date(
+                                meeting.desiredEndAt
+                            );
+
+
+                        endAt.textContent =
+                            "희망 종료 "
+                            +
+                            date.toLocaleString(
+                                "ko-KR",
+                                {
+                                    month:
+                                        "numeric",
+
+                                    day:
+                                        "numeric",
+
+                                    hour:
+                                        "2-digit",
+
+                                    minute:
+                                        "2-digit"
+                                }
+                            );
+
+                    }
+                    else
+                    {
+
+                        endAt.textContent =
+                            "종료시간 미정";
+                    }
+
+
+                    const button =
+                        document.createElement(
+                            "button"
+                        );
+
+
+                    button.type =
+                        "button";
+
+
+                    button.className =
+                        "quick-meeting-join-button";
+
+
+                    button.textContent =
+                        "참여하기";
+
+
+                    button.addEventListener(
+                        "click",
+                        async function()
+                        {
+
+                            if (!meeting.inviteCode)
+                            {
+
+                                showHomeMessage(
+                                    "모임 정보를 확인할 수 없습니다.",
+                                    "error"
+                                );
+
+
+                                return;
+                            }
+
+
+                            try
+                            {
+
+                                button.disabled =
+                                    true;
+
+
+                                button.textContent =
+                                    "참가 중...";
+
+
+                                await joinMeetingByInviteCode(
+                                    meeting.inviteCode,
+                                    true
+                                );
+
+                            }
+                            catch (error)
+                            {
+
+                                console.error(
+                                    "[QUICK MEETING JOIN ERROR]",
+                                    error
+                                );
+
+
+                                showHomeMessage(
+                                    error.message
+                                    ||
+                                    "번개 모임 참가에 실패했습니다.",
+                                    "error"
+                                );
+
+
+                                button.disabled =
+                                    false;
+
+
+                                button.textContent =
+                                    "참여하기";
+                            }
+                        }
+                    );
+
+
+                    card.appendChild(
+                        title
+                    );
+
+
+                    card.appendChild(
+                        endAt
+                    );
+
+
+                    card.appendChild(
+                        button
+                    );
+
+
+                    quickMeetingList.appendChild(
+                        card
+                    );
+                }
+            );
+
+        }
+        catch (error)
+        {
+
+            console.error(
+                "[QUICK MEETINGS ERROR]",
+                error
+            );
+
+
+            quickMeetingList.textContent =
+                "번개 모임을 불러오지 못했습니다.";
+        }
+    }
+
+    // ============================================================
     // 내 모임 목록 조회
     // ============================================================
 
@@ -2760,6 +3051,8 @@
         {
             return;
         }
+
+        await loadQuickMeetings();
 
 
         /*
