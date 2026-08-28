@@ -2435,6 +2435,49 @@
                                     return;
                                 }
 
+                                // ================================
+                                // QUICK_VOTE 참가자 방 나가기
+                                // ================================
+
+                                if (
+                                    data.messageType === "EVENT"
+                                    &&
+                                    data.eventType === "PARTICIPANT_LEFT"
+                                )
+                                {
+                                    const leftMe =
+                                        Number(data.userId)
+                                        ===
+                                        Number(currentUser.userId);
+
+                                    /*
+                                     * 같은 계정의 다른 탭에서 나간 경우
+                                     */
+                                    if (leftMe)
+                                    {
+                                        if (stompClient)
+                                        {
+                                            stompClient.reconnectDelay = 0;
+                                            await stompClient.deactivate();
+                                        }
+
+                                        location.replace("/home");
+                                        return;
+                                    }
+
+                                    /*
+                                     * 다른 참가자가 나간 경우
+                                     * 방장 화면의 참가자 목록과 진행 상태 갱신
+                                     */
+                                    await loadParticipants();
+                                    await loadSubmittedStatus();
+                                    await loadCandidateCount();
+
+                                    renderChatAction();
+
+                                    return;
+                                }
+
 
                                 // ================================
                                 // 투표 갱신
