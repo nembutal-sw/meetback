@@ -139,7 +139,8 @@
 
                     <input
                             type="datetime-local"
-                            id="desiredEndAt">
+                            id="desiredEndAt"
+                            required>
 
                 </div>
 
@@ -513,6 +514,7 @@
             "homeMessage"
         );
 
+    let homeMessageTimer = null;
 
     const logoutButton =
         document.getElementById(
@@ -576,7 +578,6 @@
         document.getElementById(
             "desiredEndAt"
         );
-
 
     const createMeetingButton =
         document.getElementById(
@@ -790,7 +791,47 @@
         }
     }
 
+    // ============================================================
+    // 선택 가능한 최소 시간을 현재 이후로 설정
+    // ============================================================
 
+    function setDesiredEndAtMinimum()
+    {
+        /*
+         * 현재 분을 선택하면 저장 시점에는 이미 과거가 될 수 있으므로
+         * 다음 1분부터 선택할 수 있게 설정합니다.
+         */
+        const minimumDate = new Date();
+
+        minimumDate.setSeconds(0, 0);
+        minimumDate.setMinutes(
+            minimumDate.getMinutes() + 1
+        );
+
+        /*
+         * datetime-local은 UTC가 아니라 로컬 시간을 사용하므로
+         * 시간대 차이를 보정합니다.
+         */
+        const timezoneOffset =
+            minimumDate.getTimezoneOffset() * 60000;
+
+        const localMinimumDate =
+            new Date(
+                minimumDate.getTime() - timezoneOffset
+            );
+
+        desiredEndAtInput.min =
+            localMinimumDate
+                .toISOString()
+                .slice(0, 16);
+    }
+
+    setDesiredEndAtMinimum();
+
+    desiredEndAtInput.addEventListener(
+        "focus",
+        setDesiredEndAtMinimum
+    );
 
     // ============================================================
     // 초대 URL에서 inviteCode 보관
@@ -875,9 +916,18 @@
 
     function showHomeMessage(
         message,
-        type = "info"
+        type = "info",
+        duration = 3000
     )
     {
+        if(homeMessageTimer)
+        {
+            clearTimeout(
+                homeMessageTimer
+            );
+
+            homeMessageTimer = null;
+        }
 
         homeMessage.innerText =
             message;
@@ -897,7 +947,6 @@
         }
         else if (type === "error")
         {
-
             homeMessage.classList.add(
                 "message-error"
             );
@@ -905,11 +954,26 @@
         }
         else
         {
-
             homeMessage.classList.add(
                 "message-info"
             );
+        }
 
+        if(duration > 0)
+        {
+            homeMessageTimer = setTimeout(
+                () =>
+                {
+                    homeMessage.classList.remove(
+                        "show"
+                    );
+
+                    homeMessage.innerText = "";
+
+                    homeMessageTimer = null;
+                },
+                duration
+            );
         }
     }
 
@@ -1392,16 +1456,29 @@
 
         if (!response.ok)
         {
-
             const errorText =
                 await response.text();
 
+            let errorMessage = "모임 참가에 실패했습니다.";
 
-            throw new Error(
-                errorText
-                ||
-                "모임 참가에 실패했습니다."
-            );
+            if(errorText)
+            {
+                try
+                {
+                    const errorBody =
+                        JSON.parse(
+                            errorText
+                        );
+
+                    errorMessage = errorBody.message || errorMessage;
+
+                }catch(error)
+                {
+                    errorMessage = errorText;
+                }
+            }
+
+            throw new Error(errorMessage);
         }
 
 
@@ -1537,11 +1614,33 @@
 
             if (!desiredEndAt)
             {
-
                 showHomeMessage(
                     "희망 종료시간을 선택해주세요.",
                     "error"
                 );
+
+                return;
+            }
+
+            const selectedEndAt =
+                new Date(desiredEndAt);
+
+            if (
+                Number.isNaN(
+                    selectedEndAt.getTime()
+                )
+                ||
+                selectedEndAt.getTime()
+                <= Date.now()
+            )
+            {
+                showHomeMessage(
+                    "희망 종료시간은 현재 시각 이후로 선택해주세요.",
+                    "error"
+                );
+
+                setDesiredEndAtMinimum();
+                desiredEndAtInput.focus();
 
                 return;
             }
@@ -1590,22 +1689,6 @@
 
                         }
                     );
-
-
-                if (!response.ok)
-                {
-
-                    const errorText =
-                        await response.text();
-
-
-                    throw new Error(
-                        errorText
-                        ||
-                        "모임 생성에 실패했습니다."
-                    );
-                }
-
 
                 const data =
                     await response.json();
@@ -1783,7 +1866,8 @@
                     error.message
                     ||
                     "모임 참가에 실패했습니다.",
-                    "error"
+                    "info",
+                    0
                 );
 
             }

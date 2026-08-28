@@ -8,6 +8,8 @@ import com.meetback.dev.repository.ParticipantMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,6 +28,22 @@ public class MeetingService {
             Long hostUserId,
             MeetingCreateRequest request
     ){
+        LocalDateTime desiredEndAt =
+                request.getDesiredEndAt();
+
+        if (desiredEndAt == null)
+        {
+            throw new IllegalArgumentException(
+                    "희망 종료시간은 필수입니다."
+            );
+        }
+
+        if (!desiredEndAt.isAfter(LocalDateTime.now()))
+        {
+            throw new IllegalArgumentException(
+                    "희망 종료시간은 현재 시각 이후로 선택해주세요."
+            );
+        }
 
         String inviteCode = generateInviteCode();
 
@@ -44,6 +62,7 @@ public class MeetingService {
 
         participant.setMeetingId(meeting.getMeetingId());
         participant.setUserId(hostUserId);
+        participant.setParticipantStatus(ParticipantStatus.ACTIVE);
         participant.setInputStatus(InputStatus.DRAFT);
 
         participantMapper.insertParticipant(participant);
