@@ -49,7 +49,7 @@
 <!-- =========================================================
      강퇴 안내 모달
      ========================================================= -->
-<div
+    <div
         id="kickModal"
         class="kick-modal"
         role="dialog"
@@ -61,7 +61,8 @@
             모임에서 강퇴되었습니다.
         </div>
 
-</div>
+    </div>
+    </div>
 
 
 
@@ -108,7 +109,19 @@
     </div>
 
 
-    <div>
+    <div class="room-header-actions">
+
+        <button
+                type="button"
+                id="leaveMeetingButton"
+                class="leave-meeting-button"
+                onclick="requestLeaveMeeting()"
+                hidden>
+
+            방 나가기
+
+        </button>
+
 
         <button
                 type="button"
@@ -339,6 +352,8 @@
 
     let toastTimer =
         null;
+
+    let isLeavingMeeting = false;
 
 
 
@@ -712,6 +727,13 @@
         await loadMeeting();
 
         await loadCurrentParticipant();
+
+        /*
+         * currentMeeting과 currentParticipant를 모두 불러온 뒤
+         * QUICK_VOTE 일반 참가자에게만
+         * 방 나가기 버튼을 표시한다.
+         */
+        updateLeaveButtonVisibility();
 
         await loadParticipants();
 
@@ -1094,6 +1116,63 @@
             button.disabled =
                 false;
         }
+    }
+
+    function updateLeaveButtonVisibility()
+    {
+
+        const button =
+            document.getElementById(
+                "leaveMeetingButton"
+            );
+
+
+        if (!button)
+        {
+            return;
+        }
+
+
+        const isQuickVote =
+            currentMeeting
+            &&
+            currentMeeting.meetingType
+            === "QUICK_VOTE";
+
+
+        const isInputOpen =
+            currentMeeting
+            &&
+            currentMeeting.status
+            === "INPUT_OPEN";
+
+
+        const isHost =
+            currentMeeting
+            &&
+            currentUser
+            &&
+            Number(
+                currentMeeting.hostUserId
+            )
+            ===
+            Number(
+                currentUser.userId
+            );
+
+
+        const canLeave =
+            isQuickVote
+            &&
+            isInputOpen
+            &&
+            !isHost
+            &&
+            currentParticipant;
+
+
+        button.hidden =
+            !canLeave;
     }
 
 
@@ -1496,6 +1575,143 @@
                 );
             }
         );
+    }
+
+    async function requestLeaveMeeting()
+    {
+
+        if (
+            isLeavingMeeting
+            ||
+            !currentParticipant
+        )
+        {
+            return;
+        }
+
+
+        const confirmed =
+            confirm(
+                "이 모임에서 나가시겠습니까?\n"
+                + "입력한 장소와 후보 정보가 초기화됩니다."
+            );
+
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+
+        const button =
+            document.getElementById(
+                "leaveMeetingButton"
+            );
+
+
+        try
+        {
+
+            isLeavingMeeting =
+                true;
+
+
+            if (button)
+            {
+                button.disabled =
+                    true;
+
+                button.textContent =
+                    "나가는 중...";
+            }
+
+
+            const response =
+                await MeetBack.authenticatedFetch(
+                    "/participants/"
+                    + currentParticipant.participantId
+                    + "/leave",
+                    {
+                        method:
+                            "DELETE"
+                    }
+                );
+
+
+            if (!response.ok)
+            {
+
+                let errorMessage =
+                    "모임 나가기에 실패했습니다.";
+
+
+                try
+                {
+                    const errorBody =
+                        await response.json();
+
+
+                    if (errorBody.message)
+                    {
+                        errorMessage =
+                            errorBody.message;
+                    }
+                }
+                catch (error)
+                {
+                    /*
+                     * JSON 형식이 아니면 기본 메시지 사용
+                     */
+                }
+
+
+                throw new Error(
+                    errorMessage
+                );
+            }
+
+
+            /*
+             * 자동 재연결 방지
+             */
+            if (stompClient)
+            {
+                stompClient.reconnectDelay =
+                    0;
+
+
+                await stompClient.deactivate();
+            }
+
+
+            location.replace(
+                "/home"
+            );
+
+        }
+        catch (error)
+        {
+
+            showToast(
+                error.message
+                || "모임 나가기에 실패했습니다.",
+                "error"
+            );
+
+
+            isLeavingMeeting =
+                false;
+
+
+            if (button)
+            {
+                button.disabled =
+                    false;
+
+                button.textContent =
+                    "방 나가기";
+            }
+        }
     }
 
     async function requestKick(
@@ -2256,41 +2472,24 @@
 
                                     if (kickedMe)
                                     {
-                                        /*
-                                         * 강퇴 전용 중앙 모달을 먼저 표시합니다.
-                                         */
-                                        showKickModal();
-
-                                        /*
-                                         * 3초 뒤 홈으로 이동합니다.
-                                         * replace를 사용하므로 뒤로가기로
-                                         * 강퇴된 모임방에 돌아가는 것도 방지됩니다.
-                                         */
-                                        setTimeout(
-                                            () =>
-                                            {
-                                                location.replace(
-                                                    "/home"
-                                                );
-                                            },
-                                            3500
-                                        );
-
-                                        /*
-                                         * WebSocket 자동 재연결을 중단하고
-                                         * 현재 연결을 종료합니다.
-                                         */
-                                        if(stompClient)
+                                        if (stompClient)
                                         {
                                             stompClient.reconnectDelay = 0;
-
                                             await stompClient.deactivate();
                                         }
 
+                                        location.replace("/home");
                                         return;
                                     }
 
+                                    /*
+                                     * 다른 참가자가 나간 경우 화면 정보 갱신
+                                     */
                                     await loadParticipants();
+                                    await loadSubmittedStatus();
+                                    await loadCandidateCount();
+
+                                    renderChatAction();
 
                                     return;
                                 }

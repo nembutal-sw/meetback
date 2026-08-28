@@ -35,4 +35,8 @@ public interface MeetingParticipantMapper {
     int cancelKick(
             @Param("participantId") Long participantId
     );
+
+    int leaveBeforeVoting(
+            @Param("participantId") Long participantId
+    );
 }
