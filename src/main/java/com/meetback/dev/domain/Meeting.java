@@ -17,5 +17,4 @@ public class Meeting {
     private Long finalCandidateId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private MeetingType meetingType;
 }

@@ -426,6 +426,7 @@ public class MeetingService {
                 meeting.getTitle(),
                 meeting.getInviteCode(),
                 meeting.getDesiredEndAt(),
+                meeting.getMeetingType(),
                 meeting.getStatus(),
                 meeting.getFinalCandidateId()
         );

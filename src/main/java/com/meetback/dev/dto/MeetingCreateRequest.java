@@ -7,9 +7,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class MeetingCreateRequest {
-
     private String title;
     private MeetingType meetingType;
     private LocalDateTime desiredEndAt;
-    private MeetingType meetingType;
 }
