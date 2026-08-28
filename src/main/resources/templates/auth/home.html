@@ -1785,6 +1785,12 @@
                     "success"
                 );
 
+                /*
+                 * 생성된 모임이 내 모임 목록에
+                 * 즉시 나타나도록 다시 조회
+                 */
+                refreshMyMeetings();
+
             }
             catch (error)
             {
@@ -1955,6 +1961,29 @@
 
     let myMeetingsLoaded =
         false;
+
+    function refreshMyMeetings()
+    {
+        /*
+         * 기존 목록 캐시를 무효화한다.
+         */
+        myMeetingsLoaded =
+            false;
+
+        myMeetingList.innerHTML =
+            "";
+
+        myMeetingList.style.display =
+            "none";
+
+        loadMyMeetingsButton.innerText =
+            "내 모임 보기";
+
+        /*
+         * 기존 목록 조회 버튼 로직을 다시 실행한다.
+         */
+        loadMyMeetingsButton.click();
+    }
 
 
     loadMyMeetingsButton.addEventListener(

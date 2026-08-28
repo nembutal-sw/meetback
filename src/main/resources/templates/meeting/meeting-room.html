@@ -2387,31 +2387,58 @@
                         ).textContent =
                             "CONNECTED";
 
+                        const destination =
+                            "/topic/meetings/"
+                            + meetingId
+                            + "/chat";
+
+                        const receiptId =
+                            "meeting-subscribe-"
+                            + meetingId
+                            + "-"
+                            + currentUser.userId
+                            + "-"
+                            + Date.now();
 
                         console.log(
                             "[WS SUBSCRIBE]",
-                            "/topic/meetings/"
-                            + meetingId
-                            + "/chat"
+                            destination
                         );
 
+                        /*
+                         * 서버가 SUBSCRIBE 처리를 완료하면
+                         * PresenceService에도 현재 사용자가 ON으로 등록되어 있다.
+                         * 그 시점에 참가자 목록을 다시 불러온다.
+                         */
+                        stompClient.watchForReceipt(
+                            receiptId,
+                            async function()
+                            {
+                                console.log(
+                                    "[WS SUBSCRIBE RECEIPT]",
+                                    receiptId
+                                );
+
+                                await loadParticipants();
+                                await loadSubmittedStatus();
+                                await loadCandidateCount();
+
+                                renderChatAction();
+                            }
+                        );
 
                         stompClient.subscribe(
-                            "/topic/meetings/"
-                            + meetingId
-                            + "/chat",
+                            destination,
 
                             async message =>
                             {
-
                                 const data =
                                     JSON.parse(
                                         message.body
                                     );
 
-
                                 console.log(
-                                    "[WS RECEIVE]",
+                                    "[WS SUBSCRIBE]",
                                     data
                                 );
 
@@ -2584,6 +2611,9 @@
                                 addChat(
                                     data
                                 );
+                            },
+                            {
+                                receipt: receiptId
                             }
                         );
 
