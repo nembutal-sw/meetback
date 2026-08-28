@@ -13,6 +13,7 @@
         INSERT INTO meetings (
         host_user_id,
         title,
+        meeting_type,
         status,
         desired_end_at,
         calculation_version,
@@ -21,6 +22,7 @@
         VALUES (
         #{hostUserId},
         #{title},
+        #{meetingType},
         #{status},
         #{desiredEndAt},
         #{calculationVersion},
@@ -37,6 +39,7 @@
         meeting_id,
         host_user_id,
         title,
+        meeting_type,
         status,
         desired_end_at,
         calculation_version,
@@ -64,16 +67,17 @@
             resultType="com.meetback.dev.domain.Meeting">
 
         SELECT
-            meeting_id,
-            host_user_id,
-            title,
-            status,
-            desired_end_at,
-            calculation_version,
-            invite_code,
-            final_candidate_id,
-            created_at,
-            updated_at
+        meeting_id,
+        host_user_id,
+        title,
+        meeting_type,
+        status,
+        desired_end_at,
+        calculation_version,
+        invite_code,
+        final_candidate_id,
+        created_at,
+        updated_at
         FROM meetings
         WHERE meeting_id = #{meetingId}
 
