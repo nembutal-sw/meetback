@@ -1736,7 +1736,8 @@
                 + participantId
                 + "/kick",
                 {
-                    method: "DELETE"
+                    method:
+                        "DELETE"
                 }
             );
 
@@ -1751,7 +1752,8 @@
         }
 
         showToast(
-            nickname + "님을 강퇴했습니다.",
+            nickname
+            + "님을 강퇴했습니다.",
             "success"
         );
     }
@@ -2448,24 +2450,27 @@
                                 }
 
                                 // ================================
-// QUICK_VOTE 참가자 퇴장
-// ================================
+                                // 참가자 강퇴
+                                // ================================
 
                                 if (
-                                    data.messageType === "EVENT"
+                                    data.messageType
+                                    === "EVENT"
                                     &&
-                                    data.eventType === "PARTICIPANT_LEFT"
+                                    data.eventType
+                                    === "PARTICIPANT_KICKED"
                                 )
                                 {
-                                    const leftMe =
-                                        Number(data.userId)
+                                    const kickedMe =
+                                        Number(
+                                            data.userId
+                                        )
                                         ===
-                                        Number(currentUser.userId);
+                                        Number(
+                                            currentUser.userId
+                                        );
 
-                                    /*
-                                     * 같은 계정의 다른 탭에서 방 나가기를 실행한 경우
-                                     */
-                                    if (leftMe)
+                                    if (kickedMe)
                                     {
                                         if (stompClient)
                                         {
