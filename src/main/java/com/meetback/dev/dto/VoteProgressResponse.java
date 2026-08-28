@@ -5,6 +5,8 @@ public record VoteProgressResponse(
         int totalVotes,
         int candidateVotes,
         int abstainVotes,
-        boolean allVoted
+        boolean allVoted,
+        int requiredVotes,
+        boolean canConfirm
 ) {
 }
