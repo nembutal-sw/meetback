@@ -39,6 +39,11 @@ public interface UserMapper {
             @Param("userId") Long userId
     );
 
+    // 피드 작성자 닉네임 조회
+    String selectNicknameById(
+            @Param("userId") Long userId
+    );
+
     // 회원탈퇴 요청
     int withdrawUser(
             @Param("userId") Long userId

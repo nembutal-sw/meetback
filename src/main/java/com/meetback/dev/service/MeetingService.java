@@ -5,6 +5,7 @@ import com.meetback.dev.dto.*;
 import com.meetback.dev.repository.CandidateMapper;
 import com.meetback.dev.repository.MeetingMapper;
 import com.meetback.dev.repository.ParticipantMapper;
+import com.meetback.dev.repository.VoteMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +23,7 @@ public class MeetingService {
     private final CandidateMapper candidateMapper;
     private final ParticipantService participantService;
     private final CandidateService candidateService;
+    private final VoteMapper voteMapper;
 
     @Transactional
     public MeetingCreateResponse createMeeting(
@@ -47,10 +49,16 @@ public class MeetingService {
 
         String inviteCode = generateInviteCode();
 
+        MeetingType meetingType =
+                request.getMeetingType() == null
+                ? MeetingType.FRIEND
+                : request.getMeetingType();
+
         Meeting meeting = new Meeting();
 
         meeting.setHostUserId(hostUserId);
         meeting.setTitle(request.getTitle());
+        meeting.setMeetingType(meetingType);
         meeting.setStatus(MeetingStatus.INPUT_OPEN);
         meeting.setDesiredEndAt(request.getDesiredEndAt());
         meeting.setCalculationVersion(0);
@@ -94,6 +102,17 @@ public class MeetingService {
         {
             throw new IllegalArgumentException(
                     "유효하지 않은 초대코드입니다."
+            );
+        }
+
+        /*
+         * 투표가 시작된 이후에는
+         * 새로운 참가 또는 재입장을 허용하지 않는다.
+         */
+        if(meeting.getStatus() != MeetingStatus.INPUT_OPEN)
+        {
+            throw new IllegalStateException(
+                    "참가할 수 있는 상태의 모임이 아닙니다."
             );
         }
 
@@ -182,6 +201,34 @@ public class MeetingService {
             );
         }
 
+        // QUICK_VOTE는 전체 참가자의 과반수가 투표해야 확정 가능
+        if (meeting.getMeetingType() == MeetingType.QUICK_VOTE) {
+
+            int totalParticipants =
+                    participantMapper.countParticipant(
+                            meetingId
+                    );
+
+            int totalVotes =
+                    voteMapper.countVotesByMeetingId(
+                            meetingId
+                    );
+
+            int requiredVotes =
+                    (totalParticipants / 2) + 1;
+
+            if (
+                    totalParticipants == 0
+                            ||
+                            totalVotes < requiredVotes
+            ) {
+
+                throw new IllegalStateException(
+                        "과반수의 투표가 완료되어야 장소를 확정할 수 있습니다."
+                );
+            }
+        }
+
 
         // 후보 확인
         MeetingCandidate candidate =
@@ -194,6 +241,81 @@ public class MeetingService {
             throw new IllegalArgumentException(
                     "유효하지 않은 후보지입니다."
             );
+        }
+
+        // QUICK_VOTE는 단독 최다 득표 후보만 확정 가능
+        if (meeting.getMeetingType() == MeetingType.QUICK_VOTE) {
+
+            List<CandidateVoteResult> voteResults =
+                    voteMapper.selectVoteResults(
+                            meetingId
+                    );
+
+            if (
+                    voteResults == null
+                            ||
+                            voteResults.isEmpty()
+            ) {
+
+                throw new IllegalStateException(
+                        "투표 결과를 확인할 수 없습니다."
+                );
+            }
+
+
+            int maxVoteCount =
+                    voteResults.stream()
+                            .mapToInt(
+                                    CandidateVoteResult::getVoteCount
+                            )
+                            .max()
+                            .orElse(0);
+
+
+            // 후보에게 들어간 표가 하나도 없는 경우
+            if (maxVoteCount == 0) {
+
+                throw new IllegalStateException(
+                        "득표한 후보가 없어 장소를 확정할 수 없습니다."
+                );
+            }
+
+
+            List<CandidateVoteResult> topCandidates =
+                    voteResults.stream()
+                            .filter(
+                                    result ->
+                                            result.getVoteCount()
+                                                    == maxVoteCount
+                            )
+                            .toList();
+
+
+            // 최다 득표 후보가 여러 명이면 동점
+            if (topCandidates.size() != 1) {
+
+                throw new IllegalStateException(
+                        "최다 득표 후보가 동점이라 장소를 확정할 수 없습니다."
+                );
+            }
+
+
+            Long topCandidateId =
+                    topCandidates.get(0)
+                            .getCandidateId();
+
+
+            // 요청으로 들어온 후보가 실제 1등인지 확인
+            if (
+                    !topCandidateId.equals(
+                            request.getCandidateId()
+                    )
+            ) {
+
+                throw new IllegalStateException(
+                        "최다 득표한 장소만 확정할 수 있습니다."
+                );
+            }
         }
 
 
@@ -304,6 +426,7 @@ public class MeetingService {
                 meeting.getTitle(),
                 meeting.getInviteCode(),
                 meeting.getDesiredEndAt(),
+                meeting.getMeetingType(),
                 meeting.getStatus(),
                 meeting.getFinalCandidateId()
         );
@@ -350,6 +473,11 @@ public class MeetingService {
         return meetingMapper.selectMyMeetings(
                 userId
         );
+    }
+
+    @Transactional
+    public int deleteExpiredMeetings() {
+        return meetingMapper.deleteExpiredMeetings();
     }
 
 }

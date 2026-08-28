@@ -11,20 +11,22 @@
             keyProperty="meetingId">
 
         INSERT INTO meetings (
-        host_user_id,
-        title,
-        status,
-        desired_end_at,
-        calculation_version,
-        invite_code
+            host_user_id,
+            title,
+            meeting_type,
+            status,
+            desired_end_at,
+            calculation_version,
+            invite_code
         )
         VALUES (
-        #{hostUserId},
-        #{title},
-        #{status},
-        #{desiredEndAt},
-        #{calculationVersion},
-        #{inviteCode}
+            #{hostUserId},
+            #{title},
+            #{meetingType},
+            #{status},
+            #{desiredEndAt},
+            #{calculationVersion},
+            #{inviteCode}
         )
 
     </insert>
@@ -34,16 +36,17 @@
             resultType="com.meetback.dev.domain.Meeting">
 
         SELECT
-        meeting_id,
-        host_user_id,
-        title,
-        status,
-        desired_end_at,
-        calculation_version,
-        invite_code,
-        final_candidate_id,
-        created_at,
-        updated_at
+            meeting_id,
+            host_user_id,
+            title,
+            meeting_type,
+            status,
+            desired_end_at,
+            calculation_version,
+            invite_code,
+            final_candidate_id,
+            created_at,
+            updated_at
 
         FROM meetings
 
@@ -67,6 +70,7 @@
             meeting_id,
             host_user_id,
             title,
+            meeting_type,
             status,
             desired_end_at,
             calculation_version,
@@ -112,4 +116,9 @@
 
     </select>
 
+    <delete id="deleteExpiredMeetings">
+        DELETE FROM meetings
+        WHERE desired_end_at IS NOT NULL
+        AND desired_end_at &lt;= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+    </delete>
 </mapper>
