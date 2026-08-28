@@ -908,4 +908,139 @@ button:disabled {
     cursor: default;
 
     opacity: 0.5;
+
+    /* =========================================================
+   내 모임
+   ========================================================= */
+
+    .my-meeting-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+    }
+
+    .my-meeting-header h2 {
+        margin-bottom: 8px;
+    }
+
+    .my-meeting-list {
+        margin-top: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .my-meeting-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+
+        padding: 18px 20px;
+
+        background: #ffffff;
+        border: 1px solid #e8e7f1;
+        border-radius: 14px;
+    }
+
+    .my-meeting-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #191924;
+    }
+
+    .my-meeting-code-area {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .my-meeting-code-label {
+        font-size: 13px;
+        color: #777788;
+    }
+
+    .my-meeting-code-button {
+        padding: 8px 12px;
+
+        border: 1px solid #6557f6;
+        border-radius: 8px;
+
+        background: #f1efff;
+        color: #5143df;
+
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .my-meeting-code-button:hover {
+        background: #e7e3ff;
+    }
+
+    .my-meeting-empty {
+        padding: 20px;
+
+        text-align: center;
+
+        color: #777788;
+
+        background: #f8f8fd;
+        border: 1px solid #e8e7f1;
+        border-radius: 12px;
+    }
+}
+
+.message {
+    display:
+            none;
+
+    position:
+            fixed;
+
+    top:
+            24px;
+
+    left:
+            50%;
+
+    z-index:
+            9999;
+
+    min-width:
+            320px;
+
+    max-width:
+            calc(100vw - 32px);
+
+    margin:
+            0;
+
+    padding:
+            15px 18px;
+
+    border:
+            1px solid transparent;
+
+    border-radius:
+            13px;
+
+    font-size:
+            14px;
+
+    font-weight:
+            700;
+
+    line-height:
+            1.6;
+
+    text-align:
+            center;
+
+    box-shadow:
+            0 10px 30px
+            rgba(35, 32, 61, 0.15);
+
+    transform:
+            translateX(-50%);
 }

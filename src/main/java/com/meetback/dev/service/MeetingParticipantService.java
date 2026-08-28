@@ -1,13 +1,12 @@
 package com.meetback.dev.service;
 
-import com.meetback.dev.domain.Meeting;
-import com.meetback.dev.domain.MeetingParticipant;
-import com.meetback.dev.domain.MeetingStatus;
+import com.meetback.dev.domain.*;
 import com.meetback.dev.dto.ParticipantLocationRequestDTO;
 import com.meetback.dev.dto.ParticipantRoomResponse;
 import com.meetback.dev.repository.CandidateReturnResultMapper;
 import com.meetback.dev.repository.MeetingMapper;
 import com.meetback.dev.repository.MeetingParticipantMapper;
+import com.meetback.dev.repository.ParticipantKickHistoryMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -26,10 +25,11 @@ public class MeetingParticipantService {
     private final CandidateReturnResultMapper returnResultMapper;
     private final MeetingMapper meetingMapper;
     private final MeetingPresenceService meetingPresenceService;
-
+    private final ParticipantKickHistoryMapper participantKickHistoryMapper;
 
     public MeetingParticipant findById(
-            Long participantId
+            Long participantId,
+            Long hostUserId
     ) {
 
         return meetingParticipantMapper.findById(
@@ -464,6 +464,10 @@ public class MeetingParticipantService {
                 );
 
 
+        // =========================================================
+        // 1. 참가자 존재 확인
+        // =========================================================
+
         if (participant == null) {
 
             throw new IllegalArgumentException(
@@ -471,6 +475,31 @@ public class MeetingParticipantService {
             );
         }
 
+
+        // =========================================================
+        // 2. 정상 참가 상태 확인
+        //
+        // KICKED 참가자는 장소 입력, 수정, 제출 등의
+        // 모임 기능을 사용할 수 없다.
+        // =========================================================
+
+        if (
+                participant.getParticipantStatus()
+                        != ParticipantStatus.ACTIVE
+        ) {
+
+            throw new AccessDeniedException(
+                    "강퇴된 참가자는 모임 기능을 사용할 수 없습니다."
+            );
+        }
+
+
+        // =========================================================
+        // 3. 본인의 참가자 정보인지 확인
+        //
+        // 프론트에서 받은 participantId만 신뢰하지 않고
+        // JWT userId와 실제 participant.userId를 비교한다.
+        // =========================================================
 
         if (
                 !Objects.equals(
@@ -530,4 +559,271 @@ public class MeetingParticipantService {
 
         return participants;
     }
+
+    @Transactional
+    public ParticipantKickResult kickParticipant(
+            Long participantId,
+            Long hostUserId
+    ) {
+
+        // =========================================================
+        // 1. 강퇴 대상 참가자 조회
+        // =========================================================
+
+        MeetingParticipant participant =
+                meetingParticipantMapper.findById(
+                        participantId
+                );
+
+
+        if (participant == null) {
+
+            throw new IllegalArgumentException(
+                    "참가자를 찾을 수 없습니다."
+            );
+        }
+
+
+        // =========================================================
+        // 2. 이미 강퇴된 참가자인지 확인
+        // =========================================================
+
+        if (
+                participant.getParticipantStatus()
+                        != ParticipantStatus.ACTIVE
+        ) {
+
+            throw new IllegalStateException(
+                    "이미 강퇴된 참가자입니다."
+            );
+        }
+
+
+        // =========================================================
+        // 3. 대상 참가자가 속한 모임 조회
+        // =========================================================
+
+        Meeting meeting =
+                meetingMapper.findById(
+                        participant.getMeetingId()
+                );
+
+
+        if (meeting == null) {
+
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+
+        // =========================================================
+        // 4. 강퇴 요청자가 실제 방장인지 확인
+        //
+        // hostUserId는 Controller에서
+        // JWT user.userId()를 전달한 값이다.
+        // =========================================================
+
+        if (
+                !Objects.equals(
+                        meeting.getHostUserId(),
+                        hostUserId
+                )
+        ) {
+
+            throw new AccessDeniedException(
+                    "방장만 참가자를 강퇴할 수 있습니다."
+            );
+        }
+
+
+        // =========================================================
+        // 5. 방장 자기 자신 강퇴 방지
+        // =========================================================
+
+        if (
+                Objects.equals(
+                        participant.getUserId(),
+                        hostUserId
+                )
+        ) {
+
+            throw new IllegalArgumentException(
+                    "방장은 자신을 강퇴할 수 없습니다."
+            );
+        }
+
+
+        // =========================================================
+        // 6. 참가자 현재 상태 변경
+        //
+        // ACTIVE -> KICKED
+        // =========================================================
+
+        int updatedRows =
+                meetingParticipantMapper.kickParticipant(
+                        participantId
+                );
+
+
+        if (updatedRows != 1) {
+
+            throw new IllegalStateException(
+                    "참가자 강퇴에 실패했습니다."
+            );
+        }
+
+
+        // =========================================================
+        // 7. 강퇴 이력 객체 생성
+        //
+        // 저장하는 정보:
+        // meetingId
+        // participantId
+        // 강퇴당한 userId
+        //
+        // 강퇴한 방장과 강퇴 시각은 저장하지 않는다.
+        // =========================================================
+
+        ParticipantKickHistory history =
+                new ParticipantKickHistory();
+
+
+        history.setMeetingId(
+                participant.getMeetingId()
+        );
+
+
+        history.setParticipantId(
+                participant.getParticipantId()
+        );
+
+
+        history.setKickedUserId(
+                participant.getUserId()
+        );
+
+        history.setKickedByUserId(
+                hostUserId
+        );
+
+
+        // =========================================================
+        // 8. 강퇴 이력 INSERT
+        // =========================================================
+
+        int insertedRows =
+                participantKickHistoryMapper.insertKickHistory(
+                        history
+                );
+
+
+        if (insertedRows != 1) {
+
+            throw new IllegalStateException(
+                    "강퇴 이력 저장에 실패했습니다."
+            );
+        }
+
+
+        // =========================================================
+        // 9. Controller에 WebSocket 방송 정보 반환
+        // =========================================================
+
+        return new ParticipantKickResult(
+                participant.getMeetingId(),
+                participant.getParticipantId(),
+                participant.getUserId(),
+                participant.getNickname()
+        );
+    }
+
+    @Transactional
+    public ParticipantKickResult cancelKick(
+            Long participantId,
+            Long hostUserId
+    )
+    {
+        MeetingParticipant participant =
+                meetingParticipantMapper.findById(
+                        participantId
+                );
+
+        if(participant == null)
+        {
+            throw new IllegalArgumentException(
+                    "참가자를 찾을 수 없습니다."
+            );
+        }
+
+        if(participant.getParticipantStatus() != ParticipantStatus.KICKED)
+        {
+            throw new IllegalStateException(
+                    "강퇴된 참가자가 아닙니다."
+            );
+        }
+
+        Meeting meeting =
+                meetingMapper.findById(
+                        participant.getMeetingId()
+                );
+
+        if(meeting == null)
+        {
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+        /*
+         * 현재 모임의 방장만 취소할 수 있게 합니다.
+         *
+         * '강퇴했던 사람만 취소 가능'으로 만들고 싶다면
+         * 이력의 kickedByUserId를 별도로 조회해 비교해야 합니다.
+         */
+
+        if(
+                !Objects.equals(
+                        meeting.getHostUserId(),
+                        hostUserId
+                )
+        ){
+            throw new AccessDeniedException(
+                    "방장만 강퇴를 취소할 수 있습니다."
+            );
+        }
+
+        int updatedRows =
+                meetingParticipantMapper.cancelKick(
+                        participantId
+                );
+
+        if(updatedRows != 1)
+        {
+            throw new IllegalStateException(
+                    "강퇴 취소에 실패했습니다."
+            );
+        }
+
+        int historyUpdatedRows =
+                participantKickHistoryMapper.cancelLatestKickHistory(
+                        participantId,
+                        hostUserId
+                );
+
+        if(historyUpdatedRows != 1)
+        {
+            throw new IllegalStateException(
+                    "강퇴 취소 이력 저장에 실패했습니다."
+            );
+        }
+
+        return new ParticipantKickResult(
+                participant.getMeetingId(),
+                participant.getParticipantId(),
+                participant.getUserId(),
+                participant.getNickname()
+        );
+    }
+
 }

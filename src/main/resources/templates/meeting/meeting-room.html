@@ -11,8 +11,12 @@
             src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js">
     </script>
 
+    <script
+            src="/js/auth-session-guard.js"
+            defer>
+    </script>
+
     <script src="/js/meeting-common.js"></script>
-    <script src="/js/auth-session-guard.js" defer></script>
 
     <link
             rel="stylesheet"
@@ -1342,6 +1346,15 @@
                     participant.nickname
                     || "참가자";
 
+                const currentUserIsHost =
+                    Number(currentMeeting.hostUserId)
+                    === Number(currentUser.userId);
+
+                const canKick =
+                    currentUserIsHost
+                    && !me
+                    && !host;
+
 
                 card.innerHTML =
                     `
@@ -1396,14 +1409,87 @@
 
                         </span>
 
+                        ${canKick
+                            ? `
+                                <button
+                                    type="button"
+                                    class="participant-kick-button">
+                                    강퇴
+                                </button>
+                            `
+                            : ""
+                        }
+
                     </div>
                     `;
 
+                    const kickButton =
+                        card.querySelector(
+                            ".participant-kick-button"
+                        );
+
+                    if (kickButton)
+                    {
+                        kickButton.addEventListener(
+                            "click",
+                            () =>
+                            {
+                                requestKick(
+                                    participant.participantId,
+                                    nickname
+                                );
+                            }
+                        );
+                    }
 
                 area.appendChild(
                     card
                 );
             }
+        );
+    }
+
+    async function requestKick(
+        participantId,
+        nickname
+    )
+    {
+        const confirmed =
+            confirm(
+                nickname
+                + "님을 강퇴하시겠습니까?"
+            );
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        const response =
+            await MeetBack.authenticatedFetch(
+                "/participants/"
+                + participantId
+                + "/kick",
+                {
+                    method:
+                        "DELETE"
+                }
+            );
+
+        if (!response.ok)
+        {
+            showToast(
+                "참가자 강퇴에 실패했습니다.",
+                "error"
+            );
+
+            return;
+        }
+
+        showToast(
+            nickname
+            + "님을 강퇴했습니다.",
+            "success"
         );
     }
 
@@ -2094,6 +2180,79 @@
                                     === "VOTE_UPDATED"
                                 )
                                 {
+
+                                    return;
+                                }
+
+                                // ================================
+                                // 참가자 강퇴
+                                // ================================
+
+                                if (
+                                    data.messageType
+                                    === "EVENT"
+                                    &&
+                                    data.eventType
+                                    === "PARTICIPANT_KICKED"
+                                )
+                                {
+                                    const kickedMe =
+                                        Number(
+                                            data.userId
+                                        )
+                                        ===
+                                        Number(
+                                            currentUser.userId
+                                        );
+
+                                    if (kickedMe)
+                                    {
+                                        if (stompClient)
+                                        {
+                                            stompClient.reconnectDelay =
+                                                0;
+
+                                            await stompClient.deactivate();
+                                        }
+
+                                        showToast(
+                                            "모임에서 강퇴되었습니다.",
+                                            "error",
+                                            1800
+                                        );
+
+                                        setTimeout(
+                                            () =>
+                                            {
+                                                location.replace(
+                                                    "/home"
+                                                );
+                                            },
+                                            1800
+                                        );
+
+                                        return;
+                                    }
+
+                                    await loadParticipants();
+
+                                    return;
+                                }
+
+
+                                // ================================
+                                // 강퇴 취소
+                                // ================================
+
+                                if (
+                                    data.messageType
+                                    === "EVENT"
+                                    &&
+                                    data.eventType
+                                    === "PARTICIPANT_KICK_CANCELED"
+                                )
+                                {
+                                    await loadParticipants();
 
                                     return;
                                 }

@@ -13,8 +13,9 @@ CREATE TABLE users (
                        nickname VARCHAR(255),
                        password_hash VARCHAR(255),
     -- JWT 로그아웃 시 기존 Access / Refresh Token 무효화용
-                       token_version BIGINT NOT NULL DEFAULT 0,
-                       role VARCHAR(255) DEFAULT "USER",
+                       token_version INT NOT NULL DEFAULT 0,
+                       role VARCHAR(255) DEFAULT 'USER',
+                       status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
                        deleted_at DATETIME,
                        created_at DATETIME,
                        updated_at DATETIME,
@@ -22,7 +23,9 @@ CREATE TABLE users (
                        CONSTRAINT uq_users_email
                            UNIQUE (email),
                        CONSTRAINT uq_users_nickname
-                           UNIQUE (nickname)
+                           UNIQUE (nickname),
+                       CONSTRAINT chk_users_status
+                           CHECK (status IN ('ACTIVE', 'SUSPENDED'))
 );
 
 
@@ -252,6 +255,7 @@ CREATE TABLE meeting_participants (
                                       meeting_id BIGINT NOT NULL,
                                       user_id BIGINT NOT NULL,
 
+                                      participant_status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
                                       input_status VARCHAR(20) NOT NULL DEFAULT 'DRAFT',
 
                                       departure_name VARCHAR(100),
@@ -324,7 +328,6 @@ CREATE TABLE meeting_candidates (
 -- ============================================================
 -- 13. CANDIDATE_RETURN_RESULTS
 -- ============================================================
-
 CREATE TABLE candidate_return_results (
                                           result_id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
@@ -336,6 +339,9 @@ CREATE TABLE candidate_return_results (
 
                                           return_minutes INT,
                                           transfer_count INT,
+
+                                          route_map_obj TEXT NULL,
+                                          route_map_data LONGTEXT NULL,
 
                                           last_train_departure_at DATETIME,
                                           last_train_arrival_at DATETIME,
@@ -540,6 +546,48 @@ ALTER TABLE meetings
             REFERENCES meeting_candidates(candidate_id)
             ON DELETE SET NULL;
 
---경로 안내용 컬럼 추가 - 이래원
-ALTER TABLE candidate_return_results
-    ADD COLUMN route_map_obj TEXT NULL;
+
+-- ============================================================
+-- 18. MEETING_PARTICIPANT_KICK_HISTORY
+-- ============================================================
+
+CREATE TABLE meeting_participant_kick_history (
+    kick_history_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    meeting_id BIGINT NOT NULL,
+    participant_id BIGINT NOT NULL,
+    kicked_user_id BIGINT NOT NULL,
+    kicked_by_user_id BIGINT NOT NULL,
+    kicked_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    canceled_by_user_id BIGINT,
+
+    canceled_at DATETIME,
+    INDEX idx_kick_history_participant (
+    participant_id,
+    canceled_at
+    ),
+
+    CONSTRAINT fk_kick_history_meeting
+      FOREIGN KEY (meeting_id)
+          REFERENCES meetings(meeting_id)
+          ON DELETE CASCADE,
+
+    CONSTRAINT fk_kick_history_participant
+      FOREIGN KEY (participant_id)
+          REFERENCES meeting_participants(participant_id)
+          ON DELETE CASCADE,
+
+    CONSTRAINT fk_kick_history_kicked_user
+      FOREIGN KEY (kicked_user_id)
+          REFERENCES users(user_id)
+          ON DELETE RESTRICT,
+
+    CONSTRAINT fk_kick_history_kicked_by_user
+      FOREIGN KEY (kicked_by_user_id)
+          REFERENCES users(user_id)
+          ON DELETE RESTRICT,
+
+    CONSTRAINT fk_kick_history_canceled_by_user
+      FOREIGN KEY (canceled_by_user_id)
+          REFERENCES users(user_id)
+          ON DELETE RESTRICT
+);

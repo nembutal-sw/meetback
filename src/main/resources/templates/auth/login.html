@@ -3,29 +3,45 @@
       xmlns:th="http://www.thymeleaf.org">
 
 <head>
+
     <meta charset="UTF-8">
+
     <title>MeetBack 로그인</title>
+
 
     <script
             src="https://accounts.google.com/gsi/client"
             async
-            defer
-    ></script>
+            defer>
+    </script>
 
-    <link rel="stylesheet" th:href="@{/css/login_test.css}">
+    <script
+            src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js">
+    </script>
+
+    <link rel="stylesheet"
+          th:href="@{/css/login_test.css}">
+
 </head>
 
 <body>
 
+
 <div class="login-container">
 
-    <h1>MeetBack 로그인</h1>
+    <h1>
+        MeetBack 로그인
+    </h1>
 
 
-    <!-- 일반 로그인 -->
+    <!-- ============================================================
+         일반 로그인
+         ============================================================ -->
+
     <form id="loginForm">
 
         <div>
+
             <label for="email">
                 이메일
             </label>
@@ -35,8 +51,8 @@
                     id="email"
                     placeholder="이메일을 입력하세요"
                     autocomplete="email"
-                    required
-            >
+                    required>
+
         </div>
 
 
@@ -44,6 +60,7 @@
 
 
         <div>
+
             <label for="password">
                 비밀번호
             </label>
@@ -53,15 +70,16 @@
                     id="password"
                     placeholder="비밀번호를 입력하세요"
                     autocomplete="current-password"
-                    required
-            >
+                    required>
+
         </div>
 
 
         <br>
 
 
-        <div id="loginMessage"></div>
+        <div id="loginMessage">
+        </div>
 
 
         <br>
@@ -77,7 +95,10 @@
     <br>
 
 
-    <!-- 회원가입 / 아이디 찾기 / 비밀번호 찾기 -->
+    <!-- ============================================================
+         회원가입 / 아이디 찾기 / 비밀번호 찾기
+         ============================================================ -->
+
     <div>
 
         <a th:href="@{/signup}">
@@ -102,7 +123,10 @@
     <br>
 
 
-    <!-- 소셜 로그인 -->
+    <!-- ============================================================
+         소셜 로그인
+         ============================================================ -->
+
     <div class="social-login-container">
 
         <div>
@@ -114,9 +138,12 @@
 
 
         <!-- 카카오 로그인 -->
+
         <div>
 
-            <a th:href="@{/oauth/kakao/login}">
+            <a
+                    id="kakaoLoginLink"
+                    th:href="@{/oauth/kakao/login}">
                 카카오 로그인
             </a>
 
@@ -126,19 +153,20 @@
         <br>
 
 
-        <!-- 구글 로그인 -->
+        <!-- Google 로그인 -->
+
         <div th:if="${googleLoginEnabled}">
 
             <div
                     id="g_id_onload"
                     th:attr="data-client_id=${googleClientId}"
                     data-callback="handleGoogleCredentialResponse"
-                    data-auto_prompt="false"
-            >
+                    data-auto_prompt="false">
             </div>
 
 
             <div>
+
                 <span>
                     Google 로그인
                 </span>
@@ -148,8 +176,9 @@
                         data-type="icon"
                         data-shape="rectangular"
                         data-theme="outline"
-                        data-size="large"
-                ></div>
+                        data-size="large">
+                </div>
+
             </div>
 
         </div>
@@ -163,7 +192,8 @@
         <br>
 
 
-        <div id="socialMessage"></div>
+        <div id="socialMessage">
+        </div>
 
     </div>
 
@@ -171,11 +201,13 @@
     <br>
 
 
-    <!-- 신규 Google 회원 가입 -->
+    <!-- ============================================================
+         신규 Google 회원 가입
+         ============================================================ -->
+
     <div
             id="socialSignupContainer"
-            style="display: none;"
-    >
+            style="display: none;">
 
         <h3>
             닉네임 설정
@@ -195,14 +227,14 @@
             <input
                     type="text"
                     id="socialNickname"
-                    placeholder="닉네임을 입력하세요"
-            >
+                    placeholder="닉네임을 입력하세요">
 
             <button
                     type="button"
-                    id="nicknameCheckButton"
-            >
+                    id="nicknameCheckButton">
+
                 중복 확인
+
             </button>
 
         </div>
@@ -211,7 +243,8 @@
         <br>
 
 
-        <div id="nicknameCheckMessage"></div>
+        <div id="nicknameCheckMessage">
+        </div>
 
 
         <br>
@@ -221,9 +254,13 @@
             약관 동의
         </h3>
 
-        <div id="socialTermsContainer"></div>
 
-        <div id="socialTermsMessage"></div>
+        <div id="socialTermsContainer">
+        </div>
+
+
+        <div id="socialTermsMessage">
+        </div>
 
 
         <br>
@@ -232,9 +269,10 @@
         <button
                 type="button"
                 id="socialSignupButton"
-                disabled
-        >
+                disabled>
+
             가입 완료
+
         </button>
 
 
@@ -242,7 +280,8 @@
         <br>
 
 
-        <div id="socialSignupMessage"></div>
+        <div id="socialSignupMessage">
+        </div>
 
     </div>
 
@@ -250,6 +289,10 @@
 
 
 <script>
+
+    // ============================================================
+    // DOM
+    // ============================================================
 
     const loginForm =
         document.getElementById(
@@ -325,7 +368,115 @@
         null;
 
 
-    // 이미 로그인 정보가 있다면 Home에서 검증
+
+    // ============================================================
+    // ★ 로그인 성공 후 이동할 주소
+    //
+    // 일반 로그인:
+    //
+    // /login
+    //      ↓
+    // /home
+    //
+    //
+    // 초대 링크에서 온 경우:
+    //
+    // /login?redirect=%2Fhome%3FinviteCode%3DABC123
+    //      ↓
+    // /home?inviteCode=ABC123
+    //
+    // 이후 home.html에서 자동 참가 후
+    // /meeting?meetingId=...
+    // ============================================================
+
+    function getLoginRedirectUrl()
+    {
+
+        const params =
+            new URLSearchParams(
+                window.location.search
+            );
+
+
+        const redirect =
+            params.get(
+                "redirect"
+            );
+
+
+        /*
+         * redirect가 없다면
+         * 기존처럼 Home으로 이동
+         */
+        if (!redirect)
+        {
+            return "/home";
+        }
+
+
+        /*
+         * 외부 사이트로 강제 이동시키는
+         * Open Redirect 방지
+         *
+         * MeetBack 내부 상대경로만 허용
+         */
+        if (
+            !redirect.startsWith("/")
+            ||
+            redirect.startsWith("//")
+        )
+        {
+            return "/home";
+        }
+
+
+        return redirect;
+    }
+
+    // ============================================================
+    // 카카오 로그인에도 현재 redirect 전달
+    // ============================================================
+
+    const kakaoLoginLink =
+        document.getElementById(
+            "kakaoLoginLink"
+        );
+
+
+    function initializeKakaoLoginLink()
+    {
+
+        const redirect =
+            getLoginRedirectUrl();
+
+
+        if (
+            redirect
+            &&
+            redirect !== "/home"
+        )
+        {
+
+            kakaoLoginLink.href =
+                "/oauth/kakao/login"
+                +
+                "?redirect="
+                +
+                encodeURIComponent(
+                    redirect
+                );
+        }
+    }
+
+
+    initializeKakaoLoginLink();
+
+
+
+    // ============================================================
+    // 이미 로그인된 사용자 처리
+    // ============================================================
+
     function redirectAlreadyLoggedIn()
     {
 
@@ -341,24 +492,50 @@
             );
 
 
+        const activeLoginSessionId =
+            localStorage.getItem(
+                "activeLoginSessionId"
+            );
+
+
+        const tabLoginSessionId =
+            sessionStorage.getItem(
+                "tabLoginSessionId"
+            );
+
+
         if (
-            accessToken
-            ||
-            refreshToken
+            (
+                accessToken
+                ||
+                refreshToken
+            )
+            &&
+            activeLoginSessionId
+            &&
+            tabLoginSessionId
+            &&
+            activeLoginSessionId
+            === tabLoginSessionId
         )
         {
 
             window.location.replace(
-                "/home"
+                getLoginRedirectUrl()
             );
         }
     }
 
 
-    redirectAlreadyLoggedIn();
+    // 현재는 기존 코드대로 비활성화
+    // redirectAlreadyLoggedIn();
 
 
+
+    // ============================================================
     // 닉네임 정책
+    // ============================================================
+
     const nicknamePattern =
         /^[가-힣A-Za-z0-9_]{2,12}$/;
 
@@ -406,7 +583,11 @@
         ];
 
 
+
+    // ============================================================
     // 닉네임 필터용 정규화
+    // ============================================================
+
     function normalizeNicknameForFilter(
         nickname
     )
@@ -421,7 +602,11 @@
     }
 
 
+
+    // ============================================================
     // 닉네임 사용 가능 형식 검사
+    // ============================================================
+
     function isValidNickname(
         nickname
     )
@@ -449,7 +634,10 @@
             );
 
 
-        for (const blockedWord of blockedNicknameWords)
+        for (
+            const blockedWord
+            of blockedNicknameWords
+            )
         {
 
             const normalizedBlockedWord =
@@ -469,7 +657,10 @@
         }
 
 
-        for (const reservedNickname of reservedNicknames)
+        for (
+            const reservedNickname
+            of reservedNicknames
+            )
         {
 
             const normalizedReservedNickname =
@@ -479,8 +670,8 @@
 
 
             if (
-                normalizedNickname ===
-                normalizedReservedNickname
+                normalizedNickname
+                === normalizedReservedNickname
             )
             {
                 return false;
@@ -492,7 +683,11 @@
     }
 
 
+
+    // ============================================================
     // 로그인 정보 저장
+    // ============================================================
+
     function saveLoginData(
         data
     )
@@ -520,10 +715,42 @@
             "role",
             data.role
         );
+
+
+        if (data.nickname)
+        {
+
+            localStorage.setItem(
+                "nickname",
+                data.nickname
+            );
+        }
+
+
+        /*
+         * 필요 시 로그인 세션 분리 기능 사용
+         *
+         * const loginSessionId =
+         *     crypto.randomUUID();
+         *
+         * localStorage.setItem(
+         *     "activeLoginSessionId",
+         *     loginSessionId
+         * );
+         *
+         * sessionStorage.setItem(
+         *     "tabLoginSessionId",
+         *     loginSessionId
+         * );
+         */
     }
 
 
+
+    // ============================================================
     // 소셜 회원가입용 약관 조회
+    // ============================================================
+
     async function loadSocialTerms()
     {
 
@@ -546,7 +773,8 @@
                 await fetch(
                     "/terms",
                     {
-                        method: "GET"
+                        method:
+                            "GET"
                     }
                 );
 
@@ -630,14 +858,21 @@
 
 
                 title.textContent =
-                    (term.required
-                        ? "[필수] "
-                        : "[선택] ")
-                    + term.termName
-                    + " "
-                    + "(v"
-                    + term.version
-                    + ")";
+                    (
+                        term.required
+                            ? "[필수] "
+                            : "[선택] "
+                    )
+                    +
+                    term.termName
+                    +
+                    " "
+                    +
+                    "(v"
+                    +
+                    term.version
+                    +
+                    ")";
 
 
                 label.appendChild(
@@ -735,7 +970,11 @@
     }
 
 
+
+    // ============================================================
     // 동의한 약관 ID 조회
+    // ============================================================
+
     function getAgreedTermIds()
     {
 
@@ -756,7 +995,11 @@
     }
 
 
+
+    // ============================================================
     // 필수 약관 동의 여부
+    // ============================================================
+
     function areRequiredTermsAgreed()
     {
 
@@ -788,7 +1031,11 @@
     }
 
 
-    // 일반 로그인
+
+    // ============================================================
+    // ★ 일반 로그인
+    // ============================================================
+
     loginForm.addEventListener(
         "submit",
         async function(event)
@@ -841,7 +1088,8 @@
                         "/auth/login",
                         {
 
-                            method: "POST",
+                            method:
+                                "POST",
 
                             headers: {
 
@@ -850,17 +1098,18 @@
 
                             },
 
-                            body: JSON.stringify(
-                                {
+                            body:
+                                JSON.stringify(
+                                    {
 
-                                    email:
-                                    email,
+                                        email:
+                                        email,
 
-                                    password:
-                                    password
+                                        password:
+                                        password
 
-                                }
-                            )
+                                    }
+                                )
 
                         }
                     );
@@ -889,8 +1138,16 @@
                     "로그인에 성공했습니다.";
 
 
-                window.location.href =
-                    "/home";
+                /*
+                 * 일반 로그인
+                 * → /home
+                 *
+                 * 초대 링크 로그인
+                 * → /home?inviteCode=...
+                 */
+                window.location.replace(
+                    getLoginRedirectUrl()
+                );
 
             }
             catch (error)
@@ -910,7 +1167,11 @@
     );
 
 
-    // Google 로그인
+
+    // ============================================================
+    // ★ Google 로그인
+    // ============================================================
+
     window.handleGoogleCredentialResponse =
         async function(
             googleResponse
@@ -943,7 +1204,8 @@
                         "/auth/google",
                         {
 
-                            method: "POST",
+                            method:
+                                "POST",
 
                             headers: {
 
@@ -952,14 +1214,15 @@
 
                             },
 
-                            body: JSON.stringify(
-                                {
+                            body:
+                                JSON.stringify(
+                                    {
 
-                                    credential:
-                                    googleResponse.credential
+                                        credential:
+                                        googleResponse.credential
 
-                                }
-                            )
+                                    }
+                                )
 
                         }
                     );
@@ -981,10 +1244,13 @@
                 }
 
 
+                // ====================================================
                 // 신규 Google 회원
+                // ====================================================
+
                 if (
-                    data.status ===
-                    "NICKNAME_REQUIRED"
+                    data.status
+                    === "NICKNAME_REQUIRED"
                 )
                 {
 
@@ -1048,10 +1314,13 @@
                 }
 
 
+                // ====================================================
                 // 기존 Google 회원
+                // ====================================================
+
                 if (
-                    data.status !==
-                    "LOGIN_SUCCESS"
+                    data.status
+                    !== "LOGIN_SUCCESS"
                 )
                 {
 
@@ -1071,8 +1340,12 @@
                     "Google 로그인에 성공했습니다.";
 
 
-                window.location.href =
-                    "/home";
+                /*
+                 * 초대 링크 redirect 유지
+                 */
+                window.location.replace(
+                    getLoginRedirectUrl()
+                );
 
             }
             catch (error)
@@ -1091,7 +1364,11 @@
         };
 
 
+
+    // ============================================================
     // 닉네임 변경 시 중복 확인 상태 초기화
+    // ============================================================
+
     socialNickname.addEventListener(
         "input",
         function()
@@ -1111,7 +1388,11 @@
     );
 
 
+
+    // ============================================================
     // 닉네임 중복 검사
+    // ============================================================
+
     nicknameCheckButton.addEventListener(
         "click",
         async function()
@@ -1163,12 +1444,14 @@
                 const response =
                     await fetch(
                         "/auth/nickname/check?nickname="
-                        + encodeURIComponent(
+                        +
+                        encodeURIComponent(
                             nickname
                         ),
                         {
 
-                            method: "GET"
+                            method:
+                                "GET"
 
                         }
                     );
@@ -1232,7 +1515,11 @@
     );
 
 
-    // Google 신규 회원가입 완료
+
+    // ============================================================
+    // ★ Google 신규 회원가입 완료
+    // ============================================================
+
     socialSignupButton.addEventListener(
         "click",
         async function()
@@ -1285,8 +1572,8 @@
 
 
             if (
-                checkedNickname !==
-                nickname
+                checkedNickname
+                !== nickname
             )
             {
 
@@ -1321,7 +1608,8 @@
                         "/auth/social/complete",
                         {
 
-                            method: "POST",
+                            method:
+                                "POST",
 
                             headers: {
 
@@ -1330,20 +1618,21 @@
 
                             },
 
-                            body: JSON.stringify(
-                                {
+                            body:
+                                JSON.stringify(
+                                    {
 
-                                    signupToken:
-                                    socialSignupToken,
+                                        signupToken:
+                                        socialSignupToken,
 
-                                    nickname:
-                                    nickname,
+                                        nickname:
+                                        nickname,
 
-                                    agreedTermIds:
-                                    agreedTermIds
+                                        agreedTermIds:
+                                        agreedTermIds
 
-                                }
-                            )
+                                    }
+                                )
 
                         }
                     );
@@ -1366,8 +1655,8 @@
 
 
                 if (
-                    data.status !==
-                    "LOGIN_SUCCESS"
+                    data.status
+                    !== "LOGIN_SUCCESS"
                 )
                 {
 
@@ -1395,8 +1684,13 @@
                     "회원가입 및 로그인에 성공했습니다.";
 
 
-                window.location.href =
-                    "/home";
+                /*
+                 * 신규 Google 회원도
+                 * 초대 링크 redirect 유지
+                 */
+                window.location.replace(
+                    getLoginRedirectUrl()
+                );
 
             }
             catch (error)
@@ -1416,6 +1710,7 @@
     );
 
 </script>
+
 
 </body>
 

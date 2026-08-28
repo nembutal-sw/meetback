@@ -1,10 +1,8 @@
 package com.meetback.dev.controller;
 
 import com.meetback.dev.domain.MeetingParticipant;
-import com.meetback.dev.dto.ChatMessageResponse;
-import com.meetback.dev.dto.CurrentParticipantResponse;
-import com.meetback.dev.dto.ParticipantLocationRequestDTO;
-import com.meetback.dev.dto.ParticipantRoomResponse;
+import com.meetback.dev.domain.ParticipantKickResult;
+import com.meetback.dev.dto.*;
 import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.ChatService;
 import com.meetback.dev.service.MeetingParticipantService;
@@ -339,4 +337,110 @@ public class MeetingParticipantController {
                 user.userId()
         );
     }
+
+    @DeleteMapping("/{participantId}/kick")
+    public ResponseEntity<Void> kickParticipant(
+            @PathVariable Long participantId,
+            @AuthenticationPrincipal AuthenticatedUser user
+    )
+    {
+        ParticipantKickResult kicked =
+                meetingParticipantService.kickParticipant(
+                        participantId,
+                        user.userId()
+                );
+
+        String nickname =
+                kicked.nickname() == null
+                    ? "참가자"
+                    : kicked.nickname();
+
+        String destination =
+                "/topic/meetings/"
+                    + kicked.meetingId()
+                    + "/chat";
+
+        /*
+         * 1. DB에 저장되는 채팅 SYSTEM 메시지
+         */
+        ChatMessageResponse systemMessage =
+                chatService.saveSystemMessage(
+                        kicked.meetingId(),
+                        user.userId(),
+                        "PARTICIPANT_KICKED",
+                        nickname + "님이 강퇴되었습니다."
+                );
+
+        messagingTemplate.convertAndSend(
+                destination,
+                systemMessage
+        );
+
+        /*
+         * 2. 강퇴당한 사용자를 퇴장시키기 위한 실시간 이벤트
+         */
+        messagingTemplate.convertAndSend(
+                destination,
+                (Object)Map.of(
+                        "messageType", "EVENT",
+                        "eventType","PARTICIPANT_KICKED",
+                        "meetingId",kicked.meetingId(),
+                        "participantId",kicked.participantId(),
+                        "userId",kicked.userId(),
+                        "nickname",nickname
+                )
+        );
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{participantId}/kick/cancel")
+    public ResponseEntity<Void> cancelKick(
+            @PathVariable Long participantId,
+            @AuthenticationPrincipal AuthenticatedUser user
+    )
+    {
+        ParticipantKickResult canceled =
+                meetingParticipantService.cancelKick(
+                        participantId,
+                        user.userId()
+                );
+
+        String nickname = canceled.nickname() == null
+                ? "참가자"
+                : canceled.nickname();
+
+        String destination =
+                "/topic/meetings/"
+                    + canceled.meetingId()
+                    + "/chat";
+
+        ChatMessageResponse systemMessage =
+                chatService.saveSystemMessage(
+                        canceled.meetingId(),
+                        user.userId(),
+                        "PARTICIPANT_KICK_CANCELED",
+                        nickname + "님의 강퇴가 취소되었습니다."
+                );
+
+        messagingTemplate.convertAndSend(
+                destination,
+                systemMessage
+        );
+
+        messagingTemplate.convertAndSend(
+                destination,
+                (Object) Map.of(
+                        "messageType","EVENT",
+                        "eventType","PARTICIPANT_KICK_CANCELED",
+                        "meetingId", canceled.meetingId(),
+                        "participantId", canceled.participantId(),
+                        "userId", canceled.userId(),
+                        "nickname", nickname
+            )
+        );
+
+        return ResponseEntity.noContent().build();
+    }
+
 }

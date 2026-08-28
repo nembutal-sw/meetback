@@ -2,8 +2,11 @@ package com.meetback.dev.repository;
 
 import com.meetback.dev.domain.Meeting;
 import com.meetback.dev.domain.MeetingStatus;
+import com.meetback.dev.dto.MyMeetingResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 @Mapper
 public interface MeetingMapper {
@@ -29,5 +32,5 @@ public interface MeetingMapper {
             @Param("status") MeetingStatus status
     );
 
-    int increaseCalculationVersion(Long meetingId);
+    List<MyMeetingResponse> selectMyMeetings(Long userId);
 }
