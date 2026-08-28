@@ -35,4 +35,6 @@ public interface MeetingMapper {
     List<MyMeetingResponse> selectMyMeetings(Long userId);
 
     int deleteExpiredMeetings();
+
+    List<Meeting> selectQuickVoteMeetings();
 }

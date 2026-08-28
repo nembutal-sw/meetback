@@ -1506,3 +1506,107 @@ button:disabled {
     }
 
 }
+/* =========================================================
+   지금 바로 번개
+   ========================================================= */
+
+.quick-meeting-list {
+    display: flex;
+    gap: 14px;
+
+    overflow-x: auto;
+
+    padding:
+            8px
+            2px
+            14px;
+}
+
+
+.quick-meeting-card {
+    flex: 0 0 250px;
+
+    padding: 20px;
+
+    background: #ffffff;
+
+    border:
+            1px solid
+            #dddaf5;
+
+    border-radius: 16px;
+
+    box-shadow:
+            0 8px 20px
+            rgba(59, 54, 118, 0.08);
+}
+
+
+.quick-meeting-title {
+    margin-bottom: 8px;
+
+    color:
+            var(--mb-text);
+
+    font-size: 16px;
+    font-weight: 800;
+
+    letter-spacing: -0.3px;
+}
+
+
+.quick-meeting-end {
+    margin-bottom: 16px;
+
+    color:
+            var(--mb-text-soft);
+
+    font-size: 12px;
+}
+
+
+.quick-meeting-join-button {
+    width: 100%;
+
+    color: #ffffff;
+
+    background:
+            var(--mb-primary);
+
+    border-color:
+            var(--mb-primary);
+}
+
+
+.quick-meeting-join-button:hover:not(:disabled) {
+    color: #ffffff;
+
+    background:
+            var(--mb-primary-strong);
+
+    border-color:
+            var(--mb-primary-strong);
+}
+
+
+.quick-meeting-empty {
+    width: 100%;
+
+    padding: 24px;
+
+    color:
+            var(--mb-text-muted);
+
+    background:
+            var(--mb-surface-soft);
+
+    border:
+            1px dashed
+            var(--mb-border-strong);
+
+    border-radius: 14px;
+
+    text-align: center;
+
+    font-size: 13px;
+}

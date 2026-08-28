@@ -121,4 +121,25 @@
         WHERE desired_end_at IS NOT NULL
         AND desired_end_at &lt;= DATE_SUB(NOW(), INTERVAL 24 HOUR)
     </delete>
+
+    <select id="selectQuickVoteMeetings"
+            resultType="com.meetback.dev.domain.Meeting">
+
+        SELECT
+        meeting_id,
+        host_user_id,
+        title,
+        invite_code,
+        desired_end_at,
+        meeting_type,
+        status,
+        created_at
+        FROM meetings
+        WHERE meeting_type = 'QUICK_VOTE'
+        AND status = 'INPUT_OPEN'
+        AND desired_end_at IS NOT NULL
+        AND desired_end_at > NOW()
+        ORDER BY created_at DESC
+
+    </select>
 </mapper>
