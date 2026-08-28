@@ -28,6 +28,7 @@
 
     </resultMap>
 
+
     <!-- 회원가입 -->
     <insert id="insertUser"
             parameterType="com.meetback.dev.domain.User"
@@ -48,8 +49,8 @@
             #{email},
             #{nickname},
             #{passwordHash},
-        NOW(),
-        NOW()
+            NOW(),
+            NOW()
         )
 
     </insert>
@@ -137,6 +138,17 @@
     </select>
 
 
+    <!-- 피드 작성자 닉네임 조회 -->
+    <select id="selectNicknameById"
+            resultType="java.lang.String">
+
+        SELECT nickname
+        FROM users
+        WHERE user_id = #{userId}
+
+    </select>
+
+
     <!-- 회원탈퇴 -->
     <update id="withdrawUser">
 
@@ -175,7 +187,7 @@
 
         UPDATE users
         SET password_hash = #{passwordHash},
-             updated_at = NOW()
+        updated_at = NOW()
         WHERE user_id = #{userId}
 
     </update>

@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>MeetBack 후기 작성</title>
+
+</head>
+
+<body>
+
+<div>
+
+    <h1>
+        후기 작성
+    </h1>
+
+
+    <form
+            id="feedForm"
+            th:action="@{/api/feeds}"
+            method="post"
+            enctype="multipart/form-data">
+
+
+        <!-- =====================================================
+             제목
+             ===================================================== -->
+
+        <div>
+
+            <label for="feedTitle">
+                제목
+            </label>
+
+
+            <input
+                    type="text"
+                    id="feedTitle"
+                    name="title"
+                    maxlength="255"
+                    placeholder="후기 제목을 입력하세요">
+
+        </div>
+
+
+        <br>
+
+
+        <!-- =====================================================
+             내용
+             ===================================================== -->
+
+        <div>
+
+            <label for="feedContent">
+                내용
+            </label>
+
+
+            <br>
+
+
+            <textarea
+                    id="feedContent"
+                    name="content"
+                    rows="10"
+                    placeholder="후기 내용을 작성해주세요."></textarea>
+
+        </div>
+
+
+        <br>
+
+
+        <!-- =====================================================
+             이미지
+             ===================================================== -->
+
+        <div>
+
+            <label for="feedImages">
+                이미지
+            </label>
+
+
+            <input
+                    type="file"
+                    id="feedImages"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    multiple>
+
+
+            <div>
+                최대 10장까지 등록할 수 있습니다.
+            </div>
+
+        </div>
+
+
+        <br>
+
+
+        <!-- =====================================================
+             이미지 미리보기
+             ===================================================== -->
+
+        <div id="imagePreviewContainer">
+        </div>
+
+
+        <br>
+
+
+        <!-- =====================================================
+             메시지
+             ===================================================== -->
+
+        <div id="feedMessage">
+        </div>
+
+
+        <br>
+
+
+        <!-- =====================================================
+             버튼
+             ===================================================== -->
+
+        <button
+                type="submit"
+                id="submitFeedButton">
+
+            후기 등록
+
+        </button>
+
+
+        <a th:href="@{/feed}">
+            취소
+        </a>
+
+    </form>
+
+</div>
+
+
+<script>
+
+    // ============================================================
+    // 설정
+    // ============================================================
+
+    const MAX_IMAGE_COUNT =
+        10;
+
+
+    const MAX_IMAGE_SIZE =
+        5 * 1024 * 1024;
+
+
+    const ALLOWED_IMAGE_TYPES =
+        [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp"
+        ];
+
+
+    // ============================================================
+    // DOM
+    // ============================================================
+
+    const feedForm =
+        document.getElementById(
+            "feedForm"
+        );
+
+
+    const feedTitle =
+        document.getElementById(
+            "feedTitle"
+        );
+
+
+    const feedContent =
+        document.getElementById(
+            "feedContent"
+        );
+
+
+    const feedImages =
+        document.getElementById(
+            "feedImages"
+        );
+
+
+    const imagePreviewContainer =
+        document.getElementById(
+            "imagePreviewContainer"
+        );
+
+
+    const feedMessage =
+        document.getElementById(
+            "feedMessage"
+        );
+
+
+    const submitFeedButton =
+        document.getElementById(
+            "submitFeedButton"
+        );
+
+
+    // ============================================================
+    // 선택 이미지
+    // ============================================================
+
+    let selectedFiles =
+        [];
+
+
+    // ============================================================
+    // 같은 이미지인지 확인
+    // ============================================================
+
+    function isSameFile(
+        firstFile,
+        secondFile
+    ) {
+
+        return (
+            firstFile.name === secondFile.name
+            &&
+            firstFile.size === secondFile.size
+            &&
+            firstFile.lastModified === secondFile.lastModified
+        );
+    }
+
+
+    // ============================================================
+    // 이미지 검증
+    // ============================================================
+
+    function validateImageFile(
+        file
+    ) {
+
+        if (
+            !ALLOWED_IMAGE_TYPES.includes(
+                file.type
+            )
+        ) {
+
+            feedMessage.textContent =
+                "JPG, PNG, GIF, WEBP 이미지만 등록할 수 있습니다.";
+
+
+            return false;
+        }
+
+
+        if (
+            file.size
+            > MAX_IMAGE_SIZE
+        ) {
+
+            feedMessage.textContent =
+                file.name
+                + " 파일은 5MB를 초과합니다.";
+
+
+            return false;
+        }
+
+
+        return true;
+    }
+
+
+    // ============================================================
+    // 이미지 선택
+    // ============================================================
+
+    feedImages.addEventListener(
+        "change",
+        function() {
+
+            const newFiles =
+                Array.from(
+                    feedImages.files
+                );
+
+
+            for (
+                const file
+                of newFiles
+                ) {
+
+                if (
+                    !validateImageFile(
+                        file
+                    )
+                ) {
+
+                    continue;
+                }
+
+
+                const duplicated =
+                    selectedFiles.some(
+                        function(selectedFile) {
+
+                            return isSameFile(
+                                selectedFile,
+                                file
+                            );
+                        }
+                    );
+
+
+                if (
+                    duplicated
+                ) {
+
+                    continue;
+                }
+
+
+                if (
+                    selectedFiles.length
+                    >= MAX_IMAGE_COUNT
+                ) {
+
+                    feedMessage.textContent =
+                        "이미지는 최대 "
+                        + MAX_IMAGE_COUNT
+                        + "장까지 등록할 수 있습니다.";
+
+
+                    break;
+                }
+
+
+                selectedFiles.push(
+                    file
+                );
+            }
+
+
+            feedImages.value =
+                "";
+
+
+            renderImagePreviews();
+        }
+    );
+
+
+    // ============================================================
+    // 이미지 미리보기
+    // ============================================================
+
+    function renderImagePreviews() {
+
+        imagePreviewContainer.innerHTML =
+            "";
+
+
+        if (
+            selectedFiles.length === 0
+        ) {
+
+            imagePreviewContainer.textContent =
+                "선택된 이미지가 없습니다.";
+
+
+            return;
+        }
+
+
+        const countText =
+            document.createElement(
+                "div"
+            );
+
+
+        countText.textContent =
+            "선택된 이미지 : "
+            + selectedFiles.length
+            + " / "
+            + MAX_IMAGE_COUNT;
+
+
+        imagePreviewContainer.appendChild(
+            countText
+        );
+
+
+        selectedFiles.forEach(
+            function(
+                file,
+                index
+            ) {
+
+                const wrapper =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                wrapper.style.display =
+                    "inline-block";
+
+
+                wrapper.style.margin =
+                    "10px";
+
+
+                wrapper.style.verticalAlign =
+                    "top";
+
+
+                // ------------------------------------------------
+                // 이미지 순서
+                // ------------------------------------------------
+
+                const order =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                order.textContent =
+                    (index + 1)
+                    + "번째 이미지";
+
+
+                wrapper.appendChild(
+                    order
+                );
+
+
+                // ------------------------------------------------
+                // 이미지
+                // ------------------------------------------------
+
+                const image =
+                    document.createElement(
+                        "img"
+                    );
+
+
+                image.style.width =
+                    "150px";
+
+
+                image.style.height =
+                    "150px";
+
+
+                image.style.objectFit =
+                    "cover";
+
+
+                image.alt =
+                    file.name;
+
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onload =
+                    function(event) {
+
+                        image.src =
+                            event.target.result;
+                    };
+
+
+                reader.readAsDataURL(
+                    file
+                );
+
+
+                wrapper.appendChild(
+                    image
+                );
+
+
+                // ------------------------------------------------
+                // 파일명
+                // ------------------------------------------------
+
+                const fileName =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                fileName.textContent =
+                    file.name;
+
+
+                wrapper.appendChild(
+                    fileName
+                );
+
+
+                // ------------------------------------------------
+                // 이미지 삭제
+                // ------------------------------------------------
+
+                const removeButton =
+                    document.createElement(
+                        "button"
+                    );
+
+
+                removeButton.type =
+                    "button";
+
+
+                removeButton.textContent =
+                    "이미지 삭제";
+
+
+                removeButton.addEventListener(
+                    "click",
+                    function() {
+
+                        selectedFiles.splice(
+                            index,
+                            1
+                        );
+
+
+                        feedMessage.textContent =
+                            "";
+
+
+                        renderImagePreviews();
+                    }
+                );
+
+
+                wrapper.appendChild(
+                    removeButton
+                );
+
+
+                imagePreviewContainer.appendChild(
+                    wrapper
+                );
+            }
+        );
+    }
+
+
+    // ============================================================
+    // 후기 등록
+    // ============================================================
+
+    feedForm.addEventListener(
+        "submit",
+        async function(event) {
+
+            event.preventDefault();
+
+
+            const title =
+                feedTitle
+                    .value
+                    .trim();
+
+
+            const content =
+                feedContent
+                    .value
+                    .trim();
+
+
+            if (
+                !title
+            ) {
+
+                feedMessage.textContent =
+                    "제목을 입력해주세요.";
+
+
+                return;
+            }
+
+
+            if (
+                !content
+            ) {
+
+                feedMessage.textContent =
+                    "후기 내용을 입력해주세요.";
+
+
+                return;
+            }
+
+
+            if (
+                selectedFiles.length
+                > MAX_IMAGE_COUNT
+            ) {
+
+                feedMessage.textContent =
+                    "이미지는 최대 "
+                    + MAX_IMAGE_COUNT
+                    + "장까지 등록할 수 있습니다.";
+
+
+                return;
+            }
+
+
+            const accessToken =
+                localStorage.getItem(
+                    "accessToken"
+                );
+
+
+            if (
+                !accessToken
+            ) {
+
+                window.location.href =
+                    "/login";
+
+
+                return;
+            }
+
+
+            // ====================================================
+            // Multipart
+            // ====================================================
+
+            const formData =
+                new FormData();
+
+
+            formData.append(
+                "title",
+                title
+            );
+
+
+            formData.append(
+                "content",
+                content
+            );
+
+
+            for (
+                const file
+                of selectedFiles
+                ) {
+
+                formData.append(
+                    "images",
+                    file
+                );
+            }
+
+
+            try {
+
+                submitFeedButton.disabled =
+                    true;
+
+
+                feedMessage.textContent =
+                    "후기를 등록하고 있습니다.";
+
+
+                const response =
+                    await fetch(
+                        feedForm.action,
+                        {
+
+                            method:
+                                "POST",
+
+                            headers: {
+
+                                "Authorization":
+                                    "Bearer "
+                                    + accessToken
+
+                            },
+
+                            body:
+                            formData
+
+                        }
+                    );
+
+
+                if (
+                    response.status === 401
+                    ||
+                    response.status === 403
+                ) {
+
+                    window.location.href =
+                        "/login";
+
+
+                    return;
+                }
+
+
+                if (
+                    !response.ok
+                ) {
+
+                    const errorText =
+                        await response.text();
+
+
+                    throw new Error(
+                        errorText
+                        || "후기 등록에 실패했습니다."
+                    );
+                }
+
+
+                const data =
+                    await response.json();
+
+
+                console.log(
+                    "[FEED CREATE]",
+                    data
+                );
+
+
+                feedMessage.textContent =
+                    "후기가 등록되었습니다.";
+
+
+                setTimeout(
+                    function() {
+
+                        window.location.href =
+                            "/feed";
+
+                    },
+                    300
+                );
+
+            }
+            catch (
+                error
+                ) {
+
+                console.error(
+                    "[FEED CREATE ERROR]",
+                    error
+                );
+
+
+                feedMessage.textContent =
+                    error.message
+                    || "후기 등록 중 오류가 발생했습니다.";
+            }
+            finally {
+
+                submitFeedButton.disabled =
+                    false;
+            }
+        }
+    );
+
+
+    // ============================================================
+    // 최초 실행
+    // ============================================================
+
+    renderImagePreviews();
+
+</script>
+
+</body>
+
+</html>
