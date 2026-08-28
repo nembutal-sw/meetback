@@ -220,4 +220,36 @@
 
     </update>
 
+    <!--
+        QUICK_VOTE 입력 단계 방 나가기
+
+        참가자 행은 재입장을 위해 유지하고,
+        상태와 위치 입력값만 초기화한다.
+    -->
+    <update id="leaveBeforeVoting">
+
+        UPDATE meeting_participants
+
+        SET
+        participant_status = 'LEFT',
+        input_status = 'DRAFT',
+
+        departure_name = NULL,
+        departure_address = NULL,
+        departure_latitude = NULL,
+        departure_longitude = NULL,
+
+        return_name = NULL,
+        return_address = NULL,
+        return_latitude = NULL,
+        return_longitude = NULL,
+
+        submitted_at = NULL,
+        updated_at = NOW()
+
+        WHERE participant_id = #{participantId}
+        AND participant_status = 'ACTIVE'
+
+    </update>
+
 </mapper>

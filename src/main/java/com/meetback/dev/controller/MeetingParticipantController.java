@@ -2,6 +2,7 @@ package com.meetback.dev.controller;
 
 import com.meetback.dev.domain.MeetingParticipant;
 import com.meetback.dev.domain.ParticipantKickResult;
+import com.meetback.dev.domain.ParticipantLeaveResult;
 import com.meetback.dev.dto.*;
 import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.ChatService;
@@ -441,6 +442,56 @@ public class MeetingParticipantController {
         );
 
         return ResponseEntity.noContent().build();
+    }
+
+    /*
+     * QUICK_VOTE 방 나가기
+     *
+     * 현재는 INPUT_OPEN 단계에서만 지원한다.
+     */
+    @DeleteMapping("/{participantId}/leave")
+    public ResponseEntity<Void> leaveQuickVoteMeeting(
+            @PathVariable Long participantId,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+
+        ParticipantLeaveResult left =
+                meetingParticipantService
+                        .leaveQuickVoteMeeting(
+                                participantId,
+                                user.userId()
+                        );
+
+
+        String nickname =
+                left.nickname() == null
+                        ? "참가자"
+                        : left.nickname();
+
+
+        /*
+         * 참가자 목록 갱신 및
+         * 다른 탭의 퇴장 처리를 위한 실시간 EVENT
+         */
+        messagingTemplate.convertAndSend(
+                "/topic/meetings/"
+                        + left.meetingId()
+                        + "/chat",
+
+                (Object) Map.of(
+                        "messageType", "EVENT",
+                        "eventType", "PARTICIPANT_LEFT",
+                        "meetingId", left.meetingId(),
+                        "participantId", left.participantId(),
+                        "userId", left.userId(),
+                        "nickname", nickname
+                )
+        );
+
+
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 
 }
