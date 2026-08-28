@@ -1,4 +1,7 @@
-package com.meetback.dev.domain;
+package com.meetback.dev.dto;
+
+import com.meetback.dev.domain.MeetingStatus;
+import com.meetback.dev.domain.MeetingType;
 
 import java.time.LocalDateTime;
 
