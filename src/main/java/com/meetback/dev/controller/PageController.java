@@ -33,6 +33,12 @@ public class PageController {
     }
 
 
+    @GetMapping("/quick-meetings")
+    public String quickMeetings()
+    {
+        return "auth/quick-meetings";
+    }
+
     @GetMapping("/login")
     public String login(
             Model model

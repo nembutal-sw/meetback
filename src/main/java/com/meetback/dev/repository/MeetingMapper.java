@@ -36,5 +36,7 @@ public interface MeetingMapper {
 
     int deleteExpiredMeetings();
 
-    List<Meeting> selectQuickVoteMeetings();
+    List<Meeting> selectQuickVoteMeetings(
+            @Param("keyword") String keyword
+    );
 }

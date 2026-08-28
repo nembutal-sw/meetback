@@ -230,9 +230,17 @@ public class MeetingController {
     }
 
     @GetMapping("/quick")
-    public List<QuickMeetingResponse> getQuickVoteMeetings() {
+    public List<QuickMeetingResponse> getQuickVoteMeetings(
+            @RequestParam(
+                    required = false,
+                    defaultValue = ""
+            )
+            String keyword
+    ) {
 
-        return meetingService.getQuickVoteMeetings();
+        return meetingService.getQuickVoteMeetings(
+                keyword
+        );
     }
 
     @GetMapping("/{meetingId}")
