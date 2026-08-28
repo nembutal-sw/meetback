@@ -434,6 +434,24 @@ public class VoteService {
         );
 
 
+        // =========================================================
+        // QUICK_VOTE 여부 확인을 위한 모임 조회
+        // =========================================================
+
+        Meeting meeting =
+                meetingMapper.findById(
+                        meetingId
+                );
+
+
+        if (meeting == null) {
+
+            throw new IllegalArgumentException(
+                    "존재하지 않는 모임입니다."
+            );
+        }
+
+
 
         // =========================================================
         // 2. 전체 참가자 수
@@ -499,6 +517,47 @@ public class VoteService {
 
 
         // =========================================================
+        // QUICK_VOTE 과반수 필요 인원
+        // =========================================================
+
+        int requiredVotes =
+                (totalParticipants / 2) + 1;
+
+
+
+        // =========================================================
+        // 확정 가능 여부
+        //
+        // FRIEND
+        // → 전원 투표 완료 시 확정 가능
+        //
+        // QUICK_VOTE
+        // → 과반수 투표 완료 시 확정 가능
+        // =========================================================
+
+        boolean canConfirm;
+
+
+        if (
+                meeting.getMeetingType()
+                        == MeetingType.QUICK_VOTE
+        ) {
+
+            canConfirm =
+                    totalParticipants > 0
+                            &&
+                            totalVotes >= requiredVotes;
+
+        }
+        else {
+
+            canConfirm =
+                    allVoted;
+        }
+
+
+
+        // =========================================================
         // 7. 결과 반환
         // =========================================================
 
@@ -512,7 +571,11 @@ public class VoteService {
 
                 abstainVotes,
 
-                allVoted
+                allVoted,
+
+                requiredVotes,
+
+                canConfirm
 
         );
     }

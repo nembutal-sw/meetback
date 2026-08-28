@@ -1,6 +1,5 @@
 package com.meetback.dev.controller;
 
-import com.meetback.dev.domain.MeetingRoomResponse;
 import com.meetback.dev.dto.*;
 import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.ChatService;

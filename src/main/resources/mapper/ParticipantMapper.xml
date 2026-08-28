@@ -125,4 +125,39 @@
 
     </select>
 
+    <!--
+        QUICK_VOTE 방에서 나갔던 참가자의 재입장 처리
+
+        기존 참가자 행을 새로 INSERT하지 않고
+        LEFT 상태의 기존 행을 다시 ACTIVE로 변경한다.
+
+        INPUT_OPEN 단계에서 나갔다가 재입장하는 것이므로
+        이전 위치 입력값은 초기화한다.
+    -->
+    <update id="reactivateLeftParticipant">
+
+        UPDATE meeting_participants
+
+        SET
+            participant_status = 'ACTIVE',
+            input_status = 'DRAFT',
+
+            departure_name = NULL,
+            departure_address = NULL,
+            departure_latitude = NULL,
+            departure_longitude = NULL,
+
+            return_name = NULL,
+            return_address = NULL,
+            return_latitude = NULL,
+            return_longitude = NULL,
+
+            submitted_at = NULL,
+            updated_at = NOW()
+
+        WHERE participant_id = #{participantId}
+        AND participant_status = 'LEFT'
+
+    </update>
+
 </mapper>

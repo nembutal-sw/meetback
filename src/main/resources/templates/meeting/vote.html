@@ -1966,6 +1966,9 @@
          * 최종 요청 직전 한 번 더 검사한다.
          *
          * 화면 버튼만 믿으면 안 된다.
+         *
+         * meetingType이 QUICK_VOTE 일 경우
+         * 과반수 넘을시 투표 가능하다
          */
         await loadVoteProgress();
 
@@ -1973,7 +1976,7 @@
         if (
             !voteProgress
             ||
-            !voteProgress.allVoted
+            !voteProgress.canConfirm
         )
         {
 
@@ -1981,7 +1984,11 @@
 
 
             showToast(
-                "아직 모든 참가자의 투표가 완료되지 않았습니다.",
+                meeting
+                &&
+                meeting.meetingType === "QUICK_VOTE"
+                    ? "과반수의 투표가 완료되어야 장소를 확정할 수 있습니다."
+                    : "아직 모든 참가자의 투표가 완료되지 않았습니다.",
                 "error"
             );
 
@@ -2200,18 +2207,19 @@
             </strong>
             `;
 
-
             return;
         }
 
 
-        const remaining =
-            Math.max(
-                0,
-                voteProgress.totalParticipants
-                - voteProgress.totalVotes
-            );
+        const isQuickVote =
+            meeting
+            &&
+            meeting.meetingType === "QUICK_VOTE";
 
+
+        // =========================================================
+        // 전원 투표 완료
+        // =========================================================
 
         if (voteProgress.allVoted)
         {
@@ -2251,6 +2259,137 @@
 
             return;
         }
+
+
+        // =========================================================
+        // QUICK_VOTE 과반수 충족
+        // =========================================================
+
+        if (
+            isQuickVote
+            &&
+            voteProgress.canConfirm
+        )
+        {
+
+            area.innerHTML =
+                `
+            <div
+                class="
+                    vote-progress-title
+                    vote-progress-complete
+                ">
+
+                ✅ 과반수 투표 완료
+
+            </div>
+
+            <div class="vote-progress-detail">
+
+                ${voteProgress.totalVotes}
+                /
+                ${voteProgress.totalParticipants}명
+                투표 완료
+
+                <br>
+
+                확정 기준 :
+                ${voteProgress.requiredVotes}명 이상
+
+                <br>
+
+                후보 투표 :
+                ${voteProgress.candidateVotes}표
+
+                <br>
+
+                기권 :
+                ${voteProgress.abstainVotes}표
+
+                <br>
+
+                현재 투표 결과로 장소를 확정할 수 있습니다.
+
+            </div>
+            `;
+
+
+            return;
+        }
+
+
+        // =========================================================
+        // QUICK_VOTE 과반수 미달
+        // =========================================================
+
+        if (isQuickVote)
+        {
+
+            const remainingToConfirm =
+                Math.max(
+                    0,
+                    voteProgress.requiredVotes
+                    - voteProgress.totalVotes
+                );
+
+
+            area.innerHTML =
+                `
+            <div
+                class="
+                    vote-progress-title
+                    vote-progress-waiting
+                ">
+
+                투표 진행 중
+
+            </div>
+
+            <div class="vote-progress-detail">
+
+                ${voteProgress.totalVotes}
+                /
+                ${voteProgress.totalParticipants}명
+                투표 완료
+
+                <br>
+
+                확정 기준 :
+                ${voteProgress.requiredVotes}명 이상
+
+                <br>
+
+                후보 투표 :
+                ${voteProgress.candidateVotes}표
+
+                <br>
+
+                기권 :
+                ${voteProgress.abstainVotes}표
+
+                <br>
+
+                확정까지
+                ${remainingToConfirm}명의 투표가 더 필요합니다.
+
+            </div>
+            `;
+
+
+            return;
+        }
+
+
+        // =========================================================
+        // FRIEND - 기존 전원 투표 방식
+        // =========================================================
+
+        const remaining =
+            Math.max(
+                0,
+                voteProgress.totalParticipants
+                - voteProgress.totalVotes
+            );
 
 
         area.innerHTML =
@@ -2386,10 +2525,16 @@
 
 
         // =========================================================
-        // 전원 투표 완료 전
+        // 최종 확정 조건 충족 전
+        //
+        // FRIEND
+        // → 전원 투표 필요
+        //
+        // QUICK_VOTE
+        // → 과반수 투표 필요
         // =========================================================
 
-        if (!voteProgress.allVoted)
+        if (!voteProgress.canConfirm)
         {
 
             selectedCandidateId =
@@ -2400,12 +2545,40 @@
                 true;
 
 
-            voteStatus.textContent =
-                voteProgress.totalVotes
-                + " / "
-                + voteProgress.totalParticipants
-                + "명 투표 완료 - "
-                + "모든 참가자의 투표를 기다리고 있습니다.";
+            if (
+                meeting.meetingType
+                === "QUICK_VOTE"
+            )
+            {
+
+                const remainingToConfirm =
+                    Math.max(
+                        0,
+                        voteProgress.requiredVotes
+                        - voteProgress.totalVotes
+                    );
+
+
+                voteStatus.textContent =
+                    voteProgress.totalVotes
+                    + " / "
+                    + voteProgress.totalParticipants
+                    + "명 투표 완료 - "
+                    + "확정까지 "
+                    + remainingToConfirm
+                    + "명의 투표가 더 필요합니다.";
+
+            }
+            else
+            {
+
+                voteStatus.textContent =
+                    voteProgress.totalVotes
+                    + " / "
+                    + voteProgress.totalParticipants
+                    + "명 투표 완료 - "
+                    + "모든 참가자의 투표를 기다리고 있습니다.";
+            }
 
 
             return;
@@ -2413,7 +2586,7 @@
 
 
         // =========================================================
-        // 전원 기권
+        // 후보에 들어간 표가 하나도 없는 경우
         // =========================================================
 
         if (
@@ -2433,7 +2606,7 @@
 
 
             voteStatus.textContent =
-                "모든 참가자가 기권했습니다.";
+                "득표한 후보가 없어 장소를 확정할 수 없습니다.";
 
 
             return;
@@ -2507,9 +2680,6 @@
 
         // =========================================================
         // 동점
-        //
-        // 아직 동점 처리 정책을 구현하지 않았기 때문에
-        // 방장이 임의로 하나를 확정하지 못하게 한다.
         // =========================================================
 
         if (
@@ -2528,7 +2698,7 @@
 
             voteStatus.textContent =
                 "최다 득표 후보가 동점입니다. "
-                + "동점 처리 규칙이 필요합니다.";
+                + "추가 투표를 기다려주세요.";
 
 
             return;
@@ -2549,12 +2719,10 @@
 
 
         voteStatus.textContent =
-            "전원 투표가 완료되었습니다. "
-            + "최다 득표 장소를 확정할 수 있습니다.";
+            meeting.meetingType === "QUICK_VOTE"
+                ? "과반수의 투표가 완료되었습니다. 최다 득표 장소를 확정할 수 있습니다."
+                : "전원 투표가 완료되었습니다. 최다 득표 장소를 확정할 수 있습니다.";
     }
-
-
-
     // ============================================================
     // 모임방 이동
     // ============================================================
