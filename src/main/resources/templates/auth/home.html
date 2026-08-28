@@ -149,6 +149,24 @@
 
                 </div>
 
+                <div class="field">
+
+                    <label for="meetingType">
+                        모임 유형
+                    </label>
+
+                    <select id="meetingType">
+                        <option value="FRIEND">
+                            친구방
+                        </option>
+
+                        <option value="QUICK_VOTE">
+                            번개 투표방
+                        </option>
+                    </select>
+
+                </div>
+
 
                 <div class="field">
 
@@ -594,6 +612,12 @@
         );
 
     const meetingTypeSelect =
+        document.getElementById(
+            "meetingType"
+        );
+
+
+    const meetingTypeInput =
         document.getElementById(
             "meetingType"
         );
@@ -1605,7 +1629,6 @@
         "click",
         async function()
         {
-
             const title =
                 meetingTitleInput
                     .value
@@ -1613,6 +1636,11 @@
 
             const meetingType =
                 meetingTypeSelect.value;
+
+
+            const meetingType =
+                meetingTypeInput
+                    .value;
 
 
             const desiredEndAt =
