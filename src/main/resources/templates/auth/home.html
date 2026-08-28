@@ -568,6 +568,7 @@
             "myMeetingList"
         );
 
+
     const meetingTitleInput =
         document.getElementById(
             "meetingTitle"
@@ -578,6 +579,7 @@
         document.getElementById(
             "desiredEndAt"
         );
+
 
     const createMeetingButton =
         document.getElementById(
@@ -892,20 +894,8 @@
     function redirectToLogin()
     {
 
-        const currentPath =
-            window.location.pathname
-            +
-            window.location.search;
-
-
         window.location.href =
-            loginUrl
-            +
-            "?redirect="
-            +
-            encodeURIComponent(
-                currentPath
-            );
+            loginUrl;
     }
 
 
@@ -947,6 +937,7 @@
         }
         else if (type === "error")
         {
+
             homeMessage.classList.add(
                 "message-error"
             );
@@ -954,6 +945,7 @@
         }
         else
         {
+
             homeMessage.classList.add(
                 "message-info"
             );
@@ -1456,6 +1448,7 @@
 
         if (!response.ok)
         {
+
             const errorText =
                 await response.text();
 
@@ -1614,6 +1607,7 @@
 
             if (!desiredEndAt)
             {
+
                 showHomeMessage(
                     "희망 종료시간을 선택해주세요.",
                     "error"
@@ -1689,6 +1683,22 @@
 
                         }
                     );
+
+
+                if (!response.ok)
+                {
+
+                    const errorText =
+                        await response.text();
+
+
+                    throw new Error(
+                        errorText
+                        ||
+                        "모임 생성에 실패했습니다."
+                    );
+                }
+
 
                 const data =
                     await response.json();
@@ -2305,19 +2315,9 @@
                     );
 
 
-                if (response.ok)
-                {
-
-                    clearLoginStorage();
-
-                    window.location.href =
-                        loginUrl;
-
-                    return;
-                }
-
-
                 if (
+                    response.ok
+                    ||
                     response.status === 401
                     ||
                     response.status === 403
@@ -2634,20 +2634,8 @@
                 );
 
 
-                const currentPath =
-                    window.location.pathname
-                    +
-                    window.location.search;
-
-
                 window.location.replace(
                     loginUrl
-                    +
-                    "?redirect="
-                    +
-                    encodeURIComponent(
-                        currentPath
-                    )
                 );
 
 
