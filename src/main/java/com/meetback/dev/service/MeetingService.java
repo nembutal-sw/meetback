@@ -47,10 +47,16 @@ public class MeetingService {
 
         String inviteCode = generateInviteCode();
 
+        MeetingType meetingType =
+                request.getMeetingType() == null
+                ? MeetingType.FRIEND
+                : request.getMeetingType();
+
         Meeting meeting = new Meeting();
 
         meeting.setHostUserId(hostUserId);
         meeting.setTitle(request.getTitle());
+        meeting.setMeetingType(meetingType);
         meeting.setStatus(MeetingStatus.INPUT_OPEN);
         meeting.setDesiredEndAt(request.getDesiredEndAt());
         meeting.setCalculationVersion(0);
@@ -94,6 +100,17 @@ public class MeetingService {
         {
             throw new IllegalArgumentException(
                     "유효하지 않은 초대코드입니다."
+            );
+        }
+
+        /*
+         * 투표가 시작된 이후에는
+         * 새로운 참가 또는 재입장을 허용하지 않는다.
+         */
+        if(meeting.getStatus() != MeetingStatus.INPUT_OPEN)
+        {
+            throw new IllegalStateException(
+                    "참가할 수 있는 상태의 모임이 아닙니다."
             );
         }
 
@@ -304,6 +321,7 @@ public class MeetingService {
                 meeting.getTitle(),
                 meeting.getInviteCode(),
                 meeting.getDesiredEndAt(),
+                meeting.getMeetingType(),
                 meeting.getStatus(),
                 meeting.getFinalCandidateId()
         );

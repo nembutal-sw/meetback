@@ -9,6 +9,7 @@ public class Meeting {
     private Long meetingId;
     private Long hostUserId;
     private String title;
+    private MeetingType meetingType;
     private MeetingStatus status;
     private LocalDateTime desiredEndAt;
     private Integer calculationVersion;

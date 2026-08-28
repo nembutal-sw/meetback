@@ -38,4 +38,8 @@ public interface ParticipantMapper {
             @Param("meetingId") Long meetingId,
             @Param("userId") Long userId
     );
+
+    int reactivateLeftParticipant(
+            @Param("participantId") Long participantId
+    );
 }

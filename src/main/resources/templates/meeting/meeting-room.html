@@ -46,6 +46,23 @@
 
 </div>
 
+<!-- =========================================================
+     강퇴 안내 모달
+     ========================================================= -->
+<div
+        id="kickModal"
+        class="kick-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-hidden="true"
+        aria-live="assertive">
+    <div class="kick-modal-box">
+        <div class="kick-modal-title">
+            모임에서 강퇴되었습니다.
+        </div>
+
+</div>
+
 
 
 <!-- =========================================================
@@ -411,6 +428,38 @@
                     duration
                 );
         }
+    }
+
+    // ============================================================
+    // 강퇴 안내 모달
+    // ============================================================
+
+    function showKickModal() {
+        const kickModal = document.getElementById("kickModal");
+
+
+        if (!kickModal) {
+            return;
+        }
+
+        /*
+         * 기존 상단 Toast가 열려 있다면 숨깁니다.
+         */
+        hideToast();
+
+        kickModal.classList.add(
+            "show"
+        );
+
+        kickModal.setAttribute(
+            "aria-hidden",
+            "false"
+        );
+
+        /*
+         * 모달이 표시된 동안 화면 스크롤과 조작을 막습니다.
+         */
+        document.body.style.overflow = "hidden";
     }
 
 
@@ -2207,20 +2256,16 @@
 
                                     if (kickedMe)
                                     {
-                                        if (stompClient)
-                                        {
-                                            stompClient.reconnectDelay =
-                                                0;
+                                        /*
+                                         * 강퇴 전용 중앙 모달을 먼저 표시합니다.
+                                         */
+                                        showKickModal();
 
-                                            await stompClient.deactivate();
-                                        }
-
-                                        showToast(
-                                            "모임에서 강퇴되었습니다.",
-                                            "error",
-                                            1800
-                                        );
-
+                                        /*
+                                         * 3초 뒤 홈으로 이동합니다.
+                                         * replace를 사용하므로 뒤로가기로
+                                         * 강퇴된 모임방에 돌아가는 것도 방지됩니다.
+                                         */
                                         setTimeout(
                                             () =>
                                             {
@@ -2228,8 +2273,19 @@
                                                     "/home"
                                                 );
                                             },
-                                            1800
+                                            3500
                                         );
+
+                                        /*
+                                         * WebSocket 자동 재연결을 중단하고
+                                         * 현재 연결을 종료합니다.
+                                         */
+                                        if(stompClient)
+                                        {
+                                            stompClient.reconnectDelay = 0;
+
+                                            await stompClient.deactivate();
+                                        }
 
                                         return;
                                     }

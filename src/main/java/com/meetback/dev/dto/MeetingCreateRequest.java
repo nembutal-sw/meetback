@@ -1,5 +1,6 @@
 package com.meetback.dev.dto;
 
+import com.meetback.dev.domain.MeetingType;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 public class MeetingCreateRequest {
 
     private String title;
+    private MeetingType meetingType;
     private LocalDateTime desiredEndAt;
 
 }

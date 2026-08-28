@@ -116,6 +116,25 @@
                     기준으로 사용됩니다.
                 </div>
 
+                <div class="field">
+
+                    <label for="meetingType">
+                        방 종류
+                    </label>
+
+                        <select id="meetingType">
+
+                            <option value="FRIEND" selected>
+                                친구방 - 참가자가 고정되는 모임
+                            </option>
+
+                            <option value="QUICK_VOTE">
+                                번개방 - 자유롭게 참여하는 모임
+                            </option>
+
+                        </select>
+
+                </div>
 
                 <div class="field">
 
@@ -572,6 +591,11 @@
     const meetingTitleInput =
         document.getElementById(
             "meetingTitle"
+        );
+
+    const meetingTypeSelect =
+        document.getElementById(
+            "meetingType"
         );
 
 
@@ -1587,6 +1611,9 @@
                     .value
                     .trim();
 
+            const meetingType =
+                meetingTypeSelect.value;
+
 
             const desiredEndAt =
                 desiredEndAtInput
@@ -1674,6 +1701,9 @@
 
                                         title:
                                         title,
+
+                                        meetingType:
+                                        meetingType,
 
                                         desiredEndAt:
                                         desiredEndAt
