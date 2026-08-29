@@ -114,22 +114,22 @@ public class MeetingService {
     }
 
 
+    // ============================================================
+    // 모임 참가
+    // ============================================================
+
     @Transactional
     public MeetingJoinResponse joinMeeting(
             Long userId,
             MeetingJoinRequest request
-    ) {
-
+    )
+    {
         // 1. 초대코드로 모임 찾기
-        Meeting meeting =
-                meetingMapper.selectByInviteCode(
-                        request.getInviteCode()
-                );
-
+        Meeting meeting = meetingMapper.selectByInviteCode(request.getInviteCode());
 
         // 2. 존재하지 않는 초대코드
-        if (meeting == null) {
-
+        if(meeting == null)
+        {
             throw new IllegalArgumentException(
                     "유효하지 않은 초대코드입니다."
             );
@@ -143,9 +143,8 @@ public class MeetingService {
                         userId
                 );
 
-
         // 4. 강퇴된 참가자 재입장 차단
-        if (
+        if(
                 existingParticipant != null
                 &&
                 existingParticipant.getParticipantStatus()
@@ -256,6 +255,10 @@ public class MeetingService {
     }
 
 
+    // ============================================================
+    // 최종 후보 확정
+    // ============================================================
+
     @Transactional
     public void confirmFinalCandidate(
             Long meetingId,
@@ -279,7 +282,6 @@ public class MeetingService {
 
 
         if (meeting == null) {
-
             throw new IllegalArgumentException(
                     "존재하지 않는 모임입니다."
             );
@@ -306,20 +308,26 @@ public class MeetingService {
         }
 
         // QUICK_VOTE는 전체 참가자의 과반수가 투표해야 확정 가능
-        if (meeting.getMeetingType() == MeetingType.QUICK_VOTE) {
+        if (
+                meeting.getMeetingType()
+                        == MeetingType.QUICK_VOTE
+        ) {
 
             int totalParticipants =
                     participantMapper.countParticipant(
                             meetingId
                     );
 
+
             int totalVotes =
                     voteMapper.countVotesByMeetingId(
                             meetingId
                     );
 
+
             int requiredVotes =
                     (totalParticipants / 2) + 1;
+
 
             if (
                     totalParticipants == 0
@@ -407,7 +415,8 @@ public class MeetingService {
 
 
             Long topCandidateId =
-                    topCandidates.get(0)
+                    topCandidates
+                            .get(0)
                             .getCandidateId();
 
 
@@ -435,13 +444,16 @@ public class MeetingService {
 
 
         if (result == 0) {
-
             throw new IllegalStateException(
                     "최종 장소 확정에 실패했습니다."
             );
         }
     }
 
+
+    // ============================================================
+    // 투표 시작
+    // ============================================================
 
     @Transactional
     public void startVoting(
@@ -473,7 +485,6 @@ public class MeetingService {
             );
         }
 
-
         // 3. 현재 상태 확인
         if (meeting.getStatus()
                 != MeetingStatus.INPUT_OPEN) {
@@ -483,7 +494,6 @@ public class MeetingService {
             );
         }
 
-
         // 4. 전원 위치 제출 확인
         boolean allSubmitted =
                 participantService.isAllSubmitted(
@@ -492,12 +502,10 @@ public class MeetingService {
 
 
         if (!allSubmitted) {
-
             throw new IllegalStateException(
                     "모든 참가자의 위치 입력이 완료되지 않았습니다."
             );
         }
-
 
         // 5. 후보 존재 확인
         boolean candidateExists =
@@ -507,12 +515,10 @@ public class MeetingService {
 
 
         if (!candidateExists) {
-
             throw new IllegalStateException(
                     "등록된 후보지가 없습니다."
             );
         }
-
 
         // 6. VOTING으로 변경
         meetingMapper.updateMeetingStatus(
@@ -521,6 +527,10 @@ public class MeetingService {
         );
     }
 
+
+    // ============================================================
+    // 모임방 조회
+    // ============================================================
 
     public MeetingRoomResponse getMeetingRoom(
             Long meetingId,
@@ -556,7 +566,6 @@ public class MeetingService {
             );
         }
 
-
         return new MeetingRoomResponse(
                 meeting.getMeetingId(),
                 meeting.getHostUserId(),
@@ -570,6 +579,10 @@ public class MeetingService {
     }
 
 
+    // ============================================================
+    // 모임 조회
+    // ============================================================
+
     public Meeting getMeeting(
             Long meetingId,
             Long userId
@@ -580,9 +593,7 @@ public class MeetingService {
                         meetingId
                 );
 
-
         if (meeting == null) {
-
             throw new IllegalArgumentException(
                     "존재하지 않는 모임입니다."
             );
@@ -598,7 +609,6 @@ public class MeetingService {
 
 
         if (participantCount == 0) {
-
             throw new IllegalStateException(
                     "해당 모임의 참가자가 아닙니다."
             );
@@ -609,18 +619,44 @@ public class MeetingService {
     }
 
 
+    // ============================================================
+    // 내 모임 조회
+    // ============================================================
+
     public List<MyMeetingResponse> getMyMeetings(
             Long userId
     ) {
-
         return meetingMapper.selectMyMeetings(
                 userId
         );
     }
 
 
+    // ============================================================
+    // 종료된 모임 삭제
+    // ============================================================
+
     @Transactional
     public int deleteExpiredMeetings() {
         return meetingMapper.deleteExpiredMeetings();
+    }
+
+    // ============================================================
+    // 번개 모임 목록 조회
+    // ============================================================
+
+    public List<QuickMeetingResponse> getQuickVoteMeetings(
+            String keyword
+    ) {
+
+        String searchKeyword =
+                keyword == null
+                        ? ""
+                        : keyword.trim();
+
+
+        return meetingMapper.selectQuickVoteMeetings(
+                searchKeyword
+        );
     }
 }

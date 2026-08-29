@@ -2012,3 +2012,24 @@ button:disabled {
     background: #eef2ff;
     border-color: #4f46e5;
 }
+
+.room-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+.leave-meeting-button {
+    color: var(--danger);
+    background: var(--danger-bg);
+    border-color: rgba(201, 75, 84, 0.35);
+}
+
+
+.leave-meeting-button:hover {
+    border-color: var(--danger);
+    box-shadow:
+            0 8px 18px
+            rgba(201, 75, 84, 0.12);
+}

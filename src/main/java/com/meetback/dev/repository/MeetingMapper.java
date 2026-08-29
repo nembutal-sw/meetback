@@ -3,6 +3,7 @@ package com.meetback.dev.repository;
 import com.meetback.dev.domain.Meeting;
 import com.meetback.dev.domain.MeetingStatus;
 import com.meetback.dev.dto.MyMeetingResponse;
+import com.meetback.dev.dto.QuickMeetingResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -35,4 +36,8 @@ public interface MeetingMapper {
     List<MyMeetingResponse> selectMyMeetings(Long userId);
 
     int deleteExpiredMeetings();
+
+    List<QuickMeetingResponse> selectQuickVoteMeetings(
+            @Param("keyword") String keyword
+    );
 }
