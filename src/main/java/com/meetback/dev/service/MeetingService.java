@@ -712,13 +712,18 @@ public class MeetingService {
     // 내 모임 조회
     // ============================================================
 
-    public List<MyMeetingResponse> getMyMeetings(
-            Long userId
-    ) {
-
+    public List<MyMeetingResponse> getMyMeetings(Long userId) {
         return meetingMapper.selectMyMeetings(
                 userId
         );
+    }
+
+    // ============================================================
+    // 내 번개 모임 조회
+    // ============================================================
+
+    public List<MyMeetingResponse> getMyQuickMeetings(Long userId) {
+        return meetingMapper.selectMyQuickMeetings(userId);
     }
 
 
@@ -728,7 +733,6 @@ public class MeetingService {
 
     @Transactional
     public int deleteExpiredMeetings() {
-
         return meetingMapper.deleteExpiredMeetings();
     }
 

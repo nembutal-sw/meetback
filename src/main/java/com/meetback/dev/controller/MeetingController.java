@@ -229,6 +229,15 @@ public class MeetingController {
         );
     }
 
+    @GetMapping("/my/quick")
+    public List<MyMeetingResponse> getMyQuickMeetings(
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        return meetingService.getMyQuickMeetings(
+                user.userId()
+        );
+    }
+
     @GetMapping("/quick")
     public List<QuickMeetingResponse> getQuickVoteMeetings(
             @RequestParam(

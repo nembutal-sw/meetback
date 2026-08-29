@@ -112,6 +112,26 @@
         JOIN meetings m
         ON m.meeting_id = mp.meeting_id
         WHERE mp.user_id = #{userId}
+        AND m.meeting_type = 'FRIEND'
+        AND mp.participant_status = 'ACTIVE'
+        ORDER BY m.created_at DESC
+
+    </select>
+
+    <select id="selectMyQuickMeetings"
+            parameterType="long"
+            resultType="com.meetback.dev.dto.MyMeetingResponse">
+
+        SELECT
+        m.meeting_id AS meetingId,
+        m.title AS title,
+        m.invite_code AS inviteCode
+        FROM meeting_participants mp
+        JOIN meetings m
+        ON m.meeting_id = mp.meeting_id
+        WHERE mp.user_id = #{userId}
+        AND m.meeting_type = 'QUICK_VOTE'
+        AND mp.participant_status = 'ACTIVE'
         ORDER BY m.created_at DESC
 
     </select>

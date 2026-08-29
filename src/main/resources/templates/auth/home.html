@@ -29,6 +29,7 @@
         data-create-meeting-url=@{/meetings},
         data-join-meeting-url=@{/meetings/join},
         data-my-meetings-url=@{/meetings/my},
+        data-my-quick-meetings-url=@{/meetings/my/quick},
         data-quick-meetings-url=@{/meetings/quick},
         data-meeting-page-url=@{/meeting}
      ">
@@ -77,6 +78,26 @@
 
                 <div
                         id="myMeetingList"
+                        class="my-meeting-list"
+                        style="display: none;">
+                </div>
+
+            </div>
+
+            <div class="my-meeting-menu">
+
+                <button
+                        type="button"
+                        id="loadMyQuickMeetingsButton"
+                        class="my-meeting-toggle-button">
+
+                    내 번개방
+
+                </button>
+
+
+                <div
+                        id="myQuickMeetingList"
                         class="my-meeting-list"
                         style="display: none;">
                 </div>
@@ -547,6 +568,9 @@
     const myMeetingsUrl =
         homeContainer.dataset.myMeetingsUrl;
 
+    const myQuickMeetingsUrl =
+        homeContainer.dataset.myQuickMeetingsUrl;
+
 
     const meetingPageUrl =
         homeContainer.dataset.meetingPageUrl;
@@ -649,6 +673,16 @@
             "myMeetingList"
         );
 
+    const loadMyQuickMeetingsButton =
+        document.getElementById(
+            "loadMyQuickMeetingsButton"
+        );
+
+
+    const myQuickMeetingList =
+        document.getElementById(
+            "myQuickMeetingList"
+        );
 
     const quickMeetingList =
         document.getElementById(
@@ -1639,6 +1673,11 @@
             meetingId
         );
 
+        myMeetingsLoaded =
+            false;
+
+        myQuickMeetingsLoaded =
+            false;
 
         if (autoEnter)
         {
@@ -1912,6 +1951,18 @@
 
                 loadMyMeetingsButton.innerText =
                     "내 모임 보기";
+
+                // 내 번개방 목록 다시 조회할 수 있도록 초기화
+                myQuickMeetingsLoaded =
+                    false;
+
+                myQuickMeetingList.replaceChildren();
+
+                myQuickMeetingList.style.display =
+                    "none";
+
+                loadMyQuickMeetingsButton.innerText =
+                    "내 번개방";
 
 
                 // 번개방이면 홈의 번개 목록 즉시 새로고침
@@ -2686,6 +2737,326 @@
             {
 
                 loadMyMeetingsButton.disabled =
+                    false;
+            }
+        }
+    );
+
+    // ============================================================
+    // 내 번개 모임 목록 조회
+    // ============================================================
+
+    let myQuickMeetingsLoaded =
+        false;
+
+
+    loadMyQuickMeetingsButton.addEventListener(
+        "click",
+        async function()
+        {
+
+            if (
+                myQuickMeetingsLoaded
+                &&
+                myQuickMeetingList.style.display !== "none"
+            )
+            {
+
+                myQuickMeetingList.style.display =
+                    "none";
+
+
+                loadMyQuickMeetingsButton.innerText =
+                    "내 번개방";
+
+
+                return;
+            }
+
+
+            if (myQuickMeetingsLoaded)
+            {
+
+                myQuickMeetingList.style.display =
+                    "block";
+
+
+                loadMyQuickMeetingsButton.innerText =
+                    "내 번개방 닫기";
+
+
+                return;
+            }
+
+
+            try
+            {
+
+                loadMyQuickMeetingsButton.disabled =
+                    true;
+
+
+                loadMyQuickMeetingsButton.innerText =
+                    "불러오는 중...";
+
+
+                const response =
+                    await authenticatedFetch(
+                        myQuickMeetingsUrl,
+                        {
+                            method:
+                                "GET"
+                        }
+                    );
+
+
+                if (
+                    response.status === 401
+                    ||
+                    response.status === 403
+                )
+                {
+
+                    clearLoginStorage();
+
+                    redirectToLogin();
+
+                    return;
+                }
+
+
+                if (!response.ok)
+                {
+
+                    throw new Error(
+                        "내 번개방을 불러오지 못했습니다."
+                    );
+                }
+
+
+                const meetings =
+                    await response.json();
+
+
+                myQuickMeetingList.replaceChildren();
+
+
+                if (
+                    !Array.isArray(meetings)
+                    ||
+                    meetings.length === 0
+                )
+                {
+
+                    const emptyMessage =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    emptyMessage.className =
+                        "my-meeting-empty";
+
+
+                    emptyMessage.textContent =
+                        "현재 참여 중인 번개 모임이 없습니다.";
+
+
+                    myQuickMeetingList.appendChild(
+                        emptyMessage
+                    );
+
+
+                    myQuickMeetingList.style.display =
+                        "block";
+
+
+                    myQuickMeetingsLoaded =
+                        true;
+
+
+                    loadMyQuickMeetingsButton.innerText =
+                        "내 번개방 닫기";
+
+
+                    return;
+                }
+
+
+                meetings.forEach(
+                    meeting =>
+                    {
+
+                        const item =
+                            document.createElement(
+                                "div"
+                            );
+
+
+                        item.className =
+                            "my-meeting-item";
+
+
+                        const title =
+                            document.createElement(
+                                "div"
+                            );
+
+
+                        title.className =
+                            "my-meeting-title";
+
+
+                        title.textContent =
+                            meeting.title
+                            ||
+                            "제목 없는 번개";
+
+
+                        const codeArea =
+                            document.createElement(
+                                "div"
+                            );
+
+
+                        codeArea.className =
+                            "my-meeting-code-area";
+
+
+                        const codeLabel =
+                            document.createElement(
+                                "span"
+                            );
+
+
+                        codeLabel.className =
+                            "my-meeting-code-label";
+
+
+                        codeLabel.textContent =
+                            "초대코드";
+
+
+                        const codeButton =
+                            document.createElement(
+                                "button"
+                            );
+
+
+                        codeButton.type =
+                            "button";
+
+
+                        codeButton.className =
+                            "my-meeting-code-button";
+
+
+                        codeButton.textContent =
+                            meeting.inviteCode
+                            ||
+                            "-";
+
+
+                        codeButton.addEventListener(
+                            "click",
+                            function()
+                            {
+
+                                if (!meeting.meetingId)
+                                {
+
+                                    showHomeMessage(
+                                        "모임 ID를 확인할 수 없습니다.",
+                                        "error"
+                                    );
+
+
+                                    return;
+                                }
+
+
+                                localStorage.setItem(
+                                    "chatMeetingId",
+                                    meeting.meetingId
+                                );
+
+
+                                window.location.href =
+                                    meetingPageUrl
+                                    +
+                                    "?meetingId="
+                                    +
+                                    encodeURIComponent(
+                                        meeting.meetingId
+                                    );
+                            }
+                        );
+
+
+                        codeArea.appendChild(
+                            codeLabel
+                        );
+
+
+                        codeArea.appendChild(
+                            codeButton
+                        );
+
+
+                        item.appendChild(
+                            title
+                        );
+
+
+                        item.appendChild(
+                            codeArea
+                        );
+
+
+                        myQuickMeetingList.appendChild(
+                            item
+                        );
+                    }
+                );
+
+
+                myQuickMeetingList.style.display =
+                    "block";
+
+
+                myQuickMeetingsLoaded =
+                    true;
+
+
+                loadMyQuickMeetingsButton.innerText =
+                    "내 번개방 닫기";
+
+            }
+            catch (error)
+            {
+
+                console.error(
+                    "[MY QUICK MEETINGS ERROR]",
+                    error
+                );
+
+
+                showHomeMessage(
+                    error.message
+                    ||
+                    "내 번개방을 불러오는 중 오류가 발생했습니다.",
+                    "error"
+                );
+
+
+                loadMyQuickMeetingsButton.innerText =
+                    "내 번개방";
+
+            }
+            finally
+            {
+
+                loadMyQuickMeetingsButton.disabled =
                     false;
             }
         }
