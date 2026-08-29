@@ -1,6 +1,9 @@
 package com.meetback.dev.controller;
 
+import com.meetback.dev.domain.MeetingEventType;
 import com.meetback.dev.dto.*;
+import com.meetback.dev.realtime.event.RealtimeEvent;
+import com.meetback.dev.realtime.publisher.RealtimeEventPublisher;
 import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.ChatService;
 import com.meetback.dev.service.MeetingService;
@@ -26,6 +29,7 @@ public class MeetingController {
     private final MeetingService meetingService;
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatService chatService;
+    private final RealtimeEventPublisher realtimeEventPublisher;
 
     /*
      * ============================================================
@@ -79,6 +83,8 @@ public class MeetingController {
 
         if(response.newlyJoined())
         {
+            String eventType = MeetingEventType.PARTICIPANT_JOINED.name();
+
             ChatMessageResponse event =
                     chatService.saveSystemMessage(
                             response.meetingId(),
@@ -87,13 +93,13 @@ public class MeetingController {
                             "모임에 참가했습니다."
                     );
 
-
-            messagingTemplate.convertAndSend(
-                    "/topic/meetings/"
-                    + response.meetingId()
-                    + "/chat",
-
-                    event
+            realtimeEventPublisher.publish(
+                    RealtimeEvent.meetingBroadcast(
+                            eventType,
+                            response.meetingId(),
+                            user.userId(),
+                            event
+                    )
             );
         }
 
@@ -123,6 +129,8 @@ public class MeetingController {
 
     ) {
 
+        String eventType = MeetingEventType.MEETING_CONFIRMED.name();
+
         // =========================================================
         // 1. 최종 후보 DB 확정
         // =========================================================
@@ -142,8 +150,8 @@ public class MeetingController {
                 chatService.saveSystemMessageOnce(
                         meetingId,
                         user.userId(),
-                        "MEETING_CONFIRMED",
-                        "MEETING_CONFIRMED",
+                        eventType,
+                        eventType,
                         "최종 장소가 확정되었습니다."
                 );
 
@@ -153,14 +161,13 @@ public class MeetingController {
         // =========================================================
 
         if (notice != null) {
-
-            messagingTemplate.convertAndSend(
-
-                    "/topic/meetings/"
-                            + meetingId
-                            + "/chat",
-
-                    notice
+            realtimeEventPublisher.publish(
+                    RealtimeEvent.meetingBroadcast(
+                            eventType,
+                            meetingId,
+                            user.userId(),
+                            notice
+                    )
             );
         }
     }
@@ -178,46 +185,42 @@ public class MeetingController {
             @AuthenticationPrincipal AuthenticatedUser user
             ) {
 
-        ChatMessageResponse notice =
-                chatService.saveSystemMessageOnce(
-                        meetingId,
-                        user.userId(),
-                        "VOTING_STARTED",
-                        "VOTING_STARTED",
-                        "장소 투표가 시작되었습니다."
-                );
-
-        if(notice != null)
-        {
-            messagingTemplate.convertAndSend(
-                    "/topic/meetings/"
-                        + meetingId
-                        + "/chat",
-                    notice
-            );
-        }
-        // DB 상태
-        // INPUT_OPEN -> VOTING
+        /*
+         * 먼저 DB 상태를 INPUT_OPEN에서 VOTING으로 변경합니다.
+         *
+         * 상태 변경이 실패하면 투표 시작 메시지도 발생하지 않습니다.
+         */
         meetingService.startVoting(
                 meetingId,
                 user.userId()
         );
 
-        ChatMessageResponse event =
-                chatService.saveSystemMessage(
+        String eventType =
+                MeetingEventType.VOTING_STARTED.name();
+
+        /*
+         * 투표 시작 공지는 모임당 한 번만 저장합니다.
+         */
+        ChatMessageResponse notice =
+                chatService.saveSystemMessageOnce(
                         meetingId,
                         user.userId(),
-                        "VOTING_STARTED",
-                        "장소 투표를 시작합니다."
+                        eventType,
+                        eventType,
+                        "장소 투표가 시작되었습니다."
                 );
 
-        messagingTemplate.convertAndSend(
-                "/topic/meetings/"
-                        + meetingId
-                        + "/chat",
-
-                event
-        );
+        if (notice != null)
+        {
+            realtimeEventPublisher.publish(
+                    RealtimeEvent.meetingBroadcast(
+                            eventType,
+                            meetingId,
+                            user.userId(),
+                            notice
+                    )
+            );
+        }
     }
 
     @GetMapping("/my")

@@ -28,6 +28,10 @@ public interface MeetingParticipantMapper {
             @Param("meetingId") Long meetingId
     );
 
+    List<ParticipantRoomResponse> findKickedRoomParticipants(
+            @Param("meetingId") Long meetingId
+    );
+
     int kickParticipant(
             @Param("participantId") Long participantId
     );

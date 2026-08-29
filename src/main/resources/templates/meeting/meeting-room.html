@@ -235,6 +235,18 @@
 
     </div>
 
+    <div
+        id="kickedParticipantSection"
+        hidden>
+
+        <h3>강퇴된 참가자</h3>
+
+        <div id="kickedParticipantList">
+
+        </div>
+
+    </div>
+
 </div>
 
 
@@ -736,6 +748,8 @@
         updateLeaveButtonVisibility();
 
         await loadParticipants();
+
+        await loadKickedParticipants();
 
         await loadSubmittedStatus();
 
@@ -1577,6 +1591,150 @@
         );
     }
 
+    async function loadKickedParticipants()
+    {
+        const section = document.getElementById(
+            "kickedParticipantSection"
+        );
+
+        const area =
+            document.getElementById(
+                "kickedParticipantList"
+            );
+        if( !section
+            ||
+            !area
+            ||
+            !currentMeeting
+            ||
+            !currentUser)
+        {
+            return;
+        }
+
+        const currentUserIsHost =
+            Number(currentMeeting.hostUserId)
+            ===
+            Number(currentUser.userId);
+
+        /*
+         * 일반 참가자에게는 강퇴 목록을 표시하지 않습니다.
+         */
+        if(!currentUserIsHost)
+        {
+            section.hidden = true;
+            area.innerHTML = "";
+            return;
+        }
+
+        const response =
+            await MeetBack.authenticatedFetch(
+                "/participants/meeting/"
+                    + meetingId
+                    + "/kicked",
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
+            );
+
+        if(!response.ok)
+        {
+            console.error(
+                "강퇴된 참가자 조회 실패:",
+                response.status
+            );
+
+            section.hidden = true;
+            return;
+        }
+
+        const kickedParticipants = await response.json();
+
+        area.innerHTML = "";
+
+        /*
+         * 강퇴된 사람이 없다면 영역 자체를 숨깁니다.
+         */
+        if(
+            !Array.isArray(kickedParticipants)
+            ||
+            kickedParticipants.length === 0
+        )
+        {
+            section.hidden = true;
+            return;
+        }
+
+        section.hidden = false;
+
+        kickedParticipants.forEach(
+            participant =>
+            {
+                const nickname =
+                    participant.nickname
+                    || "참가자";
+
+                const card =
+                    document.createElement(
+                        "div"
+                    );
+
+                card.className =
+                    "participant-card kicked-participant-card";
+
+                card.innerHTML =
+                    `
+                <div class="participant-card-top">
+
+                    <strong class="participant-nickname">
+                        ${MeetBack.escapeHtml(nickname)}
+                    </strong>
+
+                    <span class="kicked-participant-badge">
+                        강퇴됨
+                    </span>
+
+                </div>
+
+                <div class="participant-card-bottom">
+
+                    <span>
+                        모임 참여 제한 중
+                    </span>
+
+                    <button
+                            type="button"
+                            class="participant-kick-cancel-button">
+                        강퇴 취소
+                    </button>
+
+                </div>
+                `;
+
+                const cancelButton =
+                    card.querySelector(
+                        ".participant-kick-cancel-button"
+                    );
+
+                cancelButton.addEventListener(
+                    "click",
+                    () =>
+                    {
+                        requestCancelKick(
+                            participant.participantId,
+                            nickname
+                        );
+                    }
+                );
+
+                area.appendChild(
+                    card
+                );
+            }
+        );
+    }
+
     async function requestLeaveMeeting()
     {
 
@@ -1756,6 +1914,56 @@
             + "님을 강퇴했습니다.",
             "success"
         );
+    }
+
+    async function requestCancelKick(
+        participantId,
+        nickname
+    )
+    {
+        const confirmed =
+            confirm(
+                nickname
+                + "님의 강퇴를 취소하시겠습니까?"
+            );
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        const response =
+            await MeetBack.authenticatedFetch(
+                "/participants/"
+                + participantId
+                + "/kick/cancel",
+                {
+                    method: "PATCH"
+                }
+            );
+
+        if (!response.ok)
+        {
+            showToast(
+                "강퇴 취소에 실패했습니다.",
+                "error"
+            );
+
+            return;
+        }
+
+        showToast(
+            nickname
+            + "님의 강퇴를 취소했습니다.",
+            "success"
+        );
+
+        /*
+         * WebSocket 이벤트를 기다리지 않아도
+         * 방장 화면을 즉시 갱신합니다.
+         */
+        await loadParticipants();
+        await loadKickedParticipants();
     }
 
 
@@ -2420,6 +2628,7 @@
                                 );
 
                                 await loadParticipants();
+                                await loadKickedParticipants();
                                 await loadSubmittedStatus();
                                 await loadCandidateCount();
 
@@ -2453,10 +2662,16 @@
                                 )
                                 {
 
-                                    updateParticipantPresence(
-                                        data.userId,
-                                        data.online
-                                    );
+                                    /*
+                                     * WebSocket 이벤트의 ON/OFF 값을 그대로 적용하지 않고
+                                     * 서버의 현재 Presence 상태를 다시 조회합니다.
+                                     *
+                                     * 화면 이동 과정에서 OFF와 ON 이벤트의 도착 순서가
+                                     * 뒤바뀌더라도 최종 상태를 정확하게 표시할 수 있습니다.
+                                     */
+                                    await loadParticipants();
+
+                                    return;
 
 
                                     return;
@@ -2542,13 +2757,39 @@
 
                                     if (kickedMe)
                                     {
-                                        if (stompClient)
+                                        /*
+                                         * 먼저 강퇴 안내 모달 표시
+                                         */
+                                        showKickModal();
+
+                                        /*
+                                         * WebSocket 자동 재연결 방지 및 연결 종료
+                                         */
+                                        if(stompClient)
                                         {
                                             stompClient.reconnectDelay = 0;
-                                            await stompClient.deactivate();
+
+                                            stompClient
+                                                .deactivate()
+                                                .catch(error =>
+                                                {
+                                                    console.error(
+                                                        "WebSocket 종료 실패:",
+                                                        error
+                                                    );
+                                                });
                                         }
 
-                                        location.replace("/home");
+                                        /*
+                                         * 모달을 잠시 보여준 다음 홈으로 이동
+                                         */
+                                        setTimeout(
+                                            () =>
+                                            {
+                                                location.replace("/home");
+                                            },
+                                            2000
+                                        );
                                         return;
                                     }
 
@@ -2556,6 +2797,7 @@
                                      * 다른 참가자가 나간 경우 화면 정보 갱신
                                      */
                                     await loadParticipants();
+                                    await loadKickedParticipants();
                                     await loadSubmittedStatus();
                                     await loadCandidateCount();
 
@@ -2578,6 +2820,7 @@
                                 )
                                 {
                                     await loadParticipants();
+                                    await loadKickedParticipants();
 
                                     return;
                                 }
@@ -2921,6 +3164,8 @@
         await loadCurrentParticipant();
 
         await loadParticipants();
+
+        await loadKickedParticipants();
 
         await loadSubmittedStatus();
 
