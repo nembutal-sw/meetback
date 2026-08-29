@@ -558,6 +558,40 @@ public class MeetingParticipantService {
         return participants;
     }
 
+    public List<ParticipantRoomResponse> findKickedRoomParticipants(
+            Long meetingId,
+            Long hostUserId
+    )
+    {
+        Meeting meeting =
+                meetingMapper.findById(
+                        meetingId
+                );
+
+        if(meeting == null)
+        {
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+        /*
+         * 강퇴 목록은 방장만 조회할 수 있습니다.
+         */
+        if(
+                !Objects.equals(
+                        meeting.getHostUserId(),
+                        hostUserId
+                )
+        ){
+            throw new AccessDeniedException(
+                    "방장만 강퇴된 참가자를 조회할 수 있습니다."
+            );
+        }
+
+        return meetingParticipantMapper.findKickedRoomParticipants(meetingId);
+    }
+
     @Transactional
     public ParticipantKickResult kickParticipant(
             Long participantId,
