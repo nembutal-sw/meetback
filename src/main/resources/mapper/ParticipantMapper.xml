@@ -5,7 +5,9 @@
 
 <mapper namespace="com.meetback.dev.repository.ParticipantMapper">
 
-    <insert id="insertParticipant">
+    <insert id="insertParticipant"
+            useGeneratedKeys="true"
+            keyProperty="participantId">
 
         INSERT INTO meeting_participants
         (

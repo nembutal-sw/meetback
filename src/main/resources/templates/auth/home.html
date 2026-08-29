@@ -29,6 +29,7 @@
         data-create-meeting-url=@{/meetings},
         data-join-meeting-url=@{/meetings/join},
         data-my-meetings-url=@{/meetings/my},
+        data-quick-fixed-page-url=@{/quick-fixed},
         data-my-quick-meetings-url=@{/meetings/my/quick},
         data-quick-meetings-url=@{/meetings/quick},
         data-meeting-page-url=@{/meeting}
@@ -189,6 +190,10 @@
                             번개방 - 자유롭게 참여하는 모임
                         </option>
 
+                        <option value="QUICK_FIXED">
+                            고정 번개방 - 장소와 시간을 정해두는 모임
+                        </option>
+
                     </select>
 
                 </div>
@@ -204,6 +209,49 @@
                             type="text"
                             id="meetingTitle"
                             placeholder="예: 금요일 건대 모임">
+
+                </div>
+
+                <div
+                        class="field"
+                        id="meetingStartAtField"
+                        style="display: none;">
+
+                    <label for="meetingStartAt">
+                        모임 시작시간
+                    </label>
+
+                    <input
+                            type="datetime-local"
+                            id="meetingStartAt">
+
+                </div>
+
+                <div
+                        class="field"
+                        id="fixedPlaceField"
+                        style="display: none;">
+
+                    <label for="fixedPlaceInput">
+                        모임 장소
+                    </label>
+
+                    <input
+                            type="text"
+                            id="fixedPlaceInput"
+                            placeholder="모임 장소를 검색해주세요"
+                            autocomplete="off">
+
+                    <div
+                            id="fixedPlaceSearchResults">
+                    </div>
+
+                    <div
+                            id="fixedPlaceSelected">
+
+                        선택된 장소 없음
+
+                    </div>
 
                 </div>
 
@@ -536,6 +584,8 @@
             "homeContainer"
         );
 
+    const quickFixedPageUrl =
+        homeContainer.dataset.quickFixedPageUrl;
 
     const loginUrl =
         homeContainer.dataset.loginUrl;
@@ -706,6 +756,52 @@
         document.getElementById(
             "meetingType"
         );
+
+    const meetingStartAtField =
+        document.getElementById(
+            "meetingStartAtField"
+        );
+
+
+    const meetingStartAtInput =
+        document.getElementById(
+            "meetingStartAt"
+        );
+
+    const fixedPlaceField =
+        document.getElementById(
+            "fixedPlaceField"
+        );
+
+
+    const fixedPlaceInput =
+        document.getElementById(
+            "fixedPlaceInput"
+        );
+
+
+    const fixedPlaceSearchResults =
+        document.getElementById(
+            "fixedPlaceSearchResults"
+        );
+
+
+    const fixedPlaceSelected =
+        document.getElementById(
+            "fixedPlaceSelected"
+        );
+
+
+    let selectedFixedPlace =
+        null;
+
+
+    let fixedPlaceSearchTimer =
+        null;
+
+
+    let fixedPlaceRequestVersion =
+        0;
 
 
     const desiredEndAtInput =
@@ -1753,6 +1849,285 @@
         return data;
     }
 
+    // ============================================================
+    // 고정 번개방 장소 검색
+    // ============================================================
+
+    async function searchFixedPlace()
+    {
+
+        const query =
+            fixedPlaceInput
+                .value
+                .trim();
+
+
+        if (query.length < 2)
+        {
+
+            fixedPlaceSearchResults
+                .replaceChildren();
+
+
+            return;
+        }
+
+
+        const requestVersion =
+            ++fixedPlaceRequestVersion;
+
+
+        fixedPlaceSearchResults.textContent =
+            "검색 중...";
+
+
+        try
+        {
+
+            const response =
+                await authenticatedFetch(
+                    "/places?query="
+                    +
+                    encodeURIComponent(
+                        query
+                    ),
+                    {
+                        method:
+                            "GET"
+                    }
+                );
+
+
+            if (
+                requestVersion
+                !==
+                fixedPlaceRequestVersion
+            )
+            {
+                return;
+            }
+
+
+            if (
+                fixedPlaceInput
+                    .value
+                    .trim()
+                !==
+                query
+            )
+            {
+                return;
+            }
+
+
+            if (!response.ok)
+            {
+
+                fixedPlaceSearchResults.textContent =
+                    "장소 검색에 실패했습니다.";
+
+
+                return;
+            }
+
+
+            const places =
+                await response.json();
+
+
+            fixedPlaceSearchResults
+                .replaceChildren();
+
+
+            if (
+                !Array.isArray(places)
+                ||
+                places.length === 0
+            )
+            {
+
+                fixedPlaceSearchResults.textContent =
+                    "검색 결과가 없습니다.";
+
+
+                return;
+            }
+
+
+            places.forEach(
+                place =>
+                {
+
+                    const result =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    result.className =
+                        "fixed-place-result";
+
+
+                    const name =
+                        place.name
+                        ||
+                        place.placeName
+                        ||
+                        "장소명 없음";
+
+
+                    const address =
+                        place.roadAddress
+                        ||
+                        place.address
+                        ||
+                        "";
+
+
+                    const nameElement =
+                        document.createElement(
+                            "strong"
+                        );
+
+
+                    nameElement.textContent =
+                        name;
+
+
+                    const addressElement =
+                        document.createElement(
+                            "div"
+                        );
+
+
+                    addressElement.textContent =
+                        address;
+
+
+                    result.appendChild(
+                        nameElement
+                    );
+
+
+                    result.appendChild(
+                        addressElement
+                    );
+
+
+                    result.addEventListener(
+                        "click",
+                        function()
+                        {
+
+                            selectedFixedPlace = {
+
+                                name:
+                                name,
+
+                                address:
+                                address,
+
+                                longitude:
+                                place.longitude,
+
+                                latitude:
+                                place.latitude
+
+                            };
+
+
+                            fixedPlaceInput.value =
+                                name;
+
+
+                            fixedPlaceSelected.textContent =
+                                name
+                                +
+                                (
+                                    address
+                                        ? " / " + address
+                                        : ""
+                                );
+
+
+                            fixedPlaceSearchResults
+                                .replaceChildren();
+                        }
+                    );
+
+
+                    fixedPlaceSearchResults.appendChild(
+                        result
+                    );
+                }
+            );
+
+        }
+        catch (error)
+        {
+
+            console.error(
+                "[FIXED PLACE SEARCH ERROR]",
+                error
+            );
+
+
+            fixedPlaceSearchResults.textContent =
+                "장소 검색 중 오류가 발생했습니다.";
+        }
+    }
+
+
+    fixedPlaceInput.addEventListener(
+        "input",
+        function()
+        {
+
+            selectedFixedPlace =
+                null;
+
+
+            fixedPlaceSelected.textContent =
+                "선택된 장소 없음";
+
+
+            if (fixedPlaceSearchTimer)
+            {
+
+                clearTimeout(
+                    fixedPlaceSearchTimer
+                );
+            }
+
+
+            const query =
+                fixedPlaceInput
+                    .value
+                    .trim();
+
+
+            if (query.length < 2)
+            {
+
+                fixedPlaceRequestVersion++;
+
+
+                fixedPlaceSearchResults
+                    .replaceChildren();
+
+
+                return;
+            }
+
+
+            fixedPlaceSearchTimer =
+                setTimeout(
+                    searchFixedPlace,
+                    350
+                );
+        }
+    );
+
 
 
     // ============================================================
@@ -1773,6 +2148,10 @@
             const meetingType =
                 meetingTypeSelect.value;
 
+            const meetingStartAt =
+                meetingStartAtInput
+                    .value;
+
 
             const desiredEndAt =
                 desiredEndAtInput
@@ -1784,6 +2163,36 @@
 
                 showHomeMessage(
                     "모임 제목을 입력해주세요.",
+                    "error"
+                );
+
+                return;
+            }
+
+            if (
+                meetingType === "QUICK_FIXED"
+                &&
+                !meetingStartAt
+            )
+            {
+
+                showHomeMessage(
+                    "모임 시작시간을 선택해주세요.",
+                    "error"
+                );
+
+                return;
+            }
+
+            if (
+                meetingType === "QUICK_FIXED"
+                &&
+                !selectedFixedPlace
+            )
+            {
+
+                showHomeMessage(
+                    "모임 장소를 선택해주세요.",
                     "error"
                 );
 
@@ -1874,8 +2283,18 @@
                                         meetingType:
                                         meetingType,
 
+                                        meetingStartAt:
+                                            meetingStartAt
+                                            ||
+                                            null,
+
                                         desiredEndAt:
-                                        desiredEndAt
+                                        desiredEndAt,
+
+                                        fixedPlace:
+                                            meetingType === "QUICK_FIXED"
+                                                ? selectedFixedPlace
+                                                : null
 
                                     }
                                 )
@@ -1950,6 +2369,11 @@
                     .dataset
                     .meetingId =
                     meetingId;
+
+                enterCreatedMeetingButton
+                    .dataset
+                    .meetingType =
+                    meetingType;
 
 
                 showHomeMessage(
@@ -2033,8 +2457,29 @@
                 this.dataset.meetingId;
 
 
+            const meetingType =
+                this.dataset.meetingType;
+
+
             if (!meetingId)
             {
+                return;
+            }
+
+
+            if (meetingType === "QUICK_FIXED")
+            {
+
+                window.location.href =
+                    quickFixedPageUrl
+                    +
+                    "?meetingId="
+                    +
+                    encodeURIComponent(
+                        meetingId
+                    );
+
+
                 return;
             }
 
@@ -3591,6 +4036,52 @@
                 false;
         }
     }
+
+    meetingTypeSelect.addEventListener(
+        "change",
+        function()
+        {
+
+            if (meetingTypeSelect.value === "QUICK_FIXED")
+            {
+
+                meetingStartAtField.style.display =
+                    "block";
+
+                fixedPlaceField.style.display =
+                    "block";
+
+            }
+            else
+            {
+
+                meetingStartAtField.style.display =
+                    "none";
+
+
+                meetingStartAtInput.value =
+                    "";
+
+
+                fixedPlaceField.style.display =
+                    "none";
+
+
+                fixedPlaceInput.value =
+                    "";
+
+
+                fixedPlaceSearchResults.replaceChildren();
+
+                fixedPlaceSelected.textContent =
+                    "선택된 장소 없음";
+
+
+                selectedFixedPlace =
+                    null;
+            }
+        }
+    );
 
 
     // ============================================================

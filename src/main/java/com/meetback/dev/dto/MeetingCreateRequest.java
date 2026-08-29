@@ -10,4 +10,6 @@ public class MeetingCreateRequest {
     private String title;
     private MeetingType meetingType;
     private LocalDateTime desiredEndAt;
+    private LocalDateTime meetingStartAt;
+    private CandidateRequestDTO fixedPlace;
 }

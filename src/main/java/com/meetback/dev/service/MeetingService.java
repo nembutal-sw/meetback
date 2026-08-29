@@ -9,10 +9,11 @@ import com.meetback.dev.repository.VoteMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.meetback.dev.repository.VoteMapper;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import com.meetback.dev.repository.MeetingCandidateMapper;
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +25,7 @@ public class MeetingService {
     private final ParticipantService participantService;
     private final CandidateService candidateService;
     private final VoteMapper voteMapper;
+    private final MeetingCandidateMapper meetingCandidateMapper;
 
     @Transactional
     public MeetingCreateResponse createMeeting(
@@ -58,6 +60,59 @@ public class MeetingService {
                         ? request.getMeetingType()
                         : MeetingType.FRIEND;
 
+        LocalDateTime meetingStartAt =
+                request.getMeetingStartAt();
+
+        if (
+                meetingType == MeetingType.QUICK_FIXED
+                        &&
+                        (
+                                request.getFixedPlace() == null
+                                        ||
+                                        request.getFixedPlace().name() == null
+                                        ||
+                                        request.getFixedPlace().name().isBlank()
+                                        ||
+                                        request.getFixedPlace().latitude() == null
+                                        ||
+                                        request.getFixedPlace().longitude() == null
+                        )
+        ) {
+            throw new IllegalArgumentException(
+                    "고정 번개방은 모임 장소가 필수입니다."
+            );
+        }
+
+        if (
+                meetingType == MeetingType.QUICK_FIXED
+                        &&
+                        meetingStartAt == null
+        ) {
+            throw new IllegalArgumentException(
+                    "고정 번개방은 모임 시작시간이 필수입니다."
+            );
+        }
+
+        if (
+                meetingType == MeetingType.QUICK_FIXED
+                        &&
+                        !meetingStartAt.isAfter(LocalDateTime.now())
+        ) {
+            throw new IllegalArgumentException(
+                    "모임 시작시간은 현재 시각 이후로 선택해주세요."
+            );
+        }
+
+        if (
+                meetingType == MeetingType.QUICK_FIXED
+                        &&
+                        !desiredEndAt.isAfter(meetingStartAt)
+        ) {
+            throw new IllegalArgumentException(
+                    "희망 종료시간은 모임 시작시간 이후로 선택해주세요."
+            );
+        }
+
         String inviteCode = generateInviteCode();
 
         Meeting meeting = new Meeting();
@@ -67,6 +122,7 @@ public class MeetingService {
         meeting.setMeetingType(meetingType);
         meeting.setStatus(MeetingStatus.INPUT_OPEN);
         meeting.setDesiredEndAt(request.getDesiredEndAt());
+        meeting.setMeetingStartAt(request.getMeetingStartAt());
         meeting.setCalculationVersion(0);
         meeting.setInviteCode(inviteCode);
 
@@ -95,6 +151,69 @@ public class MeetingService {
         participantMapper.insertParticipant(
                 participant
         );
+
+        if (
+                meetingType == MeetingType.QUICK_FIXED
+        ) {
+
+            CandidateRequestDTO fixedPlace =
+                    request.getFixedPlace();
+
+
+            MeetingCandidate candidate =
+                    new MeetingCandidate();
+
+
+            candidate.setMeetingId(
+                    meeting.getMeetingId()
+            );
+
+
+            candidate.setProposerParticipantId(
+                    participant.getParticipantId()
+            );
+
+
+            candidate.setPlaceName(
+                    fixedPlace.name().trim()
+            );
+
+
+            candidate.setAddress(
+                    fixedPlace.address()
+            );
+
+
+            candidate.setLatitude(
+                    BigDecimal.valueOf(
+                            fixedPlace.latitude()
+                    )
+            );
+
+
+            candidate.setLongitude(
+                    BigDecimal.valueOf(
+                            fixedPlace.longitude()
+                    )
+            );
+
+
+            candidate.setIsActive(
+                    true
+            );
+
+
+            meetingCandidateMapper.insert(
+                    candidate
+            );
+
+
+            meetingMapper.updateFinalCandidate(
+                    meeting.getMeetingId(),
+                    candidate.getCandidateId(),
+                    MeetingStatus.INPUT_OPEN
+            );
+        }
 
 
         return new MeetingCreateResponse(
@@ -195,6 +314,8 @@ public class MeetingService {
         {
             if(
                     meeting.getMeetingType() != MeetingType.QUICK_VOTE
+                            &&
+                            meeting.getMeetingType() != MeetingType.QUICK_FIXED
             )
             {
                 throw new IllegalStateException(
@@ -572,6 +693,7 @@ public class MeetingService {
                 meeting.getTitle(),
                 meeting.getInviteCode(),
                 meeting.getDesiredEndAt(),
+                meeting.getMeetingStartAt(),
                 meeting.getMeetingType(),
                 meeting.getStatus(),
                 meeting.getFinalCandidateId()

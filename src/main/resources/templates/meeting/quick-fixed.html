@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>MeetBack 고정 번개방</title>
+
+    <script
+            src="/js/auth-session-guard.js"
+            defer>
+    </script>
+
+    <script
+            src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js">
+    </script>
+
+    <script src="/js/meeting-common.js"></script>
+
+    <script src="/js/meeting-presence.js"></script>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #f8f8fd;
+            font-family: Arial, sans-serif;
+            color: #191924;
+        }
+
+        .page {
+            width: 900px;
+            max-width: calc(100% - 32px);
+            margin: 40px auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            margin: 0;
+        }
+
+        .home-button {
+            border: 1px solid #e8e7f1;
+            background: white;
+            padding: 10px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e8e7f1;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 18px;
+        }
+
+        .meeting-title {
+            font-size: 26px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .meeting-type {
+            color: #6557f6;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 22px;
+        }
+
+        .info-item {
+            padding: 16px;
+            background: #f8f8fd;
+            border-radius: 12px;
+        }
+
+        .info-label {
+            color: #777788;
+            font-size: 13px;
+            margin-bottom: 7px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .place-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .place-address {
+            color: #777788;
+        }
+
+        .invite-button {
+            margin-top: 18px;
+            border: 1px solid #6557f6;
+            background: #f1efff;
+            color: #5143df;
+            padding: 10px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .return-card h2 {
+            margin-top: 0;
+        }
+
+        .return-description {
+            color: #777788;
+            line-height: 1.6;
+        }
+
+        .message {
+            display: none;
+            margin-bottom: 18px;
+            padding: 14px 16px;
+            border-radius: 10px;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message-error {
+            background: #fff0f1;
+            color: #c94b54;
+        }
+
+        @media (max-width: 700px) {
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+
+<div class="page">
+
+
+    <!-- =========================================================
+         상단
+         ========================================================= -->
+
+    <div class="header">
+
+        <h1>
+            MeetBack
+        </h1>
+
+        <button
+                type="button"
+                class="home-button"
+                onclick="goHome()">
+
+            홈으로
+
+        </button>
+
+    </div>
+
+
+    <div
+            id="message"
+            class="message">
+    </div>
+
+
+    <!-- =========================================================
+         고정 번개방 정보
+         ========================================================= -->
+
+    <div class="card">
+
+        <div
+                id="meetingTitle"
+                class="meeting-title">
+
+            모임 정보를 불러오는 중...
+
+        </div>
+
+
+        <div class="meeting-type">
+
+            ⚡ 고정 번개방
+
+        </div>
+
+
+        <div class="info-grid">
+
+
+            <div class="info-item">
+
+                <div class="info-label">
+                    모임 시작시간
+                </div>
+
+                <div
+                        id="meetingStartAt"
+                        class="info-value">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="info-item">
+
+                <div class="info-label">
+                    희망 종료시간
+                </div>
+
+                <div
+                        id="desiredEndAt"
+                        class="info-value">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <button
+                type="button"
+                id="inviteCodeButton"
+                class="invite-button"
+                onclick="copyInviteUrl()"
+                disabled>
+
+            🔗 초대코드
+            <span id="inviteCode">
+                -
+            </span>
+
+        </button>
+
+    </div>
+
+
+    <!-- =========================================================
+         고정 장소
+         ========================================================= -->
+
+    <div class="card">
+
+        <h2>
+            모임 장소
+        </h2>
+
+
+        <div
+                id="fixedPlaceName"
+                class="place-name">
+
+            장소 정보를 불러오는 중...
+
+        </div>
+
+
+        <div
+                id="fixedPlaceAddress"
+                class="place-address">
+
+            -
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         내 귀가 정보
+         이후 구현 영역
+         ========================================================= -->
+
+    <div class="card return-card">
+
+        <h2>
+            내 귀가 확인
+        </h2>
+
+
+        <div class="return-description">
+
+            귀가 장소를 입력하면
+            모임 종료 후 집에 돌아갈 수 있는지 확인하고
+            귀가 경로를 볼 수 있습니다.
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+
+<script>
+
+    // =========================================================
+    // 상태
+    // =========================================================
+
+    let meetingId =
+        null;
+
+
+    let meeting =
+        null;
+
+
+    let fixedPlace =
+        null;
+
+
+
+    // =========================================================
+    // DOM
+    // =========================================================
+
+    const message =
+        document.getElementById(
+            "message"
+        );
+
+
+    const meetingTitle =
+        document.getElementById(
+            "meetingTitle"
+        );
+
+
+    const meetingStartAt =
+        document.getElementById(
+            "meetingStartAt"
+        );
+
+
+    const desiredEndAt =
+        document.getElementById(
+            "desiredEndAt"
+        );
+
+
+    const inviteCode =
+        document.getElementById(
+            "inviteCode"
+        );
+
+
+    const inviteCodeButton =
+        document.getElementById(
+            "inviteCodeButton"
+        );
+
+
+    const fixedPlaceName =
+        document.getElementById(
+            "fixedPlaceName"
+        );
+
+
+    const fixedPlaceAddress =
+        document.getElementById(
+            "fixedPlaceAddress"
+        );
+
+
+
+    // =========================================================
+    // 메시지
+    // =========================================================
+
+    function showMessage(
+        text
+    )
+    {
+
+        message.textContent =
+            text;
+
+
+        message.className =
+            "message show message-error";
+    }
+
+
+
+    // =========================================================
+    // 홈 이동
+    // =========================================================
+
+    function goHome()
+    {
+
+        location.href =
+            "/home";
+    }
+
+
+
+    // =========================================================
+    // 초대 링크 복사
+    // =========================================================
+
+    async function copyInviteUrl()
+    {
+
+        if (
+            !meeting
+            ||
+            !meeting.inviteCode
+        )
+        {
+            return;
+        }
+
+
+        const inviteUrl =
+            window.location.origin
+            +
+            "/home?inviteCode="
+            +
+            encodeURIComponent(
+                meeting.inviteCode
+            );
+
+
+        try
+        {
+
+            await navigator.clipboard.writeText(
+                inviteUrl
+            );
+
+
+            const originalText =
+                inviteCodeButton.innerHTML;
+
+
+            inviteCodeButton.textContent =
+                "✓ 초대 링크 복사 완료";
+
+
+            setTimeout(
+                () =>
+                {
+
+                    inviteCodeButton.innerHTML =
+                        originalText;
+
+                },
+                1500
+            );
+
+        }
+        catch (error)
+        {
+
+            console.error(
+                "[INVITE COPY ERROR]",
+                error
+            );
+        }
+    }
+
+
+
+    // =========================================================
+    // 모임 정보 조회
+    // =========================================================
+
+    async function loadMeeting()
+    {
+
+        const response =
+            await MeetBack.authenticatedFetch(
+                "/meetings/"
+                +
+                meetingId
+            );
+
+
+        if (!response.ok)
+        {
+
+            throw new Error(
+                "모임 정보를 불러오지 못했습니다."
+            );
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            data.meetingType
+            !==
+            "QUICK_FIXED"
+        )
+        {
+
+            throw new Error(
+                "고정 번개방이 아닙니다."
+            );
+        }
+
+
+        meeting =
+            data;
+
+
+        meetingTitle.textContent =
+            data.title
+            ||
+            "제목 없는 모임";
+
+
+        meetingStartAt.textContent =
+            MeetBack.formatDateTime(
+                data.meetingStartAt
+            );
+
+
+        desiredEndAt.textContent =
+            MeetBack.formatDateTime(
+                data.desiredEndAt
+            );
+
+
+        inviteCode.textContent =
+            data.inviteCode
+            ||
+            "-";
+
+
+        inviteCodeButton.disabled =
+            !data.inviteCode;
+    }
+
+
+
+    // =========================================================
+    // 고정 장소 조회
+    // =========================================================
+
+    async function loadFixedPlace()
+    {
+
+        const response =
+            await MeetBack.authenticatedFetch(
+                "/participants/meeting/"
+                +
+                meetingId
+                +
+                "/candidates"
+            );
+
+
+        if (!response.ok)
+        {
+
+            throw new Error(
+                "모임 장소를 불러오지 못했습니다."
+            );
+        }
+
+
+        const candidates =
+            await response.json();
+
+
+        if (
+            !Array.isArray(
+                candidates
+            )
+        )
+        {
+
+            throw new Error(
+                "모임 장소 정보가 올바르지 않습니다."
+            );
+        }
+
+
+        fixedPlace =
+            candidates.find(
+                candidate =>
+                    Number(
+                        candidate.candidateId
+                    )
+                    ===
+                    Number(
+                        meeting.finalCandidateId
+                    )
+            );
+
+
+        if (!fixedPlace)
+        {
+
+            throw new Error(
+                "확정된 모임 장소를 찾을 수 없습니다."
+            );
+        }
+
+
+        fixedPlaceName.textContent =
+            fixedPlace.placeName
+            ||
+            "장소명 없음";
+
+
+        fixedPlaceAddress.textContent =
+            fixedPlace.address
+            ||
+            "주소 정보 없음";
+    }
+
+
+
+    // =========================================================
+    // 초기화
+    // =========================================================
+
+    async function initialize()
+    {
+
+        const currentUser =
+            await MeetBack.checkLogin();
+
+
+        if (!currentUser)
+        {
+            return;
+        }
+
+
+        meetingId =
+            MeetBack.getMeetingId();
+
+
+        if (!meetingId)
+        {
+
+            showMessage(
+                "모임 ID를 확인할 수 없습니다."
+            );
+
+
+            return;
+        }
+
+        MeetBackPresence.connect(
+            meetingId
+        );
+
+
+        try
+        {
+
+            await loadMeeting();
+
+
+            await loadFixedPlace();
+
+        }
+        catch (error)
+        {
+
+            console.error(
+                "[QUICK FIXED INITIALIZE ERROR]",
+                error
+            );
+
+
+            showMessage(
+                error.message
+                ||
+                "고정 번개방을 불러오는 중 오류가 발생했습니다."
+            );
+        }
+    }
+
+
+
+    // =========================================================
+    // 실행
+    // =========================================================
+
+    initialize();
+
+</script>
+
+
+</body>
+</html>
