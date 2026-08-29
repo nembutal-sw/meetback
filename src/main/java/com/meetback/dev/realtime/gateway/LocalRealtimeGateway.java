@@ -6,4 +6,8 @@ public interface LocalRealtimeGateway {
             Long meetingId,
             Object exactClientPayload
     );
+
+    void broadcastToQuickLobby(
+            Object exactClientPayload
+    );
 }

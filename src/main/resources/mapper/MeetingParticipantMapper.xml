@@ -247,7 +247,7 @@
         UPDATE meeting_participants
 
         SET
-            participant_status = 'ACTIVE',
+            participant_status = #{nextStatus},
             updated_at = NOW()
 
         WHERE participant_id = #{participantId}

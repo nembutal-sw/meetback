@@ -1,6 +1,7 @@
 package com.meetback.dev.controller;
 
 import com.meetback.dev.domain.MeetingEventType;
+import com.meetback.dev.domain.MeetingType;
 import com.meetback.dev.dto.*;
 import com.meetback.dev.realtime.event.RealtimeEvent;
 import com.meetback.dev.realtime.publisher.RealtimeEventPublisher;
@@ -8,10 +9,10 @@ import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.ChatService;
 import com.meetback.dev.service.MeetingService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
 
 
 // ============================================================
@@ -27,7 +28,6 @@ import java.util.List;
 public class MeetingController {
 
     private final MeetingService meetingService;
-    private final SimpMessagingTemplate messagingTemplate;
     private final ChatService chatService;
     private final RealtimeEventPublisher realtimeEventPublisher;
 
@@ -45,14 +45,40 @@ public class MeetingController {
             @RequestBody MeetingCreateRequest request
             ){
 
-        System.out.println(
-                "[MeetingController] user = " + user
-        );
+        MeetingCreateResponse response =
+                meetingService.createMeeting(
+                        user.userId(),
+                        request
+                );
 
-        return meetingService.createMeeting(
-                user.userId(),
-                request
-        );
+        MeetingType meetingType =
+                request.getMeetingType() != null
+                    ? request.getMeetingType()
+                    : MeetingType.FRIEND;
+
+        /*
+         * 번개방 생성 시 홈의 번개방 목록 갱신 이벤트 발행
+         */
+        if(meetingType == MeetingType.QUICK_VOTE)
+        {
+            String eventType =
+                    MeetingEventType.QUICK_MEETING_LIST_CHANGED.name();
+
+            realtimeEventPublisher.publish(
+                    RealtimeEvent.quickLobbyBroadcast(
+                            eventType,
+                            response.getMeetingId(),
+                            user.userId(),
+                            Map.of(
+                                    "messageType", "EVENT",
+                                    "eventType", eventType,
+                                    "meetingId", response.getMeetingId()
+                            )
+                    )
+            );
+        }
+
+        return response;
 
     }
 

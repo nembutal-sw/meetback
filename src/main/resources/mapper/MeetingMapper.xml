@@ -112,6 +112,7 @@
         JOIN meetings m
         ON m.meeting_id = mp.meeting_id
         WHERE mp.user_id = #{userId}
+          AND mp.participant_status = 'ACTIVE'
         ORDER BY m.created_at DESC
 
     </select>

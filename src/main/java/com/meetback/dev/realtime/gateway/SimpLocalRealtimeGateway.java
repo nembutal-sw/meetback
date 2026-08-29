@@ -42,4 +42,20 @@ public class SimpLocalRealtimeGateway
                 exactClientPayload
         );
     }
+
+    @Override
+    public void broadcastToQuickLobby(
+            Object exactClientPayload
+    )
+    {
+        Objects.requireNonNull(
+                exactClientPayload,
+                "exactClientPayload는 필수입니다."
+        );
+
+        messagingTemplate.convertAndSend(
+                "/topic/quick-meetings",
+                exactClientPayload
+        );
+    }
 }

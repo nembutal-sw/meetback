@@ -1,10 +1,12 @@
 package com.meetback.dev.WebSocket;
 
+import com.meetback.dev.domain.MeetingEventType;
+import com.meetback.dev.realtime.event.RealtimeEvent;
+import com.meetback.dev.realtime.publisher.RealtimeEventPublisher;
 import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.MeetingPresenceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -19,7 +21,7 @@ import java.util.Map;
 public class MeetingPresenceEventListener {
 
     private final MeetingPresenceService presenceService;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final RealtimeEventPublisher realtimeEventPublisher;
 
     /*
      * ============================================================
@@ -124,25 +126,22 @@ public class MeetingPresenceEventListener {
             MeetingPresenceService.PresenceChange change
     )
     {
-        messagingTemplate.convertAndSend(
-                "/topic/meetings/"
-                        + change.meetingId()
-                        + "/chat",
+        String eventType = MeetingEventType.PRESENCE_UPDATED.name();
 
-                (Object) Map.of(
-                        "messageType",
-                        "PRESENCE",
-
-                        "eventType",
-                        "PRESENCE_UPDATED",
-
-                        "userId",
+        realtimeEventPublisher.publish(
+                RealtimeEvent.meetingBroadcast(
+                        eventType,
+                        change.meetingId(),
                         change.userId(),
-
-                        "online",
-                        change.online()
+                        Map.of(
+                                "messageType", "PRESENCE",
+                                "eventType", eventType,
+                                "userId", change.userId(),
+                                "online", change.online()
+                        )
                 )
         );
+
     }
     /*
      * /topic/meetings/33/chat

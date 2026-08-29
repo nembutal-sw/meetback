@@ -13,7 +13,6 @@ import com.meetback.dev.service.MeetingParticipantService;
 import com.meetback.dev.service.ParticipantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +26,6 @@ public class MeetingParticipantController {
 
     private final MeetingParticipantService meetingParticipantService;
     private final ParticipantService participantService;
-    private final SimpMessagingTemplate messagingTemplate;
     private final ChatService chatService;
     private final RealtimeEventPublisher realtimeEventPublisher;
 

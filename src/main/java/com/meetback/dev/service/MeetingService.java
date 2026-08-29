@@ -9,7 +9,6 @@ import com.meetback.dev.repository.VoteMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.meetback.dev.repository.VoteMapper;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;

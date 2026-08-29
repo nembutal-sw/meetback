@@ -825,9 +825,28 @@ public class MeetingParticipantService {
             );
         }
 
+        ParticipantStatus nextStatus;
+
+        if(meeting.getMeetingType() == MeetingType.QUICK_VOTE)
+        {
+            /*
+             * 번개방은 강퇴만 해제합니다.
+             * 사용자가 다시 참가해야 ACTIVE가 됩니다.
+             */
+            nextStatus = ParticipantStatus.LEFT;
+        }
+        else
+        {
+            /*
+             * 친구방은 고정 참가자이므로 바로 복구합니다.
+             */
+            nextStatus = ParticipantStatus.ACTIVE;
+        }
+
         int updatedRows =
                 meetingParticipantMapper.cancelKick(
-                        participantId
+                        participantId,
+                        nextStatus
                 );
 
         if(updatedRows != 1)
