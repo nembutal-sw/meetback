@@ -9,6 +9,7 @@ import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.ChatService;
 import com.meetback.dev.service.MeetingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.Map;
 public class MeetingController {
 
     private final MeetingService meetingService;
+    private final SimpMessagingTemplate messagingTemplate;
     private final ChatService chatService;
     private final RealtimeEventPublisher realtimeEventPublisher;
 
@@ -254,6 +256,15 @@ public class MeetingController {
             @AuthenticationPrincipal AuthenticatedUser user
     ) {
         return meetingService.getMyMeetings(
+                user.userId()
+        );
+    }
+
+    @GetMapping("/my/quick")
+    public List<MyMeetingResponse> getMyQuickMeetings(
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        return meetingService.getMyQuickMeetings(
                 user.userId()
         );
     }

@@ -11,22 +11,24 @@
             keyProperty="meetingId">
 
         INSERT INTO meetings (
-            host_user_id,
-            title,
-            meeting_type,
-            status,
-            desired_end_at,
-            calculation_version,
-            invite_code
+        host_user_id,
+        title,
+        meeting_type,
+        status,
+        desired_end_at,
+        meeting_start_at,
+        calculation_version,
+        invite_code
         )
         VALUES (
-            #{hostUserId},
-            #{title},
-            #{meetingType},
-            #{status},
-            #{desiredEndAt},
-            #{calculationVersion},
-            #{inviteCode}
+        #{hostUserId},
+        #{title},
+        #{meetingType},
+        #{status},
+        #{desiredEndAt},
+        #{meetingStartAt},
+        #{calculationVersion},
+        #{inviteCode}
         )
 
     </insert>
@@ -42,6 +44,7 @@
             meeting_type,
             status,
             desired_end_at,
+            meeting_start_at,
             calculation_version,
             invite_code,
             final_candidate_id,
@@ -67,17 +70,18 @@
             resultType="com.meetback.dev.domain.Meeting">
 
         SELECT
-            meeting_id,
-            host_user_id,
-            title,
-            meeting_type,
-            status,
-            desired_end_at,
-            calculation_version,
-            invite_code,
-            final_candidate_id,
-            created_at,
-            updated_at
+        meeting_id,
+        host_user_id,
+        title,
+        meeting_type,
+        status,
+        desired_end_at,
+        meeting_start_at,
+        calculation_version,
+        invite_code,
+        final_candidate_id,
+        created_at,
+        updated_at
         FROM meetings
         WHERE meeting_id = #{meetingId}
 
@@ -112,7 +116,26 @@
         JOIN meetings m
         ON m.meeting_id = mp.meeting_id
         WHERE mp.user_id = #{userId}
-          AND mp.participant_status = 'ACTIVE'
+        AND m.meeting_type = 'FRIEND'
+        AND mp.participant_status = 'ACTIVE'
+        ORDER BY m.created_at DESC
+
+    </select>
+
+    <select id="selectMyQuickMeetings"
+            parameterType="long"
+            resultType="com.meetback.dev.dto.MyMeetingResponse">
+
+        SELECT
+        m.meeting_id AS meetingId,
+        m.title AS title,
+        m.invite_code AS inviteCode
+        FROM meeting_participants mp
+        JOIN meetings m
+        ON m.meeting_id = mp.meeting_id
+        WHERE mp.user_id = #{userId}
+        AND m.meeting_type = 'QUICK_VOTE'
+        AND mp.participant_status = 'ACTIVE'
         ORDER BY m.created_at DESC
 
     </select>

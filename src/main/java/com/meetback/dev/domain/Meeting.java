@@ -12,6 +12,7 @@ public class Meeting {
     private MeetingType meetingType;
     private MeetingStatus status;
     private LocalDateTime desiredEndAt;
+    private LocalDateTime meetingStartAt;
     private Integer calculationVersion;
     private String inviteCode;
     private Long finalCandidateId;

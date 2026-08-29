@@ -229,6 +229,7 @@ CREATE TABLE meetings (
                           status VARCHAR(20) NOT NULL DEFAULT 'INPUT_OPEN',
 
                           desired_end_at DATETIME NOT NULL,
+                          meeting_start_at DATETIME NULL,
                           calculation_version INT NOT NULL DEFAULT 0,
 
                           invite_code VARCHAR(50) UNIQUE,
