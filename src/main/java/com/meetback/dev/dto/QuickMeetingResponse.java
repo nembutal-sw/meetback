@@ -6,6 +6,7 @@ public record QuickMeetingResponse(
         Long meetingId,
         String title,
         String inviteCode,
-        LocalDateTime desiredEndAt
+        LocalDateTime desiredEndAt,
+        String hostNickname
 ) {
 }

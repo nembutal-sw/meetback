@@ -123,28 +123,27 @@
     </delete>
 
     <select id="selectQuickVoteMeetings"
-            resultType="com.meetback.dev.domain.Meeting">
+            resultType="com.meetback.dev.dto.QuickMeetingResponse">
 
         SELECT
-        meeting_id,
-        host_user_id,
-        title,
-        meeting_type,
-        status,
-        desired_end_at,
-        invite_code,
-        created_at
-        FROM meetings
-        WHERE meeting_type = 'QUICK_VOTE'
-        AND status = 'INPUT_OPEN'
-        AND desired_end_at IS NOT NULL
-        AND desired_end_at > NOW()
+        m.meeting_id AS meetingId,
+        m.title AS title,
+        m.invite_code AS inviteCode,
+        m.desired_end_at AS desiredEndAt,
+        u.nickname AS hostNickname
+        FROM meetings m
+        JOIN users u
+        ON m.host_user_id = u.user_id
+        WHERE m.meeting_type = 'QUICK_VOTE'
+        AND m.status = 'INPUT_OPEN'
+        AND m.desired_end_at IS NOT NULL
+        AND m.desired_end_at > NOW()
 
         <if test="keyword != null and keyword != ''">
-            AND title LIKE CONCAT('%', #{keyword}, '%')
+            AND m.title LIKE CONCAT('%', #{keyword}, '%')
         </if>
 
-        ORDER BY created_at DESC
+        ORDER BY m.created_at DESC
 
     </select>
 </mapper>

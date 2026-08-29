@@ -15,7 +15,11 @@
 
     <section class="section">
 
-        <div class="quick-page-top">
+        <div class="quick-title-row">
+
+            <h2>
+                번개 모임
+            </h2>
 
             <a
                     href="/home"
@@ -26,10 +30,6 @@
             </a>
 
         </div>
-
-        <h2>
-            번개 모임
-        </h2>
 
         <p class="section-description">
             현재 참여 가능한 번개 모임을 확인해보세요.
@@ -81,21 +81,15 @@
     // ============================================================
 
     const quickSearchInput =
-        document.getElementById(
-            "quickSearchInput"
-        );
+        document.getElementById("quickSearchInput");
 
 
     const quickSearchButton =
-        document.getElementById(
-            "quickSearchButton"
-        );
+        document.getElementById("quickSearchButton");
 
 
     const quickMeetingList =
-        document.getElementById(
-            "quickMeetingList"
-        );
+        document.getElementById("quickMeetingList");
 
 
     // ============================================================
@@ -106,9 +100,7 @@
     {
 
         const refreshToken =
-            localStorage.getItem(
-                "refreshToken"
-            );
+            localStorage.getItem("refreshToken");
 
 
         if (!refreshToken)
@@ -119,13 +111,10 @@
 
         try
         {
-
             const response =
                 await fetch(
                     "/auth/refresh",
-                    {
-                        method:
-                            "POST",
+                    {method: "POST",
 
                         headers: {
                             "Content-Type":
@@ -399,6 +388,28 @@
                         ||
                         "제목 없는 번개";
 
+                    // --------------------------------------------
+                    // 방장 nickname
+                    // --------------------------------------------
+
+
+                    const host =
+                        document.createElement(
+                            "div"
+                        );
+
+                    host.className =
+                        "quick-meeting-host";
+
+                    host.textContent =
+                        "방장 "
+                        +
+                        (
+                            meeting.hostNickname
+                            ||
+                            "알 수 없음"
+                        );
+
 
                     // --------------------------------------------
                     // 희망 종료시간
@@ -491,6 +502,10 @@
 
                     card.appendChild(
                         title
+                    );
+
+                    card.appendChild(
+                        host
                     );
 
 
