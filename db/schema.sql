@@ -235,6 +235,7 @@ CREATE TABLE meetings (
                           invite_code VARCHAR(50) UNIQUE,
                           final_candidate_id BIGINT,
                           meeting_type VARCHAR(20) NOT NULL DEFAULT 'FRIEND',
+                          max_participants INT NULL,
 
                           created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                           updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP

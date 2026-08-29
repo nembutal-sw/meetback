@@ -13,6 +13,7 @@ public record MeetingRoomResponse(
         LocalDateTime desiredEndAt,
         LocalDateTime meetingStartAt,
         MeetingType meetingType,
+        Integer maxParticipants,
         MeetingStatus status,
         Long finalCandidateId
 ) {

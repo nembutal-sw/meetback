@@ -14,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
+import org.springframework.http.ResponseEntity;
 
 
 // ============================================================
@@ -61,7 +62,10 @@ public class MeetingController {
         /*
          * 번개방 생성 시 홈의 번개방 목록 갱신 이벤트 발행
          */
-        if(meetingType == MeetingType.QUICK_VOTE)
+        if( meetingType == MeetingType.QUICK_VOTE
+            ||
+            meetingType == MeetingType.QUICK_FIXED
+        )
         {
             String eventType =
                     MeetingEventType.QUICK_MEETING_LIST_CHANGED.name();
@@ -121,6 +125,7 @@ public class MeetingController {
                             "모임에 참가했습니다."
                     );
 
+            // 모임방 참가자 목록 및 채팅 갱신
             realtimeEventPublisher.publish(
                     RealtimeEvent.meetingBroadcast(
                             eventType,
@@ -129,6 +134,31 @@ public class MeetingController {
                             event
                     )
             );
+
+            // 홈의 공개 번개방 현재 인원 갱신
+            if (
+                    response.meetingType() == MeetingType.QUICK_VOTE
+                    ||
+                    response.meetingType() == MeetingType.QUICK_FIXED
+            ) {
+                String lobbyEventType =
+                        MeetingEventType
+                                .QUICK_MEETING_LIST_CHANGED
+                                .name();
+
+                realtimeEventPublisher.publish(
+                        RealtimeEvent.quickLobbyBroadcast(
+                                lobbyEventType,
+                                response.meetingId(),
+                                user.userId(),
+                                Map.of(
+                                        "messageType", "EVENT",
+                                        "eventType", lobbyEventType,
+                                        "meetingId", response.meetingId()
+                                )
+                        )
+                );
+            }
         }
 
         return response;
@@ -249,6 +279,62 @@ public class MeetingController {
                     )
             );
         }
+    }
+
+    @PatchMapping("/{meetingId}/recruitment/close")
+    public ResponseEntity<Void> closeRecruitment(
+            @PathVariable Long meetingId,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        meetingService.closeFixedRecruitment(
+                meetingId,
+                user.userId()
+        );
+
+        String eventType =
+                MeetingEventType.RECRUITMENT_CLOSED.name();
+
+        ChatMessageResponse notice =
+                chatService.saveSystemMessageOnce(
+                        meetingId,
+                        user.userId(),
+                        eventType,
+                        eventType,
+                        "참가 모집이 마감되었습니다."
+                );
+
+        if (notice != null) {
+            realtimeEventPublisher.publish(
+                    RealtimeEvent.meetingBroadcast(
+                            eventType,
+                            meetingId,
+                            user.userId(),
+                            notice
+                    )
+            );
+        }
+
+        String lobbyEventType =
+                MeetingEventType
+                        .QUICK_MEETING_LIST_CHANGED
+                        .name();
+
+        realtimeEventPublisher.publish(
+                RealtimeEvent.quickLobbyBroadcast(
+                        lobbyEventType,
+                        meetingId,
+                        user.userId(),
+                        Map.of(
+                                "messageType", "EVENT",
+                                "eventType", lobbyEventType,
+                                "meetingId", meetingId
+                        )
+                )
+        );
+
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 
     @GetMapping("/my")

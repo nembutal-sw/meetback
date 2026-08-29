@@ -7,11 +7,13 @@ import com.meetback.dev.repository.MeetingMapper;
 import com.meetback.dev.repository.ParticipantMapper;
 import com.meetback.dev.repository.VoteMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import com.meetback.dev.repository.MeetingCandidateMapper;
 import java.math.BigDecimal;
@@ -70,55 +72,113 @@ public class MeetingService {
         LocalDateTime meetingStartAt =
                 request.getMeetingStartAt();
 
-        if (
-                meetingType == MeetingType.QUICK_FIXED
-                        &&
-                        (
-                                request.getFixedPlace() == null
-                                        ||
-                                        request.getFixedPlace().name() == null
-                                        ||
-                                        request.getFixedPlace().name().isBlank()
-                                        ||
-                                        request.getFixedPlace().latitude() == null
-                                        ||
-                                        request.getFixedPlace().longitude() == null
-                        )
-        ) {
-            throw new IllegalArgumentException(
-                    "고정 번개방은 모임 장소가 필수입니다."
-            );
+        Integer maxParticipants = request.getMaxParticipants();
+
+        /*
+         * 고정 번개방 전용 검증
+         */
+        if (meetingType == MeetingType.QUICK_FIXED)
+        {
+            /*
+             * 1. 고정 장소 필수
+             */
+            if (
+                    request.getFixedPlace() == null
+                    ||
+                    request.getFixedPlace().name() == null
+                    ||
+                    request.getFixedPlace().name().isBlank()
+                    ||
+                    request.getFixedPlace().latitude() == null
+                    ||
+                    request.getFixedPlace().longitude() == null
+            ) {
+                throw new IllegalArgumentException(
+                        "고정 번개방은 모임 장소가 필수입니다."
+                );
+            }
+
+
+            /*
+             * 2. 모임 시작시간 필수
+             */
+            if (meetingStartAt == null) {
+
+                throw new IllegalArgumentException(
+                        "고정 번개방은 모임 시작시간이 필수입니다."
+                );
+            }
+
+
+            /*
+             * 3. 모임 시작시간은 현재 시각 이후
+             */
+            if (
+                    !meetingStartAt.isAfter(
+                            LocalDateTime.now()
+                    )
+            ) {
+                throw new IllegalArgumentException(
+                        "모임 시작시간은 현재 시각 이후로 선택해주세요."
+                );
+            }
+
+
+            /*
+             * 4. 종료시간은 시작시간 이후
+             */
+            if (
+                    !desiredEndAt.isAfter(
+                            meetingStartAt
+                    )
+            ) {
+                throw new IllegalArgumentException(
+                        "희망 종료시간은 모임 시작시간 이후로 선택해주세요."
+                );
+            }
         }
 
-        if (
-                meetingType == MeetingType.QUICK_FIXED
-                        &&
-                        meetingStartAt == null
-        ) {
-            throw new IllegalArgumentException(
-                    "고정 번개방은 모임 시작시간이 필수입니다."
-            );
+
+        /*
+         * 투표형 번개방과 고정 번개방 여부
+         */
+        boolean quickMeeting =
+                meetingType == MeetingType.QUICK_VOTE
+                ||
+                meetingType == MeetingType.QUICK_FIXED;
+
+
+        /*
+         * 두 번개방의 최대 참가 인원 검사
+         */
+        if (quickMeeting) {
+
+            if (
+                    maxParticipants == null
+                    ||
+                    maxParticipants < 2
+                    ||
+                    maxParticipants > 100
+            ) {
+                throw new IllegalArgumentException(
+                        "번개방 최대 인원은 2명 이상 100명 이하로 설정해주세요."
+                );
+            }
+
+        }
+        else {
+
+            /*
+             * 친구방은 최대 인원 제한을 사용하지 않는다.
+             */
+            maxParticipants =
+                    null;
         }
 
-        if (
-                meetingType == MeetingType.QUICK_FIXED
-                        &&
-                        !meetingStartAt.isAfter(LocalDateTime.now())
-        ) {
-            throw new IllegalArgumentException(
-                    "모임 시작시간은 현재 시각 이후로 선택해주세요."
-            );
-        }
+        /*
+         * 5. 방장을 포함한 최대 참가 인원 검사
+         */
 
-        if (
-                meetingType == MeetingType.QUICK_FIXED
-                        &&
-                        !desiredEndAt.isAfter(meetingStartAt)
-        ) {
-            throw new IllegalArgumentException(
-                    "희망 종료시간은 모임 시작시간 이후로 선택해주세요."
-            );
-        }
 
         String inviteCode = generateInviteCode();
 
@@ -127,6 +187,7 @@ public class MeetingService {
         meeting.setHostUserId(hostUserId);
         meeting.setTitle(request.getTitle());
         meeting.setMeetingType(meetingType);
+        meeting.setMaxParticipants(maxParticipants);
         meeting.setStatus(MeetingStatus.INPUT_OPEN);
         meeting.setDesiredEndAt(request.getDesiredEndAt());
         meeting.setMeetingStartAt(request.getMeetingStartAt());
@@ -308,7 +369,8 @@ public class MeetingService {
 
             return new MeetingJoinResponse(
                     meeting.getMeetingId(),
-                    false
+                    false,
+                    meeting.getMeetingType()
             );
         }
 
@@ -327,6 +389,25 @@ public class MeetingService {
             );
         }
 
+        Integer maxParticipants = meeting.getMaxParticipants();
+
+        if(maxParticipants != null)
+        {
+            int currentParticipants =
+                    participantMapper.countParticipant(
+                            meeting.getMeetingId()
+                    );
+
+            if(currentParticipants >= maxParticipants)
+            {
+                throw new IllegalStateException(
+                        "모임의 참가 인원이 모두 찼습니다."
+                );
+            }
+        }
+
+
+
 
         // QUICK_VOTE에서 정상적으로 나갔던 사용자 재입장
         if (
@@ -339,7 +420,7 @@ public class MeetingService {
             if(
                     meeting.getMeetingType() != MeetingType.QUICK_VOTE
                             &&
-                            meeting.getMeetingType() != MeetingType.QUICK_FIXED
+                    meeting.getMeetingType() != MeetingType.QUICK_FIXED
             )
             {
                 throw new IllegalStateException(
@@ -366,7 +447,8 @@ public class MeetingService {
 
             return new MeetingJoinResponse(
                     meeting.getMeetingId(),
-                    true
+                    true,
+                    meeting.getMeetingType()
             );
         }
 
@@ -404,7 +486,8 @@ public class MeetingService {
         // 7. 신규 참가 결과 반환
         return new MeetingJoinResponse(
                 meeting.getMeetingId(),
-                true
+                true,
+                meeting.getMeetingType()
         );
     }
 
@@ -698,6 +781,75 @@ public class MeetingService {
         );
     }
 
+    // ============================================================
+// 고정 번개방 참가 모집 마감
+// ============================================================
+
+    @Transactional
+    public void closeFixedRecruitment(
+            Long meetingId,
+            Long hostUserId
+    ) {
+        Meeting meeting =
+                meetingMapper.findById(
+                        meetingId
+                );
+
+        if (meeting == null) {
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+        if (
+                meeting.getMeetingType()
+                        != MeetingType.QUICK_FIXED
+        ) {
+            throw new IllegalStateException(
+                    "고정 번개방만 참가 모집을 마감할 수 있습니다."
+            );
+        }
+
+        if (
+                !Objects.equals(
+                        meeting.getHostUserId(),
+                        hostUserId
+                )
+        ) {
+            throw new AccessDeniedException(
+                    "방장만 참가 모집을 마감할 수 있습니다."
+            );
+        }
+
+        if (
+                meeting.getStatus()
+                        == MeetingStatus.RECRUITMENT_CLOSED
+        ) {
+            return;
+        }
+
+        if (
+                meeting.getStatus()
+                        != MeetingStatus.INPUT_OPEN
+        ) {
+            throw new IllegalStateException(
+                    "현재 상태에서는 참가 모집을 마감할 수 없습니다."
+            );
+        }
+
+        int updatedRows =
+                meetingMapper.updateMeetingStatus(
+                        meetingId,
+                        MeetingStatus.RECRUITMENT_CLOSED
+                );
+
+        if (updatedRows != 1) {
+            throw new IllegalStateException(
+                    "참가 모집 마감에 실패했습니다."
+            );
+        }
+    }
+
 
     // ============================================================
     // 모임방 조회
@@ -746,6 +898,7 @@ public class MeetingService {
                 meeting.getDesiredEndAt(),
                 meeting.getMeetingStartAt(),
                 meeting.getMeetingType(),
+                meeting.getMaxParticipants(),
                 meeting.getStatus(),
                 meeting.getFinalCandidateId()
         );

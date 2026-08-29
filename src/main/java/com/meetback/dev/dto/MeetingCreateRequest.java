@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public class MeetingCreateRequest {
     private String title;
     private MeetingType meetingType;
+    private Integer maxParticipants;
     private LocalDateTime desiredEndAt;
     private LocalDateTime meetingStartAt;
     private CandidateRequestDTO fixedPlace;

@@ -425,6 +425,24 @@ public class MeetingParticipantController {
                 )
         );
 
+        String lobbyEventType =
+                MeetingEventType
+                        .QUICK_MEETING_LIST_CHANGED
+                        .name();
+
+        realtimeEventPublisher.publish(
+                RealtimeEvent.quickLobbyBroadcast(
+                        lobbyEventType,
+                        kicked.meetingId(),
+                        user.userId(),
+                        Map.of(
+                                "messageType", "EVENT",
+                                "eventType", lobbyEventType,
+                                "meetingId", kicked.meetingId()
+                        )
+                )
+        );
+
         return ResponseEntity.noContent().build();
     }
 
@@ -492,6 +510,24 @@ public class MeetingParticipantController {
                 )
         );
 
+        String lobbyEventType =
+                MeetingEventType
+                        .QUICK_MEETING_LIST_CHANGED
+                        .name();
+
+        realtimeEventPublisher.publish(
+                RealtimeEvent.quickLobbyBroadcast(
+                        lobbyEventType,
+                        canceled.meetingId(),
+                        user.userId(),
+                        Map.of(
+                                "messageType", "EVENT",
+                                "eventType", lobbyEventType,
+                                "meetingId", canceled.meetingId()
+                        )
+                )
+        );
+
         return ResponseEntity.noContent().build();
     }
 
@@ -543,6 +579,27 @@ public class MeetingParticipantController {
                         left.userId(),
                         left.participantId(),
                         payload
+                )
+        );
+
+        /*
+         * 홈의 공개 번개방 목록 인원 갱신
+         */
+        String lobbyEventType =
+                MeetingEventType
+                        .QUICK_MEETING_LIST_CHANGED
+                        .name();
+
+        realtimeEventPublisher.publish(
+                RealtimeEvent.quickLobbyBroadcast(
+                        lobbyEventType,
+                        left.meetingId(),
+                        user.userId(),
+                        Map.of(
+                                "messageType", "EVENT",
+                                "eventType", lobbyEventType,
+                                "meetingId", left.meetingId()
+                        )
                 )
         );
 
