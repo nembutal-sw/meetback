@@ -13,7 +13,6 @@ import com.meetback.dev.service.MeetingParticipantService;
 import com.meetback.dev.service.ParticipantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +26,6 @@ public class MeetingParticipantController {
 
     private final MeetingParticipantService meetingParticipantService;
     private final ParticipantService participantService;
-    private final SimpMessagingTemplate messagingTemplate;
     private final ChatService chatService;
     private final RealtimeEventPublisher realtimeEventPublisher;
 
@@ -427,6 +425,24 @@ public class MeetingParticipantController {
                 )
         );
 
+        String lobbyEventType =
+                MeetingEventType
+                        .QUICK_MEETING_LIST_CHANGED
+                        .name();
+
+        realtimeEventPublisher.publish(
+                RealtimeEvent.quickLobbyBroadcast(
+                        lobbyEventType,
+                        kicked.meetingId(),
+                        user.userId(),
+                        Map.of(
+                                "messageType", "EVENT",
+                                "eventType", lobbyEventType,
+                                "meetingId", kicked.meetingId()
+                        )
+                )
+        );
+
         return ResponseEntity.noContent().build();
     }
 
@@ -494,6 +510,24 @@ public class MeetingParticipantController {
                 )
         );
 
+        String lobbyEventType =
+                MeetingEventType
+                        .QUICK_MEETING_LIST_CHANGED
+                        .name();
+
+        realtimeEventPublisher.publish(
+                RealtimeEvent.quickLobbyBroadcast(
+                        lobbyEventType,
+                        canceled.meetingId(),
+                        user.userId(),
+                        Map.of(
+                                "messageType", "EVENT",
+                                "eventType", lobbyEventType,
+                                "meetingId", canceled.meetingId()
+                        )
+                )
+        );
+
         return ResponseEntity.noContent().build();
     }
 
@@ -545,6 +579,27 @@ public class MeetingParticipantController {
                         left.userId(),
                         left.participantId(),
                         payload
+                )
+        );
+
+        /*
+         * 홈의 공개 번개방 목록 인원 갱신
+         */
+        String lobbyEventType =
+                MeetingEventType
+                        .QUICK_MEETING_LIST_CHANGED
+                        .name();
+
+        realtimeEventPublisher.publish(
+                RealtimeEvent.quickLobbyBroadcast(
+                        lobbyEventType,
+                        left.meetingId(),
+                        user.userId(),
+                        Map.of(
+                                "messageType", "EVENT",
+                                "eventType", lobbyEventType,
+                                "meetingId", left.meetingId()
+                        )
                 )
         );
 

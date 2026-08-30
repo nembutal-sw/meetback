@@ -825,9 +825,32 @@ public class MeetingParticipantService {
             );
         }
 
+        ParticipantStatus nextStatus;
+
+        if(
+                meeting.getMeetingType() == MeetingType.QUICK_VOTE
+                ||
+                meeting.getMeetingType() == MeetingType.QUICK_FIXED
+        )
+        {
+            /*
+             * 번개방은 강퇴만 해제합니다.
+             * 사용자가 다시 참가해야 ACTIVE가 됩니다.
+             */
+            nextStatus = ParticipantStatus.LEFT;
+        }
+        else
+        {
+            /*
+             * 친구방은 고정 참가자이므로 바로 복구합니다.
+             */
+            nextStatus = ParticipantStatus.ACTIVE;
+        }
+
         int updatedRows =
                 meetingParticipantMapper.cancelKick(
-                        participantId
+                        participantId,
+                        nextStatus
                 );
 
         if(updatedRows != 1)
@@ -926,10 +949,14 @@ public class MeetingParticipantService {
          * FRIEND는 WebSocket 연결이 끊겨도
          * 참가자 상태를 ACTIVE로 유지한다.
          */
-        if (
+        boolean quickMeeting =
                 meeting.getMeetingType()
-                        != MeetingType.QUICK_VOTE
-        ) {
+                        == MeetingType.QUICK_VOTE
+                ||
+                meeting.getMeetingType()
+                        == MeetingType.QUICK_FIXED;
+
+        if (!quickMeeting) {
             throw new IllegalStateException(
                     "친구방에서는 참가자 상태가 유지됩니다."
             );
@@ -954,12 +981,21 @@ public class MeetingParticipantService {
         /*
          * 7. 우선 INPUT_OPEN 단계만 지원
          */
-        if (
+        boolean leaveAllowed =
                 meeting.getStatus()
-                        != MeetingStatus.INPUT_OPEN
-        ) {
+                        == MeetingStatus.INPUT_OPEN
+                        ||
+                        (
+                                meeting.getMeetingType()
+                                        == MeetingType.QUICK_FIXED
+                                &&
+                                meeting.getStatus()
+                                        == MeetingStatus.RECRUITMENT_CLOSED
+                        );
+
+        if (!leaveAllowed) {
             throw new IllegalStateException(
-                    "투표가 시작된 이후에는 모임에서 나갈 수 없습니다."
+                    "현재 상태에서는 모임에서 나갈 수 없습니다."
             );
         }
 

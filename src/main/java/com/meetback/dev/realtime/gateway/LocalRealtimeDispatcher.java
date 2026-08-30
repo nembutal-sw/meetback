@@ -44,6 +44,7 @@ public class LocalRealtimeDispatcher {
 
         switch (event.deliveryKind()) {
             case ROOM_BROADCAST -> broadcast(event);
+            case QUICK_LOBBY_BROADCAST -> broadcastToQuickLobby(event);
             case ROOM_BROADCAST_AND_DISCONNECT_TARGET ->
                     broadcastAndDisconnectTarget(event);
             case DISCONNECT_USER_BEFORE_TOKEN_VERSION ->
@@ -56,6 +57,15 @@ public class LocalRealtimeDispatcher {
     ) {
         realtimeGateway.broadcastToMeeting(
                 event.meetingId(),
+                event.clientPayload()
+        );
+    }
+
+    private void broadcastToQuickLobby(
+            RealtimeEventEnvelope event
+    )
+    {
+        realtimeGateway.broadcastToQuickLobby(
                 event.clientPayload()
         );
     }

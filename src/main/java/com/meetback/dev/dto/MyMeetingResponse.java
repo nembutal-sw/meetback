@@ -1,17 +1,13 @@
 package com.meetback.dev.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.meetback.dev.domain.MeetingType;
+import lombok.*;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
 public class MyMeetingResponse {
 
     private Long meetingId;
     private String title;
     private String inviteCode;
+    private MeetingType meetingType;
 }

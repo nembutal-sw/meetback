@@ -11,7 +11,9 @@ public record MeetingRoomResponse(
         String title,
         String inviteCode,
         LocalDateTime desiredEndAt,
+        LocalDateTime meetingStartAt,
         MeetingType meetingType,
+        Integer maxParticipants,
         MeetingStatus status,
         Long finalCandidateId
 ) {

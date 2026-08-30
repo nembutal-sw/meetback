@@ -40,4 +40,6 @@ public interface MeetingMapper {
     List<QuickMeetingResponse> selectQuickVoteMeetings(
             @Param("keyword") String keyword
     );
+
+    List<MyMeetingResponse> selectMyQuickMeetings(Long userId);
 }

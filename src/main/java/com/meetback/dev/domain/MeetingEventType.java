@@ -1,6 +1,11 @@
 package com.meetback.dev.domain;
 
 public enum MeetingEventType {
+    CHAT_MESSAGE,
+    PRESENCE_UPDATED,
+    QUICK_MEETING_LIST_CHANGED,
+    RECRUITMENT_CLOSED,
+
     PARTICIPANT_JOINED,
     PARTICIPANT_LEFT,
     PARTICIPANT_KICKED,
@@ -13,7 +18,7 @@ public enum MeetingEventType {
 
     VOTING_STARTED,
     VOTE_UPDATED,
-    VOTE_COMPLETED,
+    ALL_VOTES_COMPLETED,
 
     MEETING_CONFIRMED
 }

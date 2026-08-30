@@ -1,6 +1,7 @@
 package com.meetback.dev.repository;
 
 import com.meetback.dev.domain.MeetingParticipant;
+import com.meetback.dev.domain.ParticipantStatus;
 import com.meetback.dev.dto.ParticipantRoomResponse;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -37,8 +38,9 @@ public interface MeetingParticipantMapper {
     );
 
     int cancelKick(
-            @Param("participantId") Long participantId
-    );
+            @Param("participantId") Long participantId,
+            @Param("nextStatus")ParticipantStatus nextStatus
+            );
 
     int leaveBeforeVoting(
             @Param("participantId") Long participantId
