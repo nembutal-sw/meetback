@@ -7,10 +7,11 @@ import java.time.LocalDateTime;
 @Data
 public class Comment {
     private Long commentId;
-    private Long feedIdl;
+    private Long feedId;
     private Long userId;
+    private String nickname;
     private String content;
     private LocalDateTime deletedAt;
     private LocalDateTime createdAt;
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
 }
