@@ -39,6 +39,19 @@ public class PageController {
         return "auth/quick-meetings";
     }
 
+    @GetMapping("/quick-fixed")
+    public String quickFixed(
+            Model model
+    )
+    {
+        model.addAttribute(
+                "naverMapsClientId",
+                naverMapsClientId
+        );
+
+        return "meeting/quick-fixed";
+    }
+
     @GetMapping("/login")
     public String login(
             Model model
@@ -116,5 +129,18 @@ public class PageController {
         );
 
         return "meeting/result";
+    }
+
+    @GetMapping("/quick-fixed-check")
+    public String quickFixedCheck(
+            Model model
+    )
+    {
+        model.addAttribute(
+                "naverMapsClientId",
+                naverMapsClientId
+        );
+
+        return "meeting/quick-fixed-check";
     }
 }

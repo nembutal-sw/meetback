@@ -1507,11 +1507,47 @@ button:disabled {
 
 }
 /* =========================================================
-   지금 바로 번개
+   지금 바로 번개 - 홈
    ========================================================= */
 
+.quick-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 16px;
+}
+
+
+.quick-section-header h2 {
+    margin-bottom: 8px;
+}
+
+
+.quick-all-link {
+    position: relative;
+    z-index: 2;
+
+    flex-shrink: 0;
+
+    color: var(--mb-text-soft);
+
+    font-size: 13px;
+    font-weight: 700;
+
+    text-decoration: none;
+}
+
+
+.quick-all-link:hover {
+    color: var(--mb-primary);
+}
+
+
+/* 홈 화면 번개 목록 */
 .quick-meeting-list {
     display: flex;
+
     gap: 14px;
 
     overflow-x: auto;
@@ -1522,6 +1558,10 @@ button:disabled {
             14px;
 }
 
+
+/* =========================================================
+   번개 카드 공통
+   ========================================================= */
 
 .quick-meeting-card {
     flex: 0 0 250px;
@@ -1539,6 +1579,23 @@ button:disabled {
     box-shadow:
             0 8px 20px
             rgba(59, 54, 118, 0.08);
+
+    transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease,
+            border-color 0.2s ease;
+}
+
+
+.quick-meeting-card:hover {
+    transform:
+            translateY(-2px);
+
+    border-color:
+            #d9d5ff;
+
+    box-shadow:
+            var(--mb-shadow-md);
 }
 
 
@@ -1552,6 +1609,12 @@ button:disabled {
     font-weight: 800;
 
     letter-spacing: -0.3px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
 }
 
 
@@ -1611,16 +1674,40 @@ button:disabled {
     font-size: 13px;
 }
 
+
 /* =========================================================
-   번개 모임 전체보기
+   번개 전체보기 페이지
    ========================================================= */
 
-.quick-meeting-list {
-    display: flex;
-    gap: 14px;
 
-    overflow-x: auto;
+.quick-home-link {
+    position: relative;
+    z-index: 2;
+
+    color:
+            var(--mb-text-soft);
+
+    font-size: 13px;
+    font-weight: 700;
+
+    text-decoration: none;
+}
+
+
+.quick-home-link:hover {
+    color:
+            var(--mb-primary);
+}
+
+
+/* =========================================================
+   검색
+   ========================================================= */
+
 .quick-search-area {
+    position: relative;
+    z-index: 1;
+
     display: flex;
 
     align-items: center;
@@ -1641,9 +1728,8 @@ button:disabled {
 .quick-search-button {
     flex: 0 0 auto;
 
-    min-width: 90px;
-
     width: auto;
+    min-width: 90px;
 
     color: #ffffff;
 
@@ -1666,14 +1752,21 @@ button:disabled {
 }
 
 
+/* =========================================================
+   전체보기 번개 목록
+   ========================================================= */
+
 .quick-meeting-grid {
+    position: relative;
+    z-index: 1;
+
     display: grid;
 
     grid-template-columns:
-            repeat(
-                    3,
-                    minmax(0, 1fr)
-            );
+        repeat(
+            3,
+            minmax(0, 1fr)
+        );
 
     gap: 22px;
 
@@ -1681,41 +1774,14 @@ button:disabled {
 }
 
 
+/* 홈의 flex: 0 0 250px 제거 */
 .quick-meeting-grid .quick-meeting-card {
-    width: 100%;
+    flex: none;
 
+    width: 100%;
     min-width: 0;
 
     padding: 24px;
-
-    background: #ffffff;
-
-    border:
-            1px solid
-            var(--mb-border);
-
-    border-radius: 18px;
-
-    box-shadow:
-            0 10px 28px
-            rgba(55, 52, 108, 0.07);
-
-    transition:
-            transform 0.2s ease,
-            box-shadow 0.2s ease,
-            border-color 0.2s ease;
-}
-
-
-.quick-meeting-grid .quick-meeting-card:hover {
-    transform:
-            translateY(-2px);
-
-    border-color:
-            #d9d5ff;
-
-    box-shadow:
-            var(--mb-shadow-md);
 }
 
 
@@ -1723,8 +1789,6 @@ button:disabled {
     margin-bottom: 12px;
 
     font-size: 18px;
-
-    font-weight: 800;
 }
 
 
@@ -1741,6 +1805,29 @@ button:disabled {
 
 
 /* =========================================================
+   스크롤바
+   ========================================================= */
+
+.quick-meeting-list::-webkit-scrollbar {
+    height: 7px;
+}
+
+
+.quick-meeting-list::-webkit-scrollbar-thumb {
+    background:
+            #d7d6df;
+
+    border-radius: 999px;
+}
+
+
+.quick-meeting-list::-webkit-scrollbar-track {
+    background:
+            transparent;
+}
+
+
+/* =========================================================
    태블릿
    ========================================================= */
 
@@ -1748,10 +1835,10 @@ button:disabled {
 
     .quick-meeting-grid {
         grid-template-columns:
-                repeat(
-                        2,
-                        minmax(0, 1fr)
-                );
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
     }
 
 }
@@ -1777,30 +1864,34 @@ button:disabled {
 
     .quick-meeting-grid {
         grid-template-columns:
-                1fr;
+            1fr;
     }
+
+
+    .quick-meeting-card {
+        flex-basis: 230px;
+    }
+
 }
 
-/* =========================================================
-   홈 번개 전체보기 링크
-   ========================================================= */
-
-.quick-section-header {
+.quick-title-row {
     display: flex;
 
     align-items: center;
     justify-content: space-between;
 
     gap: 16px;
-}
 
-
-.quick-section-header h2 {
     margin-bottom: 8px;
 }
 
 
-.quick-all-link {
+.quick-title-row h2 {
+    margin: 0;
+}
+
+
+.quick-home-link {
     position: relative;
 
     z-index: 2;
@@ -1817,123 +1908,16 @@ button:disabled {
 }
 
 
-.quick-all-link:hover {
-    color:
-            var(--mb-primary);
-}
-.quick-page-top {
-    display: flex;
-    justify-content: flex-end;
-
-    margin-bottom: 10px;
-}
-
-
-.quick-home-link {
-    color:
-            var(--mb-text-soft);
-
-    font-size: 13px;
-    font-weight: 700;
-
-    text-decoration: none;
-}
-
-    padding:
-            8px
-            2px
-            14px;
-}
-
-
-.quick-meeting-card {
-    flex: 0 0 250px;
-
-    padding: 20px;
-
-    background: #ffffff;
-
-    border:
-            1px solid
-            #dddaf5;
-
-    border-radius: 16px;
-
-    box-shadow:
-            0 8px 20px
-            rgba(59, 54, 118, 0.08);
-}
-
-
-.quick-meeting-title {
-    margin-bottom: 8px;
-
-    color:
-            var(--mb-text);
-
-    font-size: 16px;
-    font-weight: 800;
-
-    letter-spacing: -0.3px;
-}
-
-
-.quick-meeting-end {
-    margin-bottom: 16px;
-
-    color:
-            var(--mb-text-soft);
-
-    font-size: 12px;
-}
-
-
-.quick-meeting-join-button {
-    width: 100%;
-
-    color: #ffffff;
-
-    background:
-            var(--mb-primary);
-
-    border-color:
-            var(--mb-primary);
-}
-
-
-.quick-meeting-join-button:hover:not(:disabled) {
-    color: #ffffff;
-
-    background:
-            var(--mb-primary-strong);
-
-    border-color:
-            var(--mb-primary-strong);
-}
-
-
-.quick-meeting-empty {
-    width: 100%;
-
-    padding: 24px;
-
-    color:
-            var(--mb-text-muted);
-
-    background:
-            var(--mb-surface-soft);
-
-    border:
-            1px dashed
-            var(--mb-border-strong);
-
-    border-radius: 14px;
-
-    text-align: center;
-
-    font-size: 13px;
-
 .quick-home-link:hover {
     color:
             var(--mb-primary);
+}
+.quick-meeting-host {
+    margin-bottom: 8px;
+
+    color:
+            var(--mb-text-soft);
+
+    font-size: 13px;
+    font-weight: 600;
 }

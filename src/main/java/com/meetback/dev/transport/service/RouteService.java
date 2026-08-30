@@ -78,6 +78,133 @@ public class RouteService {
         return distance <= WALKING_DISTANCE_METERS;
     }
 
+    public boolean isWithinWalkingDistance(
+            MeetingCandidate candidate,
+            Double returnLatitude,
+            Double returnLongitude
+    ) {
+
+        if (candidate == null) {
+            throw new IllegalArgumentException(
+                    "고정 장소 정보가 없습니다."
+            );
+        }
+
+
+        if (returnLatitude == null || returnLongitude == null) {
+            throw new IllegalArgumentException(
+                    "귀가 장소 좌표가 없습니다."
+            );
+        }
+
+        double distance =
+                calculateDistanceMeters(
+                        candidate.getLatitude().doubleValue(),
+                        candidate.getLongitude().doubleValue(),
+                        returnLatitude,
+                        returnLongitude
+                );
+
+        System.out.println(
+                "[참여 전 거리 확인] candidateId="
+                        + candidate.getCandidateId()
+                        + ", distance="
+                        + Math.round(distance)
+                        + "m"
+        );
+
+        return distance <= WALKING_DISTANCE_METERS;
+    }
+
+    public TransitRouteDTO searchReturnRoute(
+            MeetingCandidate candidate,
+            String returnName,
+            String returnAddress,
+            Double returnLongitude,
+            Double returnLatitude
+    ) {
+
+        if (candidate == null) {
+            throw new IllegalArgumentException(
+                    "고정 장소 정보가 없습니다."
+            );
+        }
+
+
+        if (
+                returnLongitude == null
+                        ||
+                        returnLatitude == null
+        ) {
+            throw new IllegalArgumentException(
+                    "귀가 장소 좌표가 없습니다."
+            );
+        }
+
+
+        PlaceDTO start =
+                new PlaceDTO(
+                        null,
+                        candidate.getPlaceName(),
+                        candidate.getAddress(),
+                        candidate.getAddress(),
+                        candidate.getLongitude().doubleValue(),
+                        candidate.getLatitude().doubleValue(),
+                        null,
+                        null
+                );
+
+
+        PlaceDTO end =
+                new PlaceDTO(
+                        null,
+                        returnName,
+                        returnAddress,
+                        returnAddress,
+                        returnLongitude,
+                        returnLatitude,
+                        null,
+                        null
+                );
+
+
+        return odsayTransitClient.findSubwayRoute(
+                start,
+                end
+        );
+    }
+
+    public RouteMapDTO createPreviewRouteMap(
+            MeetingCandidate candidate,
+            String returnName,
+            TransitRouteDTO route
+    ) {
+
+        if (
+                route.mapObj() == null
+                        ||
+                        route.mapObj().isBlank()
+        ) {
+            throw new IllegalStateException(
+                    "귀가 경로 지도 정보가 없습니다."
+            );
+        }
+
+
+        RouteMapDTO loadedMap =
+                odsayTransitClient.loadLane(
+                        route.mapObj()
+                );
+
+
+        return new RouteMapDTO(
+                candidate.getPlaceName(),
+                returnName,
+                loadedMap.lines(),
+                route.steps()
+        );
+    }
+
 
     private double calculateDistanceMeters(
             double lat1,

@@ -3,10 +3,14 @@ package com.meetback.dev.controller;
 import com.meetback.dev.domain.CandidateEvaluation;
 import com.meetback.dev.domain.CandidateReturnResult;
 import com.meetback.dev.dto.CandidateRankingResponseDTO;
+import com.meetback.dev.dto.QuickFixedReturnLocationRequestDTO;
 import com.meetback.dev.service.CalculationService;
 import com.meetback.dev.service.CandidateEvaluationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import com.meetback.dev.dto.QuickFixedReturnCheckResponseDTO;
+import com.meetback.dev.security.AuthenticatedUser;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.List;
 
@@ -89,6 +93,48 @@ public class CalculationController {
         return candidateEvaluationService
                 .getRanking(
                         meetingId
+                );
+    }
+
+    /*
+     * QUICK_FIXED
+     * 현재 로그인 참가자 × 고정 장소 귀가 가능 여부 확인
+     */
+    @PostMapping("/meeting/{meetingId}/quick-fixed/return-check")
+    public QuickFixedReturnCheckResponseDTO checkQuickFixedReturn(
+
+            @PathVariable Long meetingId,
+
+            @AuthenticationPrincipal
+            AuthenticatedUser user
+
+    ) {
+
+        return calculationService
+                .calculateQuickFixedReturn(
+                        meetingId,
+                        user.userId()
+                );
+    }
+
+    /*
+     * QUICK_FIXED
+     * 참여 전 귀가 가능 여부 미리 확인
+     */
+    @PostMapping("/meeting/{meetingId}/quick-fixed/preview")
+    public QuickFixedReturnCheckResponseDTO previewQuickFixedReturn(
+
+            @PathVariable Long meetingId,
+
+            @RequestBody
+            QuickFixedReturnLocationRequestDTO request
+
+    ) {
+
+        return calculationService
+                .calculateQuickFixedPreview(
+                        meetingId,
+                        request
                 );
     }
 }

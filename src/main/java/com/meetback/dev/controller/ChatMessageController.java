@@ -1,14 +1,15 @@
 package com.meetback.dev.controller;
 
-import com.meetback.dev.domain.ChatMessage;
+import com.meetback.dev.domain.MeetingEventType;
 import com.meetback.dev.dto.ChatMessageResponse;
 import com.meetback.dev.dto.ChatSendRequest;
+import com.meetback.dev.realtime.event.RealtimeEvent;
+import com.meetback.dev.realtime.publisher.RealtimeEventPublisher;
 import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
@@ -20,7 +21,7 @@ public class ChatMessageController {
 
     private final ChatService chatService;
 
-    private final SimpMessagingTemplate messagingTemplate;
+    private final RealtimeEventPublisher realtimeEventPublisher;
 
     @MessageMapping("/meetings/{meetingId}/chat")
     public void sendMessage(
@@ -59,12 +60,16 @@ public class ChatMessageController {
                         request
                 );
 
-        messagingTemplate.convertAndSend(
-                "/topic/meetings/"
-                + meetingId
-                + "/chat",
-                saved
+        realtimeEventPublisher.publish(
+                RealtimeEvent.meetingBroadcast(
+                        MeetingEventType.CHAT_MESSAGE.name(),
+                        meetingId,
+                        user.userId(),
+                        saved
+                )
         );
     }
+
+
 
 }

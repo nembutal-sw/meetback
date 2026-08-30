@@ -194,6 +194,41 @@
 
     </select>
 
+    <!--
+    강퇴된 참가자 목록 조회
+
+    방장의 강퇴 취소 화면에서 사용합니다.
+    -->
+    
+    <select id="findKickedRoomParticipants"
+            resultType="com.meetback.dev.dto.ParticipantRoomResponse">
+
+        SELECT
+            mp.participant_id AS participantId,
+            mp.meeting_id AS meetingId,
+            mp.user_id AS userId,
+
+            u.nickname AS nickname,
+
+            mp.input_status AS inputStatus,
+
+            mp.departure_name AS departureName,
+            mp.return_name AS returnName,
+
+            0 AS online
+
+        FROM meeting_participants mp
+
+        JOIN users u
+          ON u.user_id = mp.user_id
+
+        WHERE mp.meeting_id = #{meetingId}
+          AND mp.participant_status = 'KICKED'
+
+        ORDER BY mp.updated_at DESC
+
+    </select>
+
     <update id="kickParticipant">
 
         UPDATE meeting_participants
@@ -212,7 +247,7 @@
         UPDATE meeting_participants
 
         SET
-            participant_status = 'ACTIVE',
+            participant_status = #{nextStatus},
             updated_at = NOW()
 
         WHERE participant_id = #{participantId}
@@ -252,4 +287,77 @@
 
     </update>
 
+    <select id="findByMeetingIdAndUserId"
+            resultType="com.meetback.dev.domain.MeetingParticipant">
+
+        SELECT
+        mp.participant_id AS participantId,
+        mp.meeting_id AS meetingId,
+        mp.user_id AS userId,
+
+        mp.participant_status AS participantStatus,
+        mp.input_status AS inputStatus,
+
+        mp.departure_name AS departureName,
+        mp.departure_address AS departureAddress,
+        mp.departure_latitude AS departureLatitude,
+        mp.departure_longitude AS departureLongitude,
+
+        mp.return_name AS returnName,
+        mp.return_address AS returnAddress,
+        mp.return_latitude AS returnLatitude,
+        mp.return_longitude AS returnLongitude,
+
+        mp.submitted_at AS submittedAt,
+        mp.created_at AS createdAt,
+        mp.updated_at AS updatedAt,
+
+        u.nickname AS nickname
+
+        FROM meeting_participants mp
+
+        JOIN users u
+        ON u.user_id = mp.user_id
+
+        WHERE mp.meeting_id = #{meetingId}
+        AND mp.user_id = #{userId}
+
+        LIMIT 1
+
+    </select>
+
+
+    <update id="updateReturnLocation">
+
+        UPDATE meeting_participants
+
+        SET
+        return_name = #{returnName},
+        return_address = #{returnAddress},
+        return_latitude = #{returnLatitude},
+        return_longitude = #{returnLongitude},
+        updated_at = NOW()
+
+        WHERE participant_id = #{participantId}
+        AND participant_status = 'ACTIVE'
+
+    </update>
+
+    <select id="countActiveByMeetingId"
+            resultType="int">
+
+        SELECT COUNT(*)
+        FROM meeting_participants
+        WHERE meeting_id = #{meetingId}
+        AND participant_status = 'ACTIVE'
+
+    </select>
+
+
+    <delete id="deleteByMeetingId">
+
+        DELETE FROM meeting_participants
+        WHERE meeting_id = #{meetingId}
+
+    </delete>
 </mapper>
