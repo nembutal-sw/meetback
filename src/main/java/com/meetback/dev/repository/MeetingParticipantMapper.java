@@ -45,4 +45,21 @@ public interface MeetingParticipantMapper {
     int leaveBeforeVoting(
             @Param("participantId") Long participantId
     );
+
+    MeetingParticipant findByMeetingIdAndUserId(
+            @Param("meetingId") Long meetingId,
+            @Param("userId") Long userId
+    );
+
+    int updateReturnLocation(
+            MeetingParticipant participant
+    );
+
+    int countActiveByMeetingId(
+            @Param("meetingId") Long meetingId
+    );
+
+    int deleteByMeetingId(
+            @Param("meetingId") Long meetingId
+    );
 }

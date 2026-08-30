@@ -21,4 +21,8 @@ public interface MeetingCandidateMapper {
             @Param("meetingId") Long meetingId,
             @Param("participantId") Long participantId
     );
+
+    int deleteByMeetingId(
+            @Param("meetingId") Long meetingId
+    );
 }

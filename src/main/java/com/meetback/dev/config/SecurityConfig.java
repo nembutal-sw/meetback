@@ -54,6 +54,7 @@ public class SecurityConfig {
                                                 "/home",
                                                 "/quick-meetings",
                                                 "/quick-fixed",
+                                                "/quick-fixed-check",
                                                 "/favicon.ico",
 
                                                 // 관리자 HTML 페이지
