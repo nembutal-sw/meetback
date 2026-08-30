@@ -381,4 +381,17 @@ public class MeetingController {
                 user.userId()
         );
     }
+
+    @DeleteMapping("/{meetingId}/quick-fixed/setup")
+    public ResponseEntity<Void> cancelQuickFixedSetup(
+            @PathVariable Long meetingId,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        meetingService.cancelQuickFixedSetup(
+                meetingId,
+                user.userId()
+        );
+
+        return ResponseEntity.noContent().build();
+    }
 }

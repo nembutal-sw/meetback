@@ -222,4 +222,21 @@
         ORDER BY m.created_at DESC
 
     </select>
+
+    <update id="clearFinalCandidate">
+
+        UPDATE meetings
+        SET final_candidate_id = NULL,
+        updated_at = NOW()
+        WHERE meeting_id = #{meetingId}
+
+    </update>
+
+
+    <delete id="deleteById">
+
+        DELETE FROM meetings
+        WHERE meeting_id = #{meetingId}
+
+    </delete>
 </mapper>

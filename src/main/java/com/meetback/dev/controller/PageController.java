@@ -130,4 +130,17 @@ public class PageController {
 
         return "meeting/result";
     }
+
+    @GetMapping("/quick-fixed-check")
+    public String quickFixedCheck(
+            Model model
+    )
+    {
+        model.addAttribute(
+                "naverMapsClientId",
+                naverMapsClientId
+        );
+
+        return "meeting/quick-fixed-check";
+    }
 }

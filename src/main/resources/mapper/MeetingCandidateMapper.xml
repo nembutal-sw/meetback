@@ -121,4 +121,11 @@
 
     </select>
 
+    <delete id="deleteByMeetingId">
+
+        DELETE FROM meeting_candidates
+        WHERE meeting_id = #{meetingId}
+
+    </delete>
+
 </mapper>

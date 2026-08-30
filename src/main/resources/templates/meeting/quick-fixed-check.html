@@ -1,0 +1,4492 @@
+<!DOCTYPE html>
+<html lang="ko"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>MeetBack 고정 번개 참여 확인</title>
+
+
+    <script
+            src="/js/auth-session-guard.js"
+            defer>
+    </script>
+
+    <script src="/js/meeting-common.js"></script>
+
+
+    <!-- =========================================================
+         NAVER MAP
+         ========================================================= -->
+
+    <script
+            th:src="|https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${naverMapsClientId}|">
+    </script>
+
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            margin: 0;
+
+            background: #f8f8fd;
+
+            font-family: Arial, sans-serif;
+
+            color: #191924;
+        }
+
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+
+        button,
+        input {
+            font: inherit;
+        }
+
+
+        button {
+            cursor: pointer;
+        }
+
+
+        .page {
+            width: 760px;
+
+            max-width: calc(100% - 32px);
+
+            margin: 40px auto 80px;
+        }
+
+
+        .header {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            margin-bottom: 24px;
+        }
+
+
+        .header h1 {
+            margin: 0;
+
+            font-size: 28px;
+        }
+
+
+        .back-button {
+            padding: 10px 16px;
+
+            border: 1px solid #e8e7f1;
+
+            border-radius: 10px;
+
+            background: white;
+
+            color: #191924;
+        }
+
+
+        .card {
+            margin-bottom: 18px;
+
+            padding: 24px;
+
+            border: 1px solid #e8e7f1;
+
+            border-radius: 16px;
+
+            background: white;
+        }
+
+
+        .meeting-type {
+            margin-bottom: 8px;
+
+            color: #6557f6;
+
+            font-size: 14px;
+
+            font-weight: bold;
+        }
+
+
+        .meeting-title {
+            margin-bottom: 20px;
+
+            font-size: 27px;
+
+            font-weight: bold;
+        }
+
+
+        .info-grid {
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 12px;
+        }
+
+
+        .info-item {
+            padding: 16px;
+
+            border-radius: 12px;
+
+            background: #f8f8fd;
+        }
+
+
+        .info-label {
+            margin-bottom: 7px;
+
+            color: #777788;
+
+            font-size: 13px;
+        }
+
+
+        .info-value {
+            font-weight: bold;
+
+            line-height: 1.5;
+        }
+
+
+        .place-box {
+            margin-top: 14px;
+
+            padding: 18px;
+
+            border-radius: 12px;
+
+            background: #f8f8fd;
+        }
+
+
+        .place-name {
+            margin-bottom: 7px;
+
+            font-size: 19px;
+
+            font-weight: bold;
+        }
+
+
+        .place-address {
+            color: #777788;
+
+            line-height: 1.5;
+        }
+
+
+        h2 {
+            margin: 0 0 8px;
+
+            font-size: 21px;
+        }
+
+
+        .description {
+            margin-bottom: 20px;
+
+            color: #777788;
+
+            line-height: 1.6;
+        }
+
+
+        .search-row {
+            display: flex;
+
+            gap: 10px;
+        }
+
+
+        .search-row input {
+            flex: 1;
+
+            min-width: 0;
+
+            padding: 13px 14px;
+
+            border: 1px solid #dcdbe7;
+
+            border-radius: 10px;
+
+            outline: none;
+        }
+
+
+        .search-row input:focus {
+            border-color: #6557f6;
+        }
+
+
+        .search-button {
+            flex-shrink: 0;
+
+            padding: 0 20px;
+
+            border: 0;
+
+            border-radius: 10px;
+
+            background: #6557f6;
+
+            color: white;
+
+            font-weight: bold;
+        }
+
+
+        .results {
+            display: none;
+
+            overflow: hidden;
+
+            margin-top: 10px;
+
+            border: 1px solid #e8e7f1;
+
+            border-radius: 10px;
+
+            background: white;
+        }
+
+
+        .result-item {
+            padding: 13px 15px;
+
+            border-bottom: 1px solid #efeff5;
+
+            cursor: pointer;
+        }
+
+
+        .result-item:last-child {
+            border-bottom: 0;
+        }
+
+
+        .result-item:hover {
+            background: #f8f8fd;
+        }
+
+
+        .result-name {
+            margin-bottom: 5px;
+
+            font-weight: bold;
+        }
+
+
+        .result-address {
+            color: #777788;
+
+            font-size: 13px;
+        }
+
+
+        .selected-place {
+            display: none;
+
+            margin-top: 14px;
+
+            padding: 15px;
+
+            border: 1px solid #dcd8ff;
+
+            border-radius: 10px;
+
+            background: #f5f3ff;
+        }
+
+
+        .selected-place.show {
+            display: block;
+        }
+
+
+        .selected-label {
+            margin-bottom: 6px;
+
+            color: #6557f6;
+
+            font-size: 13px;
+
+            font-weight: bold;
+        }
+
+
+        .selected-name {
+            font-weight: bold;
+        }
+
+
+        .selected-address {
+            margin-top: 5px;
+
+            color: #777788;
+
+            font-size: 13px;
+        }
+
+
+        .preview-button {
+            width: 100%;
+
+            margin-top: 18px;
+
+            padding: 14px;
+
+            border: 0;
+
+            border-radius: 11px;
+
+            background: #6557f6;
+
+            color: white;
+
+            font-weight: bold;
+        }
+
+
+        .preview-button:disabled {
+            background: #c7c4dd;
+
+            cursor: default;
+        }
+
+
+        .result-card {
+            display: none;
+        }
+
+
+        .result-card.show {
+            display: block;
+        }
+
+
+        .result-status {
+            margin-bottom: 20px;
+
+            padding: 18px;
+
+            border-radius: 12px;
+        }
+
+
+        .result-status.success {
+            background: #edf9f2;
+
+            color: #218a56;
+        }
+
+
+        .result-status.fail {
+            background: #fff0f1;
+
+            color: #c94b54;
+        }
+
+
+        .result-status-title {
+            font-size: 20px;
+
+            font-weight: bold;
+        }
+
+
+        .result-status-description {
+            margin-top: 6px;
+
+            font-size: 14px;
+
+            line-height: 1.5;
+        }
+
+
+        .result-grid {
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 10px;
+        }
+
+
+        .result-item-box {
+            padding: 15px;
+
+            border-radius: 10px;
+
+            background: #f8f8fd;
+        }
+
+
+        .result-label {
+            margin-bottom: 6px;
+
+            color: #777788;
+
+            font-size: 13px;
+        }
+
+
+        .result-value {
+            font-weight: bold;
+        }
+
+
+        .margin-positive {
+            color: #218a56;
+        }
+
+
+        .margin-negative {
+            color: #c94b54;
+        }
+
+
+        /* =========================================================
+           지도 보기 버튼
+           ========================================================= */
+
+        .route-map-action {
+            display: none;
+
+            margin-top: 14px;
+        }
+
+
+        .route-map-action.show {
+            display: block;
+        }
+
+
+        .route-map-button {
+            width: 100%;
+
+            padding: 14px;
+
+            border: 1px solid #dcd8ff;
+
+            border-radius: 11px;
+
+            background: #f5f3ff;
+
+            color: #5143df;
+
+            font-weight: bold;
+        }
+
+
+        .route-map-button:hover {
+            background: #ece9ff;
+        }
+
+
+        /* =========================================================
+           지도 Modal
+           ========================================================= */
+
+        .route-map-modal {
+            display: none;
+
+            position: fixed;
+
+            inset: 0;
+
+            z-index: 9999;
+
+            align-items: center;
+
+            justify-content: center;
+
+            padding: 24px;
+
+            background: rgba(20, 20, 30, 0.55);
+        }
+
+
+        .route-map-modal.open {
+            display: flex;
+        }
+
+
+        .route-map-modal-content {
+            width: 900px;
+
+            max-width: 100%;
+
+            max-height: 92vh;
+
+            overflow-y: auto;
+
+            border-radius: 18px;
+
+            background: white;
+
+            box-shadow:
+                    0 24px 70px rgba(20, 20, 40, 0.25);
+        }
+
+
+        .route-map-modal-header {
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            padding: 20px 22px;
+
+            border-bottom: 1px solid #ecebf3;
+        }
+
+
+        .route-map-modal-header h2 {
+            margin: 0;
+        }
+
+
+        .route-map-small {
+            margin-bottom: 5px;
+
+            color: #6557f6;
+
+            font-size: 12px;
+
+            font-weight: bold;
+        }
+
+
+        .route-map-close {
+            width: 40px;
+
+            height: 40px;
+
+            border: 0;
+
+            border-radius: 50%;
+
+            background: #f1f0f6;
+
+            color: #555566;
+
+            font-size: 25px;
+
+            line-height: 1;
+        }
+
+
+        .route-map-body {
+            padding: 20px;
+        }
+
+
+        .route-map-loading {
+            display: none;
+
+            align-items: center;
+
+            justify-content: center;
+
+            min-height: 420px;
+
+            border-radius: 14px;
+
+            background: #f8f8fd;
+
+            color: #777788;
+        }
+
+
+        .route-map {
+            width: 100%;
+
+            height: 460px;
+
+            overflow: hidden;
+
+            border: 1px solid #e8e7f1;
+
+            border-radius: 14px;
+        }
+
+
+        .route-map-info {
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 10px;
+
+            margin-top: 14px;
+        }
+
+
+        .route-map-info span {
+            padding: 10px 13px;
+
+            border-radius: 9px;
+
+            background: #f8f8fd;
+
+            color: #777788;
+
+            font-size: 13px;
+        }
+
+
+        .route-map-info strong {
+            margin-left: 5px;
+
+            color: #191924;
+        }
+
+
+        /* =========================================================
+           노선 안내
+           ========================================================= */
+
+        .route-guide {
+            display: none;
+
+            margin-top: 14px;
+
+            padding: 15px;
+
+            border: 1px solid #ecebf3;
+
+            border-radius: 12px;
+
+            background: #fafafe;
+        }
+
+
+        .route-guide-content {
+            display: flex;
+
+            align-items: center;
+
+            flex-wrap: wrap;
+
+            gap: 8px;
+        }
+
+
+        .route-guide-label {
+            margin-right: 4px;
+
+            color: #777788;
+
+            font-size: 13px;
+
+            font-weight: bold;
+        }
+
+
+        .route-guide-line-chip {
+            padding: 6px 9px;
+
+            border-radius: 999px;
+
+            font-size: 12px;
+
+            font-weight: bold;
+        }
+
+
+        .route-guide-arrow {
+            color: #aaaabb;
+        }
+
+
+        .route-guide-transfer-station {
+            font-size: 12px;
+
+            font-weight: bold;
+        }
+
+
+        .route-guide-transfer-badge {
+            padding: 4px 7px;
+
+            border-radius: 999px;
+
+            background: #eeeeF5;
+
+            color: #777788;
+
+            font-size: 11px;
+        }
+
+
+        /* =========================================================
+   지도 마커
+   ========================================================= */
+
+        .route-station-marker {
+            --marker-color: #6557f6;
+            --marker-next-color: var(--marker-color);
+
+            position: relative;
+
+            min-width: 105px;
+
+            padding: 9px 11px;
+
+            transform: translate(-50%, -100%);
+
+            border: 1px solid #e5e4ed;
+            border-radius: 10px;
+
+            background: #ffffff;
+
+            box-shadow:
+                    0 5px 16px rgba(30, 30, 50, 0.18);
+
+            white-space: nowrap;
+        }
+
+
+        .route-station-marker-header {
+            display: flex;
+
+            align-items: center;
+
+            gap: 6px;
+        }
+
+
+        .route-station-marker-badge {
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            min-width: 34px;
+            height: 20px;
+
+            padding: 0 6px;
+
+            border-radius: 999px;
+
+            background:
+                    var(--marker-color);
+
+            color: #ffffff;
+
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+
+        /*
+         * 환승은
+         * 이전 호선 / 다음 호선 색상을 반반 표시
+         */
+        .route-station-marker.transfer
+        .route-station-marker-badge {
+            background:
+                    linear-gradient(
+                            135deg,
+                            var(--marker-color) 0%,
+                            var(--marker-color) 48%,
+                            var(--marker-next-color) 52%,
+                            var(--marker-next-color) 100%
+                    );
+        }
+
+
+        .route-station-marker-name {
+            color: #191924;
+
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+
+        .route-station-marker-line {
+            margin-top: 6px;
+
+            color: var(--marker-color);
+
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+
+        /*
+         * 환승역의
+         * "2호선 → 7호선" 글자도
+         * 두 호선 색상으로 표현
+         */
+        .route-station-marker.transfer
+        .route-station-marker-line {
+            background:
+                    linear-gradient(
+                            90deg,
+                            var(--marker-color),
+                            var(--marker-next-color)
+                    );
+
+            background-clip: text;
+            -webkit-background-clip: text;
+
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+        }
+
+
+        /* =========================================================
+           하단 버튼
+           ========================================================= */
+
+        .action-row {
+            display: flex;
+
+            gap: 10px;
+
+            margin-top: 20px;
+        }
+
+
+        .cancel-button,
+        .join-button {
+            flex: 1;
+
+            padding: 14px;
+
+            border-radius: 11px;
+
+            font-weight: bold;
+        }
+
+
+        .cancel-button {
+            border: 1px solid #e8e7f1;
+
+            background: white;
+
+            color: #555566;
+        }
+
+
+        .join-button {
+            border: 0;
+
+            background: #6557f6;
+
+            color: white;
+        }
+
+
+        .join-button.warning {
+            background: #c94b54;
+        }
+
+
+        .join-button:disabled {
+            background: #c7c4dd;
+
+            cursor: default;
+        }
+
+
+        .message {
+            display: none;
+
+            margin-bottom: 18px;
+
+            padding: 14px 16px;
+
+            border-radius: 10px;
+
+            line-height: 1.5;
+        }
+
+
+        .message.show {
+            display: block;
+        }
+
+
+        .message.error {
+            background: #fff0f1;
+
+            color: #c94b54;
+        }
+
+
+        .message.info {
+            background: #f1efff;
+
+            color: #5143df;
+        }
+
+
+        @media (max-width: 620px) {
+
+            .info-grid,
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+
+
+            .search-row {
+                flex-direction: column;
+            }
+
+
+            .search-button {
+                padding: 13px;
+            }
+
+
+            .action-row {
+                flex-direction: column-reverse;
+            }
+
+
+            .route-map-modal {
+                padding: 10px;
+            }
+
+
+            .route-map {
+                height: 380px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="page">
+
+    <!-- =========================================================
+         HEADER
+         ========================================================= -->
+
+    <div class="header">
+
+        <h1>
+            MeetBack
+        </h1>
+
+
+        <button
+                type="button"
+                id="headerBackButton"
+                class="back-button"
+                onclick="goBack()">
+
+            돌아가기
+
+        </button>
+
+    </div>
+
+
+    <div
+            id="message"
+            class="message">
+    </div>
+
+
+    <!-- =========================================================
+         모임 정보
+         ========================================================= -->
+
+    <div class="card">
+
+        <div
+                id="meetingTypeLabel"
+                class="meeting-type">
+
+            ⚡ 고정 번개 참여 전 확인
+
+        </div>
+
+
+        <div
+                id="meetingTitle"
+                class="meeting-title">
+
+            모임 정보를 불러오는 중...
+
+        </div>
+
+
+        <div class="info-grid">
+
+            <div class="info-item">
+
+                <div class="info-label">
+                    모임 시작
+                </div>
+
+                <div
+                        id="meetingStartAt"
+                        class="info-value">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="info-item">
+
+                <div class="info-label">
+                    모임 종료
+                </div>
+
+                <div
+                        id="desiredEndAt"
+                        class="info-value">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="info-item">
+
+                <div class="info-label">
+                    참가 인원
+                </div>
+
+                <div
+                        id="participantCount"
+                        class="info-value">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="info-item">
+
+                <div class="info-label">
+                    방장
+                </div>
+
+                <div
+                        id="hostNickname"
+                        class="info-value">
+
+                    -
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="place-box">
+
+            <div class="info-label">
+                모임 장소
+            </div>
+
+
+            <div
+                    id="fixedPlaceName"
+                    class="place-name">
+
+                -
+
+            </div>
+
+
+            <div
+                    id="fixedPlaceAddress"
+                    class="place-address">
+
+                -
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         귀가지 검색
+         ========================================================= -->
+
+    <div class="card">
+
+        <h2>
+            내 귀가 가능 여부 확인
+        </h2>
+
+
+        <div
+                id="returnDescription"
+                class="description">
+
+            참여하기 전에 귀가 장소를 선택하면
+            모임 종료 후 대중교통으로 귀가할 수 있는지 확인합니다.
+
+        </div>
+
+
+        <div class="search-row">
+
+            <input
+                    type="text"
+                    id="returnQuery"
+                    placeholder="예: 구로역"
+                    autocomplete="off"
+                    oninput="handleReturnInput()"
+                    onkeydown="
+                        if (event.key === 'Enter') {
+                            searchReturnPlace();
+                        }
+                    ">
+
+
+            <button
+                    type="button"
+                    class="search-button"
+                    onclick="searchReturnPlace()">
+
+                검색
+
+            </button>
+
+        </div>
+
+
+        <div
+                id="returnResults"
+                class="results">
+        </div>
+
+
+        <div
+                id="selectedPlace"
+                class="selected-place">
+
+            <div class="selected-label">
+                선택한 귀가 장소
+            </div>
+
+
+            <div
+                    id="selectedPlaceName"
+                    class="selected-name">
+            </div>
+
+
+            <div
+                    id="selectedPlaceAddress"
+                    class="selected-address">
+            </div>
+
+        </div>
+
+
+        <button
+                type="button"
+                id="previewButton"
+                class="preview-button"
+                onclick="checkReturn()"
+                disabled>
+
+            귀가 가능 여부 확인
+
+        </button>
+
+    </div>
+
+
+    <!-- =========================================================
+         계산 결과
+         ========================================================= -->
+
+    <div
+            id="resultCard"
+            class="card result-card">
+
+        <h2>
+            귀가 확인 결과
+        </h2>
+
+
+        <div
+                id="resultStatus"
+                class="result-status">
+
+            <div
+                    id="resultStatusTitle"
+                    class="result-status-title">
+            </div>
+
+
+            <div
+                    id="resultStatusDescription"
+                    class="result-status-description">
+            </div>
+
+        </div>
+
+
+        <div class="result-grid">
+
+            <div class="result-item-box">
+
+                <div class="result-label">
+                    예상 귀가시간
+                </div>
+
+                <div
+                        id="returnMinutes"
+                        class="result-value">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="result-item-box">
+
+                <div class="result-label">
+                    환승
+                </div>
+
+                <div
+                        id="transferCount"
+                        class="result-value">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="result-item-box">
+
+                <div class="result-label">
+                    막차 출발
+                </div>
+
+                <div
+                        id="lastTrainDeparture"
+                        class="result-value">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="result-item-box">
+
+                <div class="result-label">
+                    안전 출발 마감
+                </div>
+
+                <div
+                        id="lastSafeDeparture"
+                        class="result-value">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="result-item-box">
+
+                <div class="result-label">
+                    모임 종료
+                </div>
+
+                <div
+                        id="resultDesiredEndAt"
+                        class="result-value">
+
+                    -
+
+                </div>
+
+            </div>
+
+
+            <div class="result-item-box">
+
+                <div class="result-label">
+                    귀가 여유
+                </div>
+
+                <div
+                        id="marginMinutes"
+                        class="result-value">
+
+                    -
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             지도 보기
+             ===================================================== -->
+
+        <div
+                id="routeMapAction"
+                class="route-map-action">
+
+            <button
+                    type="button"
+                    class="route-map-button"
+                    onclick="openRouteMap()">
+
+                🗺️ 지도로 귀가 경로 보기
+
+            </button>
+
+        </div>
+
+
+        <div class="action-row">
+
+            <button
+                    type="button"
+                    id="actionBackButton"
+                    class="cancel-button"
+                    onclick="goBack()">
+
+                참여하지 않기
+
+            </button>
+
+
+            <button
+                    type="button"
+                    id="joinButton"
+                    class="join-button"
+                    onclick="joinMeeting()"
+                    disabled>
+
+                참여하기
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     귀가 경로 지도 Modal
+     ========================================================= -->
+
+<div
+        id="routeMapModal"
+        class="route-map-modal"
+        onclick="handleRouteMapBackground(event)">
+
+    <div class="route-map-modal-content">
+
+        <div class="route-map-modal-header">
+
+            <div>
+
+                <div class="route-map-small">
+                    RETURN ROUTE
+                </div>
+
+                <h2 id="routeMapTitle">
+                    내 귀가 경로
+                </h2>
+
+            </div>
+
+
+            <button
+                    type="button"
+                    class="route-map-close"
+                    onclick="closeRouteMap()">
+
+                ×
+
+            </button>
+
+        </div>
+
+
+        <div class="route-map-body">
+
+            <div
+                    id="routeMapLoading"
+                    class="route-map-loading">
+
+                귀가 경로를 불러오는 중...
+
+            </div>
+
+
+            <div
+                    id="routeMap"
+                    class="route-map">
+            </div>
+
+
+            <div
+                    id="routeMapInfo"
+                    class="route-map-info">
+            </div>
+
+
+            <div
+                    id="routeGuide"
+                    class="route-guide">
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    // =========================================================
+    // 상태
+    // =========================================================
+
+    let meetingId = null;
+
+    let meeting = null;
+
+    let selectedReturn = null;
+
+    let previewResult = null;
+
+    let searchTimer = null;
+
+    let searchVersion = 0;
+
+    let fromRoom = false;
+
+    let fromCreate = false;
+
+
+    // =========================================================
+    // 지도 상태
+    // =========================================================
+
+    let routeMap = null;
+
+    let routePolylines = [];
+
+    let routeMarkers = [];
+
+
+    // =========================================================
+    // DOM
+    // =========================================================
+
+    const message =
+        document.getElementById(
+            "message"
+        );
+
+
+    const returnQuery =
+        document.getElementById(
+            "returnQuery"
+        );
+
+
+    const returnResults =
+        document.getElementById(
+            "returnResults"
+        );
+
+
+    const previewButton =
+        document.getElementById(
+            "previewButton"
+        );
+
+
+    const resultCard =
+        document.getElementById(
+            "resultCard"
+        );
+
+
+    const joinButton =
+        document.getElementById(
+            "joinButton"
+        );
+
+
+    const routeMapAction =
+        document.getElementById(
+            "routeMapAction"
+        );
+
+
+    // =========================================================
+    // 초기화
+    // =========================================================
+
+    async function initialize()
+    {
+        try
+        {
+            const user =
+                await MeetBack.checkLogin();
+
+
+            if (!user)
+            {
+                return;
+            }
+
+
+            meetingId =
+                MeetBack.getMeetingId();
+
+
+            if (!meetingId)
+            {
+                throw new Error(
+                    "모임 정보가 없습니다."
+                );
+            }
+
+
+            const params =
+                new URLSearchParams(
+                    location.search
+                );
+
+
+            fromRoom =
+                params.get("from")
+                ===
+                "room";
+
+
+            fromCreate =
+                params.get("from")
+                ===
+                "create";
+
+
+            // =====================================================
+            // 채팅방 → 귀가 정보 확인
+            // =====================================================
+
+            if (fromRoom)
+            {
+                document.getElementById(
+                    "meetingTypeLabel"
+                ).textContent =
+                    "⚡ 내 귀가 정보 확인";
+
+
+                document.getElementById(
+                    "returnDescription"
+                ).textContent =
+                    "현재 등록된 귀가 장소와 귀가 가능 여부를 확인하거나 다시 계산할 수 있습니다.";
+
+
+                document.getElementById(
+                    "headerBackButton"
+                ).textContent =
+                    "채팅방으로";
+
+
+                document.getElementById(
+                    "actionBackButton"
+                ).textContent =
+                    "채팅방으로 돌아가기";
+
+
+                joinButton.hidden =
+                    true;
+            }
+
+
+            // =====================================================
+            // 방장 생성 직후
+            // =====================================================
+
+            if (fromCreate)
+            {
+                document.getElementById(
+                    "meetingTypeLabel"
+                ).textContent =
+                    "⚡ 고정 번개 생성 완료";
+
+
+                document.getElementById(
+                    "returnDescription"
+                ).textContent =
+                    "모임방에 들어가기 전에 방장님의 귀가 장소를 선택하고 귀가 가능 여부를 확인해주세요.";
+
+
+                document.getElementById(
+                    "headerBackButton"
+                ).textContent =
+                    "홈으로";
+
+
+                document.getElementById(
+                    "actionBackButton"
+                ).textContent =
+                    "홈으로 돌아가기";
+            }
+
+
+            await loadMeeting();
+
+
+            if (fromRoom)
+            {
+                loadSavedPreviewFromSession();
+            }
+        }
+        catch (error)
+        {
+            console.error(
+                "[QUICK FIXED CHECK INIT ERROR]",
+                error
+            );
+
+
+            showMessage(
+                error.message
+                ||
+                "페이지를 불러오지 못했습니다.",
+                "error"
+            );
+        }
+    }
+
+
+    // =========================================================
+    // 모임 정보 조회
+    // =========================================================
+
+    async function loadMeeting()
+    {
+        if (
+            fromRoom
+            ||
+            fromCreate
+        )
+        {
+            const meetingResponse =
+                await MeetBack.authenticatedFetch(
+                    "/meetings/"
+                    +
+                    meetingId
+                );
+
+
+            if (!meetingResponse.ok)
+            {
+                throw new Error(
+                    "모임 정보를 불러오지 못했습니다."
+                );
+            }
+
+
+            meeting =
+                await meetingResponse.json();
+
+
+            const participantResponse =
+                await MeetBack.authenticatedFetch(
+                    "/participants/meeting/"
+                    +
+                    meetingId,
+                    {
+                        method: "GET",
+                        cache: "no-store"
+                    }
+                );
+
+
+            if (!participantResponse.ok)
+            {
+                throw new Error(
+                    "참가자 정보를 불러오지 못했습니다."
+                );
+            }
+
+
+            const participants =
+                await participantResponse.json();
+
+
+            if (!Array.isArray(participants))
+            {
+                throw new Error(
+                    "참가자 정보 형식이 올바르지 않습니다."
+                );
+            }
+
+
+            meeting.currentParticipants =
+                participants.length;
+
+
+            const host =
+                participants.find(
+                    participant =>
+                        Number(participant.userId)
+                        ===
+                        Number(meeting.hostUserId)
+                );
+
+
+            meeting.hostNickname =
+                host?.nickname
+                ||
+                "-";
+
+
+            const candidateResponse =
+                await MeetBack.authenticatedFetch(
+                    "/participants/meeting/"
+                    +
+                    meetingId
+                    +
+                    "/candidates"
+                );
+
+
+            if (!candidateResponse.ok)
+            {
+                throw new Error(
+                    "모임 장소를 불러오지 못했습니다."
+                );
+            }
+
+
+            const candidates =
+                await candidateResponse.json();
+
+
+            if (!Array.isArray(candidates))
+            {
+                throw new Error(
+                    "모임 장소 정보 형식이 올바르지 않습니다."
+                );
+            }
+
+
+            const fixedCandidate =
+                candidates.find(
+                    candidate =>
+                        Number(candidate.candidateId)
+                        ===
+                        Number(meeting.finalCandidateId)
+                );
+
+
+            if (fixedCandidate)
+            {
+                meeting.fixedPlaceName =
+                    fixedCandidate.placeName
+                    ||
+                    "장소명 없음";
+
+
+                meeting.fixedPlaceAddress =
+                    fixedCandidate.address
+                    ||
+                    "";
+            }
+            else
+            {
+                meeting.fixedPlaceName =
+                    "장소 정보 없음";
+
+
+                meeting.fixedPlaceAddress =
+                    "";
+            }
+        }
+        else
+        {
+            const response =
+                await MeetBack.authenticatedFetch(
+                    "/meetings/quick"
+                );
+
+
+            if (!response.ok)
+            {
+                throw new Error(
+                    "모임 정보를 불러오지 못했습니다."
+                );
+            }
+
+
+            const meetings =
+                await response.json();
+
+
+            if (!Array.isArray(meetings))
+            {
+                throw new Error(
+                    "모임 정보 형식이 올바르지 않습니다."
+                );
+            }
+
+
+            meeting =
+                meetings.find(
+                    item =>
+                        Number(item.meetingId)
+                        ===
+                        Number(meetingId)
+                );
+
+
+            if (!meeting)
+            {
+                throw new Error(
+                    "현재 참여 가능한 번개방을 찾을 수 없습니다."
+                );
+            }
+        }
+
+
+        if (
+            !meeting
+            ||
+            meeting.meetingType
+            !==
+            "QUICK_FIXED"
+        )
+        {
+            throw new Error(
+                "고정 번개방이 아닙니다."
+            );
+        }
+
+
+        renderMeeting();
+    }
+
+
+    // =========================================================
+    // 모임 표시
+    // =========================================================
+
+    function renderMeeting()
+    {
+        document.getElementById(
+            "meetingTitle"
+        ).textContent =
+            meeting.title
+            ||
+            "고정 번개";
+
+
+        document.getElementById(
+            "meetingStartAt"
+        ).textContent =
+            formatDateTime(
+                meeting.meetingStartAt
+            );
+
+
+        document.getElementById(
+            "desiredEndAt"
+        ).textContent =
+            formatDateTime(
+                meeting.desiredEndAt
+            );
+
+
+        document.getElementById(
+            "participantCount"
+        ).textContent =
+            meeting.currentParticipants != null
+                ? `${meeting.currentParticipants} / ${meeting.maxParticipants ?? "-"}`
+                : "-";
+
+
+        document.getElementById(
+            "hostNickname"
+        ).textContent =
+            meeting.hostNickname
+            ||
+            "-";
+
+
+        document.getElementById(
+            "fixedPlaceName"
+        ).textContent =
+            meeting.fixedPlaceName
+            ||
+            "모임 장소";
+
+
+        document.getElementById(
+            "fixedPlaceAddress"
+        ).textContent =
+            meeting.fixedPlaceAddress
+            ||
+            "";
+    }
+
+
+    // =========================================================
+    // 귀가지 입력 변경
+    // =========================================================
+
+    function handleReturnInput()
+    {
+        selectedReturn =
+            null;
+
+
+        previewResult =
+            null;
+
+
+        previewButton.disabled =
+            true;
+
+
+        joinButton.disabled =
+            true;
+
+
+        resultCard.classList.remove(
+            "show"
+        );
+
+
+        routeMapAction.classList.remove(
+            "show"
+        );
+
+
+        document.getElementById(
+            "selectedPlace"
+        ).classList.remove(
+            "show"
+        );
+
+
+        if (searchTimer)
+        {
+            clearTimeout(
+                searchTimer
+            );
+        }
+
+
+        const query =
+            returnQuery.value.trim();
+
+
+        if (query.length < 2)
+        {
+            searchVersion++;
+
+
+            returnResults.style.display =
+                "none";
+
+
+            returnResults.innerHTML =
+                "";
+
+
+            return;
+        }
+
+
+        searchTimer =
+            setTimeout(
+                () =>
+                {
+                    searchReturnPlace(
+                        true
+                    );
+                },
+                350
+            );
+    }
+
+
+    // =========================================================
+    // 장소 검색
+    // =========================================================
+
+    async function searchReturnPlace(
+        autoSearch = false
+    )
+    {
+        const query =
+            returnQuery.value.trim();
+
+
+        if (!query)
+        {
+            if (!autoSearch)
+            {
+                showMessage(
+                    "귀가 장소를 입력해주세요.",
+                    "info"
+                );
+            }
+
+
+            return;
+        }
+
+
+        if (searchTimer)
+        {
+            clearTimeout(
+                searchTimer
+            );
+        }
+
+
+        const requestVersion =
+            ++searchVersion;
+
+
+        returnResults.style.display =
+            "block";
+
+
+        returnResults.textContent =
+            "검색 중...";
+
+
+        try
+        {
+            const response =
+                await MeetBack.authenticatedFetch(
+                    "/places?query="
+                    +
+                    encodeURIComponent(
+                        query
+                    )
+                );
+
+
+            if (
+                requestVersion
+                !==
+                searchVersion
+            )
+            {
+                return;
+            }
+
+
+            if (
+                returnQuery.value.trim()
+                !==
+                query
+            )
+            {
+                return;
+            }
+
+
+            if (!response.ok)
+            {
+                throw new Error(
+                    await getErrorMessage(
+                        response,
+                        "장소 검색에 실패했습니다."
+                    )
+                );
+            }
+
+
+            const places =
+                await response.json();
+
+
+            renderSearchResults(
+                places
+            );
+        }
+        catch (error)
+        {
+            returnResults.style.display =
+                "none";
+
+
+            if (!autoSearch)
+            {
+                showMessage(
+                    error.message,
+                    "error"
+                );
+            }
+        }
+    }
+
+
+    // =========================================================
+    // 검색 결과
+    // =========================================================
+
+    function renderSearchResults(
+        places
+    )
+    {
+        returnResults.innerHTML =
+            "";
+
+
+        if (
+            !Array.isArray(places)
+            ||
+            places.length === 0
+        )
+        {
+            returnResults.style.display =
+                "block";
+
+
+            returnResults.textContent =
+                "검색 결과가 없습니다.";
+
+
+            return;
+        }
+
+
+        returnResults.style.display =
+            "block";
+
+
+        places.forEach(
+            place =>
+            {
+                const item =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                item.className =
+                    "result-item";
+
+
+                const name =
+                    place.name
+                    ||
+                    place.placeName
+                    ||
+                    "장소명 없음";
+
+
+                const address =
+                    place.roadAddress
+                    ||
+                    place.address
+                    ||
+                    "";
+
+
+                const nameElement =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                nameElement.className =
+                    "result-name";
+
+
+                nameElement.textContent =
+                    name;
+
+
+                const addressElement =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                addressElement.className =
+                    "result-address";
+
+
+                addressElement.textContent =
+                    address;
+
+
+                item.appendChild(
+                    nameElement
+                );
+
+
+                item.appendChild(
+                    addressElement
+                );
+
+
+                item.onclick =
+                    () =>
+                    {
+                        selectReturnPlace(
+                            place
+                        );
+                    };
+
+
+                returnResults.appendChild(
+                    item
+                );
+            }
+        );
+    }
+
+
+    // =========================================================
+    // 귀가지 선택
+    // =========================================================
+
+    function selectReturnPlace(
+        place
+    )
+    {
+        searchVersion++;
+
+
+        const name =
+            place.name
+            ||
+            place.placeName;
+
+
+        const address =
+            place.roadAddress
+            ||
+            place.address
+            ||
+            "";
+
+
+        const longitude =
+            Number(
+                place.longitude
+            );
+
+
+        const latitude =
+            Number(
+                place.latitude
+            );
+
+
+        if (
+            !name
+            ||
+            Number.isNaN(longitude)
+            ||
+            Number.isNaN(latitude)
+        )
+        {
+            showMessage(
+                "선택한 장소 정보가 올바르지 않습니다.",
+                "error"
+            );
+
+
+            return;
+        }
+
+
+        selectedReturn = {
+
+            name:
+            name,
+
+            address:
+            address,
+
+            longitude:
+            longitude,
+
+            latitude:
+            latitude
+
+        };
+
+
+        returnQuery.value =
+            name;
+
+
+        document.getElementById(
+            "selectedPlaceName"
+        ).textContent =
+            name;
+
+
+        document.getElementById(
+            "selectedPlaceAddress"
+        ).textContent =
+            address;
+
+
+        document.getElementById(
+            "selectedPlace"
+        ).classList.add(
+            "show"
+        );
+
+
+        returnResults.innerHTML =
+            "";
+
+
+        returnResults.style.display =
+            "none";
+
+
+        previewResult =
+            null;
+
+
+        previewButton.disabled =
+            false;
+
+
+        joinButton.disabled =
+            true;
+
+
+        routeMapAction.classList.remove(
+            "show"
+        );
+
+
+        resultCard.classList.remove(
+            "show"
+        );
+
+
+        hideMessage();
+    }
+
+
+    // =========================================================
+    // 귀가 계산
+    // =========================================================
+
+    async function checkReturn()
+    {
+        if (!selectedReturn)
+        {
+            showMessage(
+                "귀가 장소를 검색 후 선택해주세요.",
+                "error"
+            );
+
+
+            return;
+        }
+
+
+        previewButton.disabled =
+            true;
+
+
+        previewButton.textContent =
+            "귀가 경로 계산 중...";
+
+
+        routeMapAction.classList.remove(
+            "show"
+        );
+
+
+        try
+        {
+            const response =
+                await MeetBack.authenticatedFetch(
+                    `/calculations/meeting/${meetingId}/quick-fixed/preview`,
+                    {
+                        method:
+                            "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(
+                                selectedReturn
+                            )
+                    }
+                );
+
+
+            if (!response.ok)
+            {
+                throw new Error(
+                    await getErrorMessage(
+                        response,
+                        "귀가 계산에 실패했습니다."
+                    )
+                );
+            }
+
+
+            previewResult =
+                await response.json();
+
+
+            if (fromRoom)
+            {
+                const locationResponse =
+                    await MeetBack.authenticatedFetch(
+                        `/participants/meeting/${meetingId}/quick-fixed/return-location`,
+                        {
+                            method:
+                                "PUT",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    selectedReturn
+                                )
+                        }
+                    );
+
+
+                if (!locationResponse.ok)
+                {
+                    throw new Error(
+                        await getErrorMessage(
+                            locationResponse,
+                            "귀가 장소 저장에 실패했습니다."
+                        )
+                    );
+                }
+            }
+
+
+            savePreviewToSession();
+
+
+            renderPreviewResult();
+
+
+            hideMessage();
+        }
+        catch (error)
+        {
+            previewResult =
+                null;
+
+
+            routeMapAction.classList.remove(
+                "show"
+            );
+
+
+            if (!fromRoom)
+            {
+                joinButton.disabled =
+                    true;
+            }
+
+
+            showMessage(
+                error.message,
+                "error"
+            );
+        }
+        finally
+        {
+            previewButton.disabled =
+                false;
+
+
+            previewButton.textContent =
+                "다시 확인하기";
+        }
+    }
+
+
+    // =========================================================
+    // 결과 표시
+    // =========================================================
+
+    function renderPreviewResult(
+        scrollToResult = true
+    )
+    {
+        if (!previewResult)
+        {
+            return;
+        }
+
+
+        const canReturn =
+            previewResult.canReturn
+            ===
+            true;
+
+
+        const status =
+            document.getElementById(
+                "resultStatus"
+            );
+
+
+        status.className =
+            "result-status "
+            +
+            (
+                canReturn
+                    ? "success"
+                    : "fail"
+            );
+
+
+        document.getElementById(
+            "resultStatusTitle"
+        ).textContent =
+            canReturn
+                ? "✅ 귀가 가능합니다."
+                : "❌ 예정 종료시간까지 머물면 귀가가 어렵습니다.";
+
+
+        let statusDescription;
+
+
+        if (canReturn)
+        {
+            statusDescription =
+                "현재 설정된 종료시간 기준으로 안전하게 귀가할 수 있습니다.";
+        }
+        else if (fromRoom)
+        {
+            statusDescription =
+                "현재 귀가 정보 기준으로 막차 안전 출발시간을 초과합니다.";
+        }
+        else if (fromCreate)
+        {
+            statusDescription =
+                "설정한 종료시간 기준으로 막차 안전 출발시간을 초과합니다.";
+        }
+        else
+        {
+            statusDescription =
+                "참여 여부를 결정하기 전에 막차 시간을 확인해주세요.";
+        }
+
+
+        document.getElementById(
+            "resultStatusDescription"
+        ).textContent =
+            statusDescription;
+
+
+        document.getElementById(
+            "returnMinutes"
+        ).textContent =
+            previewResult.returnMinutes != null
+                ? previewResult.returnMinutes + "분"
+                : "-";
+
+
+        document.getElementById(
+            "transferCount"
+        ).textContent =
+            previewResult.transferCount != null
+                ? previewResult.transferCount + "회"
+                : "-";
+
+
+        document.getElementById(
+            "lastTrainDeparture"
+        ).textContent =
+            previewResult.lastTrainDepartureAt
+                ? formatDateTime(
+                    previewResult.lastTrainDepartureAt
+                )
+                : "도보 귀가";
+
+
+        document.getElementById(
+            "lastSafeDeparture"
+        ).textContent =
+            previewResult.lastSafeDepartureAt
+                ? formatDateTime(
+                    previewResult.lastSafeDepartureAt
+                )
+                : "제한 없음";
+
+
+        document.getElementById(
+            "resultDesiredEndAt"
+        ).textContent =
+            formatDateTime(
+                previewResult.desiredEndAt
+            );
+
+
+        const marginElement =
+            document.getElementById(
+                "marginMinutes"
+            );
+
+
+        marginElement.className =
+            "result-value";
+
+
+        if (
+            previewResult.marginMinutes
+            == null
+        )
+        {
+            marginElement.textContent =
+                "도보 귀가";
+        }
+        else if (
+            previewResult.marginMinutes
+            >=
+            0
+        )
+        {
+            marginElement.textContent =
+                previewResult.marginMinutes
+                +
+                "분 여유";
+
+
+            marginElement.classList.add(
+                "margin-positive"
+            );
+        }
+        else
+        {
+            marginElement.textContent =
+                Math.abs(
+                    previewResult.marginMinutes
+                )
+                +
+                "분 초과";
+
+
+            marginElement.classList.add(
+                "margin-negative"
+            );
+        }
+
+
+        // =====================================================
+        // 지도 버튼
+        // =====================================================
+
+        const mapData =
+            previewResult.routeMap;
+
+
+        if (
+            mapData
+            &&
+            Array.isArray(mapData.lines)
+            &&
+            mapData.lines.length > 0
+        )
+        {
+            routeMapAction.classList.add(
+                "show"
+            );
+        }
+        else
+        {
+            routeMapAction.classList.remove(
+                "show"
+            );
+        }
+
+
+        // =====================================================
+        // 참여 버튼
+        // =====================================================
+
+        if (fromRoom)
+        {
+            joinButton.hidden =
+                true;
+        }
+        else if (fromCreate)
+        {
+            joinButton.hidden =
+                false;
+
+
+            joinButton.disabled =
+                false;
+
+
+            joinButton.className =
+                canReturn
+                    ? "join-button"
+                    : "join-button warning";
+
+
+            joinButton.textContent =
+                canReturn
+                    ? "모임방 들어가기"
+                    : "그래도 모임방 들어가기";
+        }
+        else
+        {
+            joinButton.hidden =
+                false;
+
+
+            joinButton.disabled =
+                false;
+
+
+            joinButton.className =
+                canReturn
+                    ? "join-button"
+                    : "join-button warning";
+
+
+            joinButton.textContent =
+                canReturn
+                    ? "이 모임 참여하기"
+                    : "그래도 참여하기";
+        }
+
+
+        resultCard.classList.add(
+            "show"
+        );
+
+
+        if (scrollToResult)
+        {
+            resultCard.scrollIntoView({
+                behavior:
+                    "smooth",
+
+                block:
+                    "start"
+            });
+        }
+    }
+
+
+    // =========================================================
+    // 지도 열기
+    // =========================================================
+
+    function openRouteMap()
+    {
+        const mapData =
+            previewResult?.routeMap;
+
+
+        if (
+            !mapData
+            ||
+            !Array.isArray(mapData.lines)
+            ||
+            mapData.lines.length === 0
+        )
+        {
+            showMessage(
+                "표시할 귀가 경로가 없습니다.",
+                "info"
+            );
+
+
+            return;
+        }
+
+
+        if (
+            typeof naver === "undefined"
+            ||
+            !naver.maps
+        )
+        {
+            showMessage(
+                "네이버 지도를 불러오지 못했습니다.",
+                "error"
+            );
+
+
+            return;
+        }
+
+
+        const modal =
+            document.getElementById(
+                "routeMapModal"
+            );
+
+
+        const mapElement =
+            document.getElementById(
+                "routeMap"
+            );
+
+
+        document.getElementById(
+            "routeMapTitle"
+        ).textContent =
+            `${mapData.startName || "모임 장소"} → ${mapData.endName || "귀가 장소"}`;
+
+
+        modal.classList.add(
+            "open"
+        );
+
+
+        document.body.classList.add(
+            "modal-open"
+        );
+
+
+        mapElement.style.display =
+            "block";
+
+
+        renderRouteMapInfo();
+
+
+        renderRouteGuide(
+            mapData.steps,
+            mapData.lines
+        );
+
+
+        setTimeout(
+            () =>
+            {
+                drawRouteMap(
+                    mapData.lines,
+                    mapData.startName,
+                    mapData.endName,
+                    mapData.steps
+                );
+            },
+            100
+        );
+    }
+
+
+    // =========================================================
+    // 지도 상단 정보
+    // =========================================================
+
+    function renderRouteMapInfo()
+    {
+        const info =
+            document.getElementById(
+                "routeMapInfo"
+            );
+
+
+        if (!previewResult)
+        {
+            info.innerHTML =
+                "";
+
+
+            return;
+        }
+
+
+        info.innerHTML =
+            `
+            <span>
+                예상 귀가시간
+                <strong>
+                    ${
+                previewResult.returnMinutes == null
+                    ? "-"
+                    : previewResult.returnMinutes + "분"
+            }
+                </strong>
+            </span>
+
+            <span>
+                환승
+                <strong>
+                    ${
+                previewResult.transferCount == null
+                    ? "-"
+                    : previewResult.transferCount + "회"
+            }
+                </strong>
+            </span>
+
+            <span>
+                막차
+                <strong>
+                    ${
+                previewResult.lastTrainDepartureAt
+                    ? formatTimeOnly(
+                        previewResult.lastTrainDepartureAt
+                    )
+                    : "-"
+            }
+                </strong>
+            </span>
+            `;
+    }
+
+
+    // =========================================================
+    // 노선 이름
+    // =========================================================
+
+    function normalizeLineName(
+        lineName
+    )
+    {
+        if (!lineName)
+        {
+            return "노선 정보 없음";
+        }
+
+
+        return String(
+            lineName
+        )
+            .replace(
+                /^수도권\s*/,
+                ""
+            )
+            .trim();
+    }
+
+
+    // =========================================================
+    // 지하철 호선 색상
+    // =========================================================
+
+    function getSubwayLineColor(
+        type
+    )
+    {
+        const colors = {
+
+            1: "#0052A4",
+            2: "#00A84D",
+            3: "#EF7C1C",
+            4: "#00A5DE",
+            5: "#996CAC",
+            6: "#CD7C2F",
+            7: "#747F00",
+            8: "#E6186C",
+            9: "#BDB092"
+
+        };
+
+
+        return colors[type]
+            ||
+            "#6557f6";
+    }
+
+
+    // =========================================================
+    // 노선 안내
+    // =========================================================
+
+    function renderRouteGuide(
+        steps,
+        lines
+    )
+    {
+        const guide =
+            document.getElementById(
+                "routeGuide"
+            );
+
+
+        if (
+            !Array.isArray(steps)
+            ||
+            steps.length === 0
+        )
+        {
+            guide.innerHTML =
+                "";
+
+
+            guide.style.display =
+                "none";
+
+
+            return;
+        }
+
+
+        let html =
+            `
+            <div class="route-guide-content">
+
+                <span class="route-guide-label">
+                    이용 노선
+                </span>
+            `;
+
+
+        steps.forEach(
+            (
+                step,
+                index
+            ) =>
+            {
+                const lineType =
+                    lines?.[index]?.type;
+
+
+                const lineColor =
+                    getSubwayLineColor(
+                        Number(
+                            lineType
+                        )
+                    );
+
+
+                const lineName =
+                    MeetBack.escapeHtml(
+                        normalizeLineName(
+                            step.lineName
+                        )
+                    );
+
+
+                html +=
+                    `
+                    <span
+                            class="route-guide-line-chip"
+                            style="
+                                color: ${lineColor};
+                                border: 1px solid ${lineColor}40;
+                                background: ${lineColor}18;
+                            ">
+
+                        ${lineName}
+
+                    </span>
+                    `;
+
+
+                if (
+                    index
+                    <
+                    steps.length - 1
+                )
+                {
+                    html +=
+                        `
+                        <span class="route-guide-arrow">
+                            →
+                        </span>
+
+                        <span class="route-guide-transfer-station">
+                            ${
+                            MeetBack.escapeHtml(
+                                step.endStationName
+                                ||
+                                "환승역"
+                            )
+                        }
+                        </span>
+
+                        <span class="route-guide-transfer-badge">
+                            환승
+                        </span>
+
+                        <span class="route-guide-arrow">
+                            →
+                        </span>
+                        `;
+                }
+            }
+        );
+
+
+        html +=
+            `
+            </div>
+            `;
+
+
+        guide.innerHTML =
+            html;
+
+
+        guide.style.display =
+            "block";
+    }
+
+
+    // =========================================================
+    // 역 마커
+    // =========================================================
+
+    function createRouteStationMarker(
+        position,
+        type,
+        stationName,
+        lineText,
+        lineType,
+        nextLineType = null
+    )
+    {
+        if (
+            !position
+            ||
+            !routeMap
+        )
+        {
+            return;
+        }
+
+
+        let badgeText =
+            "경유";
+
+
+        if (type === "start")
+        {
+            badgeText =
+                "출발";
+        }
+        else if (type === "transfer")
+        {
+            badgeText =
+                "환승";
+        }
+        else if (type === "end")
+        {
+            badgeText =
+                "도착";
+        }
+
+
+        const lineColor =
+            getSubwayLineColor(
+                Number(
+                    lineType
+                )
+            );
+
+
+        const nextLineColor =
+            nextLineType == null
+                ? lineColor
+                : getSubwayLineColor(
+                    Number(
+                        nextLineType
+                    )
+                );
+
+
+        const safeStationName =
+            MeetBack.escapeHtml(
+                stationName
+                ||
+                "역 정보 없음"
+            );
+
+
+        const safeLineText =
+            MeetBack.escapeHtml(
+                lineText
+                ||
+                ""
+            );
+
+
+        const marker =
+            new naver.maps.Marker(
+                {
+
+                    map:
+                    routeMap,
+
+                    position:
+                    position,
+
+                    zIndex:
+                        type === "transfer"
+                            ? 150
+                            : 120,
+
+                    icon: {
+
+                        content:
+                            `
+                            <div
+                                    class="route-station-marker ${type}"
+                                    style="
+                                        --marker-color: ${lineColor};
+                                        --marker-next-color: ${nextLineColor};
+                                    ">
+
+                                <div class="route-station-marker-header">
+
+                                    <span class="route-station-marker-badge">
+                                        ${badgeText}
+                                    </span>
+
+                                    <span class="route-station-marker-name">
+                                        ${safeStationName}
+                                    </span>
+
+                                </div>
+
+                                ${
+                                safeLineText
+                                    ? `
+                                        <div class="route-station-marker-line">
+                                            ${safeLineText}
+                                        </div>
+                                        `
+                                    : ""
+                            }
+
+                            </div>
+                            `
+                    }
+                }
+            );
+
+
+        routeMarkers.push(
+            marker
+        );
+    }
+
+
+    // =========================================================
+    // 네이버 지도 그리기
+    // =========================================================
+
+    function drawRouteMap(
+        lines,
+        startName,
+        endName,
+        steps
+    )
+    {
+        if (
+            typeof naver === "undefined"
+            ||
+            !naver.maps
+        )
+        {
+            return;
+        }
+
+
+        if (
+            !Array.isArray(lines)
+            ||
+            lines.length === 0
+        )
+        {
+            return;
+        }
+
+
+        const allPoints =
+            [];
+
+
+        lines.forEach(
+            line =>
+            {
+                if (
+                    !Array.isArray(line.points)
+                    ||
+                    line.points.length === 0
+                )
+                {
+                    return;
+                }
+
+
+                line.points.forEach(
+                    point =>
+                    {
+                        const latitude =
+                            Number(
+                                point.latitude
+                            );
+
+
+                        const longitude =
+                            Number(
+                                point.longitude
+                            );
+
+
+                        if (
+                            Number.isNaN(latitude)
+                            ||
+                            Number.isNaN(longitude)
+                        )
+                        {
+                            return;
+                        }
+
+
+                        allPoints.push(
+                            new naver.maps.LatLng(
+                                latitude,
+                                longitude
+                            )
+                        );
+                    }
+                );
+            }
+        );
+
+
+        if (allPoints.length === 0)
+        {
+            return;
+        }
+
+
+        if (!routeMap)
+        {
+            routeMap =
+                new naver.maps.Map(
+                    "routeMap",
+                    {
+
+                        center:
+                            allPoints[0],
+
+                        zoom:
+                            13
+
+                    }
+                );
+        }
+
+
+        naver.maps.Event.trigger(
+            routeMap,
+            "resize"
+        );
+
+
+        routePolylines.forEach(
+            polyline =>
+                polyline.setMap(
+                    null
+                )
+        );
+
+
+        routePolylines =
+            [];
+
+
+        routeMarkers.forEach(
+            marker =>
+                marker.setMap(
+                    null
+                )
+        );
+
+
+        routeMarkers =
+            [];
+
+
+        // =====================================================
+        // 경로선
+        // =====================================================
+
+        lines.forEach(
+            line =>
+            {
+                if (
+                    !Array.isArray(line.points)
+                    ||
+                    line.points.length === 0
+                )
+                {
+                    return;
+                }
+
+
+                const path =
+                    line.points
+                        .map(
+                            point =>
+                                new naver.maps.LatLng(
+                                    Number(
+                                        point.latitude
+                                    ),
+                                    Number(
+                                        point.longitude
+                                    )
+                                )
+                        );
+
+
+                const polyline =
+                    new naver.maps.Polyline(
+                        {
+
+                            map:
+                            routeMap,
+
+                            path:
+                            path,
+
+                            strokeColor:
+                                getSubwayLineColor(
+                                    Number(
+                                        line.type
+                                    )
+                                ),
+
+                            strokeWeight:
+                                6,
+
+                            strokeOpacity:
+                                0.9,
+
+                            strokeLineCap:
+                                "round",
+
+                            strokeLineJoin:
+                                "round"
+
+                        }
+                    );
+
+
+                routePolylines.push(
+                    polyline
+                );
+            }
+        );
+
+
+        // =====================================================
+        // 출발 / 환승 / 도착
+        // =====================================================
+
+        if (
+            Array.isArray(steps)
+            &&
+            steps.length > 0
+        )
+        {
+            const firstStep =
+                steps[0];
+
+
+            const lastStep =
+                steps[
+                steps.length - 1
+                    ];
+
+
+            let startPosition =
+                allPoints[0];
+
+
+            if (
+                firstStep.startLatitude != null
+                &&
+                firstStep.startLongitude != null
+            )
+            {
+                startPosition =
+                    new naver.maps.LatLng(
+                        Number(
+                            firstStep.startLatitude
+                        ),
+                        Number(
+                            firstStep.startLongitude
+                        )
+                    );
+            }
+
+
+            createRouteStationMarker(
+                startPosition,
+                "start",
+                firstStep.startStationName
+                ||
+                startName
+                ||
+                "출발역",
+                normalizeLineName(
+                    firstStep.lineName
+                ),
+                lines[0]?.type
+            );
+
+
+            // =================================================
+            // 환승
+            // =================================================
+
+            for (
+                let i = 0;
+                i < steps.length - 1;
+                i++
+            )
+            {
+                const currentStep =
+                    steps[i];
+
+
+                const nextStep =
+                    steps[i + 1];
+
+
+                if (
+                    currentStep.endLatitude == null
+                    ||
+                    currentStep.endLongitude == null
+                )
+                {
+                    continue;
+                }
+
+
+                const transferPosition =
+                    new naver.maps.LatLng(
+                        Number(
+                            currentStep.endLatitude
+                        ),
+                        Number(
+                            currentStep.endLongitude
+                        )
+                    );
+
+
+                createRouteStationMarker(
+                    transferPosition,
+                    "transfer",
+                    currentStep.endStationName
+                    ||
+                    "환승역",
+                    normalizeLineName(
+                        currentStep.lineName
+                    )
+                    +
+                    " → "
+                    +
+                    normalizeLineName(
+                        nextStep.lineName
+                    ),
+                    lines[i]?.type,
+                    lines[i + 1]?.type
+                );
+            }
+
+
+            // =================================================
+            // 도착
+            // =================================================
+
+            let endPosition =
+                allPoints[
+                allPoints.length - 1
+                    ];
+
+
+            if (
+                lastStep.endLatitude != null
+                &&
+                lastStep.endLongitude != null
+            )
+            {
+                endPosition =
+                    new naver.maps.LatLng(
+                        Number(
+                            lastStep.endLatitude
+                        ),
+                        Number(
+                            lastStep.endLongitude
+                        )
+                    );
+            }
+
+
+            createRouteStationMarker(
+                endPosition,
+                "end",
+                lastStep.endStationName
+                ||
+                endName
+                ||
+                "도착역",
+                normalizeLineName(
+                    lastStep.lineName
+                ),
+                lines[
+                lines.length - 1
+                    ]?.type
+            );
+        }
+        else
+        {
+            createRouteStationMarker(
+                allPoints[0],
+                "start",
+                startName
+                ||
+                "출발",
+                "",
+                lines[0]?.type
+            );
+
+
+            createRouteStationMarker(
+                allPoints[
+                allPoints.length - 1
+                    ],
+                "end",
+                endName
+                ||
+                "도착",
+                "",
+                lines[
+                lines.length - 1
+                    ]?.type
+            );
+        }
+
+
+        // =====================================================
+        // 지도 전체 경로 맞추기
+        // =====================================================
+
+        const bounds =
+            new naver.maps.LatLngBounds();
+
+
+        allPoints.forEach(
+            point =>
+                bounds.extend(
+                    point
+                )
+        );
+
+
+        routeMap.fitBounds(
+            bounds
+        );
+    }
+
+
+    // =========================================================
+    // 지도 닫기
+    // =========================================================
+
+    function closeRouteMap()
+    {
+        document.getElementById(
+            "routeMapModal"
+        ).classList.remove(
+            "open"
+        );
+
+
+        document.body.classList.remove(
+            "modal-open"
+        );
+    }
+
+
+    function handleRouteMapBackground(
+        event
+    )
+    {
+        if (
+            event.target.id
+            ===
+            "routeMapModal"
+        )
+        {
+            closeRouteMap();
+        }
+    }
+
+
+    document.addEventListener(
+        "keydown",
+        event =>
+        {
+            if (
+                event.key
+                ===
+                "Escape"
+            )
+            {
+                closeRouteMap();
+            }
+        }
+    );
+
+
+    // =========================================================
+    // 기존 Preview 결과
+    // =========================================================
+
+    function loadSavedPreviewFromSession()
+    {
+        const storageKey =
+            `quickFixedReturnResult:${meetingId}`;
+
+
+        const savedText =
+            sessionStorage.getItem(
+                storageKey
+            );
+
+
+        if (!savedText)
+        {
+            showMessage(
+                "저장된 귀가 결과가 없습니다. 귀가 장소를 선택해 다시 확인해주세요.",
+                "info"
+            );
+
+
+            return;
+        }
+
+
+        try
+        {
+            const saved =
+                JSON.parse(
+                    savedText
+                );
+
+
+            if (
+                !saved
+                ||
+                Number(saved.meetingId)
+                !==
+                Number(meetingId)
+                ||
+                !saved.returnLocation
+                ||
+                !saved.result
+            )
+            {
+                showMessage(
+                    "저장된 귀가 결과를 확인할 수 없습니다. 다시 계산해주세요.",
+                    "info"
+                );
+
+
+                return;
+            }
+
+
+            if (
+                meeting?.desiredEndAt
+                &&
+                saved.result.desiredEndAt
+                &&
+                String(meeting.desiredEndAt)
+                !==
+                String(saved.result.desiredEndAt)
+            )
+            {
+                sessionStorage.removeItem(
+                    storageKey
+                );
+
+
+                showMessage(
+                    "모임 종료시간이 변경되었습니다. 귀가 가능 여부를 다시 확인해주세요.",
+                    "info"
+                );
+
+
+                return;
+            }
+
+
+            selectedReturn =
+                saved.returnLocation;
+
+
+            previewResult =
+                saved.result;
+
+
+            returnQuery.value =
+                selectedReturn.name
+                ||
+                "";
+
+
+            document.getElementById(
+                "selectedPlaceName"
+            ).textContent =
+                selectedReturn.name
+                ||
+                "귀가 장소";
+
+
+            document.getElementById(
+                "selectedPlaceAddress"
+            ).textContent =
+                selectedReturn.address
+                ||
+                "";
+
+
+            document.getElementById(
+                "selectedPlace"
+            ).classList.add(
+                "show"
+            );
+
+
+            previewButton.disabled =
+                false;
+
+
+            previewButton.textContent =
+                "다시 확인하기";
+
+
+            renderPreviewResult(
+                false
+            );
+        }
+        catch (error)
+        {
+            console.error(
+                "[QUICK FIXED SAVED PREVIEW ERROR]",
+                error
+            );
+
+
+            showMessage(
+                "저장된 귀가 결과를 불러오지 못했습니다. 다시 계산해주세요.",
+                "info"
+            );
+        }
+    }
+
+
+    // =========================================================
+    // Preview 저장
+    // =========================================================
+
+    function savePreviewToSession()
+    {
+        if (
+            !previewResult
+            ||
+            !selectedReturn
+        )
+        {
+            return;
+        }
+
+
+        sessionStorage.setItem(
+            `quickFixedReturnResult:${meetingId}`,
+            JSON.stringify({
+
+                meetingId:
+                    Number(meetingId),
+
+                returnLocation:
+                selectedReturn,
+
+                result:
+                previewResult,
+
+                checkedAt:
+                    new Date().toISOString()
+
+            })
+        );
+    }
+
+
+    // =========================================================
+    // 실제 참여
+    // =========================================================
+
+    async function joinMeeting()
+    {
+        if (fromRoom)
+        {
+            return;
+        }
+
+
+        if (
+            !meeting
+            ||
+            !selectedReturn
+            ||
+            !previewResult
+        )
+        {
+            showMessage(
+                "귀가 가능 여부를 먼저 확인해주세요.",
+                "error"
+            );
+
+
+            return;
+        }
+
+
+        joinButton.disabled =
+            true;
+
+
+        joinButton.textContent =
+            fromCreate
+                ? "모임방 이동 중..."
+                : "참여 처리 중...";
+
+
+        try
+        {
+            // =====================================================
+            // 방장
+            // =====================================================
+
+            if (fromCreate)
+            {
+                const locationResponse =
+                    await MeetBack.authenticatedFetch(
+                        `/participants/meeting/${meetingId}/quick-fixed/return-location`,
+                        {
+                            method:
+                                "PUT",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body:
+                                JSON.stringify(
+                                    selectedReturn
+                                )
+                        }
+                    );
+
+
+                if (!locationResponse.ok)
+                {
+                    throw new Error(
+                        await getErrorMessage(
+                            locationResponse,
+                            "귀가 장소 저장에 실패했습니다."
+                        )
+                    );
+                }
+
+
+                savePreviewToSession();
+
+
+                location.href =
+                    `/quick-fixed?meetingId=${encodeURIComponent(meetingId)}`;
+
+
+                return;
+            }
+
+
+            // =====================================================
+            // 일반 참가자
+            // =====================================================
+
+            const joinResponse =
+                await MeetBack.authenticatedFetch(
+                    "/meetings/join",
+                    {
+                        method:
+                            "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify({
+
+                                inviteCode:
+                                meeting.inviteCode
+
+                            })
+                    }
+                );
+
+
+            if (!joinResponse.ok)
+            {
+                throw new Error(
+                    await getErrorMessage(
+                        joinResponse,
+                        "모임 참여에 실패했습니다."
+                    )
+                );
+            }
+
+
+            const locationResponse =
+                await MeetBack.authenticatedFetch(
+                    `/participants/meeting/${meetingId}/quick-fixed/return-location`,
+                    {
+                        method:
+                            "PUT",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body:
+                            JSON.stringify(
+                                selectedReturn
+                            )
+                    }
+                );
+
+
+            if (!locationResponse.ok)
+            {
+                throw new Error(
+                    await getErrorMessage(
+                        locationResponse,
+                        "참여는 완료되었지만 귀가 장소 저장에 실패했습니다."
+                    )
+                );
+            }
+
+
+            savePreviewToSession();
+
+
+            location.href =
+                `/quick-fixed?meetingId=${encodeURIComponent(meetingId)}`;
+        }
+        catch (error)
+        {
+            console.error(
+                "[QUICK FIXED JOIN ERROR]",
+                error
+            );
+
+
+            showMessage(
+                error.message,
+                "error"
+            );
+
+
+            joinButton.disabled =
+                false;
+
+
+            if (fromCreate)
+            {
+                joinButton.textContent =
+                    previewResult?.canReturn
+                        ? "모임방 들어가기"
+                        : "그래도 모임방 들어가기";
+            }
+            else
+            {
+                joinButton.textContent =
+                    previewResult?.canReturn
+                        ? "이 모임 참여하기"
+                        : "그래도 참여하기";
+            }
+        }
+    }
+
+
+    // =========================================================
+    // 날짜
+    // =========================================================
+
+    function formatDateTime(
+        value
+    )
+    {
+        if (!value)
+        {
+            return "-";
+        }
+
+
+        const date =
+            new Date(
+                value
+            );
+
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        )
+        {
+            return value;
+        }
+
+
+        const month =
+            String(
+                date.getMonth() + 1
+            ).padStart(
+                2,
+                "0"
+            );
+
+
+        const day =
+            String(
+                date.getDate()
+            ).padStart(
+                2,
+                "0"
+            );
+
+
+        const hour =
+            String(
+                date.getHours()
+            ).padStart(
+                2,
+                "0"
+            );
+
+
+        const minute =
+            String(
+                date.getMinutes()
+            ).padStart(
+                2,
+                "0"
+            );
+
+
+        return `${month}.${day} ${hour}:${minute}`;
+    }
+
+
+    function formatTimeOnly(
+        value
+    )
+    {
+        if (!value)
+        {
+            return "-";
+        }
+
+
+        const date =
+            new Date(
+                value
+            );
+
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        )
+        {
+            return "-";
+        }
+
+
+        return new Intl.DateTimeFormat(
+            "ko-KR",
+            {
+
+                hour:
+                    "2-digit",
+
+                minute:
+                    "2-digit",
+
+                hour12:
+                    false
+
+            }
+        ).format(
+            date
+        );
+    }
+
+
+    // =========================================================
+    // 에러
+    // =========================================================
+
+    async function getErrorMessage(
+        response,
+        fallback
+    )
+    {
+        try
+        {
+            const text =
+                await response.text();
+
+
+            if (!text)
+            {
+                return fallback;
+            }
+
+
+            try
+            {
+                const json =
+                    JSON.parse(
+                        text
+                    );
+
+
+                return json.message
+                    ||
+                    fallback;
+            }
+            catch (error)
+            {
+                return text;
+            }
+        }
+        catch (error)
+        {
+            return fallback;
+        }
+    }
+
+
+    function showMessage(
+        text,
+        type = "error"
+    )
+    {
+        message.textContent =
+            text;
+
+
+        message.className =
+            `message show ${type}`;
+    }
+
+
+    function hideMessage()
+    {
+        message.className =
+            "message";
+
+
+        message.textContent =
+            "";
+    }
+
+
+    // =========================================================
+    // 돌아가기
+    // =========================================================
+
+    async function goBack()
+    {
+        if (
+            fromRoom
+            &&
+            meetingId
+        )
+        {
+            location.href =
+                "/quick-fixed?meetingId="
+                +
+                encodeURIComponent(
+                    meetingId
+                );
+
+
+            return;
+        }
+
+
+        if (
+            fromCreate
+            &&
+            meetingId
+        )
+        {
+            const confirmed =
+                confirm(
+                    "모임 생성을 취소하고 홈으로 돌아가시겠습니까?"
+                );
+
+
+            if (!confirmed)
+            {
+                return;
+            }
+
+
+            try
+            {
+                const response =
+                    await MeetBack.authenticatedFetch(
+                        `/meetings/${meetingId}/quick-fixed/setup`,
+                        {
+                            method:
+                                "DELETE"
+                        }
+                    );
+
+
+                if (!response.ok)
+                {
+                    throw new Error(
+                        await getErrorMessage(
+                            response,
+                            "모임 생성을 취소하지 못했습니다."
+                        )
+                    );
+                }
+
+
+                sessionStorage.removeItem(
+                    `quickFixedReturnResult:${meetingId}`
+                );
+
+
+                location.href =
+                    "/home";
+            }
+            catch (error)
+            {
+                console.error(
+                    "[QUICK FIXED CREATE CANCEL ERROR]",
+                    error
+                );
+
+
+                showMessage(
+                    error.message
+                    ||
+                    "모임 생성 취소 중 오류가 발생했습니다.",
+                    "error"
+                );
+            }
+
+
+            return;
+        }
+
+
+        location.href =
+            "/home";
+    }
+
+
+    // =========================================================
+    // 실행
+    // =========================================================
+
+    initialize();
+
+</script>
+
+
+</body>
+</html>
