@@ -3,13 +3,19 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MeetBack 채팅 테스트</title>
+
+    <link rel="stylesheet" href="/css/meetback-theme.css">
+    <link rel="stylesheet" href="/css/debug-pages.css">
 
     <!-- STOMP Client -->
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+    <link rel="stylesheet" href="/css/dark-mode.css">
+    <script src="/js/theme-toggle.js"></script>
 </head>
 
-<body>
+<body class="mb-page mb-debug-page page-chat-dev">
 
 <h1>MeetBack WebSocket 채팅 테스트</h1>
 
@@ -80,13 +86,7 @@
 
 <div
         id="messageList"
-        style="
-            border: 1px solid #aaa;
-            min-height: 300px;
-            max-height: 500px;
-            overflow-y: auto;
-            padding: 10px;
-        "
+        class="debug-message-list"
 >
 </div>
 

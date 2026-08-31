@@ -5,12 +5,16 @@
 <head>
 
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>MeetBack 최종 결과</title>
 
     <link
             rel="stylesheet"
             href="/css/meeting-result.css">
+
+    <link rel="stylesheet" href="/css/meetback-theme.css">
+    <link rel="stylesheet" href="/css/app-pages.css">
 
     <script
             src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js">
@@ -28,10 +32,12 @@
             th:src="|https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${naverMapsClientId}|">
     </script>
 
+    <link rel="stylesheet" href="/css/dark-mode.css">
+    <script src="/js/theme-toggle.js"></script>
 </head>
 
 
-<body>
+<body class="mb-page mb-app-page mb-map-page page-result">
 
 
 <!-- =========================================================

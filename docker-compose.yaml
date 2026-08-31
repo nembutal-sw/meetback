@@ -1,0 +1,68 @@
+services:
+  app:
+    image: "${MEETBACK_IMAGE:-meetback:latest}"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      FEED_IMAGE_UPLOAD_DIR: /app/uploads/feed
+    volumes:
+      - app_data:/app/uploads/feed
+    networks:
+      meetback-edge:
+        aliases:
+          - meetback-app
+    init: true
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      mode: replicated
+      replicas: ${MEETBACK_REPLICAS:-3}
+      endpoint_mode: vip
+      placement:
+        constraints:
+          - node.role == worker
+        preferences:
+          - spread: node.hostname
+      update_config:
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 30s
+        order: start-first
+      rollback_config:
+        parallelism: 1
+        delay: 5s
+        failure_action: pause
+        monitor: 30s
+        order: stop-first
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+volumes:
+  app_data:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: "addr=${NFS_APP_HOST:-10.7.10.8},nfsvers=4.2,rw,proto=tcp"
+      device: ":${NFS_APP_EXPORT:-/srv/nfs/app-data}"
+
+networks:
+  meetback-edge:
+    external: true
+    name: "${MEETBACK_EDGE_NETWORK:-meetback-edge}"
