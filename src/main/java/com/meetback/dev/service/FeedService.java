@@ -4,6 +4,7 @@ import com.meetback.dev.domain.Feed;
 import com.meetback.dev.domain.FeedImage;
 import com.meetback.dev.dto.feed.FeedCreateRequest;
 import com.meetback.dev.dto.feed.FeedImageResponse;
+import com.meetback.dev.dto.feed.FeedPageResponse;
 import com.meetback.dev.dto.feed.FeedResponse;
 import com.meetback.dev.dto.feed.FeedUpdateRequest;
 import com.meetback.dev.repository.FeedImageMapper;
@@ -36,11 +37,14 @@ public class FeedService {
                     FeedService.class
             );
 
+
     private static final int MAX_IMAGE_COUNT =
             10;
 
+
     private static final long MAX_IMAGE_SIZE =
             5 * 1024 * 1024;
+
 
     private static final Set<String> ALLOWED_CONTENT_TYPES =
             Set.of(
@@ -49,6 +53,7 @@ public class FeedService {
                     "image/gif",
                     "image/webp"
             );
+
 
     private final FeedMapper feedMapper;
 
@@ -63,6 +68,7 @@ public class FeedService {
             FeedMapper feedMapper,
             FeedImageMapper feedImageMapper,
             FeedLikeMapper feedLikeMapper,
+
             @Value("${feed.image.upload-dir}")
             String uploadDirectory
     ) {
@@ -70,11 +76,14 @@ public class FeedService {
         this.feedMapper =
                 feedMapper;
 
+
         this.feedImageMapper =
                 feedImageMapper;
 
+
         this.feedLikeMapper =
                 feedLikeMapper;
+
 
         this.uploadDirectory =
                 Paths.get(
@@ -100,9 +109,11 @@ public class FeedService {
                 userId
         );
 
+
         validateCreateRequest(
                 request
         );
+
 
         validateImages(
                 images
@@ -240,6 +251,7 @@ public class FeedService {
                     savedFilePaths
             );
 
+
             throw e;
         }
     }
@@ -294,16 +306,84 @@ public class FeedService {
 
 
     // ============================================================
-    // 후기 전체 조회
+    // 후기 페이징 조회
     // ============================================================
 
     @Transactional(readOnly = true)
-    public List<FeedResponse> getFeeds(
-            Long loginUserId
+    public FeedPageResponse getFeeds(
+            Long loginUserId,
+            int page,
+            int size
     ) {
 
+        validateUserId(
+                loginUserId
+        );
+
+
+        if (
+                page < 0
+        ) {
+
+            throw new IllegalArgumentException(
+                    "페이지 번호는 0 이상이어야 합니다."
+            );
+        }
+
+
+        if (
+                size <= 0
+                        ||
+                        size > 50
+        ) {
+
+            throw new IllegalArgumentException(
+                    "페이지 크기는 1~50 사이여야 합니다."
+            );
+        }
+
+
+        // ========================================================
+        // 전체 피드 개수
+        //
+        // 반드시 long
+        // ========================================================
+
+        long totalElements =
+                feedMapper.countAll();
+
+
+        int totalPages;
+
+
+        if (
+                totalElements == 0
+        ) {
+
+            totalPages =
+                    0;
+
+        }
+        else {
+
+            totalPages =
+                    (int) (
+                            (totalElements + size - 1)
+                                    /
+                                    size
+                    );
+        }
+
+
+        int offset =
+                page * size;
+
+
         List<Feed> feeds =
-                feedMapper.findAll();
+                feedMapper.findPage(
+                        offset,
+                        size
+                );
 
 
         List<FeedResponse> responses =
@@ -331,19 +411,36 @@ public class FeedService {
         }
 
 
-        return responses;
+        return new FeedPageResponse(
+                responses,
+                page,
+                size,
+                totalElements,
+                totalPages
+        );
     }
 
 
     // ============================================================
     // 후기 수정
+    //
+    // 기존 이미지
+    // → 기본적으로 그대로 유지
+    //
+    // 사용자가 X 버튼을 누른 기존 이미지
+    // → deleteImageIds에 담아서 해당 이미지만 삭제
+    //
+    // 새로 선택한 이미지
+    // → 기존 이미지 뒤에 추가
     // ============================================================
 
     @Transactional
     public FeedResponse updateFeed(
             Long userId,
             Long feedId,
-            FeedUpdateRequest request
+            FeedUpdateRequest request,
+            List<MultipartFile> images,
+            List<Long> deleteImageIds
     ) {
 
         validateUserId(
@@ -366,6 +463,19 @@ public class FeedService {
         );
 
 
+        // ========================================================
+        // 새로 추가할 이미지 자체 검증
+        // ========================================================
+
+        validateImages(
+                images
+        );
+
+
+        // ========================================================
+        // 기존 피드 조회
+        // ========================================================
+
         Feed existingFeed =
                 feedMapper.findById(
                         feedId
@@ -382,10 +492,16 @@ public class FeedService {
         }
 
 
+        // ========================================================
+        // 작성자 확인
+        // ========================================================
+
         if (
-                !userId.equals(
-                        existingFeed.getUserId()
-                )
+                existingFeed.getUserId() == null
+                        ||
+                        !userId.equals(
+                                existingFeed.getUserId()
+                        )
         ) {
 
             throw new IllegalArgumentException(
@@ -393,6 +509,102 @@ public class FeedService {
             );
         }
 
+
+        // ========================================================
+        // 현재 DB에 저장된 기존 이미지 조회
+        // ========================================================
+
+        List<FeedImage> existingImages =
+                feedImageMapper.findByFeedId(
+                        feedId
+                );
+
+
+        // ========================================================
+        // 실제 삭제 대상 이미지 찾기
+        //
+        // 클라이언트가 deleteImageIds를 보내더라도
+        // 현재 피드에 실제로 속해있는 이미지만 삭제 대상으로 인정
+        // ========================================================
+
+        List<FeedImage> imagesToDelete =
+                new ArrayList<>();
+
+
+        if (
+                deleteImageIds != null
+                        &&
+                        !deleteImageIds.isEmpty()
+        ) {
+
+            for (
+                    FeedImage existingImage
+                    : existingImages
+            ) {
+
+                if (
+                        existingImage.getFeedImageId() == null
+                ) {
+
+                    continue;
+                }
+
+
+                if (
+                        deleteImageIds.contains(
+                                existingImage.getFeedImageId()
+                        )
+                ) {
+
+                    imagesToDelete.add(
+                            existingImage
+                    );
+                }
+            }
+        }
+
+
+        // ========================================================
+        // 새로 추가하는 이미지 개수
+        // ========================================================
+
+        int newImageCount =
+                countNewImages(
+                        images
+                );
+
+
+        // ========================================================
+        // 최종 이미지 개수 계산
+        //
+        // 기존 이미지
+        // - 삭제할 이미지
+        // + 새 이미지
+        // ========================================================
+
+        int finalImageCount =
+                existingImages.size()
+                        -
+                        imagesToDelete.size()
+                        +
+                        newImageCount;
+
+
+        if (
+                finalImageCount > MAX_IMAGE_COUNT
+        ) {
+
+            throw new IllegalArgumentException(
+                    "이미지는 최대 "
+                            + MAX_IMAGE_COUNT
+                            + "장까지 등록할 수 있습니다."
+            );
+        }
+
+
+        // ========================================================
+        // 제목 / 내용 수정
+        // ========================================================
 
         Feed feed =
                 new Feed();
@@ -438,9 +650,174 @@ public class FeedService {
         }
 
 
-        return getFeed(
-                feedId
-        );
+        // ========================================================
+        // 사용자가 직접 삭제한 기존 이미지 DB 삭제
+        // ========================================================
+
+        for (
+                FeedImage imageToDelete
+                : imagesToDelete
+        ) {
+
+            int deletedImageCount =
+                    feedImageMapper.deleteByIdAndFeedId(
+                            imageToDelete.getFeedImageId(),
+                            feedId
+                    );
+
+
+            if (
+                    deletedImageCount != 1
+            ) {
+
+                throw new IllegalStateException(
+                        "기존 이미지 삭제에 실패했습니다."
+                );
+            }
+        }
+
+
+        // ========================================================
+        // 삭제 후 현재 남아있는 이미지 조회
+        // ========================================================
+
+        List<FeedImage> remainingImages =
+                feedImageMapper.findByFeedId(
+                        feedId
+                );
+
+
+        // ========================================================
+        // 새 이미지 sortOrder 시작값
+        //
+        // 기존 이미지 중 가장 큰 sortOrder 다음부터 추가
+        // ========================================================
+
+        int nextSortOrder =
+                0;
+
+
+        for (
+                FeedImage remainingImage
+                : remainingImages
+        ) {
+
+            if (
+                    remainingImage.getSortOrder() != null
+                            &&
+                            remainingImage.getSortOrder() >= nextSortOrder
+            ) {
+
+                nextSortOrder =
+                        remainingImage.getSortOrder()
+                                + 1;
+            }
+        }
+
+
+        // ========================================================
+        // 새로 저장된 파일 경로
+        //
+        // 새 이미지 처리 실패 시 실제 파일 롤백용
+        // ========================================================
+
+        List<Path> newlySavedFilePaths =
+                new ArrayList<>();
+
+
+        try {
+
+            // ====================================================
+            // 새 이미지 추가
+            // ====================================================
+
+            if (
+                    images != null
+            ) {
+
+                for (
+                        MultipartFile image
+                        : images
+                ) {
+
+                    if (
+                            image == null
+                                    ||
+                                    image.isEmpty()
+                    ) {
+
+                        continue;
+                    }
+
+
+                    FeedImage newFeedImage =
+                            saveImage(
+                                    feedId,
+                                    image,
+                                    nextSortOrder
+                            );
+
+
+                    newlySavedFilePaths.add(
+                            uploadDirectory.resolve(
+                                    newFeedImage.getStoredName()
+                            )
+                    );
+
+
+                    int insertedImageCount =
+                            feedImageMapper.insert(
+                                    newFeedImage
+                            );
+
+
+                    if (
+                            insertedImageCount != 1
+                    ) {
+
+                        throw new IllegalStateException(
+                                "새 이미지 추가에 실패했습니다."
+                        );
+                    }
+
+
+                    nextSortOrder++;
+                }
+            }
+
+
+            // ====================================================
+            // DB 작업과 새 이미지 저장 완료 후
+            // 사용자가 삭제한 기존 실제 파일 제거
+            // ====================================================
+
+            deleteFeedImageFiles(
+                    imagesToDelete
+            );
+
+
+            return getFeed(
+                    feedId
+            );
+
+        }
+        catch (
+                RuntimeException e
+        ) {
+
+            // ====================================================
+            // 새로 저장했던 파일만 제거
+            //
+            // DB 작업은 @Transactional에 의해 롤백
+            // ====================================================
+
+            deleteSavedFiles(
+                    newlySavedFilePaths
+            );
+
+
+            throw e;
+        }
     }
 
 
@@ -486,9 +863,11 @@ public class FeedService {
 
 
         if (
-                !userId.equals(
-                        feed.getUserId()
-                )
+                feed.getUserId() == null
+                        ||
+                        !userId.equals(
+                                feed.getUserId()
+                        )
         ) {
 
             throw new IllegalArgumentException(
@@ -555,8 +934,7 @@ public class FeedService {
 
 
             if (
-                    originalName.length()
-                            > 255
+                    originalName.length() > 255
             ) {
 
                 throw new IllegalArgumentException(
@@ -669,8 +1047,6 @@ public class FeedService {
 
     // ============================================================
     // Feed -> FeedResponse
-    //
-    // 단건 조회 / 등록 / 수정 응답용
     // ============================================================
 
     private FeedResponse toFeedResponse(
@@ -689,8 +1065,8 @@ public class FeedService {
     // ============================================================
     // Feed -> FeedResponse
     //
-    // 목록 조회 시 로그인 사용자 ID를 받아
-    // 본인 피드 여부(mine)까지 판단
+    // 로그인 사용자가 있으면
+    // mine / liked 계산
     // ============================================================
 
     private FeedResponse toFeedResponse(
@@ -703,29 +1079,33 @@ public class FeedService {
                 new ArrayList<>();
 
 
-        for (
-                FeedImage image
-                : images
+        if (
+                images != null
         ) {
 
-            FeedImageResponse imageResponse =
-                    new FeedImageResponse(
-                            image.getFeedImageId(),
-                            image.getImageUrl(),
-                            image.getOriginalName(),
-                            image.getSortOrder()
-                    );
+            for (
+                    FeedImage image
+                    : images
+            ) {
+
+                FeedImageResponse imageResponse =
+                        new FeedImageResponse(
+                                image.getFeedImageId(),
+                                image.getImageUrl(),
+                                image.getOriginalName(),
+                                image.getSortOrder()
+                        );
 
 
-            imageResponses.add(
-                    imageResponse
-            );
+                imageResponses.add(
+                        imageResponse
+                );
+            }
         }
 
 
         // ========================================================
-        // 작성자 닉네임 조회
-        // FeedMapper에서 users 테이블과 JOIN해서 가져온 값
+        // 닉네임
         // ========================================================
 
         String nickname =
@@ -750,7 +1130,7 @@ public class FeedService {
 
 
         // ========================================================
-        // 현재 로그인 사용자가 작성한 피드인지 확인
+        // 본인 피드 여부
         // ========================================================
 
         boolean mine =
@@ -764,7 +1144,7 @@ public class FeedService {
 
 
         // ========================================================
-        // 좋아요 개수 조회
+        // 좋아요 개수
         // ========================================================
 
         int likeCount =
@@ -774,7 +1154,7 @@ public class FeedService {
 
 
         // ========================================================
-        // 현재 로그인 사용자가 좋아요를 눌렀는지 확인
+        // 현재 사용자가 좋아요를 눌렀는지
         // ========================================================
 
         boolean liked =
@@ -876,8 +1256,7 @@ public class FeedService {
         if (
                 title
                         .trim()
-                        .length()
-                        > 255
+                        .length() > 255
         ) {
 
             throw new IllegalArgumentException(
@@ -938,8 +1317,7 @@ public class FeedService {
 
 
             if (
-                    imageCount
-                            > MAX_IMAGE_COUNT
+                    imageCount > MAX_IMAGE_COUNT
             ) {
 
                 throw new IllegalArgumentException(
@@ -951,8 +1329,7 @@ public class FeedService {
 
 
             if (
-                    image.getSize()
-                            > MAX_IMAGE_SIZE
+                    image.getSize() > MAX_IMAGE_SIZE
             ) {
 
                 throw new IllegalArgumentException(
@@ -982,7 +1359,7 @@ public class FeedService {
 
 
     // ============================================================
-    // 로그인 사용자 검증
+    // 로그인 사용자 ID 검증
     // ============================================================
 
     private void validateUserId(
@@ -996,6 +1373,124 @@ public class FeedService {
             throw new IllegalArgumentException(
                     "로그인 정보가 필요합니다."
             );
+        }
+    }
+
+
+    // ============================================================
+    // 새로 추가하는 이미지 개수
+    // ============================================================
+
+    private int countNewImages(
+            List<MultipartFile> images
+    ) {
+
+        if (
+                images == null
+        ) {
+
+            return 0;
+        }
+
+
+        int count =
+                0;
+
+
+        for (
+                MultipartFile image
+                : images
+        ) {
+
+            if (
+                    image != null
+                            &&
+                            !image.isEmpty()
+            ) {
+
+                count++;
+            }
+        }
+
+
+        return count;
+    }
+
+
+    // ============================================================
+    // 기존 피드 이미지 실제 파일 삭제
+    // ============================================================
+
+    private void deleteFeedImageFiles(
+            List<FeedImage> images
+    ) {
+
+        if (
+                images == null
+        ) {
+
+            return;
+        }
+
+
+        for (
+                FeedImage image
+                : images
+        ) {
+
+            if (
+                    image == null
+                            ||
+                            image.getStoredName() == null
+                            ||
+                            image.getStoredName().isBlank()
+            ) {
+
+                continue;
+            }
+
+
+            Path imagePath =
+                    uploadDirectory
+                            .resolve(
+                                    image.getStoredName()
+                            )
+                            .normalize();
+
+
+            if (
+                    !imagePath.startsWith(
+                            uploadDirectory
+                    )
+            ) {
+
+                log.warn(
+                        "기존 피드 이미지 삭제 경로가 올바르지 않습니다. path={}",
+                        imagePath
+                );
+
+
+                continue;
+            }
+
+
+            try {
+
+                Files.deleteIfExists(
+                        imagePath
+                );
+
+            }
+            catch (
+                    IOException e
+            ) {
+
+                log.warn(
+                        "기존 피드 이미지 파일 삭제 실패. path={}",
+                        imagePath,
+                        e
+                );
+            }
         }
     }
 
@@ -1053,8 +1548,7 @@ public class FeedService {
         if (
                 dotIndex < 0
                         ||
-                        dotIndex
-                                == originalName.length() - 1
+                        dotIndex == originalName.length() - 1
         ) {
 
             return "";
@@ -1070,12 +1564,20 @@ public class FeedService {
 
 
     // ============================================================
-    // 저장 실패 시 파일 삭제
+    // 새 이미지 저장 실패 시 파일 롤백
     // ============================================================
 
     private void deleteSavedFiles(
             List<Path> savedFilePaths
     ) {
+
+        if (
+                savedFilePaths == null
+        ) {
+
+            return;
+        }
+
 
         for (
                 Path path

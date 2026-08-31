@@ -5,6 +5,11 @@
 
 <mapper namespace="com.meetback.dev.repository.FeedMapper">
 
+
+    <!-- =========================================================
+         Feed ResultMap
+         ========================================================= -->
+
     <resultMap id="feedResultMap"
                type="com.meetback.dev.domain.Feed">
 
@@ -35,7 +40,10 @@
     </resultMap>
 
 
-    <!-- 피드 등록 -->
+    <!-- =========================================================
+         피드 등록
+         ========================================================= -->
+
     <insert id="insert"
             parameterType="com.meetback.dev.domain.Feed"
             useGeneratedKeys="true"
@@ -63,12 +71,15 @@
     </insert>
 
 
-    <!-- 피드 단건 조회 + 작성자 닉네임 조회 -->
+    <!-- =========================================================
+         피드 단건 조회 + 작성자 닉네임
+         ========================================================= -->
+
     <select id="findById"
             resultMap="feedResultMap">
 
         SELECT
-            feeds.feed_id,
+        feeds.feed_id,
             feeds.user_id,
             users.nickname,
             feeds.title,
@@ -78,14 +89,17 @@
             feeds.updated_at
         FROM feeds
         LEFT JOIN users
-        ON feeds.user_id = users.user_id
-        WHERE feeds.feed_id = #{feedId}
-        AND feeds.deleted_at IS NULL
+            ON feeds.user_id = users.user_id
+            WHERE feeds.feed_id = #{feedId}
+            AND feeds.deleted_at IS NULL
 
     </select>
 
 
-    <!-- 피드 전체 조회 + 작성자 닉네임 조회 -->
+    <!-- =========================================================
+         기존 피드 전체 조회
+         ========================================================= -->
+
     <select id="findAll"
             resultMap="feedResultMap">
 
@@ -100,42 +114,92 @@
             feeds.updated_at
         FROM feeds
         LEFT JOIN users
-        ON feeds.user_id = users.user_id
-        WHERE feeds.deleted_at IS NULL
-        ORDER BY
+            ON feeds.user_id = users.user_id
+            WHERE feeds.deleted_at IS NULL
+            ORDER BY
             feeds.created_at DESC,
             feeds.feed_id DESC
 
     </select>
 
 
-    <!-- 피드 수정 -->
+    <!-- =========================================================
+         피드 페이징 조회
+         ========================================================= -->
+
+    <select id="findPage"
+            resultMap="feedResultMap">
+
+        SELECT
+            feeds.feed_id,
+            feeds.user_id,
+            users.nickname,
+            feeds.title,
+            feeds.content,
+            feeds.deleted_at,
+            feeds.created_at,
+            feeds.updated_at
+        FROM feeds
+        LEFT JOIN users
+            ON feeds.user_id = users.user_id
+            WHERE feeds.deleted_at IS NULL
+            ORDER BY
+            feeds.created_at DESC,
+            feeds.feed_id DESC
+            LIMIT #{size}
+            OFFSET #{offset}
+
+    </select>
+
+
+    <!-- =========================================================
+         전체 피드 개수
+         ========================================================= -->
+
+    <select id="countAll"
+            resultType="java.lang.Long">
+
+        SELECT COUNT(*)
+        FROM feeds
+        WHERE deleted_at IS NULL
+
+    </select>
+
+
+    <!-- =========================================================
+         피드 수정
+         ========================================================= -->
+
     <update id="update"
             parameterType="com.meetback.dev.domain.Feed">
 
         UPDATE feeds
         SET
-        title = #{title},
-        content = #{content},
-        updated_at = NOW()
-        WHERE feed_id = #{feedId}
-        AND user_id = #{userId}
-        AND deleted_at IS NULL
+            title = #{title},
+            content = #{content},
+            updated_at = NOW()
+            WHERE feed_id = #{feedId}
+            AND user_id = #{userId}
+            AND deleted_at IS NULL
 
     </update>
 
 
-    <!-- 피드 삭제 -->
+    <!-- =========================================================
+         피드 Soft Delete
+         ========================================================= -->
+
     <update id="softDelete">
 
         UPDATE feeds
         SET
             deleted_at = NOW(),
             updated_at = NOW()
-        WHERE feed_id = #{feedId}
+            WHERE feed_id = #{feedId}
             AND user_id = #{userId}
             AND deleted_at IS NULL
 
     </update>
+
 
 </mapper>
