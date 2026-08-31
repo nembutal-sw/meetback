@@ -5,7 +5,6 @@
 <head>
 
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>MeetBack 고정 번개방</title>
 
@@ -141,15 +140,6 @@
             MeetBack
         </h1>
 
-        <button
-                type="button"
-                class="home-button"
-                onclick="goHome()">
-
-            홈으로
-
-        </button>
-
     </div>
 
 
@@ -165,97 +155,124 @@
 
     <div class="card">
 
-        <div
-                id="meetingTitle"
-                class="meeting-title">
+        <!-- 왼쪽 모임 정보 -->
+        <div class="meeting-main">
 
-            모임 정보를 불러오는 중...
+            <div
+                    id="meetingTitle"
+                    class="meeting-title">
 
-        </div>
+                모임 정보를 불러오는 중...
 
-
-        <div class="meeting-type">
-            ⚡ 고정 번개방
-        </div>
+            </div>
 
 
-        <div class="info-grid">
+            <!-- 방 유형과 초대코드를 한 줄로 배치 -->
+            <div class="meeting-meta-row">
 
-            <div class="info-item">
-
-                <div class="info-label">
-                    모임 시작시간
+                <div class="meeting-type">
+                    ⚡ 고정 번개방
                 </div>
 
-                <div
-                        id="meetingStartAt"
-                        class="info-value">
 
+                <button
+                        type="button"
+                        id="inviteCodeButton"
+                        class="invite-button"
+                        onclick="copyInviteUrl()"
+                        disabled>
+
+                    🔗 초대코드
+                    <span id="inviteCode">
                     -
+                </span>
+
+                </button>
+
+            </div>
+
+
+            <div class="info-grid">
+
+                <div class="info-item">
+
+                    <div class="info-label">
+                        모임 시작시간
+                    </div>
+
+                    <div
+                            id="meetingStartAt"
+                            class="info-value">
+
+                        -
+
+                    </div>
+
+                </div>
+
+
+                <div class="info-item">
+
+                    <div class="info-label">
+                        희망 종료시간
+                    </div>
+
+                    <div
+                            id="desiredEndAt"
+                            class="info-value">
+
+                        -
+
+                    </div>
 
                 </div>
 
             </div>
 
-
-            <div class="info-item">
-
-                <div class="info-label">
-                    희망 종료시간
-                </div>
-
-                <div
-                        id="desiredEndAt"
-                        class="info-value">
-
-                    -
-
-                </div>
-
-            </div>
-
         </div>
 
 
-        <button
-                type="button"
-                id="inviteCodeButton"
-                class="invite-button"
-                onclick="copyInviteUrl()"
-                disabled>
+        <!-- 오른쪽 버튼 영역 -->
+        <div class="room-actions">
 
-            🔗 초대코드
-            <span id="inviteCode">
-                -
-            </span>
+            <button
+                    type="button"
+                    id="closeRecruitmentButton"
+                    class="close-recruitment-button"
+                    onclick="closeRecruitment()"
+                    hidden>
 
-        </button>
+                참가 마감
 
-
-        <button
-                type="button"
-                id="leaveMeetingButton"
-                class="leave-button"
-                onclick="leaveMeeting()"
-                hidden>
-
-            방 나가기
-
-        </button>
+            </button>
 
 
-        <button
-                type="button"
-                id="closeRecruitmentButton"
-                class="close-recruitment-button"
-                onclick="closeRecruitment()"
-                hidden>
+            <button
+                    type="button"
+                    id="leaveMeetingButton"
+                    class="leave-button"
+                    onclick="leaveMeeting()"
+                    hidden>
 
-            참가 마감
+                방 나가기
 
-        </button>
+            </button>
+
+
+            <button
+                    type="button"
+                    class="home-button"
+                    onclick="goHome()">
+
+                홈으로
+
+            </button>
+
+        </div>
 
     </div>
+
+
 
 
     <!-- =========================================================
@@ -2235,18 +2252,15 @@
             ||
             null;
 
-
         const currentUserIsHost =
             Number(meeting.hostUserId)
             ===
             Number(currentUser.userId);
 
-
         leaveMeetingButton.hidden =
             !currentParticipant
             ||
             currentUserIsHost;
-
 
         const maxParticipants =
             Number(
@@ -2254,7 +2268,6 @@
                 ||
                 0
             );
-
 
         participantSummary.textContent =
             maxParticipants > 0
@@ -2267,9 +2280,7 @@
                 + participants.length
                 + "명";
 
-
         participantList.replaceChildren();
-
 
         participants.forEach(
             participant =>
@@ -2279,22 +2290,18 @@
                         "div"
                     );
 
-
                 item.className =
-                    "participant-item";
-
+                    "participant-card";
 
                 const host =
                     Number(participant.userId)
                     ===
                     Number(meeting.hostUserId);
 
-
                 const me =
                     Number(participant.userId)
                     ===
                     Number(currentUser.userId);
-
 
                 const canKick =
                     currentUserIsHost
@@ -2303,7 +2310,6 @@
                     &&
                     !me;
 
-
                 const nickname =
                     participant.nickname
                     ||
@@ -2311,32 +2317,46 @@
 
                 item.innerHTML =
                     `
-                    <span class="participant-name">
-                        ${host ? "👑 " : ""}
-                        ${MeetBack.escapeHtml(nickname)}
-                        ${me ? " (나)" : ""}
-                    </span>
+                    <div class="participant-card-top">
 
-                    <span class="
-                        presence-badge
-                        ${participant.online ? "online" : "offline"}
-                    ">
-                        ${participant.online ? "● ON" : "● OFF"}
-                    </span>
+                        <strong class="participant-name">
+                            ${host ? "👑 " : ""}
+                            ${MeetBack.escapeHtml(nickname)}
+                            ${me ? " (나)" : ""}
+                        </strong>
 
-                    ${
-                        canKick
-                            ? `
-                                <button
-                                        type="button"
-                                        class="participant-kick-button">
+                        <span
+                                id="presence-user-${participant.userId}"
+                                class="
+                                    presence-badge
+                                    ${participant.online ? "online" : "offline"}
+                                ">
 
-                                    강퇴
+                            <span class="presence-dot"></span>
 
-                                </button>
-                              `
-                            : ""
-                    }
+                            <span class="presence-text">
+                                ${participant.online ? "ON" : "OFF"}
+                            </span>
+
+                        </span>
+
+                    </div>
+
+                    <div class="participant-card-bottom">
+
+                        ${
+                                        canKick
+                                            ? `
+                                    <button
+                                            type="button"
+                                            class="participant-kick-button">
+                                        강퇴
+                                    </button>
+                                  `
+                                            : ""
+                                    }
+
+                    </div>
                     `;
 
 
@@ -2344,7 +2364,6 @@
                     item.querySelector(
                         ".participant-kick-button"
                     );
-
 
                 if (kickButton)
                 {
@@ -2359,7 +2378,6 @@
                         }
                     );
                 }
-
 
                 participantList.appendChild(
                     item
@@ -2384,19 +2402,15 @@
             ===
             Number(currentUser.userId);
 
-
         if (!currentUserIsHost)
         {
             kickedParticipantSection.hidden =
                 true;
 
-
             kickedParticipantList.replaceChildren();
-
 
             return;
         }
-
 
         const response =
             await MeetBack.authenticatedFetch(
@@ -2411,7 +2425,6 @@
                 }
             );
 
-
         if (!response.ok)
         {
             kickedParticipantSection.hidden =
@@ -2420,13 +2433,10 @@
             return;
         }
 
-
         const kickedParticipants =
             await response.json();
 
-
         kickedParticipantList.replaceChildren();
-
 
         if (
             !Array.isArray(kickedParticipants)
@@ -2440,10 +2450,8 @@
             return;
         }
 
-
         kickedParticipantSection.hidden =
             false;
-
 
         kickedParticipants.forEach(
             participant =>
@@ -2453,10 +2461,8 @@
                         "div"
                     );
 
-
                 item.className =
                     "participant-item";
-
 
                 const nickname =
                     participant.nickname
@@ -2482,7 +2488,6 @@
                     </button>
                     `;
 
-
                 item.querySelector(
                     ".participant-kick-cancel-button"
                 ).addEventListener(
@@ -2495,7 +2500,6 @@
                         );
                     }
                 );
-
 
                 kickedParticipantList.appendChild(
                     item
@@ -2525,7 +2529,6 @@
             return;
         }
 
-
         const response =
             await MeetBack.authenticatedFetch(
                 "/participants/"
@@ -2539,7 +2542,6 @@
                 }
             );
 
-
         if (!response.ok)
         {
             showMessage(
@@ -2548,7 +2550,6 @@
 
             return;
         }
-
 
         await loadParticipants();
 
@@ -2576,7 +2577,6 @@
             return;
         }
 
-
         const response =
             await MeetBack.authenticatedFetch(
                 "/participants/"
@@ -2590,7 +2590,6 @@
                 }
             );
 
-
         if (!response.ok)
         {
             showMessage(
@@ -2599,7 +2598,6 @@
 
             return;
         }
-
 
         await loadParticipants();
 
@@ -2618,17 +2616,14 @@
                 "kickModal"
             );
 
-
         modal.classList.add(
             "show"
         );
-
 
         modal.setAttribute(
             "aria-hidden",
             "false"
         );
-
 
         document.body.style.overflow =
             "hidden";
@@ -2737,24 +2732,20 @@
             row.className =
                 "chat-message";
 
-
             const nickname =
                 document.createElement(
                     "strong"
                 );
-
 
             nickname.textContent =
                 chatMessage.nickname
                 ||
                 "참가자";
 
-
             const content =
                 document.createElement(
                     "span"
                 );
-
 
             content.textContent =
                 " : "
@@ -2765,17 +2756,14 @@
                     ""
                 );
 
-
             row.appendChild(
                 nickname
             );
-
 
             row.appendChild(
                 content
             );
         }
-
 
         area.appendChild(
             row
@@ -2809,7 +2797,6 @@
                 "/messages"
             );
 
-
         if (!response.ok)
         {
             throw new Error(
@@ -2817,19 +2804,15 @@
             );
         }
 
-
         const messages =
             await response.json();
-
 
         const area =
             document.getElementById(
                 "chatMessages"
             );
 
-
         area.replaceChildren();
-
 
         messages.forEach(
             chatMessage =>
@@ -2919,7 +2902,6 @@
                 ? "wss"
                 : "ws";
 
-
         stompClient =
             new StompJs.Client({
 
@@ -2933,7 +2915,6 @@
                     "/ws",
 
                 connectHeaders: {
-
                     "Authorization":
                         "Bearer "
                         +
@@ -2951,14 +2932,12 @@
                         ).textContent =
                             "CONNECTED";
 
-
                         const destination =
                             "/topic/meetings/"
                             +
                             meetingId
                             +
                             "/chat";
-
 
                         const receiptId =
                             "quick-fixed-"
@@ -2969,17 +2948,14 @@
                             +
                             Date.now();
 
-
                         stompClient.watchForReceipt(
                             receiptId,
                             async function()
                             {
                                 await loadParticipants();
-
                                 await loadKickedParticipants();
                             }
                         );
-
 
                         stompClient.subscribe(
                             destination,
@@ -3017,7 +2993,6 @@
                                     );
                                 }
 
-
                                 if (
                                     data.messageType === "EVENT"
                                     &&
@@ -3029,17 +3004,14 @@
                                         ===
                                         Number(currentUser.userId);
 
-
                                     if (kickedMe)
                                     {
                                         showKickModal();
-
 
                                         if (stompClient)
                                         {
                                             stompClient.reconnectDelay =
                                                 0;
-
 
                                             stompClient
                                                 .deactivate()
@@ -3052,7 +3024,6 @@
                                                 );
                                         }
 
-
                                         setTimeout(
                                             () =>
                                             {
@@ -3063,10 +3034,8 @@
                                             2000
                                         );
 
-
                                         return;
                                     }
-
 
                                     await loadParticipants();
 
@@ -3074,7 +3043,6 @@
 
                                     return;
                                 }
-
 
                                 if (
                                     data.messageType === "EVENT"
@@ -3089,7 +3057,6 @@
                                     return;
                                 }
 
-
                                 if (
                                     data.eventType === "PRESENCE_UPDATED"
                                     ||
@@ -3100,7 +3067,6 @@
                                 {
                                     await loadParticipants();
                                 }
-
 
                                 if (
                                     data.eventType === "RECRUITMENT_CLOSED"
@@ -3126,7 +3092,6 @@
                             }
                         );
 
-
                         await loadChatHistory();
                     },
 
@@ -3149,7 +3114,6 @@
                     }
             });
 
-
         stompClient.activate();
     }
 
@@ -3165,16 +3129,13 @@
                 "chatInput"
             );
 
-
         const content =
             input.value.trim();
-
 
         if (!content)
         {
             return;
         }
-
 
         if (
             !stompClient
@@ -3189,7 +3150,6 @@
             return;
         }
 
-
         stompClient.publish({
 
             destination:
@@ -3201,12 +3161,10 @@
 
             body:
                 JSON.stringify({
-
                     content:
                     content
                 })
         });
-
 
         input.value =
             "";
@@ -3226,16 +3184,13 @@
                 "마감 후에는 새로운 참가자와 나간 참가자가 다시 들어올 수 없습니다."
             );
 
-
         if (!confirmed)
         {
             return;
         }
 
-
         closeRecruitmentButton.disabled =
             true;
-
 
         try
         {
@@ -3252,18 +3207,15 @@
                     }
                 );
 
-
             if (!response.ok)
             {
                 let errorMessage =
                     "참가 모집을 마감하지 못했습니다.";
 
-
                 try
                 {
                     const errorBody =
                         await response.json();
-
 
                     errorMessage =
                         errorBody.message
@@ -3274,12 +3226,10 @@
                 {
                 }
 
-
                 throw new Error(
                     errorMessage
                 );
             }
-
 
             await loadMeeting();
         }
@@ -3290,7 +3240,6 @@
                 ||
                 "참가 모집 마감 중 오류가 발생했습니다."
             );
-
 
             updateRecruitmentButton();
         }
@@ -3312,22 +3261,18 @@
             return;
         }
 
-
         const confirmed =
             confirm(
                 "정말 이 모임에서 나가시겠습니까?"
             );
-
 
         if (!confirmed)
         {
             return;
         }
 
-
         leaveMeetingButton.disabled =
             true;
-
 
         try
         {
@@ -3344,18 +3289,15 @@
                     }
                 );
 
-
             if (!response.ok)
             {
                 let errorMessage =
                     "모임에서 나가지 못했습니다.";
 
-
                 try
                 {
                     const errorBody =
                         await response.json();
-
 
                     errorMessage =
                         errorBody.message
@@ -3364,14 +3306,13 @@
                 }
                 catch (error)
                 {
+                    // 응답 본문이 JSON이 아니면 기본 문구 사용
                 }
-
 
                 throw new Error(
                     errorMessage
                 );
             }
-
 
             if (
                 stompClient
@@ -3381,7 +3322,6 @@
             {
                 await stompClient.deactivate();
             }
-
 
             location.href =
                 "/home";
@@ -3393,7 +3333,6 @@
                 ||
                 "모임에서 나가는 중 오류가 발생했습니다."
             );
-
 
             leaveMeetingButton.disabled =
                 false;
@@ -3430,17 +3369,13 @@
             return;
         }
 
-
         try
         {
             await loadMeeting();
 
-
             await loadFixedPlace();
 
-
             await loadParticipants();
-
 
             await loadKickedParticipants();
 
@@ -3463,7 +3398,6 @@
                 "[QUICK FIXED INITIALIZE ERROR]",
                 error
             );
-
 
             showMessage(
                 error.message
