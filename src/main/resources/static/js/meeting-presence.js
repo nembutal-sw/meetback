@@ -6,7 +6,8 @@
 
 
     function connect(
-        meetingId
+        meetingId,
+        onMessage
     )
     {
 
@@ -95,14 +96,46 @@
                             + meetingId
                             + "/chat",
 
-                            function ()
+                            function (message)
                             {
-                                /*
-                                 * Presence 유지용 구독.
-                                 *
-                                 * 이 페이지에서는
-                                 * 채팅 메시지를 출력하지 않는다.
-                                 */
+                                let data;
+
+                                try
+                                {
+                                    data =
+                                        JSON.parse(
+                                            message.body
+                                        );
+                                }
+                                catch (error)
+                                {
+                                    console.error(
+                                        "[PRESENCE MESSAGE PARSE ERROR]",
+                                        error
+                                    );
+
+                                    return;
+                                }
+
+
+                                if (
+                                    typeof onMessage
+                                    ===
+                                    "function"
+                                )
+                                {
+                                    Promise.resolve(
+                                        onMessage(data)
+                                    ).catch(
+                                        function (error)
+                                        {
+                                            console.error(
+                                                "[PRESENCE MESSAGE HANDLER ERROR]",
+                                                error
+                                            );
+                                        }
+                                    );
+                                }
                             }
                         );
 
@@ -143,11 +176,42 @@
         presenceClient.activate();
     }
 
+    async function disconnect()
+    {
+        const client =
+            presenceClient;
+
+        presenceClient =
+            null;
+
+
+        if (!client)
+        {
+            return;
+        }
+
+
+        /*
+         * 강퇴 후 자동 재접속하지 않도록 막는다.
+         */
+        client.reconnectDelay =
+            0;
+
+
+        if (client.active)
+        {
+            await client.deactivate();
+        }
+    }
+
 
     global.MeetBackPresence =
         {
             connect:
-            connect
+            connect,
+
+            disconnect:
+            disconnect
         };
 
 })(window);

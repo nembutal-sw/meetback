@@ -238,61 +238,6 @@ public class RouteService {
         return EARTH_RADIUS * c;
     }
 
-
-    public TransitRouteDTO testRoute(
-            Long participantId,
-            Long candidateId
-    ) {
-
-        MeetingParticipant participant =
-                meetingParticipantMapper.findById(participantId);
-
-        MeetingCandidate candidate =
-                meetingCandidateMapper.findById(candidateId);
-
-        if (participant == null) {
-            throw new IllegalArgumentException(
-                    "참가자를 찾을 수 없습니다."
-            );
-        }
-
-        if (candidate == null) {
-            throw new IllegalArgumentException(
-                    "후보 장소를 찾을 수 없습니다."
-            );
-        }
-
-        PlaceDTO departurePlace =
-                new PlaceDTO(
-                        null,
-                        participant.getDepartureName(),
-                        participant.getDepartureAddress(),
-                        participant.getDepartureAddress(),
-                        participant.getDepartureLongitude().doubleValue(),
-                        participant.getDepartureLatitude().doubleValue(),
-                        null,
-                        null
-                );
-
-        PlaceDTO meetingPlace =
-                new PlaceDTO(
-                        null,
-                        candidate.getPlaceName(),
-                        candidate.getAddress(),
-                        candidate.getAddress(),
-                        candidate.getLongitude().doubleValue(),
-                        candidate.getLatitude().doubleValue(),
-                        null,
-                        null
-                );
-
-        return odsayTransitClient.findSubwayRoute(
-                departurePlace,
-                meetingPlace
-        );
-    }
-
-
     public TransitRouteDTO searchReturnRoute(
             Long participantId,
             Long candidateId
@@ -345,7 +290,6 @@ public class RouteService {
                 end
         );
     }
-
 
     public RouteMapDTO getRouteMap(
             Long candidateId,

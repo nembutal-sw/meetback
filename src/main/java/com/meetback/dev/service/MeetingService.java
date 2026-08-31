@@ -194,30 +194,24 @@ public class MeetingService {
         meetingMapper.insertMeeting(meeting);
 
 
-
         MeetingParticipant participant =
                 new MeetingParticipant();
-
 
         participant.setMeetingId(
                 meeting.getMeetingId()
         );
 
-
         participant.setUserId(
                 hostUserId
         );
-
 
         participant.setParticipantStatus(
                 ParticipantStatus.ACTIVE
         );
 
-
         participant.setInputStatus(
                 InputStatus.DRAFT
         );
-
 
         participantMapper.insertParticipant(
                 participant
@@ -341,7 +335,6 @@ public class MeetingService {
                         userId
                 );
 
-
         // 4. 강퇴된 참가자 재입장 차단
         if (
                 existingParticipant != null
@@ -370,7 +363,6 @@ public class MeetingService {
                     meeting.getMeetingType()
             );
         }
-
 
         /*
          * 신규 참가와 LEFT 재입장은
@@ -449,31 +441,25 @@ public class MeetingService {
             );
         }
 
-
         // 6. 참가 이력이 없는 사용자 등록
         MeetingParticipant participant =
                 new MeetingParticipant();
-
 
         participant.setMeetingId(
                 meeting.getMeetingId()
         );
 
-
         participant.setUserId(
                 userId
         );
-
 
         participant.setParticipantStatus(
                 ParticipantStatus.ACTIVE
         );
 
-
         participant.setInputStatus(
                 InputStatus.DRAFT
         );
-
 
         participantMapper.insertParticipant(
                 participant
@@ -516,7 +502,6 @@ public class MeetingService {
 
 
         if (meeting == null) {
-
             throw new IllegalArgumentException(
                     "존재하지 않는 모임입니다."
             );
@@ -545,7 +530,6 @@ public class MeetingService {
                     "현재 최종 후보를 확정할 수 없는 상태입니다."
             );
         }
-
 
         // QUICK_VOTE는 전체 참가자의 과반수가 투표해야 확정 가능
         if (
@@ -684,7 +668,6 @@ public class MeetingService {
 
 
         if (result == 0) {
-
             throw new IllegalStateException(
                     "최종 장소 확정에 실패했습니다."
             );
@@ -728,7 +711,6 @@ public class MeetingService {
             );
         }
 
-
         // 3. 현재 상태 확인
         if (
                 meeting.getStatus()
@@ -740,7 +722,6 @@ public class MeetingService {
             );
         }
 
-
         // 4. 전원 위치 제출 확인
         boolean allSubmitted =
                 participantService.isAllSubmitted(
@@ -749,12 +730,10 @@ public class MeetingService {
 
 
         if (!allSubmitted) {
-
             throw new IllegalStateException(
                     "모든 참가자의 위치 입력이 완료되지 않았습니다."
             );
         }
-
 
         // 5. 후보 존재 확인
         boolean candidateExists =
@@ -764,12 +743,10 @@ public class MeetingService {
 
 
         if (!candidateExists) {
-
             throw new IllegalStateException(
                     "등록된 후보지가 없습니다."
             );
         }
-
 
         // 6. VOTING으로 변경
         meetingMapper.updateMeetingStatus(
@@ -886,7 +863,6 @@ public class MeetingService {
             );
         }
 
-
         return new MeetingRoomResponse(
                 meeting.getMeetingId(),
                 meeting.getHostUserId(),
@@ -916,9 +892,7 @@ public class MeetingService {
                         meetingId
                 );
 
-
         if (meeting == null) {
-
             throw new IllegalArgumentException(
                     "존재하지 않는 모임입니다."
             );
@@ -934,7 +908,6 @@ public class MeetingService {
 
 
         if (participantCount == 0) {
-
             throw new IllegalStateException(
                     "해당 모임의 참가자가 아닙니다."
             );
@@ -970,7 +943,6 @@ public class MeetingService {
 
     @Transactional
     public int deleteExpiredMeetings() {
-
         return meetingMapper.deleteExpiredMeetings();
     }
 

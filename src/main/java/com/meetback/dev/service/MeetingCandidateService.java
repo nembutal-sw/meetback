@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.meetback.dev.domain.ParticipantStatus;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -46,6 +47,15 @@ public class MeetingCandidateService {
 
             throw new IllegalArgumentException(
                     "참가자를 찾을 수 없습니다."
+            );
+        }
+
+        if (
+                participant.getParticipantStatus()
+                        != ParticipantStatus.ACTIVE
+        ) {
+            throw new AccessDeniedException(
+                    "강퇴된 참가자는 희망 장소를 등록할 수 없습니다."
             );
         }
 
