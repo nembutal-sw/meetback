@@ -7,8 +7,8 @@ import com.meetback.dev.dto.feed.FeedImageResponse;
 import com.meetback.dev.dto.feed.FeedResponse;
 import com.meetback.dev.dto.feed.FeedUpdateRequest;
 import com.meetback.dev.repository.FeedImageMapper;
+import com.meetback.dev.repository.FeedLikeMapper;
 import com.meetback.dev.repository.FeedMapper;
-import com.meetback.dev.repository.UserMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,7 +54,7 @@ public class FeedService {
 
     private final FeedImageMapper feedImageMapper;
 
-    private final UserMapper userMapper;
+    private final FeedLikeMapper feedLikeMapper;
 
     private final Path uploadDirectory;
 
@@ -62,7 +62,7 @@ public class FeedService {
     public FeedService(
             FeedMapper feedMapper,
             FeedImageMapper feedImageMapper,
-            UserMapper userMapper,
+            FeedLikeMapper feedLikeMapper,
             @Value("${feed.image.upload-dir}")
             String uploadDirectory
     ) {
@@ -73,8 +73,8 @@ public class FeedService {
         this.feedImageMapper =
                 feedImageMapper;
 
-        this.userMapper =
-                userMapper;
+        this.feedLikeMapper =
+                feedLikeMapper;
 
         this.uploadDirectory =
                 Paths.get(
@@ -725,12 +725,11 @@ public class FeedService {
 
         // ========================================================
         // 작성자 닉네임 조회
+        // FeedMapper에서 users 테이블과 JOIN해서 가져온 값
         // ========================================================
 
         String nickname =
-                userMapper.selectNicknameById(
-                        feed.getUserId()
-                );
+                feed.getNickname();
 
 
         if (
@@ -764,6 +763,29 @@ public class FeedService {
                         );
 
 
+        // ========================================================
+        // 좋아요 개수 조회
+        // ========================================================
+
+        int likeCount =
+                feedLikeMapper.countByFeedId(
+                        feed.getFeedId()
+                );
+
+
+        // ========================================================
+        // 현재 로그인 사용자가 좋아요를 눌렀는지 확인
+        // ========================================================
+
+        boolean liked =
+                loginUserId != null
+                        &&
+                        feedLikeMapper.existsByFeedIdAndUserId(
+                                feed.getFeedId(),
+                                loginUserId
+                        ) > 0;
+
+
         return new FeedResponse(
                 feed.getFeedId(),
                 feed.getUserId(),
@@ -772,6 +794,8 @@ public class FeedService {
                 feed.getTitle(),
                 feed.getContent(),
                 imageResponses,
+                likeCount,
+                liked,
                 feed.getCreatedAt(),
                 feed.getUpdatedAt()
         );

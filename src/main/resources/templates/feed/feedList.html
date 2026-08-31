@@ -259,6 +259,42 @@
 
 
         /* ========================================================
+           좋아요
+           ======================================================== */
+
+        .feed-like-area {
+            display: flex;
+            align-items: center;
+
+            gap: 8px;
+
+            padding: 10px 12px 0 12px;
+        }
+
+        .feed-like-button {
+            border: none;
+            background: none;
+
+            padding: 0;
+
+            font-size: 30px;
+            line-height: 1;
+
+            cursor: pointer;
+        }
+
+        .feed-like-button:disabled {
+            cursor: default;
+            opacity: 0.5;
+        }
+
+        .feed-like-count {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+
+        /* ========================================================
            후기 내용
            ======================================================== */
 
@@ -284,6 +320,148 @@
 
         .feed-created-at {
             color: #888888;
+
+            font-size: 12px;
+        }
+
+
+        /* ========================================================
+           댓글
+           ======================================================== */
+
+        .feed-comment-area {
+            border-top: 1px solid #eeeeee;
+
+            padding: 10px 12px 12px 12px;
+
+            font-size: 12px;
+        }
+
+        .feed-comment-count {
+            margin-bottom: 9px;
+
+            color: #666666;
+
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .feed-comment-list {
+            display: flex;
+            flex-direction: column;
+
+            gap: 7px;
+
+            margin-bottom: 10px;
+        }
+
+        .feed-comment-item {
+            display: flex;
+            align-items: flex-start;
+
+            gap: 6px;
+
+            line-height: 1.4;
+        }
+
+        .feed-comment-nickname {
+            flex-shrink: 0;
+
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .feed-comment-content {
+            flex: 1;
+
+            font-size: 12px;
+
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .feed-comment-actions {
+            display: flex;
+
+            gap: 5px;
+
+            margin-left: 5px;
+
+            flex-shrink: 0;
+        }
+
+        .feed-comment-actions button {
+            border: none;
+            background: none;
+
+            padding: 0;
+
+            color: #888888;
+
+            font-size: 10px;
+
+            cursor: pointer;
+        }
+
+        .feed-comment-actions button:hover {
+            color: #333333;
+
+            text-decoration: underline;
+        }
+
+        .feed-comment-empty {
+            color: #999999;
+
+            font-size: 11px;
+        }
+
+        .feed-comment-form {
+            display: flex;
+
+            gap: 6px;
+
+            margin-top: 8px;
+        }
+
+        .feed-comment-input {
+            flex: 1;
+
+            box-sizing: border-box;
+
+            border: 1px solid #dddddd;
+            border-radius: 4px;
+
+            padding: 7px 8px;
+
+            font-size: 12px;
+        }
+
+        .feed-comment-submit {
+            border: 1px solid #cccccc;
+            background: white;
+
+            padding: 6px 11px;
+
+            font-size: 11px;
+
+            cursor: pointer;
+        }
+
+        .feed-comment-submit:disabled {
+            cursor: default;
+
+            opacity: 0.5;
+        }
+
+        .feed-comment-edit-input {
+            flex: 1;
+
+            box-sizing: border-box;
+
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+
+            padding: 5px 7px;
 
             font-size: 12px;
         }
@@ -773,6 +951,16 @@
 
 
         // ========================================================
+        // LIKE
+        // ========================================================
+
+        createLikeArea(
+            feed,
+            card
+        );
+
+
+        // ========================================================
         // BODY
         // ========================================================
 
@@ -787,7 +975,1218 @@
         );
 
 
+        // ========================================================
+        // COMMENT
+        // ========================================================
+
+        createCommentArea(
+            feed,
+            card
+        );
+
+
         return card;
+    }
+
+
+    // ============================================================
+    // 좋아요 영역
+    // ============================================================
+
+    function createLikeArea(
+        feed,
+        card
+    ) {
+
+        const likeArea =
+            document.createElement(
+                "div"
+            );
+
+
+        likeArea.className =
+            "feed-like-area";
+
+
+        const likeButton =
+            document.createElement(
+                "button"
+            );
+
+
+        likeButton.type =
+            "button";
+
+
+        likeButton.className =
+            "feed-like-button";
+
+
+        const likeCount =
+            document.createElement(
+                "span"
+            );
+
+
+        likeCount.className =
+            "feed-like-count";
+
+
+        // ========================================================
+        // 좋아요 UI 출력
+        // ========================================================
+
+        function renderLike()
+        {
+
+            const liked =
+                feed.liked === true;
+
+
+            const count =
+                Number(
+                    feed.likeCount
+                ) || 0;
+
+
+            likeButton.textContent =
+                liked
+                    ? "♥"
+                    : "♡";
+
+
+            likeButton.setAttribute(
+                "aria-label",
+                liked
+                    ? "좋아요 취소"
+                    : "좋아요"
+            );
+
+
+            likeCount.textContent =
+                "좋아요 "
+                + count
+                + "개";
+        }
+
+
+        // ========================================================
+        // 좋아요 클릭
+        // ========================================================
+
+        likeButton.addEventListener(
+            "click",
+            async function() {
+
+                likeButton.disabled =
+                    true;
+
+
+                try {
+
+                    await toggleFeedLike(
+                        feed
+                    );
+
+
+                    renderLike();
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "[FEED LIKE ERROR]",
+                        error
+                    );
+
+
+                    alert(
+                        error.message
+                        || "좋아요 처리 중 오류가 발생했습니다."
+                    );
+
+                }
+                finally {
+
+                    likeButton.disabled =
+                        false;
+                }
+            }
+        );
+
+
+        renderLike();
+
+
+        likeArea.appendChild(
+            likeButton
+        );
+
+
+        likeArea.appendChild(
+            likeCount
+        );
+
+
+        card.appendChild(
+            likeArea
+        );
+    }
+
+
+    // ============================================================
+    // 좋아요 등록 / 취소
+    // ============================================================
+
+    async function toggleFeedLike(
+        feed
+    ) {
+
+        const method =
+            feed.liked === true
+                ? "DELETE"
+                : "POST";
+
+
+        const response =
+            await fetch(
+                "/api/feeds/"
+                + encodeURIComponent(
+                    feed.feedId
+                )
+                + "/likes",
+                {
+
+                    method:
+                    method,
+
+                    headers: {
+
+                        "Authorization":
+                            "Bearer "
+                            + accessToken
+
+                    }
+
+                }
+            );
+
+
+        if (
+            response.status === 401
+            ||
+            response.status === 403
+        ) {
+
+            window.location.href =
+                "/login";
+
+
+            return;
+        }
+
+
+        if (
+            !response.ok
+        ) {
+
+            const errorText =
+                await response.text();
+
+
+            throw new Error(
+                errorText
+                || "좋아요 처리에 실패했습니다."
+            );
+        }
+
+
+        const result =
+            await response.json();
+
+
+        feed.likeCount =
+            result.likeCount;
+
+
+        feed.liked =
+            result.liked;
+    }
+
+
+    // ============================================================
+    // 댓글 영역
+    // ============================================================
+
+    function createCommentArea(
+        feed,
+        card
+    ) {
+
+        const commentArea =
+            document.createElement(
+                "div"
+            );
+
+
+        commentArea.className =
+            "feed-comment-area";
+
+
+        // --------------------------------------------------------
+        // 댓글 개수
+        // --------------------------------------------------------
+
+        const commentCount =
+            document.createElement(
+                "div"
+            );
+
+
+        commentCount.className =
+            "feed-comment-count";
+
+
+        commentCount.textContent =
+            "댓글 불러오는 중...";
+
+
+        // --------------------------------------------------------
+        // 댓글 목록
+        // --------------------------------------------------------
+
+        const commentList =
+            document.createElement(
+                "div"
+            );
+
+
+        commentList.className =
+            "feed-comment-list";
+
+
+        // --------------------------------------------------------
+        // 댓글 입력 영역
+        // --------------------------------------------------------
+
+        const commentForm =
+            document.createElement(
+                "div"
+            );
+
+
+        commentForm.className =
+            "feed-comment-form";
+
+
+        const commentInput =
+            document.createElement(
+                "input"
+            );
+
+
+        commentInput.type =
+            "text";
+
+
+        commentInput.className =
+            "feed-comment-input";
+
+
+        commentInput.placeholder =
+            "댓글을 입력하세요";
+
+
+        const commentSubmit =
+            document.createElement(
+                "button"
+            );
+
+
+        commentSubmit.type =
+            "button";
+
+
+        commentSubmit.className =
+            "feed-comment-submit";
+
+
+        commentSubmit.textContent =
+            "등록";
+
+
+        commentForm.appendChild(
+            commentInput
+        );
+
+
+        commentForm.appendChild(
+            commentSubmit
+        );
+
+
+        commentArea.appendChild(
+            commentCount
+        );
+
+
+        commentArea.appendChild(
+            commentList
+        );
+
+
+        commentArea.appendChild(
+            commentForm
+        );
+
+
+        card.appendChild(
+            commentArea
+        );
+
+
+        // ========================================================
+        // 댓글 목록 조회
+        // ========================================================
+
+        async function loadComments()
+        {
+
+            try {
+
+                const response =
+                    await fetch(
+                        "/api/feeds/"
+                        + encodeURIComponent(
+                            feed.feedId
+                        )
+                        + "/comments",
+                        {
+
+                            method:
+                                "GET",
+
+                            headers: {
+
+                                "Authorization":
+                                    "Bearer "
+                                    + accessToken
+
+                            }
+
+                        }
+                    );
+
+
+                if (
+                    response.status === 401
+                    ||
+                    response.status === 403
+                ) {
+
+                    window.location.href =
+                        "/login";
+
+
+                    return;
+                }
+
+
+                if (
+                    !response.ok
+                ) {
+
+                    throw new Error(
+                        "댓글을 불러오지 못했습니다."
+                    );
+                }
+
+
+                const comments =
+                    await response.json();
+
+
+                renderComments(
+                    comments
+                );
+
+            }
+            catch (error) {
+
+                console.error(
+                    "[COMMENT LIST ERROR]",
+                    error
+                );
+
+
+                commentCount.textContent =
+                    "댓글 조회 실패";
+            }
+        }
+
+
+        // ========================================================
+        // 댓글 목록 출력
+        // ========================================================
+
+        function renderComments(
+            comments
+        ) {
+
+            commentList.innerHTML =
+                "";
+
+
+            const commentArray =
+                Array.isArray(
+                    comments
+                )
+                    ? comments
+                    : [];
+
+
+            commentCount.textContent =
+                "댓글 "
+                + commentArray.length
+                + "개";
+
+
+            if (
+                commentArray.length === 0
+            ) {
+
+                const emptyMessage =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                emptyMessage.className =
+                    "feed-comment-empty";
+
+
+                emptyMessage.textContent =
+                    "아직 댓글이 없습니다.";
+
+
+                commentList.appendChild(
+                    emptyMessage
+                );
+
+
+                return;
+            }
+
+
+            for (
+                const comment
+                of commentArray
+                ) {
+
+                const commentItem =
+                    createCommentItem(
+                        comment,
+                        loadComments
+                    );
+
+
+                commentList.appendChild(
+                    commentItem
+                );
+            }
+        }
+
+
+        // ========================================================
+        // 댓글 등록
+        // ========================================================
+
+        commentSubmit.addEventListener(
+            "click",
+            async function() {
+
+                const content =
+                    commentInput
+                        .value
+                        .trim();
+
+
+                if (!content) {
+
+                    alert(
+                        "댓글 내용을 입력해주세요."
+                    );
+
+
+                    return;
+                }
+
+
+                commentSubmit.disabled =
+                    true;
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            "/api/feeds/"
+                            + encodeURIComponent(
+                                feed.feedId
+                            )
+                            + "/comments",
+                            {
+
+                                method:
+                                    "POST",
+
+                                headers: {
+
+                                    "Authorization":
+                                        "Bearer "
+                                        + accessToken,
+
+                                    "Content-Type":
+                                        "application/json"
+
+                                },
+
+                                body:
+                                    JSON.stringify(
+                                        {
+
+                                            content:
+                                            content
+
+                                        }
+                                    )
+
+                            }
+                        );
+
+
+                    if (
+                        response.status === 401
+                        ||
+                        response.status === 403
+                    ) {
+
+                        window.location.href =
+                            "/login";
+
+
+                        return;
+                    }
+
+
+                    if (
+                        !response.ok
+                    ) {
+
+                        const errorText =
+                            await response.text();
+
+
+                        throw new Error(
+                            errorText
+                            || "댓글 등록에 실패했습니다."
+                        );
+                    }
+
+
+                    commentInput.value =
+                        "";
+
+
+                    await loadComments();
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "[COMMENT CREATE ERROR]",
+                        error
+                    );
+
+
+                    alert(
+                        error.message
+                        || "댓글 등록 중 오류가 발생했습니다."
+                    );
+
+                }
+                finally {
+
+                    commentSubmit.disabled =
+                        false;
+                }
+            }
+        );
+
+
+        // ========================================================
+        // Enter 키 댓글 등록
+        // ========================================================
+
+        commentInput.addEventListener(
+            "keydown",
+            function(event) {
+
+                if (
+                    event.key === "Enter"
+                    &&
+                    !event.isComposing
+                ) {
+
+                    event.preventDefault();
+
+
+                    commentSubmit.click();
+                }
+            }
+        );
+
+
+        // ========================================================
+        // 댓글 최초 조회
+        // ========================================================
+
+        loadComments();
+    }
+
+
+    // ============================================================
+    // 댓글 한 개 출력
+    // ============================================================
+
+    function createCommentItem(
+        comment,
+        reloadComments
+    ) {
+
+        const item =
+            document.createElement(
+                "div"
+            );
+
+
+        item.className =
+            "feed-comment-item";
+
+
+        // --------------------------------------------------------
+        // 댓글 작성자 닉네임
+        // --------------------------------------------------------
+
+        const nickname =
+            document.createElement(
+                "span"
+            );
+
+
+        nickname.className =
+            "feed-comment-nickname";
+
+
+        nickname.textContent =
+            comment.nickname
+            || "알 수 없음";
+
+
+        // --------------------------------------------------------
+        // 댓글 내용
+        // --------------------------------------------------------
+
+        const content =
+            document.createElement(
+                "span"
+            );
+
+
+        content.className =
+            "feed-comment-content";
+
+
+        content.textContent =
+            comment.content
+            || "";
+
+
+        item.appendChild(
+            nickname
+        );
+
+
+        item.appendChild(
+            content
+        );
+
+
+        // ========================================================
+        // 본인 댓글만 수정 / 삭제 표시
+        // ========================================================
+
+        if (
+            comment.mine === true
+        ) {
+
+            const actions =
+                document.createElement(
+                    "div"
+                );
+
+
+            actions.className =
+                "feed-comment-actions";
+
+
+            // ----------------------------------------------------
+            // 댓글 수정 버튼
+            // ----------------------------------------------------
+
+            const editButton =
+                document.createElement(
+                    "button"
+                );
+
+
+            editButton.type =
+                "button";
+
+
+            editButton.textContent =
+                "수정";
+
+
+            // ----------------------------------------------------
+            // 댓글 삭제 버튼
+            // ----------------------------------------------------
+
+            const deleteButton =
+                document.createElement(
+                    "button"
+                );
+
+
+            deleteButton.type =
+                "button";
+
+
+            deleteButton.textContent =
+                "삭제";
+
+
+            actions.appendChild(
+                editButton
+            );
+
+
+            actions.appendChild(
+                deleteButton
+            );
+
+
+            item.appendChild(
+                actions
+            );
+
+
+            // ====================================================
+            // 댓글 수정 클릭
+            // ====================================================
+
+            editButton.addEventListener(
+                "click",
+                function() {
+
+                    startCommentEdit(
+                        comment,
+                        item,
+                        reloadComments
+                    );
+                }
+            );
+
+
+            // ====================================================
+            // 댓글 삭제 클릭
+            // ====================================================
+
+            deleteButton.addEventListener(
+                "click",
+                async function() {
+
+                    const confirmed =
+                        window.confirm(
+                            "댓글을 삭제하시겠습니까?"
+                        );
+
+
+                    if (!confirmed) {
+
+                        return;
+                    }
+
+
+                    deleteButton.disabled =
+                        true;
+
+
+                    try {
+
+                        const response =
+                            await fetch(
+                                "/api/comments/"
+                                + encodeURIComponent(
+                                    comment.commentId
+                                ),
+                                {
+
+                                    method:
+                                        "DELETE",
+
+                                    headers: {
+
+                                        "Authorization":
+                                            "Bearer "
+                                            + accessToken
+
+                                    }
+
+                                }
+                            );
+
+
+                        if (
+                            response.status === 401
+                            ||
+                            response.status === 403
+                        ) {
+
+                            window.location.href =
+                                "/login";
+
+
+                            return;
+                        }
+
+
+                        if (
+                            !response.ok
+                        ) {
+
+                            const errorText =
+                                await response.text();
+
+
+                            throw new Error(
+                                errorText
+                                || "댓글 삭제에 실패했습니다."
+                            );
+                        }
+
+
+                        await reloadComments();
+
+                    }
+                    catch (error) {
+
+                        console.error(
+                            "[COMMENT DELETE ERROR]",
+                            error
+                        );
+
+
+                        alert(
+                            error.message
+                            || "댓글 삭제 중 오류가 발생했습니다."
+                        );
+
+                    }
+                    finally {
+
+                        deleteButton.disabled =
+                            false;
+                    }
+                }
+            );
+        }
+
+
+        return item;
+    }
+
+
+    // ============================================================
+    // 댓글 수정
+    // ============================================================
+
+    function startCommentEdit(
+        comment,
+        item,
+        reloadComments
+    ) {
+
+        // --------------------------------------------------------
+        // 본인 댓글만 수정 가능
+        // --------------------------------------------------------
+
+        if (
+            comment.mine !== true
+        ) {
+
+            return;
+        }
+
+
+        item.innerHTML =
+            "";
+
+
+        // --------------------------------------------------------
+        // 수정 input
+        // --------------------------------------------------------
+
+        const editInput =
+            document.createElement(
+                "input"
+            );
+
+
+        editInput.type =
+            "text";
+
+
+        editInput.className =
+            "feed-comment-edit-input";
+
+
+        editInput.value =
+            comment.content
+            || "";
+
+
+        // --------------------------------------------------------
+        // 저장 / 취소 버튼 영역
+        // --------------------------------------------------------
+
+        const actions =
+            document.createElement(
+                "div"
+            );
+
+
+        actions.className =
+            "feed-comment-actions";
+
+
+        const saveButton =
+            document.createElement(
+                "button"
+            );
+
+
+        saveButton.type =
+            "button";
+
+
+        saveButton.textContent =
+            "저장";
+
+
+        const cancelButton =
+            document.createElement(
+                "button"
+            );
+
+
+        cancelButton.type =
+            "button";
+
+
+        cancelButton.textContent =
+            "취소";
+
+
+        actions.appendChild(
+            saveButton
+        );
+
+
+        actions.appendChild(
+            cancelButton
+        );
+
+
+        item.appendChild(
+            editInput
+        );
+
+
+        item.appendChild(
+            actions
+        );
+
+
+        editInput.focus();
+
+
+        // ========================================================
+        // 댓글 수정 저장
+        // ========================================================
+
+        saveButton.addEventListener(
+            "click",
+            async function() {
+
+                const content =
+                    editInput
+                        .value
+                        .trim();
+
+
+                if (!content) {
+
+                    alert(
+                        "댓글 내용을 입력해주세요."
+                    );
+
+
+                    return;
+                }
+
+
+                saveButton.disabled =
+                    true;
+
+
+                try {
+
+                    const response =
+                        await fetch(
+                            "/api/comments/"
+                            + encodeURIComponent(
+                                comment.commentId
+                            ),
+                            {
+
+                                method:
+                                    "PUT",
+
+                                headers: {
+
+                                    "Authorization":
+                                        "Bearer "
+                                        + accessToken,
+
+                                    "Content-Type":
+                                        "application/json"
+
+                                },
+
+                                body:
+                                    JSON.stringify(
+                                        {
+
+                                            content:
+                                            content
+
+                                        }
+                                    )
+
+                            }
+                        );
+
+
+                    if (
+                        response.status === 401
+                        ||
+                        response.status === 403
+                    ) {
+
+                        window.location.href =
+                            "/login";
+
+
+                        return;
+                    }
+
+
+                    if (
+                        !response.ok
+                    ) {
+
+                        const errorText =
+                            await response.text();
+
+
+                        throw new Error(
+                            errorText
+                            || "댓글 수정에 실패했습니다."
+                        );
+                    }
+
+
+                    await reloadComments();
+
+                }
+                catch (error) {
+
+                    console.error(
+                        "[COMMENT UPDATE ERROR]",
+                        error
+                    );
+
+
+                    alert(
+                        error.message
+                        || "댓글 수정 중 오류가 발생했습니다."
+                    );
+
+                }
+                finally {
+
+                    saveButton.disabled =
+                        false;
+                }
+            }
+        );
+
+
+        // ========================================================
+        // 댓글 수정 취소
+        // ========================================================
+
+        cancelButton.addEventListener(
+            "click",
+            function() {
+
+                reloadComments();
+            }
+        );
+
+
+        // ========================================================
+        // Enter 키 댓글 수정 저장
+        // ========================================================
+
+        editInput.addEventListener(
+            "keydown",
+            function(event) {
+
+                if (
+                    event.key === "Enter"
+                    &&
+                    !event.isComposing
+                ) {
+
+                    event.preventDefault();
+
+
+                    saveButton.click();
+                }
+            }
+        );
     }
 
 
@@ -838,10 +2237,6 @@
             "feed-menu-popup";
 
 
-        // --------------------------------------------------------
-        // 후기 수정
-        // --------------------------------------------------------
-
         const editButton =
             document.createElement(
                 "button"
@@ -855,10 +2250,6 @@
         editButton.textContent =
             "후기 수정";
 
-
-        // --------------------------------------------------------
-        // 후기 삭제
-        // --------------------------------------------------------
 
         const deleteButton =
             document.createElement(
@@ -894,10 +2285,6 @@
         );
 
 
-        // --------------------------------------------------------
-        // ⋯ 클릭
-        // --------------------------------------------------------
-
         menuButton.addEventListener(
             "click",
             function(event) {
@@ -910,9 +2297,7 @@
                     === "block";
 
 
-                closeAllMenus(
-                    null
-                );
+                closeAllMenus();
 
 
                 menuPopup.style.display =
@@ -922,10 +2307,6 @@
             }
         );
 
-
-        // --------------------------------------------------------
-        // 수정
-        // --------------------------------------------------------
 
         editButton.addEventListener(
             "click",
@@ -945,10 +2326,6 @@
             }
         );
 
-
-        // --------------------------------------------------------
-        // 삭제
-        // --------------------------------------------------------
 
         deleteButton.addEventListener(
             "click",
@@ -1034,10 +2411,6 @@
             "feed-image-area";
 
 
-        // --------------------------------------------------------
-        // 이미지
-        // --------------------------------------------------------
-
         const image =
             document.createElement(
                 "img"
@@ -1053,10 +2426,6 @@
         );
 
 
-        // --------------------------------------------------------
-        // 1 / N
-        // --------------------------------------------------------
-
         const imageCount =
             document.createElement(
                 "div"
@@ -1071,10 +2440,6 @@
             imageCount
         );
 
-
-        // --------------------------------------------------------
-        // 이전 버튼
-        // --------------------------------------------------------
 
         const previousButton =
             document.createElement(
@@ -1098,10 +2463,6 @@
             previousButton
         );
 
-
-        // --------------------------------------------------------
-        // 다음 버튼
-        // --------------------------------------------------------
 
         const nextButton =
             document.createElement(
@@ -1131,10 +2492,6 @@
         );
 
 
-        // --------------------------------------------------------
-        // 점 표시
-        // --------------------------------------------------------
-
         const indicatorContainer =
             document.createElement(
                 "div"
@@ -1149,10 +2506,6 @@
             indicatorContainer
         );
 
-
-        // ========================================================
-        // 현재 이미지 출력
-        // ========================================================
 
         function renderCurrentImage()
         {
@@ -1216,10 +2569,6 @@
             );
 
 
-            // ----------------------------------------------------
-            // 사진 한 장이면 버튼 숨김
-            // ----------------------------------------------------
-
             if (
                 images.length === 1
             ) {
@@ -1259,10 +2608,6 @@
         }
 
 
-        // ========================================================
-        // 이전
-        // ========================================================
-
         previousButton.addEventListener(
             "click",
             function(event) {
@@ -1286,10 +2631,6 @@
             }
         );
 
-
-        // ========================================================
-        // 다음
-        // ========================================================
 
         nextButton.addEventListener(
             "click",
@@ -1338,10 +2679,6 @@
             "feed-body";
 
 
-        // --------------------------------------------------------
-        // 제목
-        // --------------------------------------------------------
-
         const title =
             document.createElement(
                 "div"
@@ -1357,10 +2694,6 @@
             || "";
 
 
-        // --------------------------------------------------------
-        // 내용
-        // --------------------------------------------------------
-
         const content =
             document.createElement(
                 "div"
@@ -1375,10 +2708,6 @@
             feed.content
             || "";
 
-
-        // --------------------------------------------------------
-        // 작성시간
-        // --------------------------------------------------------
 
         const createdAt =
             document.createElement(
@@ -1449,10 +2778,6 @@
             "";
 
 
-        // --------------------------------------------------------
-        // 제목 input
-        // --------------------------------------------------------
-
         const titleInput =
             document.createElement(
                 "input"
@@ -1476,10 +2801,6 @@
             || "";
 
 
-        // --------------------------------------------------------
-        // 내용 textarea
-        // --------------------------------------------------------
-
         const contentInput =
             document.createElement(
                 "textarea"
@@ -1494,10 +2815,6 @@
             feed.content
             || "";
 
-
-        // --------------------------------------------------------
-        // 버튼 영역
-        // --------------------------------------------------------
 
         const buttonArea =
             document.createElement(
@@ -1561,10 +2878,6 @@
             buttonArea
         );
 
-
-        // ========================================================
-        // 수정 저장
-        // ========================================================
 
         saveButton.addEventListener(
             "click",
@@ -1701,10 +3014,6 @@
             }
         );
 
-
-        // ========================================================
-        // 수정 취소
-        // ========================================================
 
         cancelButton.addEventListener(
             "click",
