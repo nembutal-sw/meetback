@@ -1765,6 +1765,7 @@
         autoEnter = false
     )
     {
+
         const normalizedInviteCode =
             inviteCode
                 .trim()
@@ -1773,6 +1774,7 @@
 
         if (!normalizedInviteCode)
         {
+
             throw new Error(
                 "초대코드를 입력해주세요."
             );
@@ -1853,12 +1855,15 @@
             await authenticatedFetch(
                 joinMeetingUrl,
                 {
+
                     method:
                         "POST",
 
                     headers: {
+
                         "Content-Type":
                             "application/json"
+
                     },
 
                     body:
@@ -1872,6 +1877,7 @@
 
         if (!response.ok)
         {
+
             const errorText =
                 await response.text();
 
@@ -1882,8 +1888,10 @@
 
             if (errorText)
             {
+
                 try
                 {
+
                     const errorBody =
                         JSON.parse(
                             errorText
@@ -1894,9 +1902,11 @@
                         errorBody.message
                         ||
                         errorMessage;
+
                 }
                 catch (error)
                 {
+
                     errorMessage =
                         errorText;
                 }
@@ -1941,6 +1951,7 @@
 
         if (!meetingId)
         {
+
             throw new Error(
                 "모임 ID를 확인할 수 없습니다."
             );
@@ -1972,6 +1983,7 @@
 
         if (autoEnter)
         {
+
             window.location.href =
                 targetPageUrl
                 +
@@ -2017,13 +2029,16 @@
 
         if (newlyJoined)
         {
+
             showHomeMessage(
                 "모임에 참가했습니다.",
                 "success"
             );
+
         }
         else
         {
+
             showHomeMessage(
                 "이미 참가 중인 모임입니다.",
                 "info"
@@ -3129,16 +3144,33 @@
                         async function()
                         {
 
-                            if (!meeting.meetingId)
+                            if (!meeting.inviteCode)
                             {
+
                                 showHomeMessage(
                                     "모임 정보를 확인할 수 없습니다.",
                                     "error"
                                 );
 
+
                                 return;
                             }
 
+                            // =========================================================
+                            // 기존 QUICK_VOTE 번개방
+                            //
+                            // 기존처럼 바로 참가 처리 후 모임방으로 이동
+                            // =========================================================
+
+                            if (!meeting.inviteCode)
+                            {
+                                showHomeMessage(
+                                    "초대코드를 확인할 수 없습니다.",
+                                    "error"
+                                );
+
+                                return;
+                            }
 
                             // =========================================================
                             // 고정 번개방
@@ -3172,19 +3204,11 @@
                             // 기존처럼 바로 참가 처리 후 모임방으로 이동
                             // =========================================================
 
-                            if (!meeting.inviteCode)
-                            {
-                                showHomeMessage(
-                                    "초대코드를 확인할 수 없습니다.",
-                                    "error"
-                                );
-
-                                return;
-                            }
 
 
                             try
                             {
+
                                 button.disabled =
                                     true;
 
@@ -3197,9 +3221,11 @@
                                     meeting.inviteCode,
                                     true
                                 );
+
                             }
                             catch (error)
                             {
+
                                 console.error(
                                     "[QUICK MEETING JOIN ERROR]",
                                     error
