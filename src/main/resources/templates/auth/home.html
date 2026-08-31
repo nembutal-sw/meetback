@@ -132,6 +132,13 @@
             </div>
 
 
+            <a class="home-create-link"
+               href="#meetingStartSection">
+                <span aria-hidden="true">＋</span>
+                모임 만들기
+            </a>
+
+
             <!-- =====================================================
                  사용자 정보
                  ===================================================== -->
@@ -228,6 +235,26 @@
 
         </div>
 
+        <div class="home-hero-stats"
+             aria-label="MeetBack 핵심 기능">
+
+            <div>
+                <strong>대중교통</strong>
+                <span>경로 기반 추천</span>
+            </div>
+
+            <div>
+                <strong>귀가시간</strong>
+                <span>안전 여유 계산</span>
+            </div>
+
+            <div>
+                <strong>실시간 투표</strong>
+                <span>모두의 선택 반영</span>
+            </div>
+
+        </div>
+
     </section>
 
 
@@ -266,7 +293,7 @@
                  새 모임 생성
                  ================================================= -->
 
-            <div class="meeting-card">
+            <div class="meeting-card meeting-card--create">
 
                 <h3>
                     새 모임 만들기
@@ -363,11 +390,12 @@
                             autocomplete="off">
 
 
-                    <div id="fixedPlaceSearchResults">
-                    </div>
+                    <div id="fixedPlaceSearchResults"
+                         aria-live="polite"></div>
 
 
-                    <div id="fixedPlaceSelected">
+                    <div id="fixedPlaceSelected"
+                         aria-live="polite">
                         선택된 장소 없음
                     </div>
 
@@ -480,7 +508,7 @@
                  초대코드 참가
                  ================================================= -->
 
-            <div class="meeting-card">
+            <div class="meeting-card meeting-card--join">
 
                 <h3>
                     초대코드로 참가
@@ -568,7 +596,7 @@
          지금 바로 번개
          ===================================================== -->
 
-    <section class="section">
+    <section class="section home-flash-section">
 
         <div class="quick-section-header">
 
@@ -604,7 +632,7 @@
          계정
          ===================================================== -->
 
-    <section class="section">
+    <section class="section home-account-section">
 
         <h2>
             계정

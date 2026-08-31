@@ -1,0 +1,217 @@
+/* Visual shell for the two developer-only realtime test pages. */
+
+.mb-debug-page {
+    --debug-background: var(--mb-background, var(--background, #FAF9F6));
+    --debug-foreground: var(--mb-foreground, var(--foreground, #1C1B2E));
+    --debug-card: var(--mb-card, var(--card, #FFFFFF));
+    --debug-primary: var(--mb-primary, var(--primary, #5B6AF0));
+    --debug-secondary: var(--mb-secondary, var(--secondary, #EEF0FF));
+    --debug-muted: var(--mb-muted, var(--muted, #F4F2EC));
+    --debug-muted-foreground: var(--mb-muted-foreground, var(--muted-foreground, #7B7A8E));
+    --debug-accent: var(--mb-accent, var(--accent, #FF7D54));
+    --debug-success: var(--mb-success, var(--success, #34C98A));
+    --debug-border: var(--mb-border, var(--border, rgba(0, 0, 0, 0.08)));
+    --debug-input: var(--mb-input, var(--input, #F4F2EC));
+    --debug-radius: var(--mb-radius, var(--radius, 0.875rem));
+    width: min(100%, 68rem);
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: clamp(1.25rem, 4vw, 3.5rem);
+    color: var(--debug-foreground);
+    background: var(--debug-background);
+}
+
+.mb-debug-page * {
+    box-sizing: border-box;
+}
+
+.mb-debug-page h1 {
+    margin: 0;
+    color: var(--debug-foreground);
+    font-size: clamp(1.55rem, 4vw, 2.25rem);
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.04em;
+}
+
+.mb-debug-page h1::before {
+    content: "DEV";
+    display: inline-flex;
+    margin-right: 0.65rem;
+    padding: 0.34rem 0.48rem;
+    vertical-align: 0.25em;
+    color: var(--debug-primary);
+    background: var(--debug-secondary);
+    border: 1px solid color-mix(in srgb, var(--debug-primary) 18%, var(--debug-border));
+    border-radius: 0.5rem;
+    font-family: var(--mb-font-mono, "DM Mono", monospace);
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+}
+
+.mb-debug-page h3 {
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.mb-debug-page > hr {
+    height: 1px;
+    margin: 1.5rem 0;
+    background: var(--debug-border);
+    border: 0;
+}
+
+.mb-debug-page > div,
+.mb-debug-page > pre,
+.mb-debug-page > textarea {
+    border-radius: var(--debug-radius);
+}
+
+.mb-debug-page > div:not(.debug-message-list) {
+    padding: 1rem;
+    background: var(--debug-card);
+    border: 1px solid var(--debug-border);
+    box-shadow: 0 0.55rem 1.7rem color-mix(in srgb, var(--debug-foreground) 5%, transparent);
+}
+
+.mb-debug-page label {
+    display: block;
+    margin-bottom: 0.45rem;
+    color: var(--debug-muted-foreground);
+    font-size: 0.78rem;
+    font-weight: 750;
+}
+
+.mb-debug-page :where(input, textarea) {
+    width: 100%;
+    min-height: 2.9rem;
+    padding: 0.72rem 0.9rem;
+    color: var(--debug-foreground);
+    caret-color: var(--debug-primary);
+    background: var(--debug-input);
+    border: 1px solid transparent;
+    border-radius: var(--debug-radius);
+    outline: none;
+    font: inherit;
+    font-size: 0.88rem;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.mb-debug-page textarea {
+    min-height: 9rem;
+    resize: vertical;
+    font-family: var(--mb-font-mono, "DM Mono", monospace);
+    line-height: 1.55;
+}
+
+.mb-debug-page :where(input, textarea):focus-visible {
+    background: var(--debug-card);
+    border-color: var(--debug-primary);
+    box-shadow: 0 0 0 0.22rem color-mix(in srgb, var(--debug-primary) 17%, transparent);
+}
+
+.mb-debug-page button {
+    min-height: 2.75rem;
+    margin: 0.55rem 0.35rem 0 0;
+    padding: 0.65rem 0.95rem;
+    color: #FFFFFF;
+    background: var(--debug-primary);
+    border: 1px solid var(--debug-primary);
+    border-radius: var(--debug-radius);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+}
+
+.mb-debug-page button + button {
+    color: var(--debug-primary);
+    background: var(--debug-secondary);
+    border-color: color-mix(in srgb, var(--debug-primary) 18%, var(--debug-border));
+}
+
+.mb-debug-page button:hover {
+    filter: brightness(0.96);
+    transform: translateY(-1px);
+    box-shadow: 0 0.55rem 1.1rem color-mix(in srgb, var(--debug-primary) 22%, transparent);
+}
+
+.mb-debug-page button:focus-visible {
+    outline: 0.2rem solid color-mix(in srgb, var(--debug-primary) 32%, transparent);
+    outline-offset: 0.18rem;
+}
+
+.mb-debug-page #connectionStatus,
+.mb-debug-page #status {
+    color: var(--debug-success);
+    font-family: var(--mb-font-mono, "DM Mono", monospace);
+    font-size: 0.82rem;
+}
+
+.mb-debug-page .debug-message-list,
+.mb-debug-page #log {
+    min-height: 16rem;
+    max-height: 28rem;
+    padding: 1rem;
+    overflow: auto;
+    color: var(--debug-foreground);
+    background: var(--debug-card);
+    border: 1px solid var(--debug-border);
+    font-family: var(--mb-font-mono, "DM Mono", monospace);
+    font-size: 0.8rem;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    box-shadow: inset 0 0 0 0.3rem var(--debug-muted);
+}
+
+.mb-debug-page #userInfo {
+    color: var(--debug-muted-foreground);
+    font-size: 0.84rem;
+    line-height: 1.6;
+}
+
+.page-chat-dev > div:has(#meetingId),
+.page-chat-dev > div:has(#messageInput) {
+    display: grid;
+    grid-template-columns: minmax(8rem, 1fr) auto auto;
+    gap: 0.55rem;
+    align-items: end;
+}
+
+.page-chat-dev > div:has(#meetingId) label {
+    grid-column: 1 / -1;
+}
+
+.page-chat-dev > div:has(#messageInput) button,
+.page-chat-dev > div:has(#meetingId) button {
+    margin: 0;
+}
+
+@media (max-width: 40rem) {
+    .mb-debug-page {
+        padding: 1.25rem 1rem 2rem;
+    }
+
+    .page-chat-dev > div:has(#meetingId),
+    .page-chat-dev > div:has(#messageInput) {
+        grid-template-columns: 1fr;
+    }
+
+    .page-chat-dev > div:has(#meetingId) label {
+        grid-column: auto;
+    }
+
+    .mb-debug-page button {
+        width: 100%;
+        margin-right: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mb-debug-page * {
+        transition-duration: 0.01ms;
+    }
+}
