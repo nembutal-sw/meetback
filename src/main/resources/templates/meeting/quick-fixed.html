@@ -3309,6 +3309,26 @@
     }
 
     // =========================================================
+    // 사용자가 채팅 맨 아래 근처를 보고 있는지 확인
+    // =========================================================
+
+    function isChatNearBottom(
+        area
+    )
+    {
+        const threshold =
+            80;
+
+        const distanceFromBottom =
+            area.scrollHeight
+            - area.scrollTop
+            - area.clientHeight;
+
+        return distanceFromBottom
+            <= threshold;
+    }
+
+    // =========================================================
     // 채팅 메시지 화면 추가
     // =========================================================
 
@@ -3321,24 +3341,75 @@
                 "chatMessages"
             );
 
+        if (!area)
+        {
+            return;
+        }
+
+
+        /*
+         * 메시지를 추가하기 전에
+         * 사용자가 맨 아래를 보고 있었는지 확인한다.
+         */
+        const shouldAutoScroll =
+            isChatNearBottom(
+                area
+            );
+
+
         const row =
             document.createElement(
                 "div"
             );
 
-        if (chatMessage.messageType === "SYSTEM")
+
+        if (
+            chatMessage.messageType
+            ===
+            "SYSTEM"
+        )
         {
             row.className =
                 "chat-message system";
 
-            row.textContent =
-                "📢 "
-                +
-                (
-                    chatMessage.content
+
+            /*
+             * 참가 시스템 메시지는
+             * 이벤트를 발생시킨 참가자의 닉네임을 표시한다.
+             */
+            if (
+                chatMessage.eventType
+                ===
+                "PARTICIPANT_JOINED"
+            )
+            {
+                const nickname =
+                    chatMessage.nickname
                     ||
-                    ""
-                );
+                    "참가자";
+
+                row.textContent =
+                    nickname
+                    +
+                    "님이 "
+                    +
+                    (
+                        chatMessage.content
+                        ||
+                        "모임에 참가했습니다."
+                    );
+            }
+            else
+            {
+                row.textContent =
+                    "📢 "
+                    +
+                    (
+                        chatMessage.content
+                        ||
+                        ""
+                    );
+            }
         }
         else
         {
@@ -3355,6 +3426,7 @@
                 ||
                 "참가자";
 
+
             const content =
                 document.createElement(
                     "span"
@@ -3369,6 +3441,7 @@
                     ""
                 );
 
+
             row.appendChild(
                 nickname
             );
@@ -3378,12 +3451,21 @@
             );
         }
 
+
         area.appendChild(
             row
         );
 
-        area.scrollTop =
-            area.scrollHeight;
+
+        /*
+         * 기존에 맨 아래를 보고 있었을 때만
+         * 새 메시지를 따라 내려간다.
+         */
+        if (shouldAutoScroll)
+        {
+            area.scrollTop =
+                area.scrollHeight;
+        }
     }
 
 
