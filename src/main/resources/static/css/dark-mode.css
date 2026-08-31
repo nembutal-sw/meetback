@@ -1,0 +1,218 @@
+:root[data-theme="dark"],
+:root.dark {
+    color-scheme: dark;
+
+    --mb-background: #0F0F1C;
+    --mb-foreground: #EEEDF8;
+    --mb-card: #18182C;
+    --mb-card-foreground: #EEEDF8;
+    --mb-popover: #18182C;
+    --mb-popover-foreground: #EEEDF8;
+    --mb-primary: #7B8BF8;
+    --mb-primary-foreground: #0F0F1C;
+    --mb-secondary: #22223A;
+    --mb-secondary-foreground: #EEEDF8;
+    --mb-muted: #22223A;
+    --mb-muted-foreground: #8888A8;
+    --mb-accent: #FF7D54;
+    --mb-accent-foreground: #FFFFFF;
+    --mb-success: #34C98A;
+    --mb-warning: #F5A623;
+    --mb-pink: #E070B8;
+    --mb-danger: #EF4444;
+    --mb-danger-foreground: #FFFFFF;
+    --mb-border: rgba(255, 255, 255, 0.09);
+    --mb-input: #22223A;
+    --mb-switch: #33335A;
+    --mb-ring: #7B8BF8;
+    --mb-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.40), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    --mb-hero: linear-gradient(135deg, #0F0F1C 0%, #1A1830 55%, #1C1428 100%);
+    --mb-header: rgba(15, 15, 28, 0.92);
+
+    --primary: var(--mb-primary);
+    --primary-dark: var(--mb-primary);
+    --primary-light: var(--mb-secondary);
+    --primary-soft: var(--mb-secondary);
+    --text: var(--mb-foreground);
+    --text-main: var(--mb-foreground);
+    --text-sub: var(--mb-muted-foreground);
+    --text-soft: var(--mb-muted-foreground);
+    --text-muted: var(--mb-muted-foreground);
+    --background: var(--mb-background);
+    --card: var(--mb-card);
+    --border: var(--mb-border);
+    --success: var(--mb-success);
+    --success-bg: rgba(52, 201, 138, 0.13);
+    --danger: var(--mb-danger);
+    --danger-bg: rgba(239, 68, 68, 0.13);
+    --warning: var(--mb-warning);
+    --warning-bg: rgba(245, 166, 35, 0.13);
+
+    --mb-primary-strong: var(--mb-primary);
+    --mb-primary-soft: var(--mb-primary);
+    --mb-primary-pale: var(--mb-secondary);
+    --mb-text: var(--mb-foreground);
+    --mb-text-soft: var(--mb-muted-foreground);
+    --mb-text-muted: var(--mb-muted-foreground);
+    --mb-bg: var(--mb-background);
+    --mb-surface: var(--mb-card);
+    --mb-surface-soft: var(--mb-muted);
+    --mb-border-strong: rgba(255, 255, 255, 0.15);
+    --mb-success-bg: rgba(52, 201, 138, 0.13);
+    --mb-danger-bg: rgba(239, 68, 68, 0.13);
+    --mb-info: var(--mb-primary);
+    --mb-info-bg: var(--mb-secondary);
+}
+
+:root[data-theme="dark"],
+:root[data-theme="dark"] body,
+:root.dark,
+:root.dark body {
+    background-color: var(--mb-background);
+}
+
+:root[data-theme="dark"] body::before,
+:root.dark body::before {
+    background: var(--mb-background) !important;
+}
+
+:root[data-theme="dark"] body::after,
+:root.dark body::after {
+    opacity: 0.18;
+}
+
+:root[data-theme="dark"] .mb-page,
+:root.dark .mb-page {
+    color: var(--mb-foreground);
+    background: var(--mb-background);
+}
+
+:root[data-theme="dark"] .mb-page :where(h1, h2, h3, h4, strong, label),
+:root.dark .mb-page :where(h1, h2, h3, h4, strong, label) {
+    color: var(--mb-foreground);
+}
+
+:root[data-theme="dark"] .mb-page :where(p, small, .description, .section-description, .field-description, .info-label),
+:root.dark .mb-page :where(p, small, .description, .section-description, .field-description, .info-label) {
+    color: var(--mb-muted-foreground);
+}
+
+:root[data-theme="dark"] .mb-page :where(
+    .card,
+    .section,
+    .room-card,
+    .meeting-card,
+    .result-card,
+    .final-card,
+    .place-card,
+    .place-box,
+    .result-item-box,
+    .summary-item,
+    .info-item,
+    .participant-result,
+    .feed-card,
+    .feed-detail-dialog,
+    .login-container,
+    .signup-container,
+    .find-email-container,
+    .forgot-password-container,
+    .reset-password-container,
+    .kakao-login-container,
+    .confirm-modal,
+    .kick-modal-box,
+    .route-map-modal-content
+) {
+    color: var(--mb-foreground);
+    border-color: var(--mb-border) !important;
+    background: var(--mb-card) !important;
+    box-shadow: var(--mb-shadow-card) !important;
+}
+
+:root[data-theme="dark"] .mb-page :where(input, select, textarea),
+:root.dark .mb-page :where(input, select, textarea) {
+    color: var(--mb-foreground) !important;
+    border-color: var(--mb-border) !important;
+    background: var(--mb-input) !important;
+}
+
+:root[data-theme="dark"] .mb-page :where(button, .home-button, .back-button, .cancel-button),
+:root.dark .mb-page :where(button, .home-button, .back-button, .cancel-button) {
+    color: var(--mb-foreground);
+    border-color: var(--mb-border);
+    background: var(--mb-muted);
+    box-shadow: none;
+}
+
+:root[data-theme="dark"] .mb-page :where(.primary, .primary-button, button[type="submit"]),
+:root.dark .mb-page :where(.primary, .primary-button, button[type="submit"]) {
+    color: var(--mb-primary-foreground) !important;
+    border-color: transparent !important;
+    background: var(--mb-primary) !important;
+}
+
+:root[data-theme="dark"] .mb-page :where(.quick-search-button, .join-button, .chat-send-button),
+:root.dark .mb-page :where(.quick-search-button, .join-button, .chat-send-button) {
+    border-color: transparent;
+}
+
+:root[data-theme="dark"] .home-header,
+:root.dark .home-header {
+    color: var(--mb-foreground);
+    border-color: var(--mb-border) !important;
+    background: var(--mb-header) !important;
+}
+
+:root[data-theme="dark"] .home-hero,
+:root.dark .home-hero {
+    color: var(--mb-foreground);
+    background: var(--mb-hero) !important;
+}
+
+:root[data-theme="dark"] .mb-page table,
+:root.dark .mb-page table {
+    color: var(--mb-foreground);
+    border-color: var(--mb-border);
+    background: var(--mb-card);
+}
+
+:root[data-theme="dark"] .mb-page :where(th, thead),
+:root.dark .mb-page :where(th, thead) {
+    color: var(--mb-muted-foreground);
+    background: var(--mb-muted);
+}
+
+:root[data-theme="dark"] .mb-page :where(td, th),
+:root.dark .mb-page :where(td, th) {
+    border-color: var(--mb-border);
+}
+
+:root[data-theme="dark"] .mb-page :where(.confirm-overlay, .feed-detail-modal, .kick-modal, .route-map-modal),
+:root.dark .mb-page :where(.confirm-overlay, .feed-detail-modal, .kick-modal, .route-map-modal) {
+    background: rgba(0, 0, 0, 0.62);
+}
+
+:root[data-theme="dark"] .mb-page :where(.message, [id$="Message"]).success,
+:root.dark .mb-page :where(.message, [id$="Message"]).success {
+    color: #8CE5BC;
+    background: rgba(52, 201, 138, 0.13);
+}
+
+:root[data-theme="dark"] .mb-page :where(.message, [id$="Message"]).error,
+:root.dark .mb-page :where(.message, [id$="Message"]).error {
+    color: #FCA5A5;
+    background: rgba(239, 68, 68, 0.13);
+}
+
+:root[data-theme="dark"] .mb-page .route-map,
+:root.dark .mb-page .route-map {
+    background: var(--mb-muted);
+}
+
+:root[data-theme="dark"] .page-home .section,
+:root.dark .page-home .section,
+:root[data-theme="dark"] .page-quick-meetings .section,
+:root.dark .page-quick-meetings .section {
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
