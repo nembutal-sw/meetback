@@ -164,31 +164,43 @@
             resultType="com.meetback.dev.dto.QuickMeetingResponse">
 
         SELECT
-            m.meeting_id AS meetingId,
-            m.title AS title,
-            m.invite_code AS inviteCode,
-            m.meeting_type AS meetingType,
-            m.meeting_start_at AS meetingStartAt,
-            m.desired_end_at AS desiredEndAt,
+        m.meeting_id AS meetingId,
+        m.title AS title,
+        m.invite_code AS inviteCode,
+        m.meeting_type AS meetingType,
+        m.meeting_start_at AS meetingStartAt,
+        m.desired_end_at AS desiredEndAt,
 
-            COALESCE(
-            participant_count.currentParticipants,
-            0
-            ) AS currentParticipants,
+        COALESCE(
+        participant_count.currentParticipants,
+        0
+        ) AS currentParticipants,
 
-            m.max_participants AS maxParticipants,
+        m.max_participants AS maxParticipants,
 
-            fixed_candidate.place_name AS fixedPlaceName,
-            fixed_candidate.address AS fixedPlaceAddress,
-            u.nickname AS hostNickname
+        fixed_candidate.place_name AS fixedPlaceName,
+        fixed_candidate.address AS fixedPlaceAddress,
+        u.nickname AS hostNickname,
+
+        CASE
+        WHEN EXISTS (
+        SELECT 1
+        FROM meeting_participants my_mp
+        WHERE my_mp.meeting_id = m.meeting_id
+        AND my_mp.user_id = #{userId}
+        AND my_mp.participant_status = 'ACTIVE'
+        )
+        THEN TRUE
+        ELSE FALSE
+        END AS isParticipant
 
         FROM meetings m
 
         JOIN users u
-          ON u.user_id = m.host_user_id
+        ON u.user_id = m.host_user_id
 
         LEFT JOIN meeting_candidates fixed_candidate
-          ON fixed_candidate.candidate_id = m.final_candidate_id
+        ON fixed_candidate.candidate_id = m.final_candidate_id
 
         LEFT JOIN (
         SELECT

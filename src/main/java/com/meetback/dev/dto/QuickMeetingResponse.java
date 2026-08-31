@@ -15,6 +15,7 @@ public record QuickMeetingResponse(
         Integer maxParticipants,
         String fixedPlaceName,
         String fixedPlaceAddress,
-        String hostNickname
+        String hostNickname,
+        Boolean isParticipant
 ) {
 }
