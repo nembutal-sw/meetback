@@ -1079,12 +1079,15 @@
     gap: 8px;
 }
 
-.page-meeting-room .leave-meeting-button,
 .page-meeting-room .participant-kick-button,
 .page-meeting-room .participant-kick-cancel-button {
-    border-color: rgba(226, 85, 85, 0.24);
-    background: rgba(226, 85, 85, 0.09);
-    color: var(--_mb-danger);
+    min-height: 32px;
+    margin-left: auto;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
 }
 
 .page-meeting-room > .room-card {
@@ -1174,7 +1177,8 @@
 
 .page-meeting-room .presence-badge.offline,
 .page-meeting-room .waiting {
-    background: var(--_mb-muted);
+    border: 1px solid rgba(239, 68, 68, 0.24);
+    background: rgba(239, 68, 68, 0.09);
     color: var(--_mb-muted-foreground);
 }
 
@@ -2252,4 +2256,44 @@
     .page-quick-meetings .home-container {
         padding-top: 24px;
     }
+}
+
+/* =========================================================
+   투표형/친구방 모임 유형 및 초대코드
+   ========================================================= */
+
+.page-meeting-room .meeting-meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.page-meeting-room .meeting-type-badge,
+.page-meeting-room .invite-code-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    margin: 0;
+    padding: 0 12px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.page-meeting-room .meeting-type-badge {
+    border: 1px solid rgba(255, 125, 84, 0.2);
+    background: rgba(255, 125, 84, 0.13);
+    color: var(--_mb-accent);
+}
+
+.page-meeting-room .invite-code-button {
+    margin-top: 0;
+    border-color: rgba(91, 106, 240, 0.18);
+    background: var(--_mb-secondary);
+    color: var(--_mb-primary);
 }

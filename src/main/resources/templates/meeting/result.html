@@ -308,6 +308,8 @@
     let meetingId = null;
     let currentUser = null;
 
+    let kickRedirecting = false;
+
     let rankings = [];
     let finalCandidate = null;
 
@@ -345,11 +347,64 @@
 
 
         MeetBackPresence.connect(
-            meetingId
+            meetingId,
+            handleMeetingEvent
         );
 
 
         await loadResult();
+    }
+
+
+    async function handleMeetingEvent(
+        data
+    ) {
+
+        if (
+            kickRedirecting
+            ||
+            !data
+            ||
+            data.messageType !== "EVENT"
+            ||
+            data.eventType !== "PARTICIPANT_KICKED"
+            ||
+            Number(data.userId) !== Number(currentUser.userId)
+        ) {
+
+            return;
+        }
+
+
+        kickRedirecting =
+            true;
+
+
+        const toast =
+            document.getElementById(
+                "toastMessage"
+            );
+
+
+        toast.textContent =
+            "모임에서 강퇴되었습니다.";
+
+        toast.className =
+            "toast toast-error show";
+
+
+        await MeetBackPresence.disconnect();
+
+
+        setTimeout(
+            () =>
+            {
+                location.replace(
+                    "/home"
+                );
+            },
+            1500
+        );
     }
 
 

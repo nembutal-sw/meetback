@@ -139,15 +139,6 @@
             MeetBack
         </h1>
 
-        <button
-                type="button"
-                class="home-button"
-                onclick="goHome()">
-
-            홈으로
-
-        </button>
-
     </div>
 
 
@@ -163,97 +154,124 @@
 
     <div class="card">
 
-        <div
-                id="meetingTitle"
-                class="meeting-title">
+        <!-- 왼쪽 모임 정보 -->
+        <div class="meeting-main">
 
-            모임 정보를 불러오는 중...
+            <div
+                    id="meetingTitle"
+                    class="meeting-title">
 
-        </div>
+                모임 정보를 불러오는 중...
 
-
-        <div class="meeting-type">
-            ⚡ 고정 번개방
-        </div>
+            </div>
 
 
-        <div class="info-grid">
+            <!-- 방 유형과 초대코드를 한 줄로 배치 -->
+            <div class="meeting-meta-row">
 
-            <div class="info-item">
-
-                <div class="info-label">
-                    모임 시작시간
+                <div class="meeting-type">
+                    ⚡ 고정 번개방
                 </div>
 
-                <div
-                        id="meetingStartAt"
-                        class="info-value">
 
+                <button
+                        type="button"
+                        id="inviteCodeButton"
+                        class="invite-button"
+                        onclick="copyInviteUrl()"
+                        disabled>
+
+                    🔗 초대코드
+                    <span id="inviteCode">
                     -
+                </span>
+
+                </button>
+
+            </div>
+
+
+            <div class="info-grid">
+
+                <div class="info-item">
+
+                    <div class="info-label">
+                        모임 시작시간
+                    </div>
+
+                    <div
+                            id="meetingStartAt"
+                            class="info-value">
+
+                        -
+
+                    </div>
+
+                </div>
+
+
+                <div class="info-item">
+
+                    <div class="info-label">
+                        희망 종료시간
+                    </div>
+
+                    <div
+                            id="desiredEndAt"
+                            class="info-value">
+
+                        -
+
+                    </div>
 
                 </div>
 
             </div>
 
-
-            <div class="info-item">
-
-                <div class="info-label">
-                    희망 종료시간
-                </div>
-
-                <div
-                        id="desiredEndAt"
-                        class="info-value">
-
-                    -
-
-                </div>
-
-            </div>
-
         </div>
 
 
-        <button
-                type="button"
-                id="inviteCodeButton"
-                class="invite-button"
-                onclick="copyInviteUrl()"
-                disabled>
+        <!-- 오른쪽 버튼 영역 -->
+        <div class="room-actions">
 
-            🔗 초대코드
-            <span id="inviteCode">
-                -
-            </span>
+            <button
+                    type="button"
+                    id="closeRecruitmentButton"
+                    class="close-recruitment-button"
+                    onclick="closeRecruitment()"
+                    hidden>
 
-        </button>
+                참가 마감
 
-
-        <button
-                type="button"
-                id="leaveMeetingButton"
-                class="leave-button"
-                onclick="leaveMeeting()"
-                hidden>
-
-            방 나가기
-
-        </button>
+            </button>
 
 
-        <button
-                type="button"
-                id="closeRecruitmentButton"
-                class="close-recruitment-button"
-                onclick="closeRecruitment()"
-                hidden>
+            <button
+                    type="button"
+                    id="leaveMeetingButton"
+                    class="leave-button"
+                    onclick="leaveMeeting()"
+                    hidden>
 
-            참가 마감
+                방 나가기
 
-        </button>
+            </button>
+
+
+            <button
+                    type="button"
+                    class="home-button"
+                    onclick="goHome()">
+
+                홈으로
+
+            </button>
+
+        </div>
 
     </div>
+
+
 
 
     <!-- =========================================================
@@ -2272,7 +2290,7 @@
                     );
 
                 item.className =
-                    "participant-item";
+                    "participant-card";
 
                 const host =
                     Number(participant.userId)
@@ -2298,32 +2316,46 @@
 
                 item.innerHTML =
                     `
-                    <span class="participant-name">
-                        ${host ? "👑 " : ""}
-                        ${MeetBack.escapeHtml(nickname)}
-                        ${me ? " (나)" : ""}
-                    </span>
+                    <div class="participant-card-top">
 
-                    <span class="
-                        presence-badge
-                        ${participant.online ? "online" : "offline"}
-                    ">
-                        ${participant.online ? "● ON" : "● OFF"}
-                    </span>
+                        <strong class="participant-name">
+                            ${host ? "👑 " : ""}
+                            ${MeetBack.escapeHtml(nickname)}
+                            ${me ? " (나)" : ""}
+                        </strong>
 
-                    ${
-                        canKick
-                            ? `
-                                <button
-                                        type="button"
-                                        class="participant-kick-button">
+                        <span
+                                id="presence-user-${participant.userId}"
+                                class="
+                                    presence-badge
+                                    ${participant.online ? "online" : "offline"}
+                                ">
 
-                                    강퇴
+                            <span class="presence-dot"></span>
 
-                                </button>
-                              `
-                            : ""
-                    }
+                            <span class="presence-text">
+                                ${participant.online ? "ON" : "OFF"}
+                            </span>
+
+                        </span>
+
+                    </div>
+
+                    <div class="participant-card-bottom">
+
+                        ${
+                                        canKick
+                                            ? `
+                                    <button
+                                            type="button"
+                                            class="participant-kick-button">
+                                        강퇴
+                                    </button>
+                                  `
+                                            : ""
+                                    }
+
+                    </div>
                     `;
 
 

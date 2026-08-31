@@ -17,7 +17,13 @@
             defer>
     </script>
 
+    <script
+            src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js">
+    </script>
+
     <script src="/js/meeting-common.js"></script>
+
+    <script src="/js/meeting-presence.js"></script>
 
 
     <!-- =========================================================
@@ -559,6 +565,8 @@
 
     let meetingId = null;
 
+    let currentUser = null;
+
     let meeting = null;
 
     let selectedReturn = null;
@@ -572,6 +580,8 @@
     let fromRoom = false;
 
     let fromCreate = false;
+
+    let kickRedirecting = false;
 
 
     // =========================================================
@@ -639,11 +649,11 @@
     {
         try
         {
-            const user =
+            currentUser =
                 await MeetBack.checkLogin();
 
 
-            if (!user)
+            if (!currentUser)
             {
                 return;
             }
@@ -685,6 +695,11 @@
 
             if (fromRoom)
             {
+                MeetBackPresence.connect(
+                    meetingId,
+                    handleMeetingEvent
+                );
+
                 document.getElementById(
                     "meetingTypeLabel"
                 ).textContent =
@@ -768,6 +783,51 @@
                 "error"
             );
         }
+    }
+
+
+    async function handleMeetingEvent(
+        data
+    )
+    {
+        if (
+            kickRedirecting
+            ||
+            !data
+            ||
+            data.messageType !== "EVENT"
+            ||
+            data.eventType !== "PARTICIPANT_KICKED"
+            ||
+            Number(data.userId) !== Number(currentUser.userId)
+        )
+        {
+            return;
+        }
+
+
+        kickRedirecting =
+            true;
+
+
+        showMessage(
+            "모임에서 강퇴되었습니다.",
+            "error"
+        );
+
+
+        await MeetBackPresence.disconnect();
+
+
+        setTimeout(
+            () =>
+            {
+                location.replace(
+                    "/home"
+                );
+            },
+            1500
+        );
     }
 
 
