@@ -5,23 +5,17 @@
 :root {
     --primary: #635bff;
     --primary-dark: #5147f6;
-
     --text: #17182c;
     --text-soft: #6c7080;
     --text-muted: #989baa;
-
     --border: #dfe1ec;
     --danger: #d95353;
-
     --card-bg: rgba(255, 255, 255, 0.96);
-
     --input-bg: #ffffff;
     --input-border: #dfe1ec;
-
     --google-bg: #ffffff;
     --google-text: #242424;
     --google-border: #d9dce5;
-
     --divider: #dfe1ec;
 }
 
@@ -34,21 +28,17 @@
     box-sizing: border-box;
 }
 
-
 html,
 body {
     margin: 0;
     min-height: 100%;
 }
 
-
 body {
     min-height: 100vh;
-
     display: flex;
     justify-content: center;
     align-items: center;
-
     padding: 40px 20px;
 
     font-family:
@@ -92,22 +82,16 @@ html.dark,
 body.dark,
 html.dark-mode,
 body.dark-mode {
-
     --text: #f4f3ff;
     --text-soft: #aaa9bd;
     --text-muted: #9695aa;
-
     --border: #3d3d56;
-
     --card-bg: #18182b;
-
     --input-bg: #24243a;
     --input-border: #3e3e59;
-
     --google-bg: #202020;
     --google-text: #f5f5f5;
     --google-border: #484848;
-
     --divider: #3a3a50;
 }
 
@@ -122,7 +106,6 @@ html.dark body,
 body.dark,
 html.dark-mode body,
 body.dark-mode {
-
     background:
             radial-gradient(
                     circle at 82% 12%,
@@ -149,14 +132,11 @@ body.dark-mode {
 
 .login-container {
     position: relative;
-
     width: 100%;
     max-width: 500px;
-
     padding: 44px;
 
     background: var(--card-bg);
-
     border: 1px solid #e5e5f0;
     border-radius: 24px;
 
@@ -176,7 +156,6 @@ html.dark .login-container,
 body.dark .login-container,
 html.dark-mode .login-container,
 body.dark-mode .login-container {
-
     border-color: #303049;
 
     box-shadow:
@@ -189,15 +168,11 @@ body.dark-mode .login-container {
 
 .login-container::before {
     content: "";
-
     position: absolute;
-
     top: -110px;
     right: -100px;
-
     width: 250px;
     height: 250px;
-
     border-radius: 50%;
 
     background:
@@ -218,39 +193,28 @@ body.dark-mode .login-container {
 
 .login-container > h1 {
     position: relative;
-
     margin: 0 0 38px;
-
     padding-left: 34px;
 
     color: var(--text);
-
     font-size: 30px;
     font-weight: 800;
-
     letter-spacing: -1.2px;
 }
 
-
 .login-container > h1::before {
     content: "";
-
     position: absolute;
-
     left: 0;
     top: 7px;
-
     width: 21px;
     height: 21px;
-
     border: 6px solid var(--primary);
     border-radius: 50%;
 }
 
-
 .login-container > h1::after {
     content: ".";
-
     color: var(--primary);
 }
 
@@ -273,10 +237,8 @@ body.dark-mode .login-container {
 #loginForm {
     display: flex;
     flex-direction: column;
-
     gap: 20px;
 }
-
 
 #loginForm > div:not(#loginMessage) {
     width: 100%;
@@ -289,15 +251,11 @@ body.dark-mode .login-container {
 
 #loginForm label {
     display: block;
-
     margin-bottom: 9px;
-
     color: #3d4052;
-
     font-size: 14px;
     font-weight: 700;
 }
-
 
 html[data-theme="dark"] #loginForm label,
 body[data-theme="dark"] #loginForm label,
@@ -316,19 +274,15 @@ body.dark-mode #loginForm label {
 #loginForm input[type="email"],
 #loginForm input[type="password"] {
     display: block;
-
     width: 100%;
     height: 50px;
-
     padding: 0 15px;
 
     color: var(--text);
-
     background: var(--input-bg);
 
     border: 1px solid var(--input-border);
     border-radius: 12px;
-
     outline: none;
 
     font-size: 14px;
@@ -340,11 +294,9 @@ body.dark-mode #loginForm label {
             color 0.25s ease;
 }
 
-
 #loginForm input::placeholder {
     color: #adb0be;
 }
-
 
 html[data-theme="dark"] #loginForm input::placeholder,
 body[data-theme="dark"] #loginForm input::placeholder,
@@ -355,12 +307,10 @@ body.dark-mode #loginForm input::placeholder {
     color: #9291a6;
 }
 
-
 #loginForm input[type="email"]:hover,
 #loginForm input[type="password"]:hover {
     border-color: #7775ad;
 }
-
 
 #loginForm input[type="email"]:focus,
 #loginForm input[type="password"]:focus {
@@ -378,11 +328,9 @@ body.dark-mode #loginForm input::placeholder {
 
 #loginMessage {
     color: var(--danger);
-
     font-size: 13px;
     line-height: 1.5;
 }
-
 
 #loginMessage:empty {
     display: none;
@@ -396,7 +344,6 @@ body.dark-mode #loginForm input::placeholder {
 #loginForm > button[type="submit"] {
     width: 100%;
     height: 50px;
-
     margin-top: 2px;
 
     color: #ffffff;
@@ -413,7 +360,6 @@ body.dark-mode #loginForm input::placeholder {
 
     font-size: 14px;
     font-weight: 700;
-
     cursor: pointer;
 
     box-shadow:
@@ -424,7 +370,6 @@ body.dark-mode #loginForm input::placeholder {
             transform 0.16s ease,
             box-shadow 0.16s ease;
 }
-
 
 #loginForm > button[type="submit"]:hover {
     transform: translateY(-1px);
@@ -441,28 +386,20 @@ body.dark-mode #loginForm input::placeholder {
 
 #loginForm ~ div:not(.social-login-container) {
     margin-top: 22px;
-
     text-align: center;
-
     font-size: 13px;
 }
 
-
 #loginForm ~ div:not(.social-login-container):has(a[href*="signup"])::before {
     content: "아직 계정이 없으신가요? ";
-
     color: var(--text-soft);
 }
 
-
 #loginForm ~ div:not(.social-login-container) a {
     color: var(--primary);
-
     font-weight: 700;
-
     text-decoration: none;
 }
-
 
 #loginForm ~ div:not(.social-login-container) a:hover {
     text-decoration: underline;
@@ -475,18 +412,13 @@ body.dark-mode #loginForm input::placeholder {
 
 .social-login-container {
     width: 100% !important;
-
     margin-top: 30px !important;
-
     padding: 28px 0 0 !important;
 
     background: transparent !important;
-
     border: 0 !important;
     border-top: 1px solid var(--divider) !important;
-
     border-radius: 0 !important;
-
     box-shadow: none !important;
 }
 
@@ -497,9 +429,7 @@ body.dark-mode #loginForm input::placeholder {
 
 .social-login-title {
     display: flex !important;
-
     align-items: center !important;
-
     gap: 14px !important;
 
     width: 100% !important;
@@ -512,28 +442,21 @@ body.dark-mode #loginForm input::placeholder {
     padding: 0 !important;
 
     color: var(--text-muted) !important;
-
     background: transparent !important;
-
     border: none !important;
 
     font-size: 12px !important;
     font-weight: 700 !important;
-
     text-align: center !important;
 
     white-space: nowrap;
 }
 
-
 .social-login-title::before,
 .social-login-title::after {
     content: "";
-
     flex: 1;
-
     height: 1px;
-
     background: var(--divider);
 }
 
@@ -549,23 +472,19 @@ body.dark-mode #loginForm input::placeholder {
     margin:
             0
             auto
-            12px !important;
+            0 !important;
 
     padding: 0 !important;
 
     background: transparent !important;
-
     border: 0 !important;
-
     box-shadow: none !important;
 }
-
 
 #kakaoLoginLink {
     position: relative !important;
 
     display: flex !important;
-
     align-items: center !important;
     justify-content: center !important;
 
@@ -577,7 +496,6 @@ body.dark-mode #loginForm input::placeholder {
             55px !important;
 
     color: #191919 !important;
-
     background: #fee500 !important;
 
     border: 1px solid #fee500 !important;
@@ -585,16 +503,13 @@ body.dark-mode #loginForm input::placeholder {
 
     font-size: 14px !important;
     font-weight: 700 !important;
-
     text-decoration: none !important;
 
     cursor: pointer;
 }
 
-
 .kakao-logo {
     position: absolute !important;
-
     left: 18px !important;
     top: 50% !important;
 
@@ -604,10 +519,8 @@ body.dark-mode #loginForm input::placeholder {
     transform: translateY(-50%) !important;
 }
 
-
 .kakao-login-text {
     color: #191919 !important;
-
     font-size: 14px !important;
     font-weight: 700 !important;
 }
@@ -621,27 +534,24 @@ body.dark-mode #loginForm input::placeholder {
     position: relative;
 
     display: flex !important;
-
     align-items: center !important;
     justify-content: center !important;
 
     width: 100% !important;
     max-width: 400px !important;
-
     height: 48px !important;
 
     margin:
-            0
-            auto !important;
+            10px
+            auto
+            0 !important;
 
     padding: 0 !important;
 
     overflow: hidden !important;
 
     background: transparent !important;
-
     border: 0 !important;
-
     border-radius: 10px !important;
 }
 
@@ -652,13 +562,10 @@ body.dark-mode #loginForm input::placeholder {
 
 .google-custom-button {
     position: absolute;
-
     inset: 0;
-
     z-index: 1;
 
     display: flex;
-
     align-items: center;
     justify-content: center;
 
@@ -670,7 +577,6 @@ body.dark-mode #loginForm input::placeholder {
             55px;
 
     color: var(--google-text);
-
     background: var(--google-bg);
 
     border: 1px solid var(--google-border);
@@ -678,7 +584,6 @@ body.dark-mode #loginForm input::placeholder {
 
     font-size: 14px;
     font-weight: 600;
-
     line-height: 1;
 
     /*
@@ -692,7 +597,6 @@ body.dark-mode #loginForm input::placeholder {
 
 .google-custom-logo {
     position: absolute;
-
     left: 18px;
     top: 50%;
 
@@ -701,7 +605,6 @@ body.dark-mode #loginForm input::placeholder {
 
     transform: translateY(-50%);
 }
-
 
 .google-custom-text {
     display: block;
@@ -718,25 +621,19 @@ html.dark .google-custom-button,
 body.dark .google-custom-button,
 html.dark-mode .google-custom-button,
 body.dark-mode .google-custom-button {
-
     color: #f4f4f4;
-
     background: #202020;
-
     border-color: #484848;
 }
 
 
 /* =========================================================
    ★ 실제 Google 로그인 클릭 레이어
-   ★ 이번에 수정한 핵심
    ========================================================= */
 
 #googleOfficialButton {
     position: absolute !important;
-
     inset: 0 !important;
-
     z-index: 10 !important;
 
     display: block !important;
@@ -747,34 +644,24 @@ body.dark-mode .google-custom-button {
     margin: 0 !important;
     padding: 0 !important;
 
-    /*
-     * 0으로 두면 클릭이 안 먹는 문제가 있어서
-     * 거의 보이지 않는 0.01 상태로 유지
-     */
     opacity: 0.01 !important;
-
     visibility: visible !important;
 
     pointer-events: auto !important;
-
     cursor: pointer !important;
 
     overflow: hidden !important;
 
     background: transparent !important;
-
     border: 0 !important;
 }
 
-
 #googleOfficialButton > div {
     position: absolute !important;
-
     inset: 0 !important;
 
     width: 100% !important;
     max-width: 100% !important;
-
     height: 48px !important;
 
     margin: 0 !important;
@@ -783,17 +670,14 @@ body.dark-mode .google-custom-button {
     pointer-events: auto !important;
 }
 
-
 #googleOfficialButton iframe {
     position: absolute !important;
-
     inset: 0 !important;
 
     display: block !important;
 
     width: 100% !important;
     max-width: 100% !important;
-
     height: 48px !important;
 
     margin: 0 !important;
@@ -802,9 +686,7 @@ body.dark-mode .google-custom-button {
     border: 0 !important;
 
     visibility: visible !important;
-
     pointer-events: auto !important;
-
     cursor: pointer !important;
 }
 
@@ -817,12 +699,11 @@ body.dark-mode .google-custom-button {
     width: 100%;
     max-width: 400px;
 
-    margin: 0 auto;
+    margin: 10px auto 0;
 
     padding: 11px 13px;
 
     color: var(--text-soft);
-
     background: var(--input-bg);
 
     border:
@@ -833,7 +714,6 @@ body.dark-mode .google-custom-button {
 
     font-size: 12px;
     line-height: 1.6;
-
     text-align: center;
 }
 
@@ -849,15 +729,12 @@ body.dark-mode .google-custom-button {
 
     font-size: 13px;
     line-height: 1.5;
-
     text-align: center;
 }
-
 
 #socialMessage:empty {
     display: none;
 }
-
 
 #socialMessage:not(:empty) {
     padding: 10px 12px;
@@ -871,18 +748,14 @@ body.dark-mode .google-custom-button {
     border-radius: 9px;
 }
 
-
 html[data-theme="dark"] #socialMessage:not(:empty),
 body[data-theme="dark"] #socialMessage:not(:empty),
 html.dark #socialMessage:not(:empty),
 body.dark #socialMessage:not(:empty),
 html.dark-mode #socialMessage:not(:empty),
 body.dark-mode #socialMessage:not(:empty) {
-
     color: #b5b1ff;
-
     background: #25243d;
-
     border-color: #403e68;
 }
 
@@ -894,7 +767,6 @@ body.dark-mode #socialMessage:not(:empty) {
 .is-hidden {
     display: none !important;
 }
-
 
 #socialSignupContainer[style*="display: block"] {
     display: block !important;
@@ -931,7 +803,6 @@ input:focus-visible {
                 40px;
     }
 
-
     .login-container {
         margin-top: 16px;
 
@@ -942,32 +813,24 @@ input:focus-visible {
         border-radius: 19px;
     }
 
-
     .login-container > h1 {
         padding-left: 29px;
-
         margin-bottom: 31px;
-
         font-size: 25px;
     }
 
-
     .login-container > h1::before {
         top: 6px;
-
         width: 18px;
         height: 18px;
-
         border-width: 5px;
     }
-
 
     #loginForm input[type="email"],
     #loginForm input[type="password"],
     #loginForm > button[type="submit"] {
         height: 47px;
     }
-
 
     .kakao-login-container,
     #kakaoLoginLink,
@@ -976,16 +839,13 @@ input:focus-visible {
     #googleOfficialButton,
     #googleOfficialButton > div,
     #googleOfficialButton iframe {
-
         width: 100% !important;
         max-width: 100% !important;
     }
 
-
     .kakao-logo,
     .google-custom-logo {
         left: 16px !important;
-
         width: 21px !important;
         height: 21px !important;
     }

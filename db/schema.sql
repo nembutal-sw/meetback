@@ -594,3 +594,58 @@ CREATE TABLE meeting_participant_kick_history (
           REFERENCES users(user_id)
           ON DELETE RESTRICT
 );
+
+-- ============================================================
+-- INITIAL TERMS DATA
+-- ============================================================
+
+INSERT INTO terms
+(
+    term_code,
+    term_name,
+    content,
+    version,
+    kakao_tag,
+    required,
+    active,
+    effective_at,
+    created_at,
+    updated_at
+)
+VALUES
+    (
+        'SERVICE',
+        '서비스 이용약관',
+        'MeetBack 서비스 이용약관',
+        '1.0',
+        NULL,
+        TRUE,
+        TRUE,
+        NOW(),
+        NOW(),
+        NOW()
+    ),
+    (
+        'PRIVACY',
+        '개인정보 수집·이용 동의',
+        'MeetBack 회원가입 개인정보 수집·이용 동의',
+        '1.0',
+        NULL,
+        TRUE,
+        TRUE,
+        NOW(),
+        NOW(),
+        NOW()
+    ),
+    (
+        'LOCATION',
+        '개인위치정보 이용 및 위치기반서비스 이용약관',
+        'MeetBack 개인위치정보 이용 및 위치기반서비스 이용약관',
+        '1.0',
+        NULL,
+        TRUE,
+        TRUE,
+        NOW(),
+        NOW(),
+        NOW()
+    );
