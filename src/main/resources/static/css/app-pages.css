@@ -1563,7 +1563,10 @@
     color: var(--_mb-danger);
 }
 
-/* Shared overlays, maps, and notifications */
+/* =========================================================
+   Shared overlays and notifications
+   지도 관련 스타일은 route-map.css에서 관리
+   ========================================================= */
 
 .mb-app-page .toast,
 .mb-app-page .toast-container .toast {
@@ -1574,6 +1577,7 @@
     box-shadow: 0 16px 40px rgba(15, 15, 28, 0.2);
 }
 
+
 .mb-app-page .toast-success,
 .mb-app-page .toast.success {
     border-color: rgba(52, 201, 138, 0.35);
@@ -1581,12 +1585,14 @@
     color: #071a12;
 }
 
+
 .mb-app-page .toast-error,
 .mb-app-page .toast.error {
     border-color: rgba(226, 85, 85, 0.35);
     background: var(--_mb-danger);
     color: #ffffff;
 }
+
 
 .mb-app-page .toast-info,
 .mb-app-page .toast.info,
@@ -1596,16 +1602,20 @@
     color: var(--_mb-primary-foreground);
 }
 
+
+/* =========================================================
+   Confirm / Kick Overlay
+   ========================================================= */
+
 .mb-app-page .confirm-overlay,
-.mb-app-page .kick-modal,
-.mb-app-page .route-map-modal {
+.mb-app-page .kick-modal {
     background: rgba(15, 15, 28, 0.62);
     backdrop-filter: blur(8px);
 }
 
+
 .mb-app-page .confirm-modal,
-.mb-app-page .kick-modal-box,
-.mb-app-page .route-map-modal-content {
+.mb-app-page .kick-modal-box {
     border: 1px solid var(--_mb-border);
     border-radius: 20px;
     background: var(--_mb-card);
@@ -1613,46 +1623,21 @@
     box-shadow: 0 28px 80px rgba(15, 15, 28, 0.28);
 }
 
+
 .mb-app-page .confirm-modal::before {
     content: none;
 }
 
+
 .mb-app-page .confirm-title,
-.mb-app-page .kick-modal-title,
-.mb-app-page .route-map-modal-header h2 {
+.mb-app-page .kick-modal-title {
     color: var(--_mb-foreground);
 }
+
 
 .mb-app-page .confirm-title::before {
     background: var(--_mb-accent);
     box-shadow: 0 0 0 6px rgba(255, 125, 84, 0.12);
-}
-
-.mb-app-page .route-map-modal-header {
-    border-bottom-color: var(--_mb-border);
-}
-
-.mb-app-page .route-map-close {
-    border: 0;
-    background: var(--_mb-muted);
-    color: var(--_mb-muted-foreground);
-}
-
-.mb-app-page .route-map,
-.mb-app-page .route-map-loading,
-.mb-app-page .route-map-info,
-.mb-app-page .route-guide {
-    border-color: var(--_mb-border);
-    border-radius: 12px;
-    background: var(--_mb-muted);
-    color: var(--_mb-foreground);
-}
-
-.mb-app-page .route-guide-line-chip,
-.mb-app-page .route-station-marker-line {
-    border-color: rgba(91, 106, 240, 0.18);
-    background: var(--_mb-secondary);
-    color: var(--_mb-primary);
 }
 
 @media (max-width: 1040px) {
