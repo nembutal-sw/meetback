@@ -4,10 +4,15 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MeetBack 카카오 로그인</title>
+    <link rel="stylesheet" href="/css/meetback-theme.css">
+    <link rel="stylesheet" href="/css/auth-pages.css">
+    <link rel="stylesheet" href="/css/dark-mode.css">
+    <script src="/js/theme-toggle.js"></script>
 </head>
 
-<body>
+<body class="mb-page mb-auth-page page-kakao-login">
 
 <div class="kakao-login-container">
 
@@ -29,7 +34,7 @@
             th:data-user-id="${userId}"
             th:data-role="${role}"
             th:data-redirect="${redirect}"
-            style="display: none;">
+            class="is-hidden">
     </div>
 
 
@@ -39,7 +44,7 @@
 
     <div
             id="kakaoSignupContainer"
-            style="display: none;">
+            class="is-hidden">
 
         <h3>
             닉네임 설정

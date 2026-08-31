@@ -5,6 +5,11 @@
 
 <mapper namespace="com.meetback.dev.repository.FeedImageMapper">
 
+
+    <!-- =========================================================
+         FeedImage ResultMap
+         ========================================================= -->
+
     <resultMap id="feedImageResultMap"
                type="com.meetback.dev.domain.FeedImage">
 
@@ -32,12 +37,17 @@
     </resultMap>
 
 
+    <!-- =========================================================
+         이미지 등록
+         ========================================================= -->
+
     <insert id="insert"
             parameterType="com.meetback.dev.domain.FeedImage"
             useGeneratedKeys="true"
             keyProperty="feedImageId">
 
-        INSERT INTO feed_images (
+        INSERT INTO feed_images
+        (
             feed_id,
             image_url,
             original_name,
@@ -45,7 +55,8 @@
             sort_order,
             created_at
         )
-        VALUES (
+        VALUES
+        (
             #{feedId},
             #{imageUrl},
             #{originalName},
@@ -56,6 +67,10 @@
 
     </insert>
 
+
+    <!-- =========================================================
+         피드 이미지 조회
+         ========================================================= -->
 
     <select id="findByFeedId"
             resultMap="feedImageResultMap">
@@ -70,10 +85,30 @@
             created_at
         FROM feed_images
         WHERE feed_id = #{feedId}
-        ORDER BY sort_order ASC, feed_image_id ASC
+        ORDER BY
+            sort_order ASC,
+            feed_image_id ASC
 
     </select>
 
+
+    <!-- =========================================================
+         특정 이미지 삭제
+         ========================================================= -->
+
+    <delete id="deleteByIdAndFeedId">
+
+        DELETE FROM feed_images
+        WHERE feed_image_id = #{feedImageId}
+        AND feed_id = #{feedId}
+
+    </delete>
+
+
+    <!-- =========================================================
+         특정 피드 이미지 전체 삭제
+         기존 기능 유지
+         ========================================================= -->
 
     <delete id="deleteByFeedId">
 
@@ -81,5 +116,6 @@
         WHERE feed_id = #{feedId}
 
     </delete>
+
 
 </mapper>

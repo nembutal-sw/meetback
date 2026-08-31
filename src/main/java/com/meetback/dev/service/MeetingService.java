@@ -951,6 +951,7 @@ public class MeetingService {
     // ============================================================
 
     public List<QuickMeetingResponse> getQuickVoteMeetings(
+            Long userId,
             String keyword
     ) {
 
@@ -959,8 +960,8 @@ public class MeetingService {
                         ? ""
                         : keyword.trim();
 
-
         return meetingMapper.selectQuickVoteMeetings(
+                userId,
                 searchKeyword
         );
     }

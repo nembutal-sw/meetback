@@ -38,6 +38,7 @@ public interface MeetingMapper {
     int deleteExpiredMeetings();
 
     List<QuickMeetingResponse> selectQuickVoteMeetings(
+            @Param("userId") Long userId,
             @Param("keyword") String keyword
     );
 

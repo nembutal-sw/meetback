@@ -357,6 +357,8 @@ public class MeetingController {
 
     @GetMapping("/quick")
     public List<QuickMeetingResponse> getQuickVoteMeetings(
+            @AuthenticationPrincipal AuthenticatedUser user,
+
             @RequestParam(
                     required = false,
                     defaultValue = ""
@@ -365,6 +367,7 @@ public class MeetingController {
     ) {
 
         return meetingService.getQuickVoteMeetings(
+                user.userId(),
                 keyword
         );
     }

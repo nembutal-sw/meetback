@@ -27,750 +27,16 @@
     </script>
 
 
-    <style>
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            background: #f8f8fd;
-            font-family: Arial, sans-serif;
-            color: #191924;
-        }
-
-        body.modal-open {
-            overflow: hidden;
-        }
-
-        button,
-        input {
-            font: inherit;
-        }
-
-        button {
-            cursor: pointer;
-        }
-
-        button:disabled {
-            cursor: default;
-        }
-
-        .page {
-            width: 900px;
-            max-width: calc(100% - 32px);
-            margin: 40px auto;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .header h1 {
-            margin: 0;
-        }
-
-        .home-button {
-            border: 1px solid #e8e7f1;
-            background: white;
-            padding: 10px 16px;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-
-        .card {
-            background: white;
-            border: 1px solid #e8e7f1;
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 18px;
-        }
-
-        .meeting-title {
-            font-size: 26px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .meeting-type {
-            color: #6557f6;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-top: 22px;
-        }
-
-        .info-item {
-            padding: 16px;
-            background: #f8f8fd;
-            border-radius: 12px;
-        }
-
-        .info-label {
-            color: #777788;
-            font-size: 13px;
-            margin-bottom: 7px;
-        }
-
-        .info-value {
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .place-name {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .place-address {
-            color: #777788;
-        }
-
-        .invite-button {
-            margin-top: 18px;
-            border: 1px solid #6557f6;
-            background: #f1efff;
-            color: #5143df;
-            padding: 10px 14px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .return-card h2 {
-            margin-top: 0;
-        }
-
-        /* =========================================================
-           모임 장소 버튼
-           ========================================================= */
-
-        .place-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .place-action-button {
-            min-height: 42px;
-            padding: 0 17px;
-
-            border: 1px solid #d9d5ff;
-            border-radius: 10px;
-
-            background: #f4f2ff;
-            color: #5143df;
-
-            font-weight: bold;
-
-            transition:
-                    background 0.18s ease,
-                    border-color 0.18s ease;
-        }
-
-        .place-action-button:hover:not(:disabled) {
-            background: #eae7ff;
-            border-color: #bcb4ff;
-        }
-
-        .place-action-button.map-button {
-            background: #ffffff;
-        }
-
-        .return-description {
-            color: #777788;
-            line-height: 1.6;
-        }
-        .place-action-button.map-button:hover:not(:disabled) {
-            background: #f8f7ff;
-        }
-
-        .place-action-button:disabled {
-            color: #aaa8b8;
-            background: #f4f4f7;
-            border-color: #e4e3eb;
-        }
-
-
-        /* =========================================================
-           메시지
-           ========================================================= */
-
-        .message {
-            display: none;
-            margin-bottom: 18px;
-            padding: 14px 16px;
-            border-radius: 10px;
-        }
-
-        .message.show {
-            display: block;
-        }
-
-        .message-error {
-            background: #fff0f1;
-            color: #c94b54;
-        }
-
-
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .participant-summary {
-            margin-bottom: 16px;
-            color: #6557f6;
-            font-weight: bold;
-        }
-
-        .participant-list {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 12px;
-        }
-
-        .participant-item {
-            padding: 16px;
-            border: 1px solid #e8e7f1;
-            border-radius: 12px;
-            background: #f8f8fd;
-
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .participant-name {
-            font-weight: bold;
-        }
-
-        .presence-badge {
-            padding: 6px 10px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        .presence-badge.online {
-            color: #16834a;
-            background: #e8fff1;
-        }
-
-        .presence-badge.offline {
-            color: #d34242;
-            background: #fff0f0;
-        }
-
-        @media (max-width: 700px) {
-            .participant-list {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* =========================================================
-           채팅
-           ========================================================= */
-
-        .chat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .chat-header h2 {
-            margin: 0;
-        }
-
-        .chat-messages {
-            height: 320px;
-            overflow-y: auto;
-            padding: 16px;
-            border: 1px solid #e8e7f1;
-            border-radius: 12px;
-            background: #f8f8fd;
-        }
-
-        .chat-message {
-            margin-bottom: 12px;
-            line-height: 1.5;
-        }
-
-        .chat-message.system {
-            color: #777788;
-            text-align: center;
-        }
-
-        .chat-row {
-            display: flex;
-            gap: 10px;
-            margin-top: 12px;
-        }
-
-        .chat-row input {
-            flex: 1;
-            padding: 13px 14px;
-            border: 1px solid #e8e7f1;
-            border-radius: 10px;
-        }
-
-        .chat-send-button {
-            border: 0;
-            border-radius: 10px;
-            padding: 0 22px;
-            color: white;
-            background: #6557f6;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-
-        /* =========================================================
-           참가 / 강퇴 버튼
-           ========================================================= */
-
-        .leave-button {
-            margin-top: 18px;
-            margin-left: 8px;
-            padding: 10px 14px;
-
-            border: 1px solid #ef5b63;
-            border-radius: 10px;
-
-            color: #d9424b;
-            background: #fff5f5;
-
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close-recruitment-button {
-            margin-top: 18px;
-            margin-left: 8px;
-            padding: 10px 14px;
-
-            border: 0;
-            border-radius: 10px;
-
-            color: white;
-            background: #6557f6;
-
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .close-recruitment-button:disabled {
-            color: #777788;
-            background: #e8e7f1;
-            cursor: default;
-        }
-
-        .participant-kick-button,
-        .participant-kick-cancel-button {
-            padding: 7px 11px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .participant-kick-button {
-            color: #d9424b;
-            background: #fff5f5;
-            border: 1px solid #ef5b63;
-        }
-
-        .participant-kick-cancel-button {
-            color: #5143df;
-            background: #f1efff;
-            border: 1px solid #6557f6;
-        }
-
-        .kicked-participant-section {
-            margin-top: 24px;
-            padding-top: 20px;
-            border-top: 1px solid #e8e7f1;
-        }
-
-        .kicked-participant-badge {
-            color: #d9424b;
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-
-        /* =========================================================
-           강퇴 Modal
-           ========================================================= */
-
-        .kick-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-
-            align-items: center;
-            justify-content: center;
-
-            background: rgba(25, 25, 36, 0.55);
-        }
-
-        .kick-modal.show {
-            display: flex;
-        }
-
-        .kick-modal-box {
-            width: 420px;
-            max-width: calc(100% - 40px);
-            padding: 40px 30px;
-
-            border-radius: 18px;
-            background: white;
-            text-align: center;
-        }
-
-        .kick-modal-title {
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-
-        /* =========================================================
-           귀가 경로 Map Modal
-           ========================================================= */
-
-        .route-map-modal {
-            display: none;
-
-            position: fixed;
-            inset: 0;
-            z-index: 10000;
-
-            align-items: center;
-            justify-content: center;
-
-            padding: 24px;
-
-            background: rgba(25, 25, 36, 0.58);
-        }
-
-        .route-map-modal.open {
-            display: flex;
-        }
-
-        .route-map-modal-content {
-            width: 900px;
-            max-width: 100%;
-            max-height: 92vh;
-
-            overflow-y: auto;
-
-            border-radius: 18px;
-            background: white;
-
-            box-shadow:
-                    0 24px 70px rgba(20, 20, 40, 0.28);
-        }
-
-        .route-map-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-
-            gap: 20px;
-
-            padding: 20px 22px;
-
-            border-bottom: 1px solid #ecebf3;
-        }
-
-        .route-map-modal-header h2 {
-            margin: 4px 0 0;
-        }
-
-        .route-map-label {
-            color: #6557f6;
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 1.3px;
-        }
-
-        .route-map-close {
-            width: 40px;
-            height: 40px;
-
-            padding: 0;
-
-            border: 0;
-            border-radius: 50%;
-
-            background: #f2f1f6;
-            color: #555566;
-
-            font-size: 25px;
-            line-height: 1;
-        }
-
-        .route-map-body {
-            padding: 20px;
-        }
-
-        .route-map {
-            width: 100%;
-            height: 460px;
-
-            overflow: hidden;
-
-            border: 1px solid #e8e7f1;
-            border-radius: 14px;
-        }
-
-        .route-map-info {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-
-            margin-top: 14px;
-        }
-
-        .route-map-info span {
-            padding: 10px 13px;
-
-            border-radius: 9px;
-
-            background: #f8f8fd;
-
-            color: #777788;
-            font-size: 13px;
-        }
-
-        .route-map-info strong {
-            margin-left: 5px;
-            color: #191924;
-        }
-
-
-        /* =========================================================
-           노선 안내
-           ========================================================= */
-
-        .route-guide {
-            display: none;
-
-            margin-top: 14px;
-            padding: 15px;
-
-            border: 1px solid #ecebf3;
-            border-radius: 12px;
-
-            background: #fafafe;
-        }
-
-        .route-guide-content {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .route-guide-label {
-            margin-right: 4px;
-
-            color: #777788;
-
-            font-size: 13px;
-            font-weight: bold;
-        }
-
-        .route-guide-line-chip {
-            padding: 6px 9px;
-            border-radius: 999px;
-
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .route-guide-arrow {
-            color: #aaaabb;
-        }
-
-        .route-guide-transfer-station {
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .route-guide-transfer-badge {
-            padding: 4px 7px;
-
-            border-radius: 999px;
-
-            background: #eeeef5;
-            color: #777788;
-
-            font-size: 11px;
-        }
-
-
-        /* =========================================================
-           지도 위 역 마커
-           ========================================================= */
-
-        .route-station-marker {
-            --marker-color: #6557f6;
-            --marker-next-color: var(--marker-color);
-
-            position: relative;
-
-            min-width: 105px;
-
-            padding: 9px 11px;
-
-            transform: translate(-50%, -100%);
-
-            border: 1px solid #e5e4ed;
-            border-radius: 10px;
-
-            background: #ffffff;
-
-            box-shadow:
-                    0 5px 16px rgba(30, 30, 50, 0.18);
-
-            white-space: nowrap;
-        }
-
-        .route-station-marker-header {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .route-station-marker-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-
-            min-width: 34px;
-            height: 20px;
-
-            padding: 0 6px;
-
-            border-radius: 999px;
-
-            background: var(--marker-color);
-
-            color: #ffffff;
-
-            font-size: 10px;
-            font-weight: 800;
-        }
-
-        /*
-         * 환승은 이전 호선 / 다음 호선 반반
-         */
-        .route-station-marker.transfer
-        .route-station-marker-badge {
-            background:
-                    linear-gradient(
-                            135deg,
-                            var(--marker-color) 0%,
-                            var(--marker-color) 48%,
-                            var(--marker-next-color) 52%,
-                            var(--marker-next-color) 100%
-                    );
-        }
-
-        .route-station-marker-name {
-            color: #191924;
-
-            font-size: 12px;
-            font-weight: 800;
-        }
-
-        .route-station-marker-line {
-            margin-top: 6px;
-
-            color: var(--marker-color);
-
-            font-size: 10px;
-            font-weight: 700;
-        }
-
-        /*
-         * 환승 노선명도 두 호선 색상
-         */
-        .route-station-marker.transfer
-        .route-station-marker-line {
-            background:
-                    linear-gradient(
-                            90deg,
-                            var(--marker-color),
-                            var(--marker-next-color)
-                    );
-
-            background-clip: text;
-            -webkit-background-clip: text;
-
-            color: transparent;
-            -webkit-text-fill-color: transparent;
-        }
-
-
-        /* =========================================================
-           모바일
-           ========================================================= */
-
-        @media (max-width: 700px) {
-
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .participant-list {
-                grid-template-columns: 1fr;
-            }
-
-            .chat-row {
-                flex-direction: column;
-            }
-
-            .chat-send-button {
-                padding: 13px;
-            }
-
-            .place-actions {
-                flex-direction: column;
-            }
-
-            .place-action-button {
-                width: 100%;
-            }
-
-            .route-map-modal {
-                padding: 10px;
-            }
-
-            .route-map {
-                height: 380px;
-            }
-        }
-
-    </style>
-
+    <link rel="stylesheet" href="/css/quick-fixed.css">
+    <link rel="stylesheet" href="/css/meetback-theme.css">
+    <link rel="stylesheet" href="/css/app-pages.css">
+
+    <link rel="stylesheet" href="/css/dark-mode.css">
+    <script src="/js/theme-toggle.js"></script>
 </head>
 
 
-<body>
+<body class="mb-page mb-app-page mb-map-page page-quick-fixed">
 
 
 <!-- =========================================================
@@ -2966,18 +2232,15 @@
             ||
             null;
 
-
         const currentUserIsHost =
             Number(meeting.hostUserId)
             ===
             Number(currentUser.userId);
 
-
         leaveMeetingButton.hidden =
             !currentParticipant
             ||
             currentUserIsHost;
-
 
         const maxParticipants =
             Number(
@@ -2985,7 +2248,6 @@
                 ||
                 0
             );
-
 
         participantSummary.textContent =
             maxParticipants > 0
@@ -2998,9 +2260,7 @@
                 + participants.length
                 + "명";
 
-
         participantList.replaceChildren();
-
 
         participants.forEach(
             participant =>
@@ -3010,22 +2270,18 @@
                         "div"
                     );
 
-
                 item.className =
                     "participant-item";
-
 
                 const host =
                     Number(participant.userId)
                     ===
                     Number(meeting.hostUserId);
 
-
                 const me =
                     Number(participant.userId)
                     ===
                     Number(currentUser.userId);
-
 
                 const canKick =
                     currentUserIsHost
@@ -3033,7 +2289,6 @@
                     !host
                     &&
                     !me;
-
 
                 const nickname =
                     participant.nickname
@@ -3076,7 +2331,6 @@
                         ".participant-kick-button"
                     );
 
-
                 if (kickButton)
                 {
                     kickButton.addEventListener(
@@ -3090,7 +2344,6 @@
                         }
                     );
                 }
-
 
                 participantList.appendChild(
                     item
@@ -3115,19 +2368,15 @@
             ===
             Number(currentUser.userId);
 
-
         if (!currentUserIsHost)
         {
             kickedParticipantSection.hidden =
                 true;
 
-
             kickedParticipantList.replaceChildren();
-
 
             return;
         }
-
 
         const response =
             await MeetBack.authenticatedFetch(
@@ -3142,7 +2391,6 @@
                 }
             );
 
-
         if (!response.ok)
         {
             kickedParticipantSection.hidden =
@@ -3151,13 +2399,10 @@
             return;
         }
 
-
         const kickedParticipants =
             await response.json();
 
-
         kickedParticipantList.replaceChildren();
-
 
         if (
             !Array.isArray(kickedParticipants)
@@ -3171,10 +2416,8 @@
             return;
         }
 
-
         kickedParticipantSection.hidden =
             false;
-
 
         kickedParticipants.forEach(
             participant =>
@@ -3184,10 +2427,8 @@
                         "div"
                     );
 
-
                 item.className =
                     "participant-item";
-
 
                 const nickname =
                     participant.nickname
@@ -3213,7 +2454,6 @@
                     </button>
                     `;
 
-
                 item.querySelector(
                     ".participant-kick-cancel-button"
                 ).addEventListener(
@@ -3226,7 +2466,6 @@
                         );
                     }
                 );
-
 
                 kickedParticipantList.appendChild(
                     item
@@ -3256,7 +2495,6 @@
             return;
         }
 
-
         const response =
             await MeetBack.authenticatedFetch(
                 "/participants/"
@@ -3270,7 +2508,6 @@
                 }
             );
 
-
         if (!response.ok)
         {
             showMessage(
@@ -3279,7 +2516,6 @@
 
             return;
         }
-
 
         await loadParticipants();
 
@@ -3307,7 +2543,6 @@
             return;
         }
 
-
         const response =
             await MeetBack.authenticatedFetch(
                 "/participants/"
@@ -3321,7 +2556,6 @@
                 }
             );
 
-
         if (!response.ok)
         {
             showMessage(
@@ -3330,7 +2564,6 @@
 
             return;
         }
-
 
         await loadParticipants();
 
@@ -3349,17 +2582,14 @@
                 "kickModal"
             );
 
-
         modal.classList.add(
             "show"
         );
-
 
         modal.setAttribute(
             "aria-hidden",
             "false"
         );
-
 
         document.body.style.overflow =
             "hidden";
@@ -3468,24 +2698,20 @@
             row.className =
                 "chat-message";
 
-
             const nickname =
                 document.createElement(
                     "strong"
                 );
-
 
             nickname.textContent =
                 chatMessage.nickname
                 ||
                 "참가자";
 
-
             const content =
                 document.createElement(
                     "span"
                 );
-
 
             content.textContent =
                 " : "
@@ -3496,17 +2722,14 @@
                     ""
                 );
 
-
             row.appendChild(
                 nickname
             );
-
 
             row.appendChild(
                 content
             );
         }
-
 
         area.appendChild(
             row
@@ -3540,7 +2763,6 @@
                 "/messages"
             );
 
-
         if (!response.ok)
         {
             throw new Error(
@@ -3548,19 +2770,15 @@
             );
         }
 
-
         const messages =
             await response.json();
-
 
         const area =
             document.getElementById(
                 "chatMessages"
             );
 
-
         area.replaceChildren();
-
 
         messages.forEach(
             chatMessage =>
@@ -3650,7 +2868,6 @@
                 ? "wss"
                 : "ws";
 
-
         stompClient =
             new StompJs.Client({
 
@@ -3664,7 +2881,6 @@
                     "/ws",
 
                 connectHeaders: {
-
                     "Authorization":
                         "Bearer "
                         +
@@ -3682,14 +2898,12 @@
                         ).textContent =
                             "CONNECTED";
 
-
                         const destination =
                             "/topic/meetings/"
                             +
                             meetingId
                             +
                             "/chat";
-
 
                         const receiptId =
                             "quick-fixed-"
@@ -3700,17 +2914,14 @@
                             +
                             Date.now();
 
-
                         stompClient.watchForReceipt(
                             receiptId,
                             async function()
                             {
                                 await loadParticipants();
-
                                 await loadKickedParticipants();
                             }
                         );
-
 
                         stompClient.subscribe(
                             destination,
@@ -3748,7 +2959,6 @@
                                     );
                                 }
 
-
                                 if (
                                     data.messageType === "EVENT"
                                     &&
@@ -3760,17 +2970,14 @@
                                         ===
                                         Number(currentUser.userId);
 
-
                                     if (kickedMe)
                                     {
                                         showKickModal();
-
 
                                         if (stompClient)
                                         {
                                             stompClient.reconnectDelay =
                                                 0;
-
 
                                             stompClient
                                                 .deactivate()
@@ -3783,7 +2990,6 @@
                                                 );
                                         }
 
-
                                         setTimeout(
                                             () =>
                                             {
@@ -3794,10 +3000,8 @@
                                             2000
                                         );
 
-
                                         return;
                                     }
-
 
                                     await loadParticipants();
 
@@ -3805,7 +3009,6 @@
 
                                     return;
                                 }
-
 
                                 if (
                                     data.messageType === "EVENT"
@@ -3820,7 +3023,6 @@
                                     return;
                                 }
 
-
                                 if (
                                     data.eventType === "PRESENCE_UPDATED"
                                     ||
@@ -3831,7 +3033,6 @@
                                 {
                                     await loadParticipants();
                                 }
-
 
                                 if (
                                     data.eventType === "RECRUITMENT_CLOSED"
@@ -3857,7 +3058,6 @@
                             }
                         );
 
-
                         await loadChatHistory();
                     },
 
@@ -3880,7 +3080,6 @@
                     }
             });
 
-
         stompClient.activate();
     }
 
@@ -3896,16 +3095,13 @@
                 "chatInput"
             );
 
-
         const content =
             input.value.trim();
-
 
         if (!content)
         {
             return;
         }
-
 
         if (
             !stompClient
@@ -3920,7 +3116,6 @@
             return;
         }
 
-
         stompClient.publish({
 
             destination:
@@ -3932,12 +3127,10 @@
 
             body:
                 JSON.stringify({
-
                     content:
                     content
                 })
         });
-
 
         input.value =
             "";
@@ -3957,16 +3150,13 @@
                 "마감 후에는 새로운 참가자와 나간 참가자가 다시 들어올 수 없습니다."
             );
 
-
         if (!confirmed)
         {
             return;
         }
 
-
         closeRecruitmentButton.disabled =
             true;
-
 
         try
         {
@@ -3983,18 +3173,15 @@
                     }
                 );
 
-
             if (!response.ok)
             {
                 let errorMessage =
                     "참가 모집을 마감하지 못했습니다.";
 
-
                 try
                 {
                     const errorBody =
                         await response.json();
-
 
                     errorMessage =
                         errorBody.message
@@ -4005,12 +3192,10 @@
                 {
                 }
 
-
                 throw new Error(
                     errorMessage
                 );
             }
-
 
             await loadMeeting();
         }
@@ -4021,7 +3206,6 @@
                 ||
                 "참가 모집 마감 중 오류가 발생했습니다."
             );
-
 
             updateRecruitmentButton();
         }
@@ -4043,22 +3227,18 @@
             return;
         }
 
-
         const confirmed =
             confirm(
                 "정말 이 모임에서 나가시겠습니까?"
             );
-
 
         if (!confirmed)
         {
             return;
         }
 
-
         leaveMeetingButton.disabled =
             true;
-
 
         try
         {
@@ -4075,18 +3255,15 @@
                     }
                 );
 
-
             if (!response.ok)
             {
                 let errorMessage =
                     "모임에서 나가지 못했습니다.";
 
-
                 try
                 {
                     const errorBody =
                         await response.json();
-
 
                     errorMessage =
                         errorBody.message
@@ -4095,14 +3272,13 @@
                 }
                 catch (error)
                 {
+                    // 응답 본문이 JSON이 아니면 기본 문구 사용
                 }
-
 
                 throw new Error(
                     errorMessage
                 );
             }
-
 
             if (
                 stompClient
@@ -4112,7 +3288,6 @@
             {
                 await stompClient.deactivate();
             }
-
 
             location.href =
                 "/home";
@@ -4124,7 +3299,6 @@
                 ||
                 "모임에서 나가는 중 오류가 발생했습니다."
             );
-
 
             leaveMeetingButton.disabled =
                 false;
@@ -4161,17 +3335,13 @@
             return;
         }
 
-
         try
         {
             await loadMeeting();
 
-
             await loadFixedPlace();
 
-
             await loadParticipants();
-
 
             await loadKickedParticipants();
 
@@ -4194,7 +3364,6 @@
                 "[QUICK FIXED INITIALIZE ERROR]",
                 error
             );
-
 
             showMessage(
                 error.message
