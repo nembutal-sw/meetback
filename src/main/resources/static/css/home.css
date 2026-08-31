@@ -1921,3 +1921,156 @@ button:disabled {
     font-size: 13px;
     font-weight: 600;
 }
+
+/* =========================================================
+   번개 전체보기 카드 높이 / 정렬
+   ========================================================= */
+
+.page-quick-meetings
+.quick-meeting-grid
+.quick-meeting-card {
+    display: flex;
+    flex-direction: column;
+
+    min-height: 430px;
+}
+
+
+/* 제목 영역 높이 통일 */
+
+.page-quick-meetings
+.quick-meeting-grid
+.quick-meeting-title {
+    min-height: 54px;
+
+    display: -webkit-box;
+
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+
+    overflow: hidden;
+}
+
+
+/* 방 종류 한 줄 영역 */
+
+.page-quick-meetings
+.quick-meeting-type {
+    min-height: 22px;
+}
+
+
+/* 버튼은 항상 카드 맨 아래 */
+
+.page-quick-meetings
+.quick-meeting-grid
+.quick-meeting-join-button {
+    margin-top: auto;
+}
+
+
+/* =========================================================
+   번개 전체보기 페이징
+   ========================================================= */
+
+.quick-pagination {
+    position: relative;
+    z-index: 1;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    min-height: 42px;
+
+    margin-top: 30px;
+}
+
+
+.quick-page-button {
+    display: inline-flex;
+
+    justify-content: center;
+    align-items: center;
+
+    width: 40px;
+    height: 40px;
+
+    padding: 0;
+
+    color: #666b7a;
+
+    background: #ffffff;
+
+    border: 1px solid #e7e8f2;
+
+    border-radius: 10px;
+
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+            background 0.18s ease,
+            color 0.18s ease,
+            border-color 0.18s ease,
+            transform 0.18s ease;
+}
+
+
+.quick-page-button:hover:not(:disabled) {
+    color: var(--mb-primary);
+
+    background: var(--mb-primary-pale);
+
+    border-color: #cbc7ff;
+
+    transform: translateY(-1px);
+}
+
+
+.quick-page-button.is-current {
+    color: #ffffff;
+
+    background: var(--mb-primary);
+
+    border-color: var(--mb-primary);
+
+    box-shadow:
+            0 8px 18px
+            rgba(99, 91, 255, 0.20);
+}
+
+
+.quick-page-button:disabled {
+    opacity: 0.35;
+
+    cursor: default;
+}
+
+
+/* =========================================================
+   모바일
+   ========================================================= */
+
+@media (max-width: 650px) {
+
+    .page-quick-meetings
+    .quick-meeting-grid
+    .quick-meeting-card {
+        min-height: 410px;
+    }
+
+
+    .quick-page-button {
+        width: 36px;
+        height: 36px;
+    }
+
+}
