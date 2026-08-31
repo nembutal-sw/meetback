@@ -4,6 +4,7 @@
 <head>
 
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>MeetBack 장소 투표</title>
 
@@ -18,10 +19,15 @@
             rel="stylesheet"
             href="/css/meeting-vote.css">
 
+    <link rel="stylesheet" href="/css/meetback-theme.css">
+    <link rel="stylesheet" href="/css/app-pages.css">
+
+    <link rel="stylesheet" href="/css/dark-mode.css">
+    <script src="/js/theme-toggle.js"></script>
 </head>
 
 
-<body>
+<body class="mb-page mb-app-page page-vote">
 
 
 
@@ -174,8 +180,7 @@
 
 <div
         id="hostArea"
-        class="host-area"
-        style="display:none;">
+        class="host-area is-hidden">
 
     <h2>
         방장 최종 확정
@@ -255,6 +260,11 @@
 
 
     let selectedCandidateId = null;
+
+    /*
+     * 열려 있는 참자가별 귀가 결과를 기억한다.
+     */
+    const openedParticipantResultIds = new Set();
 
     let toastTimer = null;
 
@@ -1205,6 +1215,35 @@
                     </div>
                     `;
 
+                const normalizedCandidateId = Number(item.candidateId);
+
+                if(
+                    openedParticipantResultIds.has(
+                        normalizedCandidateId
+                    )
+                ){
+                    const participantResult = card.querySelector(
+                        "#participantResults-"
+                        + item.candidateId
+                    );
+
+                    const participantButton =
+                        card.querySelector(
+                            "#participantButton-"
+                            + item.candidateId
+                        );
+
+                    participantResult?.classList.add(
+                        "show"
+                    );
+
+                    if(participantButton)
+                    {
+                        participantButton.textContent =
+                            "참가자별 귀가 결과 닫기";
+                    }
+                }
+
 
                 area.appendChild(
                     card
@@ -1221,15 +1260,12 @@
 
     function toggleParticipantResults(
         candidateId
-    )
-    {
-
+    ) {
         const result =
             document.getElementById(
                 "participantResults-"
                 + candidateId
             );
-
 
         const button =
             document.getElementById(
@@ -1237,32 +1273,42 @@
                 + candidateId
             );
 
-
-        if (
-            !result
-            ||
-            !button
-        )
-        {
+        if (!result || !button) {
             return;
         }
-
 
         const opened =
             result.classList.contains(
                 "show"
             );
 
+        const normalizedCandidateId =
+            Number(candidateId);
 
-        result.classList.toggle(
-            "show"
-        );
+        if (opened) {
+            result.classList.remove(
+                "show"
+            );
 
+            openedParticipantResultIds.delete(
+                normalizedCandidateId
+            );
 
-        button.textContent =
-            opened
-                ? "참가자별 귀가 결과"
-                : "참가자별 귀가 결과 닫기";
+            button.textContent =
+                "참가자별 귀가 결과";
+        }
+        else {
+            result.classList.add(
+                "show"
+            );
+
+            openedParticipantResultIds.add(
+                normalizedCandidateId
+            );
+
+            button.textContent =
+                "참가자별 귀가 결과 닫기";
+        }
     }
 
 

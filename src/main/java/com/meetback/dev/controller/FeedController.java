@@ -1,6 +1,7 @@
 package com.meetback.dev.controller;
 
 import com.meetback.dev.dto.feed.FeedCreateRequest;
+import com.meetback.dev.dto.feed.FeedPageResponse;
 import com.meetback.dev.dto.feed.FeedResponse;
 import com.meetback.dev.dto.feed.FeedUpdateRequest;
 import com.meetback.dev.security.AuthenticatedUser;
@@ -23,7 +24,10 @@ public class FeedController {
     private final FeedService feedService;
 
 
+    // ============================================================
     // 후기 작성
+    // ============================================================
+
     @PostMapping(
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
@@ -48,23 +52,42 @@ public class FeedController {
                         images
                 );
 
+
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
 
 
-    // 후기 전체 조회
+    // ============================================================
+    // 후기 페이징 조회
+    // ============================================================
+
     @GetMapping
-    public ResponseEntity<List<FeedResponse>> getFeeds(
+    public ResponseEntity<FeedPageResponse> getFeeds(
             @AuthenticationPrincipal
-            AuthenticatedUser authenticatedUser
+            AuthenticatedUser authenticatedUser,
+
+            @RequestParam(
+                    value = "page",
+                    defaultValue = "0"
+            )
+            int page,
+
+            @RequestParam(
+                    value = "size",
+                    defaultValue = "5"
+            )
+            int size
     ) {
 
-        List<FeedResponse> response =
+        FeedPageResponse response =
                 feedService.getFeeds(
-                        authenticatedUser.userId()
+                        authenticatedUser.userId(),
+                        page,
+                        size
                 );
+
 
         return ResponseEntity.ok(
                 response
@@ -72,7 +95,10 @@ public class FeedController {
     }
 
 
-    // 후기 상세 조회
+    // ============================================================
+    // 후기 단건 조회
+    // ============================================================
+
     @GetMapping("/{feedId}")
     public ResponseEntity<FeedResponse> getFeed(
             @PathVariable
@@ -84,14 +110,27 @@ public class FeedController {
                         feedId
                 );
 
+
         return ResponseEntity.ok(
                 response
         );
     }
 
 
+    // ============================================================
     // 후기 수정
-    @PutMapping("/{feedId}")
+    //
+    // 기존 이미지:
+    // 삭제할 이미지 ID만 deleteImageIds로 전달
+    //
+    // 새 이미지:
+    // images로 추가
+    // ============================================================
+
+    @PutMapping(
+            value = "/{feedId}",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
     public ResponseEntity<FeedResponse> updateFeed(
             @AuthenticationPrincipal
             AuthenticatedUser authenticatedUser,
@@ -99,17 +138,31 @@ public class FeedController {
             @PathVariable
             Long feedId,
 
-            @RequestBody
-            FeedUpdateRequest request
+            @ModelAttribute
+            FeedUpdateRequest request,
 
+            @RequestParam(
+                    value = "images",
+                    required = false
+            )
+            List<MultipartFile> images,
+
+            @RequestParam(
+                    value = "deleteImageIds",
+                    required = false
+            )
+            List<Long> deleteImageIds
     ) {
 
         FeedResponse response =
                 feedService.updateFeed(
                         authenticatedUser.userId(),
                         feedId,
-                        request
+                        request,
+                        images,
+                        deleteImageIds
                 );
+
 
         return ResponseEntity.ok(
                 response
@@ -117,7 +170,10 @@ public class FeedController {
     }
 
 
+    // ============================================================
     // 후기 삭제
+    // ============================================================
+
     @DeleteMapping("/{feedId}")
     public ResponseEntity<Void> deleteFeed(
             @AuthenticationPrincipal
@@ -131,6 +187,7 @@ public class FeedController {
                 authenticatedUser.userId(),
                 feedId
         );
+
 
         return ResponseEntity
                 .noContent()

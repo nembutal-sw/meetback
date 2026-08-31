@@ -1939,3 +1939,97 @@ button:disabled {
     line-height:
             1.4;
 }
+
+.room-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+.leave-meeting-button {
+    color: var(--danger);
+    background: var(--danger-bg);
+    border-color: rgba(201, 75, 84, 0.35);
+}
+
+
+.leave-meeting-button:hover {
+    border-color: var(--danger);
+    box-shadow:
+            0 8px 18px
+            rgba(201, 75, 84, 0.12);
+}
+
+#kickedParticipantSection {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e8e7f1;
+}
+
+#kickedParticipantSection h3 {
+    margin: 0 0 12px;
+    font-size: 16px;
+    color: #4b5563;
+}
+
+#kickedParticipantList {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fit,
+        minmax(220px, 1fr)
+    );
+    gap: 12px;
+}
+
+.kicked-participant-card {
+    background: #fff7f7;
+    border-color: #fecaca;
+}
+
+.kicked-participant-badge {
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #fee2e2;
+    color: #dc2626;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.participant-kick-cancel-button {
+    min-height: 32px;
+    padding: 6px 10px;
+    border: 1px solid #6366f1;
+    border-radius: 9px;
+    background: #ffffff;
+    color: #4f46e5;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.participant-kick-cancel-button:hover {
+    background: #eef2ff;
+    border-color: #4f46e5;
+}
+
+.room-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+.leave-meeting-button {
+    color: var(--danger);
+    background: var(--danger-bg);
+    border-color: rgba(201, 75, 84, 0.35);
+}
+
+
+.leave-meeting-button:hover {
+    border-color: var(--danger);
+    box-shadow:
+            0 8px 18px
+            rgba(201, 75, 84, 0.12);
+}

@@ -229,11 +229,13 @@ CREATE TABLE meetings (
                           status VARCHAR(20) NOT NULL DEFAULT 'INPUT_OPEN',
 
                           desired_end_at DATETIME NOT NULL,
+                          meeting_start_at DATETIME NULL,
                           calculation_version INT NOT NULL DEFAULT 0,
 
                           invite_code VARCHAR(50) UNIQUE,
                           final_candidate_id BIGINT,
-                          meeting_type VARCHAR(20) NOT NULL DEFAULT 'QUICK_VOTE',
+                          meeting_type VARCHAR(20) NOT NULL DEFAULT 'FRIEND',
+                          max_participants INT NULL,
 
                           created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                           updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP

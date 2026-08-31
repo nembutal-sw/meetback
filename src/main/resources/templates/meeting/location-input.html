@@ -4,10 +4,13 @@
 <head>
 
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>MeetBack 장소 입력</title>
 
     <link rel="stylesheet" href="/css/location.css">
+    <link rel="stylesheet" href="/css/meetback-theme.css">
+    <link rel="stylesheet" href="/css/app-pages.css">
 
     <script
             src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js">
@@ -22,9 +25,11 @@
 
     <script src="/js/meeting-presence.js"></script>
 
+    <link rel="stylesheet" href="/css/dark-mode.css">
+    <script src="/js/theme-toggle.js"></script>
 </head>
 
-<body>
+<body class="mb-page mb-app-page page-location">
 
 
 <div class="toast-container">
@@ -326,6 +331,59 @@
             );
     }
 
+    async function handleMeetingEvent(
+        data
+    )
+    {
+        if (
+            !data
+            ||
+            data.messageType
+            !==
+            "EVENT"
+        )
+        {
+            return;
+        }
+
+
+        if (
+            data.eventType
+            ===
+            "PARTICIPANT_KICKED"
+            &&
+            Number(data.userId)
+            ===
+            Number(currentUser.userId)
+        )
+        {
+            /*
+             * 자동 재연결을 먼저 막는다.
+             */
+            await MeetBackPresence.disconnect();
+
+
+            showToast(
+                "모임에서 강퇴되었습니다.",
+                "error"
+            );
+
+
+            /*
+             * 안내 문구를 잠깐 보여준 뒤 홈으로 이동한다.
+             */
+            setTimeout(
+                function ()
+                {
+                    location.replace(
+                        "/home"
+                    );
+                },
+                1200
+            );
+        }
+    }
+
 
     // =========================================================
     // 초기화
@@ -361,7 +419,8 @@
         // =====================================================
 
         MeetBackPresence.connect(
-            meetingId
+            meetingId,
+            handleMeetingEvent
         );
 
 

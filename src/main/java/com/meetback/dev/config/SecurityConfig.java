@@ -52,6 +52,10 @@ public class SecurityConfig {
                                                 "/forgot-password",
                                                 "/reset-password",
                                                 "/home",
+                                                "/quick-meetings",
+                                                "/quick-fixed",
+                                                "/quick-fixed-check",
+                                                "/favicon.ico",
 
                                                 // 관리자 HTML 페이지
                                                 "/admin/terms",
@@ -85,8 +89,6 @@ public class SecurityConfig {
                                                 "/feed/**",
 
                                                 "/meeting",
-                                                "/meeting/location-test",
-                                                "/meeting/location-test/**",
                                                 "/meeting/location",
                                                 "/meeting/vote",
                                                 "/meeting/result"

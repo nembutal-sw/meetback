@@ -28,11 +28,27 @@ public record RealtimeEvent(
         eventType = requireText(eventType, "eventType");
 
         switch (deliveryKind) {
-            case ROOM_BROADCAST -> {
-                requireChannel(channel, RealtimeChannel.MEETING);
-                requirePositive(meetingId, "meetingId");
-                Objects.requireNonNull(clientPayload, "clientPayload는 필수입니다.");
-                requireNull(reason, "reason");
+            case ROOM_BROADCAST,QUICK_LOBBY_BROADCAST -> {
+                requireChannel(
+                        channel,
+                        RealtimeChannel.MEETING
+                );
+
+                requirePositive(
+                        meetingId,
+                        "meetingId"
+                );
+
+                Objects.requireNonNull(
+                        clientPayload,
+                        "clientPayload는 필수입니다."
+                );
+
+                requireNull(
+                        reason,
+                        "reason"
+                );
+
                 requireNull(
                         minimumValidTokenVersion,
                         "minimumValidTokenVersion"
@@ -129,6 +145,27 @@ public record RealtimeEvent(
                 actorUserId,
                 targetUserId,
                 targetParticipantId,
+                null,
+                clientPayload
+        );
+    }
+
+    public static RealtimeEvent quickLobbyBroadcast(
+            String eventType,
+            Long meetingId,
+            Long actorUserId,
+            Object clientPayload
+    )
+    {
+        return new RealtimeEvent(
+                RealtimeChannel.MEETING,
+                RealtimeDeliveryKind.QUICK_LOBBY_BROADCAST,
+                eventType,
+                null,
+                meetingId,
+                actorUserId,
+                null,
+                null,
                 null,
                 clientPayload
         );

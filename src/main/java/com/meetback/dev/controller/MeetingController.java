@@ -1,6 +1,10 @@
 package com.meetback.dev.controller;
 
+import com.meetback.dev.domain.MeetingEventType;
+import com.meetback.dev.domain.MeetingType;
 import com.meetback.dev.dto.*;
+import com.meetback.dev.realtime.event.RealtimeEvent;
+import com.meetback.dev.realtime.publisher.RealtimeEventPublisher;
 import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.ChatService;
 import com.meetback.dev.service.MeetingService;
@@ -9,6 +13,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Map;
+import org.springframework.http.ResponseEntity;
 
 
 // ============================================================
@@ -26,6 +32,7 @@ public class MeetingController {
     private final MeetingService meetingService;
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatService chatService;
+    private final RealtimeEventPublisher realtimeEventPublisher;
 
     /*
      * ============================================================
@@ -41,14 +48,43 @@ public class MeetingController {
             @RequestBody MeetingCreateRequest request
             ){
 
-        System.out.println(
-                "[MeetingController] user = " + user
-        );
+        MeetingCreateResponse response =
+                meetingService.createMeeting(
+                        user.userId(),
+                        request
+                );
 
-        return meetingService.createMeeting(
-                user.userId(),
-                request
-        );
+        MeetingType meetingType =
+                request.getMeetingType() != null
+                    ? request.getMeetingType()
+                    : MeetingType.FRIEND;
+
+        /*
+         * 번개방 생성 시 홈의 번개방 목록 갱신 이벤트 발행
+         */
+        if( meetingType == MeetingType.QUICK_VOTE
+            ||
+            meetingType == MeetingType.QUICK_FIXED
+        )
+        {
+            String eventType =
+                    MeetingEventType.QUICK_MEETING_LIST_CHANGED.name();
+
+            realtimeEventPublisher.publish(
+                    RealtimeEvent.quickLobbyBroadcast(
+                            eventType,
+                            response.getMeetingId(),
+                            user.userId(),
+                            Map.of(
+                                    "messageType", "EVENT",
+                                    "eventType", eventType,
+                                    "meetingId", response.getMeetingId()
+                            )
+                    )
+            );
+        }
+
+        return response;
 
     }
 
@@ -79,6 +115,8 @@ public class MeetingController {
 
         if(response.newlyJoined())
         {
+            String eventType = MeetingEventType.PARTICIPANT_JOINED.name();
+
             ChatMessageResponse event =
                     chatService.saveSystemMessage(
                             response.meetingId(),
@@ -87,14 +125,40 @@ public class MeetingController {
                             "모임에 참가했습니다."
                     );
 
-
-            messagingTemplate.convertAndSend(
-                    "/topic/meetings/"
-                    + response.meetingId()
-                    + "/chat",
-
-                    event
+            // 모임방 참가자 목록 및 채팅 갱신
+            realtimeEventPublisher.publish(
+                    RealtimeEvent.meetingBroadcast(
+                            eventType,
+                            response.meetingId(),
+                            user.userId(),
+                            event
+                    )
             );
+
+            // 홈의 공개 번개방 현재 인원 갱신
+            if (
+                    response.meetingType() == MeetingType.QUICK_VOTE
+                    ||
+                    response.meetingType() == MeetingType.QUICK_FIXED
+            ) {
+                String lobbyEventType =
+                        MeetingEventType
+                                .QUICK_MEETING_LIST_CHANGED
+                                .name();
+
+                realtimeEventPublisher.publish(
+                        RealtimeEvent.quickLobbyBroadcast(
+                                lobbyEventType,
+                                response.meetingId(),
+                                user.userId(),
+                                Map.of(
+                                        "messageType", "EVENT",
+                                        "eventType", lobbyEventType,
+                                        "meetingId", response.meetingId()
+                                )
+                        )
+                );
+            }
         }
 
         return response;
@@ -123,6 +187,8 @@ public class MeetingController {
 
     ) {
 
+        String eventType = MeetingEventType.MEETING_CONFIRMED.name();
+
         // =========================================================
         // 1. 최종 후보 DB 확정
         // =========================================================
@@ -142,8 +208,8 @@ public class MeetingController {
                 chatService.saveSystemMessageOnce(
                         meetingId,
                         user.userId(),
-                        "MEETING_CONFIRMED",
-                        "MEETING_CONFIRMED",
+                        eventType,
+                        eventType,
                         "최종 장소가 확정되었습니다."
                 );
 
@@ -153,14 +219,13 @@ public class MeetingController {
         // =========================================================
 
         if (notice != null) {
-
-            messagingTemplate.convertAndSend(
-
-                    "/topic/meetings/"
-                            + meetingId
-                            + "/chat",
-
-                    notice
+            realtimeEventPublisher.publish(
+                    RealtimeEvent.meetingBroadcast(
+                            eventType,
+                            meetingId,
+                            user.userId(),
+                            notice
+                    )
             );
         }
     }
@@ -178,46 +243,98 @@ public class MeetingController {
             @AuthenticationPrincipal AuthenticatedUser user
             ) {
 
-        ChatMessageResponse notice =
-                chatService.saveSystemMessageOnce(
-                        meetingId,
-                        user.userId(),
-                        "VOTING_STARTED",
-                        "VOTING_STARTED",
-                        "장소 투표가 시작되었습니다."
-                );
-
-        if(notice != null)
-        {
-            messagingTemplate.convertAndSend(
-                    "/topic/meetings/"
-                        + meetingId
-                        + "/chat",
-                    notice
-            );
-        }
-        // DB 상태
-        // INPUT_OPEN -> VOTING
+        /*
+         * 먼저 DB 상태를 INPUT_OPEN에서 VOTING으로 변경합니다.
+         *
+         * 상태 변경이 실패하면 투표 시작 메시지도 발생하지 않습니다.
+         */
         meetingService.startVoting(
                 meetingId,
                 user.userId()
         );
 
-        ChatMessageResponse event =
-                chatService.saveSystemMessage(
+        String eventType =
+                MeetingEventType.VOTING_STARTED.name();
+
+        /*
+         * 투표 시작 공지는 모임당 한 번만 저장합니다.
+         */
+        ChatMessageResponse notice =
+                chatService.saveSystemMessageOnce(
                         meetingId,
                         user.userId(),
-                        "VOTING_STARTED",
-                        "장소 투표를 시작합니다."
+                        eventType,
+                        eventType,
+                        "장소 투표가 시작되었습니다."
                 );
 
-        messagingTemplate.convertAndSend(
-                "/topic/meetings/"
-                        + meetingId
-                        + "/chat",
+        if (notice != null)
+        {
+            realtimeEventPublisher.publish(
+                    RealtimeEvent.meetingBroadcast(
+                            eventType,
+                            meetingId,
+                            user.userId(),
+                            notice
+                    )
+            );
+        }
+    }
 
-                event
+    @PatchMapping("/{meetingId}/recruitment/close")
+    public ResponseEntity<Void> closeRecruitment(
+            @PathVariable Long meetingId,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        meetingService.closeFixedRecruitment(
+                meetingId,
+                user.userId()
         );
+
+        String eventType =
+                MeetingEventType.RECRUITMENT_CLOSED.name();
+
+        ChatMessageResponse notice =
+                chatService.saveSystemMessageOnce(
+                        meetingId,
+                        user.userId(),
+                        eventType,
+                        eventType,
+                        "참가 모집이 마감되었습니다."
+                );
+
+        if (notice != null) {
+            realtimeEventPublisher.publish(
+                    RealtimeEvent.meetingBroadcast(
+                            eventType,
+                            meetingId,
+                            user.userId(),
+                            notice
+                    )
+            );
+        }
+
+        String lobbyEventType =
+                MeetingEventType
+                        .QUICK_MEETING_LIST_CHANGED
+                        .name();
+
+        realtimeEventPublisher.publish(
+                RealtimeEvent.quickLobbyBroadcast(
+                        lobbyEventType,
+                        meetingId,
+                        user.userId(),
+                        Map.of(
+                                "messageType", "EVENT",
+                                "eventType", lobbyEventType,
+                                "meetingId", meetingId
+                        )
+                )
+        );
+
+        return ResponseEntity
+                .noContent()
+                .build();
     }
 
     @GetMapping("/my")
@@ -226,6 +343,32 @@ public class MeetingController {
     ) {
         return meetingService.getMyMeetings(
                 user.userId()
+        );
+    }
+
+    @GetMapping("/my/quick")
+    public List<MyMeetingResponse> getMyQuickMeetings(
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        return meetingService.getMyQuickMeetings(
+                user.userId()
+        );
+    }
+
+    @GetMapping("/quick")
+    public List<QuickMeetingResponse> getQuickVoteMeetings(
+            @AuthenticationPrincipal AuthenticatedUser user,
+
+            @RequestParam(
+                    required = false,
+                    defaultValue = ""
+            )
+            String keyword
+    ) {
+
+        return meetingService.getQuickVoteMeetings(
+                user.userId(),
+                keyword
         );
     }
 
@@ -240,5 +383,18 @@ public class MeetingController {
                 meetingId,
                 user.userId()
         );
+    }
+
+    @DeleteMapping("/{meetingId}/quick-fixed/setup")
+    public ResponseEntity<Void> cancelQuickFixedSetup(
+            @PathVariable Long meetingId,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        meetingService.cancelQuickFixedSetup(
+                meetingId,
+                user.userId()
+        );
+
+        return ResponseEntity.noContent().build();
     }
 }

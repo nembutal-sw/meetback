@@ -3,10 +3,8 @@ package com.meetback.dev.service;
 import com.meetback.dev.domain.*;
 import com.meetback.dev.dto.ParticipantLocationRequestDTO;
 import com.meetback.dev.dto.ParticipantRoomResponse;
-import com.meetback.dev.repository.CandidateReturnResultMapper;
-import com.meetback.dev.repository.MeetingMapper;
-import com.meetback.dev.repository.MeetingParticipantMapper;
-import com.meetback.dev.repository.ParticipantKickHistoryMapper;
+import com.meetback.dev.dto.QuickFixedReturnLocationRequestDTO;
+import com.meetback.dev.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -26,6 +24,7 @@ public class MeetingParticipantService {
     private final MeetingMapper meetingMapper;
     private final MeetingPresenceService meetingPresenceService;
     private final ParticipantKickHistoryMapper participantKickHistoryMapper;
+    private final MeetingCandidateMapper meetingCandidateMapper;
 
     public MeetingParticipant findById(
             Long participantId,
@@ -560,6 +559,40 @@ public class MeetingParticipantService {
         return participants;
     }
 
+    public List<ParticipantRoomResponse> findKickedRoomParticipants(
+            Long meetingId,
+            Long hostUserId
+    )
+    {
+        Meeting meeting =
+                meetingMapper.findById(
+                        meetingId
+                );
+
+        if(meeting == null)
+        {
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+        /*
+         * 강퇴 목록은 방장만 조회할 수 있습니다.
+         */
+        if(
+                !Objects.equals(
+                        meeting.getHostUserId(),
+                        hostUserId
+                )
+        ){
+            throw new AccessDeniedException(
+                    "방장만 강퇴된 참가자를 조회할 수 있습니다."
+            );
+        }
+
+        return meetingParticipantMapper.findKickedRoomParticipants(meetingId);
+    }
+
     @Transactional
     public ParticipantKickResult kickParticipant(
             Long participantId,
@@ -793,9 +826,32 @@ public class MeetingParticipantService {
             );
         }
 
+        ParticipantStatus nextStatus;
+
+        if(
+                meeting.getMeetingType() == MeetingType.QUICK_VOTE
+                ||
+                meeting.getMeetingType() == MeetingType.QUICK_FIXED
+        )
+        {
+            /*
+             * 번개방은 강퇴만 해제합니다.
+             * 사용자가 다시 참가해야 ACTIVE가 됩니다.
+             */
+            nextStatus = ParticipantStatus.LEFT;
+        }
+        else
+        {
+            /*
+             * 친구방은 고정 참가자이므로 바로 복구합니다.
+             */
+            nextStatus = ParticipantStatus.ACTIVE;
+        }
+
         int updatedRows =
                 meetingParticipantMapper.cancelKick(
-                        participantId
+                        participantId,
+                        nextStatus
                 );
 
         if(updatedRows != 1)
@@ -824,6 +880,451 @@ public class MeetingParticipantService {
                 participant.getUserId(),
                 participant.getNickname()
         );
+    }
+
+    @Transactional
+    public ParticipantLeaveResult leaveQuickVoteMeeting(
+            Long participantId,
+            Long userId
+    )
+    {
+        /*
+         * 1. 참가자 조회
+         */
+        MeetingParticipant participant =
+                meetingParticipantMapper.findById(
+                        participantId
+                );
+
+        if(participant == null)
+        {
+            throw new IllegalArgumentException(
+                    "참가자를 찾을 수 없습니다."
+            );
+        }
+
+        /*
+         * 2. 본인 참가자 정보인지 검사
+         */
+        if(
+                !Objects.equals(
+                        participant.getUserId(),
+                        userId
+                )
+        )
+        {
+            throw new AccessDeniedException(
+                    "본인만 모임에서 나갈 수 있습니다."
+            );
+        }
+
+        if (
+                participant.getParticipantStatus()
+                        != ParticipantStatus.ACTIVE
+        ) {
+            throw new IllegalStateException(
+                    "현재 참가 중인 사용자가 아닙니다."
+            );
+        }
+
+
+        /*
+         * 4. 모임 조회
+         */
+        Meeting meeting =
+                meetingMapper.findById(
+                        participant.getMeetingId()
+                );
+
+
+        if (meeting == null) {
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+
+        /*
+         * 5. QUICK_VOTE 방에서만 나가기 허용
+         *
+         * FRIEND는 WebSocket 연결이 끊겨도
+         * 참가자 상태를 ACTIVE로 유지한다.
+         */
+        boolean quickMeeting =
+                meeting.getMeetingType()
+                        == MeetingType.QUICK_VOTE
+                ||
+                meeting.getMeetingType()
+                        == MeetingType.QUICK_FIXED;
+
+        if (!quickMeeting) {
+            throw new IllegalStateException(
+                    "친구방에서는 참가자 상태가 유지됩니다."
+            );
+        }
+
+
+        /*
+         * 6. 방장은 나가기 불가
+         */
+        if (
+                Objects.equals(
+                        meeting.getHostUserId(),
+                        userId
+                )
+        ) {
+            throw new IllegalStateException(
+                    "방장은 모임에서 나갈 수 없습니다."
+            );
+        }
+
+
+        /*
+         * 7. 우선 INPUT_OPEN 단계만 지원
+         */
+        boolean leaveAllowed =
+                meeting.getStatus()
+                        == MeetingStatus.INPUT_OPEN
+                        ||
+                        (
+                                meeting.getMeetingType()
+                                        == MeetingType.QUICK_FIXED
+                                &&
+                                meeting.getStatus()
+                                        == MeetingStatus.RECRUITMENT_CLOSED
+                        );
+
+        if (!leaveAllowed) {
+            throw new IllegalStateException(
+                    "현재 상태에서는 모임에서 나갈 수 없습니다."
+            );
+        }
+
+
+        /*
+         * 8. 참가자가 등록한 후보 조회
+         */
+        MeetingCandidate candidate =
+                meetingCandidateMapper
+                        .findByMeetingIdAndParticipantId(
+                                meeting.getMeetingId(),
+                                participantId
+                        );
+
+
+        /*
+         * 후보가 존재하면 삭제하지 않고 비활성화한다.
+         *
+         * 재입장 후 다시 장소를 등록하면
+         * 기존 후보 행을 재사용할 수 있다.
+         */
+        if (
+                candidate != null
+                        &&
+                        Boolean.TRUE.equals(
+                                candidate.getIsActive()
+                        )
+        ) {
+
+            candidate.setIsActive(false);
+
+            int candidateUpdatedRows =
+                    meetingCandidateMapper.update(
+                            candidate
+                    );
+
+
+            if (candidateUpdatedRows != 1) {
+                throw new IllegalStateException(
+                        "참가자의 후보 장소 비활성화에 실패했습니다."
+                );
+            }
+
+
+            /*
+             * 나간 참가자가 등록한 후보의 계산 결과 제거
+             */
+            returnResultMapper.deleteByCandidateId(
+                    candidate.getCandidateId()
+            );
+        }
+
+
+        /*
+         * 다른 후보에 대해 계산된
+         * 나간 참가자의 귀가 결과도 제거
+         */
+        returnResultMapper.deleteByParticipantId(
+                participantId
+        );
+
+
+        /*
+         * 기존 계산 결과를 현재 결과로 사용하지 않도록
+         * 계산 버전을 증가시킨다.
+         */
+        int currentVersion =
+                meeting.getCalculationVersion() == null
+                        ? 0
+                        : meeting.getCalculationVersion();
+
+
+        int versionUpdatedRows =
+                meetingMapper.updateCalculationVersion(
+                        meeting.getMeetingId(),
+                        currentVersion + 1
+                );
+
+
+        if (versionUpdatedRows != 1) {
+            throw new IllegalStateException(
+                    "모임 계산 버전 변경에 실패했습니다."
+            );
+        }
+
+
+        /*
+         * 9. ACTIVE → LEFT
+         * 위치 입력값도 함께 초기화
+         */
+        int participantUpdatedRows =
+                meetingParticipantMapper
+                        .leaveBeforeVoting(
+                                participantId
+                        );
+
+
+        if (participantUpdatedRows != 1) {
+            throw new IllegalStateException(
+                    "모임 나가기에 실패했습니다."
+            );
+        }
+
+
+        return new ParticipantLeaveResult(
+                participant.getMeetingId(),
+                participant.getParticipantId(),
+                participant.getUserId(),
+                participant.getNickname()
+        );
+
+
+    }
+
+    @Transactional
+    public void updateQuickFixedReturnLocation(
+            Long meetingId,
+            Long userId,
+            QuickFixedReturnLocationRequestDTO request
+    ) {
+
+        // =========================================================
+        // 1. 모임 확인
+        // =========================================================
+
+        Meeting meeting =
+                meetingMapper.findById(
+                        meetingId
+                );
+
+
+        if (meeting == null) {
+
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+
+        // =========================================================
+        // 2. QUICK_FIXED 방인지 확인
+        // =========================================================
+
+        if (
+                meeting.getMeetingType()
+                        != MeetingType.QUICK_FIXED
+        ) {
+
+            throw new IllegalStateException(
+                    "고정 번개방에서만 사용할 수 있습니다."
+            );
+        }
+
+
+        // =========================================================
+        // 3. 현재 로그인 사용자의 참가자 정보 조회
+        // =========================================================
+
+        MeetingParticipant participant =
+                meetingParticipantMapper
+                        .findByMeetingIdAndUserId(
+                                meetingId,
+                                userId
+                        );
+
+
+        if (participant == null) {
+
+            throw new AccessDeniedException(
+                    "해당 모임의 참가자가 아닙니다."
+            );
+        }
+
+
+        if (
+                participant.getParticipantStatus()
+                        != ParticipantStatus.ACTIVE
+        ) {
+
+            throw new AccessDeniedException(
+                    "현재 참가 중인 사용자만 귀가 정보를 등록할 수 있습니다."
+            );
+        }
+
+
+        // =========================================================
+        // 4. 요청값 확인
+        // =========================================================
+
+        if (request == null) {
+
+            throw new IllegalArgumentException(
+                    "귀가 장소 정보가 없습니다."
+            );
+        }
+
+
+        if (
+                request.name() == null
+                        ||
+                        request.name().isBlank()
+        ) {
+
+            throw new IllegalArgumentException(
+                    "귀가 장소를 선택해주세요."
+            );
+        }
+
+
+        if (
+                request.latitude() == null
+                        ||
+                        request.longitude() == null
+        ) {
+
+            throw new IllegalArgumentException(
+                    "귀가 장소 좌표가 올바르지 않습니다."
+            );
+        }
+
+
+        // =========================================================
+        // 5. 저장할 값 생성
+        // =========================================================
+
+        String newReturnName =
+                request.name().trim();
+
+
+        String newReturnAddress =
+                request.address();
+
+
+        BigDecimal newReturnLatitude =
+                BigDecimal.valueOf(
+                        request.latitude()
+                );
+
+
+        BigDecimal newReturnLongitude =
+                BigDecimal.valueOf(
+                        request.longitude()
+                );
+
+
+        // =========================================================
+        // 6. 기존 귀가지와 변경 여부 확인
+        // =========================================================
+
+        boolean returnChanged =
+
+                !Objects.equals(
+                        participant.getReturnName(),
+                        newReturnName
+                )
+
+                        ||
+
+                        !Objects.equals(
+                                participant.getReturnAddress(),
+                                newReturnAddress
+                        )
+
+                        ||
+
+                        !sameBigDecimal(
+                                participant.getReturnLatitude(),
+                                newReturnLatitude
+                        )
+
+                        ||
+
+                        !sameBigDecimal(
+                                participant.getReturnLongitude(),
+                                newReturnLongitude
+                        );
+
+
+        // =========================================================
+        // 7. 참가자 객체에 귀가지 설정
+        // =========================================================
+
+        participant.setReturnName(
+                newReturnName
+        );
+
+        participant.setReturnAddress(
+                newReturnAddress
+        );
+
+        participant.setReturnLatitude(
+                newReturnLatitude
+        );
+
+        participant.setReturnLongitude(
+                newReturnLongitude
+        );
+
+
+        // =========================================================
+        // 8. 귀가지 전용 DB UPDATE
+        // =========================================================
+
+        int updatedRows =
+                meetingParticipantMapper
+                        .updateReturnLocation(
+                                participant
+                        );
+
+
+        if (updatedRows != 1) {
+
+            throw new IllegalStateException(
+                    "귀가 장소 저장에 실패했습니다."
+            );
+        }
+
+
+        // =========================================================
+        // 9. 귀가지가 바뀌었으면 기존 귀가 계산 결과 제거
+        // =========================================================
+
+        if (returnChanged) {
+
+            returnResultMapper.deleteByParticipantId(
+                    participant.getParticipantId()
+            );
+        }
     }
 
 }

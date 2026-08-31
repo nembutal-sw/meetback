@@ -5,7 +5,9 @@
 
 <mapper namespace="com.meetback.dev.repository.ParticipantMapper">
 
-    <insert id="insertParticipant">
+    <insert id="insertParticipant"
+            useGeneratedKeys="true"
+            keyProperty="participantId">
 
         INSERT INTO meeting_participants
         (
@@ -43,7 +45,6 @@
         FROM meeting_participants
         WHERE meeting_id = #{meetingId}
           AND participant_status = 'ACTIVE'
-          AND input_status = 'SUBMITTED'
 
     </select>
 
