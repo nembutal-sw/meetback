@@ -25,14 +25,15 @@
          ========================================================= -->
 
     <script
-            th:src="|https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${naverMapsClientId}|">
+            th:src="|https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${naverMapsClientId}&submodules=gl|">
     </script>
+    <script src="/js/naver-map-theme.js"></script>
 
 
     <link rel="stylesheet" href="/css/quick-fixed-check.css">
     <link rel="stylesheet" href="/css/meetback-theme.css">
     <link rel="stylesheet" href="/css/app-pages.css">
-
+    <link rel="stylesheet" href="/css/route-map.css">
     <link rel="stylesheet" href="/css/dark-mode.css">
     <script src="/js/theme-toggle.js"></script>
 </head>
@@ -1921,7 +1922,6 @@
                 "info"
             );
 
-
             return;
         }
 
@@ -1937,7 +1937,6 @@
                 "error"
             );
 
-
             return;
         }
 
@@ -1945,6 +1944,12 @@
         const modal =
             document.getElementById(
                 "routeMapModal"
+            );
+
+
+        const loadingElement =
+            document.getElementById(
+                "routeMapLoading"
             );
 
 
@@ -1960,6 +1965,10 @@
             `${mapData.startName || "모임 장소"} → ${mapData.endName || "귀가 장소"}`;
 
 
+        // =====================================================
+        // 모달 열기
+        // =====================================================
+
         modal.classList.add(
             "open"
         );
@@ -1970,9 +1979,24 @@
         );
 
 
+        // =====================================================
+        // 로딩 영역 제거 / 실제 지도만 표시
+        // =====================================================
+
+        if (loadingElement)
+        {
+            loadingElement.style.display =
+                "none";
+        }
+
+
         mapElement.style.display =
             "block";
 
+
+        // =====================================================
+        // 하단 정보
+        // =====================================================
 
         renderRouteMapInfo();
 
@@ -1983,6 +2007,11 @@
         );
 
 
+        // =====================================================
+        // 지도 그리기
+        // 모달이 열린 뒤 크기가 잡힌 다음 실행
+        // =====================================================
+
         setTimeout(
             () =>
             {
@@ -1992,6 +2021,17 @@
                     mapData.endName,
                     mapData.steps
                 );
+
+
+                // 이미 생성된 지도를 다시 열었을 때
+                // 컨테이너 크기 재계산
+                if (routeMap)
+                {
+                    naver.maps.Event.trigger(
+                        routeMap,
+                        "resize"
+                    );
+                }
             },
             100
         );
