@@ -89,8 +89,6 @@ public class SecurityConfig {
                                                 "/feed/**",
 
                                                 "/meeting",
-                                                "/meeting/location-test",
-                                                "/meeting/location-test/**",
                                                 "/meeting/location",
                                                 "/meeting/vote",
                                                 "/meeting/result"

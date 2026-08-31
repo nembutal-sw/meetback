@@ -222,7 +222,6 @@
             color: #c94b54;
         }
 
-        @media (max-width: 700px) {
 
             .info-grid {
                 grid-template-columns: 1fr;
@@ -963,6 +962,7 @@
 
         </button>
 
+
         <button
                 type="button"
                 id="leaveMeetingButton"
@@ -973,6 +973,7 @@
             방 나가기
 
         </button>
+
 
         <button
                 type="button"
@@ -1055,6 +1056,7 @@
             참가자 현황
         </h2>
 
+
         <div
                 id="participantSummary"
                 class="participant-summary">
@@ -1063,13 +1065,13 @@
 
         </div>
 
-        <!-- 현재 참가 중인 사람 -->
+
         <div
                 id="participantList"
                 class="participant-list">
         </div>
 
-        <!-- 방장에게만 보이는 강퇴된 참가자 목록 -->
+
         <div
                 id="kickedParticipantSection"
                 class="kicked-participant-section"
@@ -1079,6 +1081,7 @@
                 강퇴된 참가자
             </h3>
 
+
             <div
                     id="kickedParticipantList"
                     class="participant-list">
@@ -1087,6 +1090,7 @@
         </div>
 
     </div>
+
 
     <!-- =========================================================
          모임 채팅
@@ -1100,6 +1104,7 @@
                 모임 채팅
             </h2>
 
+
             <div>
                 연결 상태 :
                 <strong id="chatStatus">
@@ -1109,10 +1114,12 @@
 
         </div>
 
+
         <div
                 id="chatMessages"
                 class="chat-messages">
         </div>
+
 
         <div class="chat-row">
 
@@ -1125,6 +1132,7 @@
                             sendChat();
                         }
                     ">
+
 
             <button
                     type="button"
@@ -2734,21 +2742,26 @@
             return;
         }
 
+
         const currentUserIsHost =
             Number(meeting.hostUserId)
             ===
             Number(currentUser.userId);
 
+
         closeRecruitmentButton.hidden =
             !currentUserIsHost;
+
 
         const recruitmentClosed =
             meeting.status
             ===
             "RECRUITMENT_CLOSED";
 
+
         closeRecruitmentButton.disabled =
             recruitmentClosed;
+
 
         closeRecruitmentButton.textContent =
             recruitmentClosed
@@ -2825,6 +2838,7 @@
 
         inviteCodeButton.disabled =
             !data.inviteCode;
+
 
         updateRecruitmentButton();
     }
@@ -2921,6 +2935,7 @@
                 }
             );
 
+
         if (!response.ok)
         {
             throw new Error(
@@ -2928,8 +2943,10 @@
             );
         }
 
+
         const participants =
             await response.json();
+
 
         if (!Array.isArray(participants))
         {
@@ -2937,6 +2954,7 @@
                 "참가자 목록 형식이 올바르지 않습니다."
             );
         }
+
 
         currentParticipant =
             participants.find(
@@ -2948,15 +2966,18 @@
             ||
             null;
 
+
         const currentUserIsHost =
             Number(meeting.hostUserId)
             ===
             Number(currentUser.userId);
 
+
         leaveMeetingButton.hidden =
             !currentParticipant
             ||
             currentUserIsHost;
+
 
         const maxParticipants =
             Number(
@@ -2964,6 +2985,7 @@
                 ||
                 0
             );
+
 
         participantSummary.textContent =
             maxParticipants > 0
@@ -2976,7 +2998,9 @@
                 + participants.length
                 + "명";
 
+
         participantList.replaceChildren();
+
 
         participants.forEach(
             participant =>
@@ -2986,18 +3010,22 @@
                         "div"
                     );
 
+
                 item.className =
                     "participant-item";
+
 
                 const host =
                     Number(participant.userId)
                     ===
                     Number(meeting.hostUserId);
 
+
                 const me =
                     Number(participant.userId)
                     ===
                     Number(currentUser.userId);
+
 
                 const canKick =
                     currentUserIsHost
@@ -3005,6 +3033,7 @@
                     !host
                     &&
                     !me;
+
 
                 const nickname =
                     participant.nickname
@@ -3026,23 +3055,27 @@
                         ${participant.online ? "● ON" : "● OFF"}
                     </span>
 
-            ${
+                    ${
                         canKick
                             ? `
-                        <button
-                                type="button"
-                                class="participant-kick-button">
-                            강퇴
-                        </button>
-                    `
+                                <button
+                                        type="button"
+                                        class="participant-kick-button">
+
+                                    강퇴
+
+                                </button>
+                              `
                             : ""
                     }
-            `;
+                    `;
+
 
                 const kickButton =
                     item.querySelector(
                         ".participant-kick-button"
                     );
+
 
                 if (kickButton)
                 {
@@ -3057,6 +3090,7 @@
                         }
                     );
                 }
+
 
                 participantList.appendChild(
                     item
@@ -3081,15 +3115,19 @@
             ===
             Number(currentUser.userId);
 
+
         if (!currentUserIsHost)
         {
             kickedParticipantSection.hidden =
                 true;
 
+
             kickedParticipantList.replaceChildren();
+
 
             return;
         }
+
 
         const response =
             await MeetBack.authenticatedFetch(
@@ -3104,6 +3142,7 @@
                 }
             );
 
+
         if (!response.ok)
         {
             kickedParticipantSection.hidden =
@@ -3112,10 +3151,13 @@
             return;
         }
 
+
         const kickedParticipants =
             await response.json();
 
+
         kickedParticipantList.replaceChildren();
+
 
         if (
             !Array.isArray(kickedParticipants)
@@ -3129,8 +3171,10 @@
             return;
         }
 
+
         kickedParticipantSection.hidden =
             false;
+
 
         kickedParticipants.forEach(
             participant =>
@@ -3140,8 +3184,10 @@
                         "div"
                     );
 
+
                 item.className =
                     "participant-item";
+
 
                 const nickname =
                     participant.nickname
@@ -3167,6 +3213,7 @@
                     </button>
                     `;
 
+
                 item.querySelector(
                     ".participant-kick-cancel-button"
                 ).addEventListener(
@@ -3179,6 +3226,7 @@
                         );
                     }
                 );
+
 
                 kickedParticipantList.appendChild(
                     item
@@ -3208,6 +3256,7 @@
             return;
         }
 
+
         const response =
             await MeetBack.authenticatedFetch(
                 "/participants/"
@@ -3221,6 +3270,7 @@
                 }
             );
 
+
         if (!response.ok)
         {
             showMessage(
@@ -3229,6 +3279,7 @@
 
             return;
         }
+
 
         await loadParticipants();
 
@@ -3256,6 +3307,7 @@
             return;
         }
 
+
         const response =
             await MeetBack.authenticatedFetch(
                 "/participants/"
@@ -3269,6 +3321,7 @@
                 }
             );
 
+
         if (!response.ok)
         {
             showMessage(
@@ -3277,6 +3330,7 @@
 
             return;
         }
+
 
         await loadParticipants();
 
@@ -3295,17 +3349,40 @@
                 "kickModal"
             );
 
+
         modal.classList.add(
             "show"
         );
+
 
         modal.setAttribute(
             "aria-hidden",
             "false"
         );
 
+
         document.body.style.overflow =
             "hidden";
+    }
+
+    // =========================================================
+    // 사용자가 채팅 맨 아래 근처를 보고 있는지 확인
+    // =========================================================
+
+    function isChatNearBottom(
+        area
+    )
+    {
+        const threshold =
+            80;
+
+        const distanceFromBottom =
+            area.scrollHeight
+            - area.scrollTop
+            - area.clientHeight;
+
+        return distanceFromBottom
+            <= threshold;
     }
 
     // =========================================================
@@ -3321,6 +3398,22 @@
                 "chatMessages"
             );
 
+        if (!area)
+        {
+            return;
+        }
+
+
+        /*
+         * 메시지를 추가하기 전에
+         * 사용자가 맨 아래를 보고 있었는지 확인한다.
+         */
+        const shouldAutoScroll =
+            isChatNearBottom(
+                area
+            );
+
+
         const row =
             document.createElement(
                 "div"
@@ -3331,34 +3424,68 @@
             row.className =
                 "chat-message system";
 
-            row.textContent =
-                "📢 "
-                +
-                (
-                    chatMessage.content
+
+            /*
+             * 참가 시스템 메시지는
+             * 이벤트를 발생시킨 참가자의 닉네임을 표시한다.
+             */
+            if (
+                chatMessage.eventType
+                ===
+                "PARTICIPANT_JOINED"
+            )
+            {
+                const nickname =
+                    chatMessage.nickname
                     ||
-                    ""
-                );
+                    "참가자";
+
+                row.textContent =
+                    nickname
+                    +
+                    "님이 "
+                    +
+                    (
+                        chatMessage.content
+                        ||
+                        "모임에 참가했습니다."
+                    );
+            }
+            else
+            {
+                row.textContent =
+                    "📢 "
+                    +
+                    (
+                        chatMessage.content
+                        ||
+                        ""
+                    );
+            }
         }
         else
         {
             row.className =
                 "chat-message";
 
+
             const nickname =
                 document.createElement(
                     "strong"
                 );
+
 
             nickname.textContent =
                 chatMessage.nickname
                 ||
                 "참가자";
 
+
             const content =
                 document.createElement(
                     "span"
                 );
+
 
             content.textContent =
                 " : "
@@ -3369,21 +3496,32 @@
                     ""
                 );
 
+
             row.appendChild(
                 nickname
             );
+
 
             row.appendChild(
                 content
             );
         }
 
+
         area.appendChild(
             row
         );
 
-        area.scrollTop =
-            area.scrollHeight;
+
+        /*
+         * 기존에 맨 아래를 보고 있었을 때만
+         * 새 메시지를 따라 내려간다.
+         */
+        if (shouldAutoScroll)
+        {
+            area.scrollTop =
+                area.scrollHeight;
+        }
     }
 
 
@@ -3402,6 +3540,7 @@
                 "/messages"
             );
 
+
         if (!response.ok)
         {
             throw new Error(
@@ -3409,15 +3548,19 @@
             );
         }
 
+
         const messages =
             await response.json();
+
 
         const area =
             document.getElementById(
                 "chatMessages"
             );
 
+
         area.replaceChildren();
+
 
         messages.forEach(
             chatMessage =>
@@ -3507,6 +3650,7 @@
                 ? "wss"
                 : "ws";
 
+
         stompClient =
             new StompJs.Client({
 
@@ -3520,6 +3664,7 @@
                     "/ws",
 
                 connectHeaders: {
+
                     "Authorization":
                         "Bearer "
                         +
@@ -3537,12 +3682,14 @@
                         ).textContent =
                             "CONNECTED";
 
+
                         const destination =
                             "/topic/meetings/"
                             +
                             meetingId
                             +
                             "/chat";
+
 
                         const receiptId =
                             "quick-fixed-"
@@ -3553,14 +3700,17 @@
                             +
                             Date.now();
 
+
                         stompClient.watchForReceipt(
                             receiptId,
                             async function()
                             {
                                 await loadParticipants();
+
                                 await loadKickedParticipants();
                             }
                         );
+
 
                         stompClient.subscribe(
                             destination,
@@ -3598,6 +3748,7 @@
                                     );
                                 }
 
+
                                 if (
                                     data.messageType === "EVENT"
                                     &&
@@ -3609,14 +3760,17 @@
                                         ===
                                         Number(currentUser.userId);
 
+
                                     if (kickedMe)
                                     {
                                         showKickModal();
+
 
                                         if (stompClient)
                                         {
                                             stompClient.reconnectDelay =
                                                 0;
+
 
                                             stompClient
                                                 .deactivate()
@@ -3629,6 +3783,7 @@
                                                 );
                                         }
 
+
                                         setTimeout(
                                             () =>
                                             {
@@ -3639,8 +3794,10 @@
                                             2000
                                         );
 
+
                                         return;
                                     }
+
 
                                     await loadParticipants();
 
@@ -3648,6 +3805,7 @@
 
                                     return;
                                 }
+
 
                                 if (
                                     data.messageType === "EVENT"
@@ -3662,6 +3820,7 @@
                                     return;
                                 }
 
+
                                 if (
                                     data.eventType === "PRESENCE_UPDATED"
                                     ||
@@ -3672,6 +3831,7 @@
                                 {
                                     await loadParticipants();
                                 }
+
 
                                 if (
                                     data.eventType === "RECRUITMENT_CLOSED"
@@ -3697,6 +3857,7 @@
                             }
                         );
 
+
                         await loadChatHistory();
                     },
 
@@ -3719,6 +3880,7 @@
                     }
             });
 
+
         stompClient.activate();
     }
 
@@ -3734,13 +3896,16 @@
                 "chatInput"
             );
 
+
         const content =
             input.value.trim();
+
 
         if (!content)
         {
             return;
         }
+
 
         if (
             !stompClient
@@ -3755,6 +3920,7 @@
             return;
         }
 
+
         stompClient.publish({
 
             destination:
@@ -3766,14 +3932,21 @@
 
             body:
                 JSON.stringify({
+
                     content:
                     content
                 })
         });
 
+
         input.value =
             "";
     }
+
+
+    // =========================================================
+    // 참가 모집 마감
+    // =========================================================
 
     async function closeRecruitment()
     {
@@ -3784,13 +3957,16 @@
                 "마감 후에는 새로운 참가자와 나간 참가자가 다시 들어올 수 없습니다."
             );
 
+
         if (!confirmed)
         {
             return;
         }
 
+
         closeRecruitmentButton.disabled =
             true;
+
 
         try
         {
@@ -3807,15 +3983,18 @@
                     }
                 );
 
+
             if (!response.ok)
             {
                 let errorMessage =
                     "참가 모집을 마감하지 못했습니다.";
 
+
                 try
                 {
                     const errorBody =
                         await response.json();
+
 
                     errorMessage =
                         errorBody.message
@@ -3826,10 +4005,12 @@
                 {
                 }
 
+
                 throw new Error(
                     errorMessage
                 );
             }
+
 
             await loadMeeting();
         }
@@ -3840,6 +4021,7 @@
                 ||
                 "참가 모집 마감 중 오류가 발생했습니다."
             );
+
 
             updateRecruitmentButton();
         }
@@ -3861,18 +4043,22 @@
             return;
         }
 
+
         const confirmed =
             confirm(
                 "정말 이 모임에서 나가시겠습니까?"
             );
+
 
         if (!confirmed)
         {
             return;
         }
 
+
         leaveMeetingButton.disabled =
             true;
+
 
         try
         {
@@ -3889,15 +4075,18 @@
                     }
                 );
 
+
             if (!response.ok)
             {
                 let errorMessage =
                     "모임에서 나가지 못했습니다.";
 
+
                 try
                 {
                     const errorBody =
                         await response.json();
+
 
                     errorMessage =
                         errorBody.message
@@ -3906,13 +4095,14 @@
                 }
                 catch (error)
                 {
-                    // 응답 본문이 JSON이 아니면 기본 문구 사용
                 }
+
 
                 throw new Error(
                     errorMessage
                 );
             }
+
 
             if (
                 stompClient
@@ -3922,6 +4112,7 @@
             {
                 await stompClient.deactivate();
             }
+
 
             location.href =
                 "/home";
@@ -3933,6 +4124,7 @@
                 ||
                 "모임에서 나가는 중 오류가 발생했습니다."
             );
+
 
             leaveMeetingButton.disabled =
                 false;
@@ -3969,13 +4161,17 @@
             return;
         }
 
+
         try
         {
             await loadMeeting();
 
+
             await loadFixedPlace();
 
+
             await loadParticipants();
+
 
             await loadKickedParticipants();
 
@@ -3998,6 +4194,7 @@
                 "[QUICK FIXED INITIALIZE ERROR]",
                 error
             );
+
 
             showMessage(
                 error.message

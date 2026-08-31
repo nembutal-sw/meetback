@@ -326,6 +326,59 @@
             );
     }
 
+    async function handleMeetingEvent(
+        data
+    )
+    {
+        if (
+            !data
+            ||
+            data.messageType
+            !==
+            "EVENT"
+        )
+        {
+            return;
+        }
+
+
+        if (
+            data.eventType
+            ===
+            "PARTICIPANT_KICKED"
+            &&
+            Number(data.userId)
+            ===
+            Number(currentUser.userId)
+        )
+        {
+            /*
+             * 자동 재연결을 먼저 막는다.
+             */
+            await MeetBackPresence.disconnect();
+
+
+            showToast(
+                "모임에서 강퇴되었습니다.",
+                "error"
+            );
+
+
+            /*
+             * 안내 문구를 잠깐 보여준 뒤 홈으로 이동한다.
+             */
+            setTimeout(
+                function ()
+                {
+                    location.replace(
+                        "/home"
+                    );
+                },
+                1200
+            );
+        }
+    }
+
 
     // =========================================================
     // 초기화
@@ -361,7 +414,8 @@
         // =====================================================
 
         MeetBackPresence.connect(
-            meetingId
+            meetingId,
+            handleMeetingEvent
         );
 
 

@@ -2945,9 +2945,12 @@
                                 // 일반 채팅
                                 // ================================
 
-                                addChat(
-                                    data
-                                );
+                                if(data.messageType === "CHAT")
+                                {
+                                    addChat(
+                                        data
+                                    );
+                                }
                             },
                             {
                                 receipt: receiptId,
