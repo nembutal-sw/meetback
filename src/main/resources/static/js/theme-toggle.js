@@ -28,6 +28,7 @@
 
     function applyTheme(theme) {
         const dark = theme === "dark";
+        const previousTheme = root.dataset.theme;
 
         root.dataset.theme = theme;
         root.classList.toggle("dark", dark);
@@ -42,6 +43,12 @@
             toggle.innerHTML = dark
                 ? '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"></path></svg>'
                 : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 15.1A8.5 8.5 0 0 1 8.9 3.8 8.5 8.5 0 1 0 20.2 15.1Z"></path></svg>';
+        }
+
+        if (previousTheme !== theme) {
+            window.dispatchEvent(new CustomEvent("meetback:themechange", {
+                detail: { theme: theme }
+            }));
         }
     }
 
@@ -98,10 +105,13 @@
             toggle.dataset.themeToggle = "";
 
             const homeActions = document.querySelector(".home-header-actions");
+            const loginContainer = document.querySelector(".page-login .login-container");
             if (siteHeaderActions) {
                 siteHeaderActions.insertBefore(toggle, siteHeaderActions.firstChild);
             } else if (homeActions) {
                 homeActions.insertBefore(toggle, homeActions.firstChild);
+            } else if (loginContainer) {
+                loginContainer.insertBefore(toggle, loginContainer.firstChild);
             } else {
                 document.body.appendChild(toggle);
             }
@@ -135,4 +145,14 @@
     } else if (typeof media.addListener === "function") {
         media.addListener(handleSystemThemeChange);
     }
+
+    window.addEventListener("storage", function (event) {
+        if (event.key === STORAGE_KEY) {
+            applyTheme(preferredTheme());
+        }
+    });
+
+    window.addEventListener("pageshow", function () {
+        applyTheme(preferredTheme());
+    });
 }());

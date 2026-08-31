@@ -155,6 +155,13 @@
     border-color: transparent;
 }
 
+:root[data-theme="dark"] .page-home .home-flash-section .quick-meeting-join-button:not(:disabled),
+:root.dark .page-home .home-flash-section .quick-meeting-join-button:not(:disabled) {
+    color: var(--mb-accent-foreground, #ffffff) !important;
+    border-color: transparent !important;
+    background: var(--mb-accent) !important;
+}
+
 :root[data-theme="dark"] .home-header,
 :root.dark .home-header {
     color: var(--mb-foreground);
@@ -215,4 +222,21 @@
     border: 0 !important;
     background: transparent !important;
     box-shadow: none !important;
+}
+
+:root[data-theme="dark"] .page-result #finalPlaceArea,
+:root.dark .page-result #finalPlaceArea {
+    color: var(--mb-foreground);
+    border-color: var(--mb-border);
+    background: var(--mb-secondary);
+}
+
+:root[data-theme="dark"] .page-result .final-place-name,
+:root.dark .page-result .final-place-name {
+    color: #ffffff;
+}
+
+:root[data-theme="dark"] .page-result .final-place-address,
+:root.dark .page-result .final-place-address {
+    color: #b8b6c8;
 }
