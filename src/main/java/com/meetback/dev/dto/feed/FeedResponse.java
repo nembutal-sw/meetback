@@ -16,6 +16,8 @@ public class FeedResponse {
     private String title;
     private String content;
     private List<FeedImageResponse> images;
+    private int likeCount;
+    private boolean liked;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

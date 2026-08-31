@@ -99,7 +99,6 @@ public class SecurityConfig {
 
                                         // 로그인 사용자 전용
                                         .requestMatchers(
-
                                                 "/auth/check",
                                                 "/auth/logout",
                                                 "/auth/withdraw",
