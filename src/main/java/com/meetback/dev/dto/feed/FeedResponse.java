@@ -11,9 +11,13 @@ import java.util.List;
 public class FeedResponse {
     private Long feedId;
     private Long userId;
+    private String nickname;
+    private boolean mine;
     private String title;
     private String content;
     private List<FeedImageResponse> images;
+    private int likeCount;
+    private boolean liked;
     private LocalDateTime createdAt;
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
 }

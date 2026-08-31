@@ -1,5 +1,8 @@
 package com.meetback.dev.WebSocket;
 
+import com.meetback.dev.domain.MeetingEventType;
+import com.meetback.dev.realtime.event.RealtimeEvent;
+import com.meetback.dev.realtime.publisher.RealtimeEventPublisher;
 import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.MeetingPresenceService;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +22,7 @@ import java.util.Map;
 public class MeetingPresenceEventListener {
 
     private final MeetingPresenceService presenceService;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final RealtimeEventPublisher realtimeEventPublisher;
 
     /*
      * ============================================================
@@ -79,6 +82,35 @@ public class MeetingPresenceEventListener {
                 );
 
         /*
+         * 가장 최근에 구독한 탭을 활성 세션으로 지정합니다.
+         */
+        MeetingPresenceService.ActiveRoomSession previousSession =
+                presenceService.claimActiveSession(
+                        sessionId,
+                        meetingId,
+                        user.userId()
+        );
+
+        String activeTabId =
+                accessor.getFirstNativeHeader(
+                        "x-room-tab-id"
+                );
+
+        if (
+                previousSession != null
+                &&
+                activeTabId != null
+                &&
+                !activeTabId.isBlank()
+        ) {
+            broadcastRoomSessionReplaced(
+                    previousSession.meetingId(),
+                    user.userId(),
+                    activeTabId
+            );
+        }
+
+        /*
          * 이미 ONLINE이었다면 방송할 필요 없음
          */
         if(change == null)
@@ -124,26 +156,49 @@ public class MeetingPresenceEventListener {
             MeetingPresenceService.PresenceChange change
     )
     {
-        messagingTemplate.convertAndSend(
-                "/topic/meetings/"
-                        + change.meetingId()
-                        + "/chat",
+        String eventType = MeetingEventType.PRESENCE_UPDATED.name();
 
-                (Object) Map.of(
-                        "messageType",
-                        "PRESENCE",
-
-                        "eventType",
-                        "PRESENCE_UPDATED",
-
-                        "userId",
+        realtimeEventPublisher.publish(
+                RealtimeEvent.meetingBroadcast(
+                        eventType,
+                        change.meetingId(),
                         change.userId(),
-
-                        "online",
-                        change.online()
+                        Map.of(
+                                "messageType", "PRESENCE",
+                                "eventType", eventType,
+                                "userId", change.userId(),
+                                "online", change.online()
+                        )
                 )
         );
+
     }
+
+    private void broadcastRoomSessionReplaced(
+            Long meetingId,
+            Long userId,
+            String activeTabId
+    )
+    {
+        String eventType = MeetingEventType.ROOM_SESSION_REPLACED.name();
+
+        realtimeEventPublisher.publish(
+                RealtimeEvent.meetingBroadcast(
+                        eventType,
+                        meetingId,
+                        userId,
+                        Map.of(
+                                "messageType", "EVENT",
+                                "eventType", eventType,
+                                "meetingId", meetingId,
+                                "userId", userId,
+                                "activeTabId", activeTabId
+                        )
+                )
+        );
+
+    }
+
     /*
      * /topic/meetings/33/chat
      *

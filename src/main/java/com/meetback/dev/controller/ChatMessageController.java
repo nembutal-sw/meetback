@@ -1,8 +1,10 @@
 package com.meetback.dev.controller;
 
-import com.meetback.dev.domain.ChatMessage;
+import com.meetback.dev.domain.MeetingEventType;
 import com.meetback.dev.dto.ChatMessageResponse;
 import com.meetback.dev.dto.ChatSendRequest;
+import com.meetback.dev.realtime.event.RealtimeEvent;
+import com.meetback.dev.realtime.publisher.RealtimeEventPublisher;
 import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.ChatService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,9 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import com.meetback.dev.service.MeetingPresenceService;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.security.Principal;
 
@@ -20,13 +25,16 @@ public class ChatMessageController {
 
     private final ChatService chatService;
 
-    private final SimpMessagingTemplate messagingTemplate;
+    private final RealtimeEventPublisher realtimeEventPublisher;
+    private final MeetingPresenceService meetingPresenceService;
 
     @MessageMapping("/meetings/{meetingId}/chat")
     public void sendMessage(
             @DestinationVariable Long meetingId,
             ChatSendRequest request,
-            Principal principal
+            Principal principal,
+            @Header("simpSessionId")
+            String sessionId
     )
     {
 
@@ -52,6 +60,19 @@ public class ChatMessageController {
             );
         }
 
+        if(
+                !meetingPresenceService.isActiveSession(
+                        sessionId,
+                        meetingId,
+                        user.userId()
+                )
+        )
+        {
+            throw new AccessDeniedException(
+                    "다른 탭에서 이 모임을 열어 현재 탭의 채팅 연결이 종료되었습니다."
+            );
+        }
+
         ChatMessageResponse saved =
                 chatService.saveMessage(
                         meetingId,
@@ -59,11 +80,13 @@ public class ChatMessageController {
                         request
                 );
 
-        messagingTemplate.convertAndSend(
-                "/topic/meetings/"
-                + meetingId
-                + "/chat",
-                saved
+        realtimeEventPublisher.publish(
+                RealtimeEvent.meetingBroadcast(
+                        MeetingEventType.CHAT_MESSAGE.name(),
+                        meetingId,
+                        user.userId(),
+                        saved
+                )
         );
     }
 

@@ -11,20 +11,26 @@
             keyProperty="meetingId">
 
         INSERT INTO meetings (
-        host_user_id,
-        title,
-        status,
-        desired_end_at,
-        calculation_version,
-        invite_code
+            host_user_id,
+            title,
+            meeting_type,
+            max_participants,
+            status,
+            desired_end_at,
+            meeting_start_at,
+            calculation_version,
+            invite_code
         )
         VALUES (
-        #{hostUserId},
-        #{title},
-        #{status},
-        #{desiredEndAt},
-        #{calculationVersion},
-        #{inviteCode}
+            #{hostUserId},
+            #{title},
+            #{meetingType},
+            #{maxParticipants},
+            #{status},
+            #{desiredEndAt},
+            #{meetingStartAt},
+            #{calculationVersion},
+            #{inviteCode}
         )
 
     </insert>
@@ -34,20 +40,24 @@
             resultType="com.meetback.dev.domain.Meeting">
 
         SELECT
-        meeting_id,
-        host_user_id,
-        title,
-        status,
-        desired_end_at,
-        calculation_version,
-        invite_code,
-        final_candidate_id,
-        created_at,
-        updated_at
+            meeting_id,
+            host_user_id,
+            title,
+            meeting_type,
+            max_participants,
+            status,
+            desired_end_at,
+            meeting_start_at,
+            calculation_version,
+            invite_code,
+            final_candidate_id,
+            created_at,
+            updated_at
 
         FROM meetings
 
         WHERE invite_code = #{inviteCode}
+        FOR UPDATE
 
     </select>
 
@@ -64,16 +74,19 @@
             resultType="com.meetback.dev.domain.Meeting">
 
         SELECT
-            meeting_id,
-            host_user_id,
-            title,
-            status,
-            desired_end_at,
-            calculation_version,
-            invite_code,
-            final_candidate_id,
-            created_at,
-            updated_at
+        meeting_id,
+        host_user_id,
+        title,
+        meeting_type,
+        max_participants,
+        status,
+        desired_end_at,
+        meeting_start_at,
+        calculation_version,
+        invite_code,
+        final_candidate_id,
+        created_at,
+        updated_at
         FROM meetings
         WHERE meeting_id = #{meetingId}
 
@@ -101,15 +114,129 @@
             resultType="com.meetback.dev.dto.MyMeetingResponse">
 
         SELECT
-        m.meeting_id AS meetingId,
-        m.title AS title,
-        m.invite_code AS inviteCode
+            m.meeting_id AS meetingId,
+            m.title AS title,
+            m.invite_code AS inviteCode
         FROM meeting_participants mp
         JOIN meetings m
-        ON m.meeting_id = mp.meeting_id
+          ON m.meeting_id = mp.meeting_id
         WHERE mp.user_id = #{userId}
+          AND m.meeting_type = 'FRIEND'
+          AND mp.participant_status = 'ACTIVE'
         ORDER BY m.created_at DESC
 
     </select>
 
+    <select id="selectMyQuickMeetings"
+            parameterType="long"
+            resultType="com.meetback.dev.dto.MyMeetingResponse">
+
+        SELECT
+            m.meeting_id AS meetingId,
+            m.title AS title,
+            m.invite_code AS inviteCode,
+            m.meeting_type AS meetingType
+
+        FROM meeting_participants mp
+
+        JOIN meetings m
+          ON m.meeting_id = mp.meeting_id
+
+        WHERE mp.user_id = #{userId}
+          AND m.meeting_type IN (
+            'QUICK_VOTE',
+            'QUICK_FIXED'
+        )
+        AND mp.participant_status = 'ACTIVE'
+
+        ORDER BY m.created_at DESC
+
+
+    </select>
+
+    <delete id="deleteExpiredMeetings">
+        DELETE FROM meetings
+        WHERE desired_end_at IS NOT NULL
+        AND desired_end_at &lt;= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+    </delete>
+
+    <select id="selectQuickVoteMeetings"
+            resultType="com.meetback.dev.dto.QuickMeetingResponse">
+
+        SELECT
+            m.meeting_id AS meetingId,
+            m.title AS title,
+            m.invite_code AS inviteCode,
+            m.meeting_type AS meetingType,
+            m.meeting_start_at AS meetingStartAt,
+            m.desired_end_at AS desiredEndAt,
+
+            COALESCE(
+            participant_count.currentParticipants,
+            0
+            ) AS currentParticipants,
+
+            m.max_participants AS maxParticipants,
+
+            fixed_candidate.place_name AS fixedPlaceName,
+            fixed_candidate.address AS fixedPlaceAddress,
+            u.nickname AS hostNickname
+
+        FROM meetings m
+
+        JOIN users u
+          ON u.user_id = m.host_user_id
+
+        LEFT JOIN meeting_candidates fixed_candidate
+          ON fixed_candidate.candidate_id = m.final_candidate_id
+
+        LEFT JOIN (
+        SELECT
+        meeting_id,
+        COUNT(*) AS currentParticipants
+
+        FROM meeting_participants
+
+        WHERE participant_status = 'ACTIVE'
+
+        GROUP BY meeting_id
+        ) participant_count
+        ON participant_count.meeting_id = m.meeting_id
+
+        WHERE m.meeting_type IN (
+        'QUICK_VOTE',
+        'QUICK_FIXED'
+        )
+        AND m.status = 'INPUT_OPEN'
+        AND m.desired_end_at IS NOT NULL
+        AND m.desired_end_at > NOW()
+
+        <if test="keyword != null and keyword != ''">
+            AND m.title LIKE CONCAT(
+            '%',
+            #{keyword},
+            '%'
+            )
+        </if>
+
+        ORDER BY m.created_at DESC
+
+    </select>
+
+    <update id="clearFinalCandidate">
+
+        UPDATE meetings
+        SET final_candidate_id = NULL,
+        updated_at = NOW()
+        WHERE meeting_id = #{meetingId}
+
+    </update>
+
+
+    <delete id="deleteById">
+
+        DELETE FROM meetings
+        WHERE meeting_id = #{meetingId}
+
+    </delete>
 </mapper>

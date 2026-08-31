@@ -6,20 +6,26 @@ import com.meetback.dev.domain.InputStatus;
 import com.meetback.dev.domain.Meeting;
 import com.meetback.dev.domain.MeetingCandidate;
 import com.meetback.dev.domain.MeetingParticipant;
+import com.meetback.dev.domain.MeetingType;
+import com.meetback.dev.domain.ParticipantStatus;
+import com.meetback.dev.dto.QuickFixedReturnCheckResponseDTO;
+import com.meetback.dev.dto.QuickFixedReturnLocationRequestDTO;
 import com.meetback.dev.repository.CandidateReturnResultMapper;
 import com.meetback.dev.repository.MeetingCandidateMapper;
 import com.meetback.dev.repository.MeetingMapper;
 import com.meetback.dev.repository.MeetingParticipantMapper;
 import com.meetback.dev.transport.client.OdsaySubwayClient;
 import com.meetback.dev.transport.dto.LastTrainDTO;
+import com.meetback.dev.transport.dto.RouteMapDTO;
 import com.meetback.dev.transport.dto.TransitRouteDTO;
 import com.meetback.dev.transport.service.RouteService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import com.meetback.dev.transport.dto.RouteMapDTO;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -42,7 +48,6 @@ public class CalculationService {
     private final OdsaySubwayClient odsaySubwayClient;
     private final ObjectMapper objectMapper;
 
-
     public CandidateReturnResult calculateReturn(
             Long participantId,
             Long candidateId
@@ -59,7 +64,6 @@ public class CalculationService {
             );
         }
 
-
         Meeting meeting =
                 meetingMapper.findById(
                         participant.getMeetingId()
@@ -71,14 +75,12 @@ public class CalculationService {
             );
         }
 
-
         Integer calculationVersion =
                 meeting.getCalculationVersion();
 
         if (calculationVersion == null) {
             calculationVersion = 0;
         }
-
 
         return calculateReturn(
                 participantId,
@@ -87,6 +89,435 @@ public class CalculationService {
         );
     }
 
+    public QuickFixedReturnCheckResponseDTO calculateQuickFixedReturn(
+            Long meetingId,
+            Long userId
+    ) {
+
+        Meeting meeting =
+                meetingMapper.findById(
+                        meetingId
+                );
+
+        if (meeting == null) {
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+        if (
+                meeting.getMeetingType()
+                        != MeetingType.QUICK_FIXED
+        ) {
+            throw new IllegalStateException(
+                    "고정 번개방에서만 사용할 수 있습니다."
+            );
+        }
+
+        if (meeting.getDesiredEndAt() == null) {
+            throw new IllegalStateException(
+                    "모임 희망 종료시간이 설정되어 있지 않습니다."
+            );
+        }
+
+        MeetingParticipant participant =
+                participantMapper.findByMeetingIdAndUserId(
+                        meetingId,
+                        userId
+                );
+
+        if (participant == null) {
+            throw new AccessDeniedException(
+                    "해당 모임의 참가자가 아닙니다."
+            );
+        }
+
+        if (
+                participant.getParticipantStatus()
+                        != ParticipantStatus.ACTIVE
+        ) {
+            throw new AccessDeniedException(
+                    "현재 참가 중인 사용자만 귀가 정보를 확인할 수 있습니다."
+            );
+        }
+
+        validateReturnLocation(
+                participant
+        );
+
+        Long finalCandidateId =
+                meeting.getFinalCandidateId();
+
+        if (finalCandidateId == null) {
+            throw new IllegalStateException(
+                    "고정 장소가 설정되어 있지 않습니다."
+            );
+        }
+
+        MeetingCandidate candidate =
+                candidateMapper.findById(
+                        finalCandidateId
+                );
+
+        if (candidate == null) {
+            throw new IllegalStateException(
+                    "고정 장소 정보를 찾을 수 없습니다."
+            );
+        }
+
+        if (
+                !meetingId.equals(
+                        candidate.getMeetingId()
+                )
+        ) {
+            throw new IllegalStateException(
+                    "고정 장소와 모임 정보가 일치하지 않습니다."
+            );
+        }
+
+        Integer calculationVersion =
+                meeting.getCalculationVersion();
+
+        if (calculationVersion == null) {
+            calculationVersion = 0;
+        }
+
+        CandidateReturnResult result =
+                calculateReturn(
+                        participant.getParticipantId(),
+                        finalCandidateId,
+                        calculationVersion
+                );
+
+        Integer marginMinutes =
+                null;
+
+        if (
+                result.getLastSafeDepartureAt()
+                        != null
+        ) {
+            marginMinutes =
+                    (int) Duration.between(
+                            meeting.getDesiredEndAt(),
+                            result.getLastSafeDepartureAt()
+                    ).toMinutes();
+        }
+
+        RouteMapDTO routeMap =
+                null;
+
+        boolean transitRoute =
+                result.getLastTrainDepartureAt() != null
+                        &&
+                        result.getRouteMapObj() != null
+                        &&
+                        !result.getRouteMapObj().isBlank();
+
+        if (transitRoute) {
+            routeMap =
+                    routeService.getRouteMap(
+                            finalCandidateId,
+                            participant.getParticipantId()
+                    );
+        }
+
+        return new QuickFixedReturnCheckResponseDTO(
+                Boolean.TRUE.equals(
+                        result.getCanReturn()
+                ),
+                result.getReturnMinutes(),
+                result.getTransferCount(),
+                result.getLastTrainDepartureAt(),
+                result.getLastSafeDepartureAt(),
+                meeting.getDesiredEndAt(),
+                marginMinutes,
+                routeMap
+        );
+    }
+
+    public QuickFixedReturnCheckResponseDTO calculateQuickFixedPreview(
+            Long meetingId,
+            QuickFixedReturnLocationRequestDTO request
+    ) {
+
+        Meeting meeting =
+                meetingMapper.findById(
+                        meetingId
+                );
+
+        if (meeting == null) {
+            throw new IllegalArgumentException(
+                    "모임을 찾을 수 없습니다."
+            );
+        }
+
+        if (
+                meeting.getMeetingType()
+                        != MeetingType.QUICK_FIXED
+        ) {
+            throw new IllegalStateException(
+                    "고정 번개방에서만 사용할 수 있습니다."
+            );
+        }
+
+        if (meeting.getDesiredEndAt() == null) {
+            throw new IllegalStateException(
+                    "모임 희망 종료시간이 설정되어 있지 않습니다."
+            );
+        }
+
+        if (request == null) {
+            throw new IllegalArgumentException(
+                    "귀가 장소 정보가 없습니다."
+            );
+        }
+
+        if (
+                request.name() == null
+                        ||
+                        request.name().isBlank()
+        ) {
+            throw new IllegalArgumentException(
+                    "귀가 장소를 선택해주세요."
+            );
+        }
+
+        if (
+                request.latitude() == null
+                        ||
+                        request.longitude() == null
+        ) {
+            throw new IllegalArgumentException(
+                    "귀가 장소 좌표가 올바르지 않습니다."
+            );
+        }
+
+        Long finalCandidateId =
+                meeting.getFinalCandidateId();
+
+        if (finalCandidateId == null) {
+            throw new IllegalStateException(
+                    "고정 장소가 설정되어 있지 않습니다."
+            );
+        }
+
+        MeetingCandidate candidate =
+                candidateMapper.findById(
+                        finalCandidateId
+                );
+
+        if (candidate == null) {
+            throw new IllegalStateException(
+                    "고정 장소 정보를 찾을 수 없습니다."
+            );
+        }
+
+        if (
+                !meetingId.equals(
+                        candidate.getMeetingId()
+                )
+        ) {
+            throw new IllegalStateException(
+                    "고정 장소와 모임 정보가 일치하지 않습니다."
+            );
+        }
+
+        if (
+                candidate.getLatitude() == null
+                        ||
+                        candidate.getLongitude() == null
+        ) {
+            throw new IllegalStateException(
+                    "고정 장소 좌표 정보가 없습니다."
+            );
+        }
+
+        boolean walking =
+                routeService.isWithinWalkingDistance(
+                        candidate,
+                        request.latitude(),
+                        request.longitude()
+                );
+
+        if (walking) {
+            return new QuickFixedReturnCheckResponseDTO(
+                    true,
+                    WALKING_RETURN_MINUTES,
+                    0,
+                    null,
+                    null,
+                    meeting.getDesiredEndAt(),
+                    null,
+                    null
+            );
+        }
+
+        TransitRouteDTO route =
+                routeService.searchReturnRoute(
+                        candidate,
+                        request.name().trim(),
+                        request.address(),
+                        request.longitude(),
+                        request.latitude()
+                );
+
+        if (route == null) {
+            throw new IllegalStateException(
+                    "귀가 경로를 조회할 수 없습니다."
+            );
+        }
+
+        if (
+                route.startStationId() == null
+                        ||
+                        route.startStationId().isBlank()
+                        ||
+                        route.endStationId() == null
+                        ||
+                        route.endStationId().isBlank()
+        ) {
+            throw new IllegalStateException(
+                    "막차 조회에 필요한 역 정보를 찾을 수 없습니다."
+            );
+        }
+
+        LocalDateTime desiredEndAt =
+                meeting.getDesiredEndAt();
+
+        LocalDate meetingDate =
+                desiredEndAt.toLocalDate();
+
+        if (
+                desiredEndAt.toLocalTime()
+                        .isBefore(
+                                LocalTime.of(
+                                        5,
+                                        0
+                                )
+                        )
+        ) {
+            meetingDate =
+                    meetingDate.minusDays(
+                            1
+                    );
+        }
+
+        int odsayDay =
+                getOdsayDay(
+                        meetingDate
+                );
+
+        LastTrainDTO lastTrain =
+                odsaySubwayClient.findLastTrain(
+                        route.startStationId(),
+                        route.endStationId(),
+                        odsayDay
+                );
+
+        if (lastTrain == null) {
+            throw new IllegalStateException(
+                    "막차 정보를 조회할 수 없습니다."
+            );
+        }
+
+        if (
+                lastTrain.departureTime() == null
+                        ||
+                        lastTrain.departureTime().isBlank()
+                        ||
+                        lastTrain.arrivalTime() == null
+                        ||
+                        lastTrain.arrivalTime().isBlank()
+        ) {
+            throw new IllegalStateException(
+                    "막차 시간 정보가 올바르지 않습니다."
+            );
+        }
+
+        LocalTime departureTime =
+                LocalTime.parse(
+                        lastTrain.departureTime()
+                );
+
+        LocalTime arrivalTime =
+                LocalTime.parse(
+                        lastTrain.arrivalTime()
+                );
+
+        LocalDateTime lastTrainDepartureAt =
+                LocalDateTime.of(
+                        meetingDate,
+                        departureTime
+                );
+
+        LocalDateTime lastTrainArrivalAt =
+                LocalDateTime.of(
+                        meetingDate,
+                        arrivalTime
+                );
+
+        if (
+                departureTime.isBefore(
+                        LocalTime.of(
+                                5,
+                                0
+                        )
+                )
+        ) {
+            lastTrainDepartureAt =
+                    lastTrainDepartureAt.plusDays(
+                            1
+                    );
+        }
+
+        if (
+                arrivalTime.isBefore(
+                        LocalTime.of(
+                                5,
+                                0
+                        )
+                )
+        ) {
+            lastTrainArrivalAt =
+                    lastTrainArrivalAt.plusDays(
+                            1
+                    );
+        }
+
+        LocalDateTime lastSafeDepartureAt =
+                lastTrainDepartureAt.minusMinutes(
+                        SAFE_MARGIN_MINUTES
+                );
+
+        boolean canReturn =
+                !desiredEndAt.isAfter(
+                        lastSafeDepartureAt
+                );
+
+        int marginMinutes =
+                (int) Duration.between(
+                        desiredEndAt,
+                        lastSafeDepartureAt
+                ).toMinutes();
+
+        RouteMapDTO routeMap =
+                routeService.createPreviewRouteMap(
+                        candidate,
+                        request.name().trim(),
+                        route
+                );
+
+        return new QuickFixedReturnCheckResponseDTO(
+                canReturn,
+                route.totalMinutes(),
+                route.transferCount(),
+                lastTrainDepartureAt,
+                lastSafeDepartureAt,
+                desiredEndAt,
+                marginMinutes,
+                routeMap
+        );
+    }
 
     private CandidateReturnResult calculateReturn(
             Long participantId,
@@ -99,24 +530,20 @@ public class CalculationService {
                         participantId
                 );
 
-
         if (participant == null) {
             throw new IllegalArgumentException(
                     "참가자를 찾을 수 없습니다."
             );
         }
 
-
-        validateParticipantLocation(
+        validateReturnLocation(
                 participant
         );
-
 
         Meeting meeting =
                 meetingMapper.findById(
                         participant.getMeetingId()
                 );
-
 
         if (meeting == null) {
             throw new IllegalArgumentException(
@@ -124,19 +551,16 @@ public class CalculationService {
             );
         }
 
-
         if (meeting.getDesiredEndAt() == null) {
             throw new IllegalStateException(
                     "모임 희망 종료시간이 설정되어 있지 않습니다."
             );
         }
 
-
         MeetingCandidate candidate =
                 candidateMapper.findById(
                         candidateId
                 );
-
 
         if (candidate == null) {
             throw new IllegalArgumentException(
@@ -144,27 +568,24 @@ public class CalculationService {
             );
         }
 
-
-        if (!participant.getMeetingId()
-                .equals(candidate.getMeetingId())) {
-
+        if (
+                !participant.getMeetingId()
+                        .equals(
+                                candidate.getMeetingId()
+                        )
+        ) {
             throw new IllegalArgumentException(
                     "참가자와 후보 장소의 모임이 일치하지 않습니다."
             );
         }
 
-
-        /*
-         * 같은 후보 + 같은 참가자 + 같은 계산 버전이면
-         * 기존 계산 결과 재사용
-         */
         CandidateReturnResult existingResult =
-                returnResultMapper.findByCandidateAndParticipantAndVersion(
-                        candidateId,
-                        participantId,
-                        calculationVersion
-                );
-
+                returnResultMapper
+                        .findByCandidateAndParticipantAndVersion(
+                                candidateId,
+                                participantId,
+                                calculationVersion
+                        );
 
         if (existingResult != null) {
 
@@ -180,78 +601,67 @@ public class CalculationService {
             return existingResult;
         }
 
-
-        /*
-         * 도보 거리 확인
-         */
-        if (routeService.isWithinWalkingDistance(
-                participantId,
-                candidateId
-        )) {
+        if (
+                routeService.isWithinWalkingDistance(
+                        participantId,
+                        candidateId
+                )
+        ) {
 
             CandidateReturnResult result =
                     new CandidateReturnResult();
-
 
             result.setMeetingId(
                     participant.getMeetingId()
             );
 
-
             result.setCandidateId(
                     candidate.getCandidateId()
             );
-
 
             result.setParticipantId(
                     participant.getParticipantId()
             );
 
-
             result.setCalculationVersion(
                     calculationVersion
             );
-
 
             result.setReturnMinutes(
                     WALKING_RETURN_MINUTES
             );
 
-
             result.setTransferCount(
                     0
             );
-
 
             result.setRouteMapObj(
                     null
             );
 
+            result.setRouteMapData(
+                    null
+            );
 
             result.setLastTrainDepartureAt(
                     null
             );
 
-
             result.setLastTrainArrivalAt(
                     null
             );
-
 
             result.setLastSafeDepartureAt(
                     null
             );
 
-
             result.setCanReturn(
                     true
             );
 
-
             returnResultMapper.insert(
                     result
             );
-
 
             System.out.println(
                     "[도보 처리] candidateId="
@@ -264,35 +674,61 @@ public class CalculationService {
                             + WALKING_RETURN_MINUTES
             );
 
-
             return result;
         }
 
-
-        /*
-         * ODsay 일반 귀가 경로 조회
-         */
         TransitRouteDTO route =
                 routeService.searchReturnRoute(
                         participantId,
                         candidateId
                 );
 
+        if (route == null) {
+            throw new IllegalStateException(
+                    "귀가 경로를 조회할 수 없습니다."
+            );
+        }
+
+        if (
+                route.startStationId() == null
+                        ||
+                        route.startStationId().isBlank()
+                        ||
+                        route.endStationId() == null
+                        ||
+                        route.endStationId().isBlank()
+        ) {
+            throw new IllegalStateException(
+                    "막차 조회에 필요한 역 정보를 찾을 수 없습니다."
+            );
+        }
+
+        LocalDateTime desiredEndAt =
+                meeting.getDesiredEndAt();
 
         LocalDate meetingDate =
-                meeting.getDesiredEndAt()
-                        .toLocalDate();
+                desiredEndAt.toLocalDate();
 
+        if (
+                desiredEndAt.toLocalTime()
+                        .isBefore(
+                                LocalTime.of(
+                                        5,
+                                        0
+                                )
+                        )
+        ) {
+            meetingDate =
+                    meetingDate.minusDays(
+                            1
+                    );
+        }
 
         int odsayDay =
                 getOdsayDay(
                         meetingDate
                 );
 
-
-        /*
-         * ODsay 막차 조회
-         */
         LastTrainDTO lastTrain =
                 odsaySubwayClient.findLastTrain(
                         route.startStationId(),
@@ -300,25 +736,35 @@ public class CalculationService {
                         odsayDay
                 );
 
-
         if (lastTrain == null) {
             throw new IllegalStateException(
                     "막차 정보를 조회할 수 없습니다."
             );
         }
 
+        if (
+                lastTrain.departureTime() == null
+                        ||
+                        lastTrain.departureTime().isBlank()
+                        ||
+                        lastTrain.arrivalTime() == null
+                        ||
+                        lastTrain.arrivalTime().isBlank()
+        ) {
+            throw new IllegalStateException(
+                    "막차 시간 정보가 올바르지 않습니다."
+            );
+        }
 
         LocalTime departureTime =
                 LocalTime.parse(
                         lastTrain.departureTime()
                 );
 
-
         LocalTime arrivalTime =
                 LocalTime.parse(
                         lastTrain.arrivalTime()
                 );
-
 
         LocalDateTime lastTrainDepartureAt =
                 LocalDateTime.of(
@@ -326,47 +772,44 @@ public class CalculationService {
                         departureTime
                 );
 
-
         LocalDateTime lastTrainArrivalAt =
                 LocalDateTime.of(
                         meetingDate,
                         arrivalTime
                 );
 
-
-        if (departureTime.isBefore(
-                LocalTime.of(
-                        5,
-                        0
+        if (
+                departureTime.isBefore(
+                        LocalTime.of(
+                                5,
+                                0
+                        )
                 )
-        )) {
-
+        ) {
             lastTrainDepartureAt =
                     lastTrainDepartureAt.plusDays(
                             1
                     );
         }
 
-
-        if (arrivalTime.isBefore(
-                LocalTime.of(
-                        5,
-                        0
+        if (
+                arrivalTime.isBefore(
+                        LocalTime.of(
+                                5,
+                                0
+                        )
                 )
-        )) {
-
+        ) {
             lastTrainArrivalAt =
                     lastTrainArrivalAt.plusDays(
                             1
                     );
         }
 
-
         LocalDateTime lastSafeDepartureAt =
                 lastTrainDepartureAt.minusMinutes(
                         SAFE_MARGIN_MINUTES
                 );
-
 
         boolean canReturn =
                 !meeting.getDesiredEndAt()
@@ -374,40 +817,32 @@ public class CalculationService {
                                 lastSafeDepartureAt
                         );
 
-
         CandidateReturnResult result =
                 new CandidateReturnResult();
-
 
         result.setMeetingId(
                 participant.getMeetingId()
         );
 
-
         result.setCandidateId(
                 candidate.getCandidateId()
         );
-
 
         result.setParticipantId(
                 participant.getParticipantId()
         );
 
-
         result.setCalculationVersion(
                 calculationVersion
         );
-
 
         result.setReturnMinutes(
                 route.totalMinutes()
         );
 
-
         result.setTransferCount(
                 route.transferCount()
         );
-
 
         result.setRouteMapObj(
                 route.mapObj()
@@ -423,7 +858,6 @@ public class CalculationService {
                             route.steps()
                     );
 
-
             result.setRouteMapData(
                     objectMapper.writeValueAsString(
                             initialRouteMap
@@ -438,35 +872,28 @@ public class CalculationService {
             );
         }
 
-
         result.setLastTrainDepartureAt(
                 lastTrainDepartureAt
         );
-
 
         result.setLastTrainArrivalAt(
                 lastTrainArrivalAt
         );
 
-
         result.setLastSafeDepartureAt(
                 lastSafeDepartureAt
         );
-
 
         result.setCanReturn(
                 canReturn
         );
 
-
         returnResultMapper.insert(
                 result
         );
 
-
         return result;
     }
-
 
     public List<CandidateReturnResult> calculateCandidate(
             Long candidateId
@@ -477,19 +904,16 @@ public class CalculationService {
                         candidateId
                 );
 
-
         if (candidate == null) {
             throw new IllegalArgumentException(
                     "후보 장소를 찾을 수 없습니다."
             );
         }
 
-
         Meeting meeting =
                 meetingMapper.findById(
                         candidate.getMeetingId()
                 );
-
 
         if (meeting == null) {
             throw new IllegalArgumentException(
@@ -497,22 +921,18 @@ public class CalculationService {
             );
         }
 
-
         Integer calculationVersion =
                 meeting.getCalculationVersion();
-
 
         if (calculationVersion == null) {
             calculationVersion = 0;
         }
-
 
         return calculateCandidate(
                 candidateId,
                 calculationVersion
         );
     }
-
 
     private List<CandidateReturnResult> calculateCandidate(
             Long candidateId,
@@ -524,43 +944,44 @@ public class CalculationService {
                         candidateId
                 );
 
-
         if (candidate == null) {
             throw new IllegalArgumentException(
                     "후보 장소를 찾을 수 없습니다."
             );
         }
 
-
         validateAllParticipantsSubmitted(
                 candidate.getMeetingId()
         );
-
 
         List<MeetingParticipant> participants =
                 participantMapper.findByMeetingId(
                         candidate.getMeetingId()
                 );
 
-
-        if (participants == null
-                || participants.isEmpty()) {
-
+        if (
+                participants == null
+                        ||
+                        participants.isEmpty()
+        ) {
             throw new IllegalArgumentException(
                     "참가자가 없습니다."
             );
         }
 
-
         List<CandidateReturnResult> results =
                 new ArrayList<>();
 
-
-        for (int i = 0; i < participants.size(); i++) {
+        for (
+                int i = 0;
+                i < participants.size();
+                i++
+        ) {
 
             MeetingParticipant participant =
-                    participants.get(i);
-
+                    participants.get(
+                            i
+                    );
 
             CandidateReturnResult result =
                     calculateReturn(
@@ -569,12 +990,10 @@ public class CalculationService {
                             calculationVersion
                     );
 
-
             results.add(
                     result
             );
         }
-
 
         candidateEvaluationService.evaluateAndSave(
                 candidateId,
@@ -583,10 +1002,8 @@ public class CalculationService {
                 results
         );
 
-
         return results;
     }
-
 
     public List<CandidateEvaluation> calculateMeeting(
             Long meetingId
@@ -596,12 +1013,10 @@ public class CalculationService {
                 meetingId
         );
 
-
         Meeting meeting =
                 meetingMapper.findById(
                         meetingId
                 );
-
 
         if (meeting == null) {
             throw new IllegalArgumentException(
@@ -609,53 +1024,52 @@ public class CalculationService {
             );
         }
 
-
         if (meeting.getDesiredEndAt() == null) {
             throw new IllegalStateException(
                     "모임 희망 종료시간이 설정되어 있지 않습니다."
             );
         }
 
-
         List<MeetingCandidate> candidates =
                 candidateMapper.findByMeetingId(
                         meetingId
                 );
 
-
-        if (candidates == null
-                || candidates.isEmpty()) {
-
+        if (
+                candidates == null
+                        ||
+                        candidates.isEmpty()
+        ) {
             throw new IllegalArgumentException(
                     "후보 장소가 없습니다."
             );
         }
 
-
         Integer currentVersion =
                 meeting.getCalculationVersion();
-
 
         if (currentVersion == null) {
             currentVersion = 0;
         }
 
-
         List<CandidateEvaluation> evaluations =
                 new ArrayList<>();
 
-
-        for (int i = 0; i < candidates.size(); i++) {
+        for (
+                int i = 0;
+                i < candidates.size();
+                i++
+        ) {
 
             MeetingCandidate candidate =
-                    candidates.get(i);
-
+                    candidates.get(
+                            i
+                    );
 
             calculateCandidate(
                     candidate.getCandidateId(),
                     currentVersion
             );
-
 
             CandidateEvaluation evaluation =
                     candidateEvaluationService
@@ -663,24 +1077,20 @@ public class CalculationService {
                                     candidate.getCandidateId()
                             );
 
-
             if (evaluation == null) {
                 throw new IllegalStateException(
                         "후보 평가 결과를 찾을 수 없습니다."
                 );
             }
 
-
             evaluations.add(
                     evaluation
             );
         }
 
-
         candidateEvaluationService.rankCandidates(
                 evaluations
         );
-
 
         System.out.println(
                 "[모임 계산 완료] meetingId="
@@ -689,10 +1099,8 @@ public class CalculationService {
                         + currentVersion
         );
 
-
         return evaluations;
     }
-
 
     private int getOdsayDay(
             LocalDate date
@@ -710,7 +1118,6 @@ public class CalculationService {
         };
     }
 
-
     private void validateAllParticipantsSubmitted(
             Long meetingId
     ) {
@@ -720,28 +1127,26 @@ public class CalculationService {
                         meetingId
                 );
 
-
         if (meeting == null) {
             throw new IllegalArgumentException(
                     "모임을 찾을 수 없습니다."
             );
         }
 
-
         List<MeetingParticipant> participants =
                 participantMapper.findByMeetingId(
                         meetingId
                 );
 
-
-        if (participants == null
-                || participants.isEmpty()) {
-
+        if (
+                participants == null
+                        ||
+                        participants.isEmpty()
+        ) {
             throw new IllegalArgumentException(
                     "참가자가 없습니다."
             );
         }
-
 
         boolean allSubmitted =
                 participants.stream()
@@ -751,37 +1156,55 @@ public class CalculationService {
                                                 == InputStatus.SUBMITTED
                         );
 
-
         if (!allSubmitted) {
-
             throw new IllegalStateException(
                     "아직 장소 입력을 완료하지 않은 참가자가 있습니다."
             );
         }
 
-
-        for (MeetingParticipant participant : participants) {
-
+        for (
+                MeetingParticipant participant
+                :
+                participants
+        ) {
             validateParticipantLocation(
                     participant
             );
         }
     }
 
-
     private void validateParticipantLocation(
             MeetingParticipant participant
     ) {
 
-        if (participant.getDepartureLatitude() == null
-                || participant.getDepartureLongitude() == null
-                || participant.getReturnLatitude() == null
-                || participant.getReturnLongitude() == null) {
-
+        if (
+                participant.getDepartureLatitude() == null
+                        ||
+                        participant.getDepartureLongitude() == null
+                        ||
+                        participant.getReturnLatitude() == null
+                        ||
+                        participant.getReturnLongitude() == null
+        ) {
             throw new IllegalStateException(
                     "참가자 "
                             + participant.getParticipantId()
                             + "의 출발지 또는 귀가지 정보가 없습니다."
+            );
+        }
+    }
+
+    private void validateReturnLocation(
+            MeetingParticipant participant
+    ) {
+
+        if (
+                participant.getReturnLatitude() == null
+                        ||
+                        participant.getReturnLongitude() == null
+        ) {
+            throw new IllegalStateException(
+                    "귀가 장소를 먼저 등록해주세요."
             );
         }
     }

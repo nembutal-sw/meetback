@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.meetback.dev.repository.CommentMapper">
+
+
+    <resultMap id="commentResultMap"
+               type="com.meetback.dev.domain.Comment">
+
+        <id property="commentId"
+            column="comment_id"/>
+
+        <result property="feedId"
+                column="feed_id"/>
+
+        <result property="userId"
+                column="user_id"/>
+
+        <result property="nickname"
+                column="nickname"/>
+
+        <result property="content"
+                column="content"/>
+
+        <result property="deletedAt"
+                column="deleted_at"/>
+
+        <result property="createdAt"
+                column="created_at"/>
+
+        <result property="updatedAt"
+                column="updated_at"/>
+
+    </resultMap>
+
+
+    <!-- =========================================================
+         댓글 등록
+         ========================================================= -->
+
+    <insert id="insert"
+            parameterType="com.meetback.dev.domain.Comment"
+            useGeneratedKeys="true"
+            keyProperty="commentId">
+
+        INSERT INTO comments
+        (
+            feed_id,
+            user_id,
+            content,
+            deleted_at,
+            created_at,
+            updated_at
+        )
+        VALUES
+        (
+            #{feedId},
+            #{userId},
+            #{content},
+            NULL,
+            NOW(),
+            NOW()
+        )
+
+    </insert>
+
+
+    <!-- =========================================================
+         댓글 단건 조회
+         작성자 닉네임까지 조회
+         ========================================================= -->
+
+    <select id="findById"
+            resultMap="commentResultMap">
+
+        SELECT
+            comments.comment_id,
+            comments.feed_id,
+            comments.user_id,
+        users.nickname,
+            comments.content,
+            comments.deleted_at,
+            comments.created_at,
+            comments.updated_at
+        FROM comments
+        LEFT JOIN users
+            ON comments.user_id = users.user_id
+            WHERE comments.comment_id = #{commentId}
+            AND comments.deleted_at IS NULL
+
+    </select>
+
+
+    <!-- =========================================================
+         특정 피드 댓글 전체 조회
+         작성자 닉네임까지 조회
+         ========================================================= -->
+
+    <select id="findByFeedId"
+            resultMap="commentResultMap">
+
+        SELECT
+            comments.comment_id,
+            comments.feed_id,
+            comments.user_id,
+            users.nickname,
+            comments.content,
+            comments.deleted_at,
+            comments.created_at,
+            comments.updated_at
+        FROM comments
+            LEFT JOIN users
+            ON comments.user_id = users.user_id
+        WHERE comments.feed_id = #{feedId}
+            AND comments.deleted_at IS NULL
+            ORDER BY
+            comments.created_at ASC,
+            comments.comment_id ASC
+
+    </select>
+
+
+    <!-- =========================================================
+         댓글 수정
+         본인 댓글만 수정
+         ========================================================= -->
+
+    <update id="update">
+
+        UPDATE comments
+        SET
+            content = #{content},
+            updated_at = NOW()
+        WHERE comment_id = #{commentId}
+            AND user_id = #{userId}
+            AND deleted_at IS NULL
+
+    </update>
+
+
+    <!-- =========================================================
+         댓글 삭제
+         실제 DELETE가 아니라 Soft Delete
+         ========================================================= -->
+
+    <update id="softDelete">
+
+        UPDATE comments
+        SET
+            deleted_at = NOW(),
+            updated_at = NOW()
+        WHERE comment_id = #{commentId}
+            AND user_id = #{userId}
+            AND deleted_at IS NULL
+
+    </update>
+
+
+    <!-- =========================================================
+         특정 피드 댓글 개수
+         ========================================================= -->
+
+    <select id="countByFeedId"
+            resultType="int">
+
+        SELECT COUNT(*)
+        FROM comments
+        WHERE feed_id = #{feedId}
+        AND deleted_at IS NULL
+
+    </select>
+
+
+</mapper>

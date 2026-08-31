@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public class Feed {
     private Long feedId;
     private Long userId;
+    private String nickname;
     private String title;
     private String content;
     private LocalDateTime deletedAt;
