@@ -1,0 +1,655 @@
+/* =========================================================
+   MeetBack mobile responsive layer
+
+   Loaded after page and dark-mode styles so every screen uses
+   one mobile rhythm without changing Thymeleaf or feature JS.
+   ========================================================= */
+
+@media (max-width: 767px) {
+    html {
+        min-width: 0;
+        max-width: 100%;
+        overflow-x: hidden;
+        scroll-padding-top: 1rem;
+    }
+
+    body.mb-page {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        margin: 0;
+        overflow-x: hidden;
+    }
+
+    .mb-page *,
+    .mb-page *::before,
+    .mb-page *::after {
+        box-sizing: border-box;
+    }
+
+    .mb-page :where(img, video, iframe) {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .mb-page :where(h1, h2, h3, p, strong, span, a, button, label) {
+        overflow-wrap: anywhere;
+    }
+
+    .mb-page :where(h1, h2, h3) {
+        word-break: keep-all;
+        text-wrap: balance;
+    }
+
+    .mb-page :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+        width: 100%;
+        max-width: 100%;
+        min-height: 48px;
+        font-size: 16px !important;
+    }
+
+    .mb-page :where(
+        button:not(.mb-theme-toggle):not(.feed-menu-button):not(.feed-summary-menu-button):not(.feed-indicator),
+        a.primary,
+        a.primary-button,
+        a.home-button,
+        a.back-button
+    ) {
+        min-height: 44px;
+    }
+
+    /* The mobile header remains in document flow while scrolling. */
+    .mb-site-header {
+        position: relative;
+        inset: auto;
+        height: auto;
+        min-height: 104px;
+    }
+
+    .mb-site-header__inner {
+        min-height: 104px;
+        padding-right: max(14px, env(safe-area-inset-right));
+        padding-left: max(14px, env(safe-area-inset-left));
+    }
+
+    .mb-site-brand__name {
+        display: inline;
+        max-width: 7rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .mb-site-nav {
+        width: calc(100% + 28px);
+        margin-inline: -14px;
+    }
+
+    .mb-site-nav a {
+        font-size: 0.75rem;
+    }
+
+    .mb-site-header .mb-theme-toggle,
+    .page-home .mb-theme-toggle,
+    .page-login .login-container > .mb-theme-toggle {
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        min-height: 40px;
+        padding: 0;
+        border-radius: 12px;
+    }
+
+    .mb-page .mb-theme-toggle:focus-visible {
+        outline: 2px solid var(--mb-primary);
+        outline-offset: 2px;
+        box-shadow: none;
+    }
+
+    .mb-has-site-header.page-quick-meetings,
+    .mb-has-site-header.page-location,
+    .mb-has-site-header.page-meeting-room,
+    .mb-has-site-header.page-vote,
+    .mb-has-site-header.page-result,
+    .mb-has-site-header.page-quick-fixed,
+    .mb-has-site-header.page-quick-fixed-check {
+        padding-top: 0;
+    }
+
+    /* Home */
+    .page-home .home-container {
+        width: 100%;
+        padding: 0 0 calc(3.5rem + env(safe-area-inset-bottom));
+    }
+
+    .page-home .home-header {
+        position: relative;
+        top: auto;
+        min-height: 104px;
+        margin: 0;
+        border-width: 0 0 1px;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .page-home .home-primary-nav a {
+        min-width: 0;
+        font-size: 0.75rem;
+    }
+
+    .page-home .home-hero {
+        min-height: 0;
+        margin: 0 0 1rem;
+        padding: 2.25rem 1rem;
+        border-width: 0 0 1px;
+        border-radius: 0;
+    }
+
+    .page-home .home-hero h2 {
+        max-width: 12em;
+        font-size: clamp(2rem, 10.5vw, 2.75rem);
+        line-height: 1.12;
+    }
+
+    .page-home .home-hero p {
+        max-width: 34rem;
+        font-size: 0.875rem;
+        line-height: 1.65;
+    }
+
+    .page-home .home-hero-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        width: 100%;
+    }
+
+    .page-home .home-hero-actions a {
+        width: 100%;
+    }
+
+    .page-home .home-hero-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    .page-home .home-hero-stats > div {
+        padding: 0.75rem 0.4rem;
+        text-align: center;
+    }
+
+    .page-home #homeMessage,
+    .page-home .section,
+    .page-home #meetingStartSection {
+        width: calc(100% - 24px);
+    }
+
+    .page-home .section,
+    .page-home .meeting-card,
+    .page-home .meeting-card--create {
+        padding: 1.125rem;
+        border-radius: 1rem;
+    }
+
+    .page-home .meeting-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.875rem;
+    }
+
+    .page-home .quick-meeting-list {
+        grid-auto-columns: min(17rem, 84vw);
+        scroll-padding-inline: 0.25rem;
+        overscroll-behavior-inline: contain;
+        scroll-snap-type: inline proximity;
+    }
+
+    .page-home .quick-meeting-card {
+        scroll-snap-align: start;
+    }
+
+    .page-home .my-meeting-list {
+        top: 4.75rem;
+        right: 12px;
+        left: 12px;
+        width: auto;
+        max-height: min(62dvh, 30rem);
+    }
+
+    /* Quick-meeting directory */
+    .page-quick-meetings .home-container {
+        width: 100%;
+        padding: 1rem 12px calc(3.5rem + env(safe-area-inset-bottom));
+    }
+
+    .page-quick-meetings .section {
+        width: 100%;
+        min-height: 0;
+        padding: 1.125rem;
+        border: 1px solid var(--mb-border);
+        border-radius: 1rem;
+        background: var(--mb-card);
+    }
+
+    .page-quick-meetings .quick-title-row {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .page-quick-meetings .quick-home-link {
+        align-self: flex-start;
+    }
+
+    .page-quick-meetings .quick-search-area {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.625rem;
+    }
+
+    .page-quick-meetings .quick-search-button {
+        width: 100%;
+    }
+
+    .page-quick-meetings .quick-meeting-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.875rem;
+    }
+
+    /* Shared app pages */
+    .page-location,
+    .page-meeting-room,
+    .page-vote,
+    .page-result {
+        width: 100%;
+        padding: 1.25rem 0 calc(3.5rem + env(safe-area-inset-bottom));
+    }
+
+    .page-location > h1,
+    .page-location > p,
+    .page-location > .card,
+    .page-meeting-room > .room-header,
+    .page-meeting-room > .room-card,
+    .page-vote > h1,
+    .page-vote > p,
+    .page-vote > button,
+    .page-vote > hr,
+    .page-vote > .vote-progress-area,
+    .page-vote > #rankingArea,
+    .page-vote > .abstain-area,
+    .page-vote > .host-area,
+    .page-result > .result-header,
+    .page-result > .result-card {
+        width: calc(100% - 24px);
+        max-width: 100%;
+    }
+
+    .page-location > .card,
+    .page-meeting-room > .room-header,
+    .page-meeting-room > .room-card,
+    .page-vote .candidate,
+    .page-vote .vote-progress-area,
+    .page-vote .abstain-area,
+    .page-vote .host-area,
+    .page-result .result-header,
+    .page-result .result-card {
+        padding: 1.125rem;
+        border-radius: 1rem;
+    }
+
+    .page-location .search-row,
+    .page-meeting-room .chat-row,
+    .page-result .header-actions,
+    .page-vote .candidate-buttons,
+    .page-vote .confirm-buttons {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .page-location .search-row button,
+    .page-meeting-room .chat-row button,
+    .page-result .header-actions button,
+    .page-vote .candidate-buttons button,
+    .page-vote .confirm-buttons button {
+        width: 100%;
+    }
+
+    .page-location .results {
+        max-height: min(48dvh, 25rem);
+    }
+
+    .page-location .result {
+        padding: 0.875rem;
+        border-radius: 0.75rem;
+    }
+
+    .page-meeting-room .room-header,
+    .page-meeting-room .meeting-title-row,
+    .page-meeting-room .my-place-title-row,
+    .page-meeting-room .chat-title-row,
+    .page-result .result-header,
+    .page-result .section-title,
+    .page-result .participant-result-header,
+    .page-result .final-header-info,
+    .page-vote .abstain-area {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .page-meeting-room .room-header-actions,
+    .page-result .header-actions {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        width: 100%;
+        gap: 0.625rem;
+    }
+
+    .page-meeting-room .my-place-info,
+    .page-meeting-room #participantList,
+    .page-meeting-room #kickedParticipantList,
+    .page-result .summary-grid,
+    .page-result .participant-info-grid,
+    .page-vote #rankingArea,
+    .page-vote .info-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .page-meeting-room .chat-messages {
+        height: clamp(15rem, 42dvh, 25rem);
+        min-height: 15rem;
+        padding: 0.875rem;
+    }
+
+    .page-meeting-room .participant-card,
+    .page-result .participant-result,
+    .page-vote .participant-result {
+        min-width: 0;
+    }
+
+    .page-vote .abstain-button,
+    .page-vote .host-area .primary {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .page-result .final-place-name {
+        font-size: clamp(1.35rem, 7vw, 1.75rem);
+    }
+
+    /* Fixed and fixed-check room pages */
+    .page-quick-fixed .page,
+    .page-quick-fixed-check .page {
+        width: calc(100% - 24px);
+        gap: 0.75rem;
+        padding: 0.75rem 0 calc(3.5rem + env(safe-area-inset-bottom));
+    }
+
+    .page-quick-fixed .header,
+    .page-quick-fixed-check .header {
+        position: relative;
+        top: auto;
+        min-height: 52px;
+        padding: 0.5rem 0.625rem;
+        border-radius: 0.875rem;
+    }
+
+    .page-quick-fixed .header h1,
+    .page-quick-fixed-check .header h1 {
+        min-width: 0;
+        font-size: 1rem;
+    }
+
+    .page-quick-fixed .page > .card,
+    .page-quick-fixed .page > .card:nth-child(3),
+    .page-quick-fixed-check .page > .card,
+    .page-quick-fixed-check .page > .card:nth-child(3),
+    .page-quick-fixed-check .result-card {
+        min-width: 0;
+        padding: 1.125rem;
+        border-radius: 1rem;
+    }
+
+    .page-quick-fixed .info-grid,
+    .page-quick-fixed .participant-list,
+    .page-quick-fixed .place-actions,
+    .page-quick-fixed .chat-row,
+    .page-quick-fixed-check .info-grid,
+    .page-quick-fixed-check .result-grid,
+    .page-quick-fixed-check .action-row,
+    .page-quick-fixed-check .search-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .page-quick-fixed .page > .card:nth-child(3) :where(button, a),
+    .page-quick-fixed .place-actions :where(button, a),
+    .page-quick-fixed .chat-row button,
+    .page-quick-fixed-check .action-row :where(button, a),
+    .page-quick-fixed-check .search-row button {
+        width: 100%;
+    }
+
+    /* Auth */
+    body.mb-auth-page {
+        display: flex;
+        min-height: 100dvh;
+        padding:
+            max(12px, env(safe-area-inset-top))
+            max(12px, env(safe-area-inset-right))
+            max(12px, env(safe-area-inset-bottom))
+            max(12px, env(safe-area-inset-left));
+        align-items: flex-start;
+        justify-content: center;
+    }
+
+    .mb-auth-page :where(
+        .login-container,
+        .signup-container,
+        .find-email-container,
+        .forgot-password-container,
+        .reset-password-container,
+        .kakao-login-container
+    ) {
+        width: 100%;
+        min-height: calc(100dvh - 24px);
+        margin: 0;
+        padding: 2.5rem 1.25rem 2rem;
+        border: 1px solid var(--auth-border);
+        border-radius: 1.25rem;
+        box-shadow: 0 1rem 2.75rem color-mix(in srgb, var(--auth-foreground) 9%, transparent);
+    }
+
+    .mb-auth-page h1 {
+        max-width: calc(100% - 2.75rem);
+        font-size: clamp(1.65rem, 8vw, 2rem);
+        line-height: 1.2;
+    }
+
+    .page-login .login-container > h1 {
+        max-width: calc(100% - 3rem);
+        padding-right: 0;
+        font-size: clamp(1.4rem, 6.4vw, 1.65rem);
+        white-space: nowrap;
+    }
+
+    .mb-auth-page form,
+    .mb-auth-page :where(.social-login-container, #socialSignupContainer, #kakaoSignupContainer) {
+        min-width: 0;
+    }
+
+    .mb-auth-page form > div:has(> label + input + button),
+    .mb-auth-page #socialSignupContainer > div:has(> label + input + button),
+    .mb-auth-page #kakaoSignupContainer > div:has(> label + input + button) {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .mb-auth-page form > div:has(> label + input + button) > button,
+    .mb-auth-page #socialSignupContainer > div:has(> label + input + button) > button,
+    .mb-auth-page #kakaoSignupContainer > div:has(> label + input + button) > button {
+        width: 100%;
+    }
+
+    .mb-auth-page .login-container > div:not(.social-login-container):not(#socialSignupContainer) {
+        white-space: normal;
+        line-height: 1.75;
+    }
+
+    .mb-auth-page :where(#loginForm, #signupForm, #findEmailForm, #forgotPasswordForm, #resetPasswordForm) > button[type="submit"] {
+        width: 100%;
+        min-height: 48px;
+    }
+
+    /* Feed and content pages */
+    .mb-has-site-header.page-feed-list .feed-page,
+    .page-feed-list .feed-page {
+        width: 100%;
+        padding: 1.25rem 12px calc(3.5rem + env(safe-area-inset-bottom));
+    }
+
+    .page-feed-list .feed-page-header {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 0.875rem;
+    }
+
+    .page-feed-list .feed-navigation {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+    }
+
+    .page-feed-list .feed-navigation a {
+        justify-content: center;
+    }
+
+    .page-feed-list #feedContainer {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.875rem;
+    }
+
+    .page-feed-list .feed-summary-card {
+        min-width: 0;
+        border-radius: 1rem;
+    }
+
+    .page-feed-list .feed-detail-modal {
+        padding: 0;
+    }
+
+    .page-feed-list .feed-detail-dialog {
+        width: 100%;
+        max-width: none;
+        height: 100dvh;
+        max-height: 100dvh;
+        border: 0;
+        border-radius: 0;
+    }
+
+    .page-feed-list .feed-comment-form,
+    .page-feed-list .feed-edit-buttons {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .page-feed-list .feed-comment-submit,
+    .page-feed-list .feed-edit-buttons button {
+        width: 100%;
+    }
+
+    .page-feed-write {
+        padding:
+            max(12px, env(safe-area-inset-top))
+            max(12px, env(safe-area-inset-right))
+            max(12px, env(safe-area-inset-bottom))
+            max(12px, env(safe-area-inset-left));
+    }
+
+    .page-feed-write > div {
+        min-height: calc(100dvh - 24px);
+        padding: 1.5rem 1rem;
+        border: 1px solid var(--content-border);
+        border-radius: 1.25rem;
+        box-shadow: 0 1rem 2.75rem color-mix(in srgb, var(--content-foreground) 8%, transparent);
+    }
+
+    .page-feed-write h1 {
+        padding-right: 3rem;
+        font-size: clamp(1.6rem, 8vw, 2rem);
+    }
+
+    .page-feed-write input[type="file"] {
+        min-height: 52px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    .page-feed-write #feedForm > button,
+    .page-feed-write #feedForm > a {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .page-admin-term {
+        width: 100%;
+        padding: 1.25rem 12px calc(3.5rem + env(safe-area-inset-bottom));
+    }
+
+    .page-admin-term #termForm {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 1rem;
+    }
+
+    .page-admin-term #termForm > div:has(#content) {
+        grid-column: auto;
+    }
+
+    .page-admin-term #termForm > button {
+        width: 100%;
+    }
+
+    .page-admin-term table {
+        max-width: 100%;
+        overflow-x: auto;
+        overscroll-behavior-inline: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Dialogs stay reachable on short mobile screens. */
+    .mb-page :where(.confirm-modal, .kick-modal-box) {
+        width: calc(100% - 24px);
+        max-width: 30rem;
+        max-height: calc(100dvh - 24px);
+        padding: 1.25rem;
+        overflow-y: auto;
+        border-radius: 1rem;
+    }
+}
+
+@media (max-width: 380px) {
+    .mb-site-brand__name {
+        display: none;
+    }
+
+    .page-home .home-hero-stats {
+        gap: 0.35rem;
+    }
+
+    .page-home .home-hero-stats > div {
+        padding-inline: 0.2rem;
+    }
+
+    .page-home .home-hero-stats strong {
+        font-size: 0.75rem;
+    }
+
+    .mb-auth-page :where(
+        .login-container,
+        .signup-container,
+        .find-email-container,
+        .forgot-password-container,
+        .reset-password-container,
+        .kakao-login-container
+    ) {
+        padding-right: 1rem;
+        padding-left: 1rem;
+    }
+
+    .page-feed-list .feed-navigation {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
