@@ -686,6 +686,17 @@
 
     let stompClient = null;
 
+    const roomTabId =
+        (
+            typeof globalThis.crypto?.randomUUID === "function"
+                ? globalThis.crypto.randomUUID()
+                : Date.now()
+                + "-"
+                + Math.random()
+        ).toString();
+
+    let roomSessionReplaced = false;
+
     let currentParticipant = null;
 
     // =========================================================
@@ -1561,6 +1572,74 @@
         );
     }
 
+    async function handleRoomSessionReplaced()
+    {
+        if (roomSessionReplaced)
+        {
+            return;
+        }
+
+        roomSessionReplaced =
+            true;
+
+        const modal =
+            document.getElementById(
+                "kickModal"
+            );
+
+        const title =
+            modal?.querySelector(
+                ".kick-modal-title"
+            );
+
+        if (title)
+        {
+            title.textContent =
+                "다른 탭에서 이 모임을 열었습니다.";
+        }
+
+        if (modal)
+        {
+            modal.classList.add(
+                "show"
+            );
+
+            modal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+        }
+
+        const chatInput =
+            document.getElementById(
+                "chatInput"
+            );
+
+        if (chatInput)
+        {
+            chatInput.disabled =
+                true;
+        }
+
+        if (stompClient)
+        {
+            stompClient.reconnectDelay =
+                0;
+
+            await stompClient.deactivate();
+        }
+
+        setTimeout(
+            () =>
+            {
+                location.replace(
+                    "/home"
+                );
+            },
+            2500
+        );
+    }
+
 
     // =========================================================
     // WebSocket 연결
@@ -1636,6 +1715,22 @@
                                     JSON.parse(
                                         frame.body
                                     );
+
+                                if(
+                                    data.messageType === "EVENT"
+                                    &&
+                                    data.eventType === "ROOM_SESSION_REPLACED"
+                                    &&
+                                    Number(data.userId)
+                                        === Number(currentUser.userId)
+                                    &&
+                                    data.activeTabId !== roomTabId
+                                )
+                                {
+                                    await handleRoomSessionReplaced();
+
+                                    return;
+                                }
 
                                 if (
                                     data.messageType === "CHAT"
@@ -1740,7 +1835,10 @@
                             },
                             {
                                 receipt:
-                                receiptId
+                                receiptId,
+
+                                "x-room-tab-id":
+                                roomTabId
                             }
                         );
 

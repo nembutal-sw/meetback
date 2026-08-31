@@ -12,6 +12,9 @@ import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import com.meetback.dev.service.MeetingPresenceService;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.security.Principal;
 
@@ -22,12 +25,15 @@ public class ChatMessageController {
     private final ChatService chatService;
 
     private final RealtimeEventPublisher realtimeEventPublisher;
+    private final MeetingPresenceService meetingPresenceService;
 
     @MessageMapping("/meetings/{meetingId}/chat")
     public void sendMessage(
             @DestinationVariable Long meetingId,
             ChatSendRequest request,
-            Principal principal
+            Principal principal,
+            @Header("simpSessionId")
+            String sessionId
     )
     {
 
@@ -50,6 +56,19 @@ public class ChatMessageController {
         if(!(principalObject instanceof AuthenticatedUser user)){
             throw new IllegalStateException(
                     "인증 사용자 정보를 확인할 수 없습니다."
+            );
+        }
+
+        if(
+                !meetingPresenceService.isActiveSession(
+                        sessionId,
+                        meetingId,
+                        user.userId()
+                )
+        )
+        {
+            throw new AccessDeniedException(
+                    "다른 탭에서 이 모임을 열어 현재 탭의 채팅 연결이 종료되었습니다."
             );
         }
 
