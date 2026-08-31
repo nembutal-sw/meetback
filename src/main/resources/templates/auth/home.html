@@ -32,6 +32,7 @@
         data-join-meeting-url=@{/meetings/join},
         data-my-meetings-url=@{/meetings/my},
         data-quick-fixed-page-url=@{/quick-fixed},
+        data-quick-fixed-check-page-url=@{/quick-fixed-check},
         data-my-quick-meetings-url=@{/meetings/my/quick},
         data-quick-meetings-url=@{/meetings/quick},
         data-meeting-page-url=@{/meeting}
@@ -610,6 +611,9 @@
 
     const quickFixedPageUrl =
         homeContainer.dataset.quickFixedPageUrl;
+
+    const quickFixedCheckPageUrl =
+        homeContainer.dataset.quickFixedCheckPageUrl;
 
     const loginUrl =
         homeContainer.dataset.loginUrl;
@@ -1684,6 +1688,72 @@
         }
     }
 
+    // ============================================================
+    // 초대코드에 해당하는 번개방 조회
+    //
+    // QUICK_FIXED인지 확인하기 위해
+    // 실제 참가 처리 전에 번개방 목록에서 먼저 찾는다.
+    // ============================================================
+
+    async function findQuickMeetingByInviteCode(
+        inviteCode
+    )
+    {
+        const normalizedInviteCode =
+            inviteCode
+                .trim()
+                .toUpperCase();
+
+
+        const response =
+            await authenticatedFetch(
+                quickMeetingsUrl,
+                {
+                    method:
+                        "GET",
+
+                    cache:
+                        "no-store"
+                }
+            );
+
+
+        if (!response.ok)
+        {
+            throw new Error(
+                "모임 정보를 확인하지 못했습니다."
+            );
+        }
+
+
+        const meetings =
+            await response.json();
+
+
+        if (!Array.isArray(meetings))
+        {
+            throw new Error(
+                "모임 정보 형식이 올바르지 않습니다."
+            );
+        }
+
+
+        return meetings.find(
+                meeting =>
+                    String(
+                        meeting.inviteCode
+                        ||
+                        ""
+                    )
+                        .trim()
+                        .toUpperCase()
+                    ===
+                    normalizedInviteCode
+            )
+            ||
+            null;
+    }
+
 
 
     // ============================================================
@@ -1711,6 +1781,76 @@
         }
 
 
+        // =========================================================
+        // 1. 실제 참가 전에 QUICK_FIXED인지 확인
+        // =========================================================
+
+        const quickMeeting =
+            await findQuickMeetingByInviteCode(
+                normalizedInviteCode
+            );
+
+
+        /*
+         * 고정 번개방이면 여기서 절대 JOIN하지 않는다.
+         *
+         * 귀가지 입력
+         * → 귀가 가능 여부 계산
+         * → 사용자가 참여 버튼 선택
+         * → 그때 /meetings/join
+         */
+        if (
+            quickMeeting
+            &&
+            quickMeeting.meetingType
+            ===
+            "QUICK_FIXED"
+        )
+        {
+            if (!quickMeeting.meetingId)
+            {
+                throw new Error(
+                    "모임 ID를 확인할 수 없습니다."
+                );
+            }
+
+
+            /*
+             * 초대 링크로 들어온 경우
+             * 홈에 다시 왔을 때 자동 참가가 반복되지 않게 제거
+             */
+            sessionStorage.removeItem(
+                "pendingInviteCode"
+            );
+
+
+            window.location.href =
+                quickFixedCheckPageUrl
+                +
+                "?meetingId="
+                +
+                encodeURIComponent(
+                    quickMeeting.meetingId
+                );
+
+
+            return {
+                meetingId:
+                quickMeeting.meetingId,
+
+                meetingType:
+                quickMeeting.meetingType,
+
+                preJoinCheck:
+                    true
+            };
+        }
+
+
+        // =========================================================
+        // 2. QUICK_FIXED가 아니면 기존 참가 처리
+        // =========================================================
+
         const response =
             await authenticatedFetch(
                 joinMeetingUrl,
@@ -1727,15 +1867,10 @@
                     },
 
                     body:
-                        JSON.stringify(
-                            {
-
-                                inviteCode:
-                                normalizedInviteCode
-
-                            }
-                        )
-
+                        JSON.stringify({
+                            inviteCode:
+                            normalizedInviteCode
+                        })
                 }
             );
 
@@ -1801,13 +1936,18 @@
         const newlyJoined =
             data.newlyJoined;
 
+
         const meetingType =
             data.meetingType;
 
+
         const targetPageUrl =
-            meetingType === "QUICK_FIXED"
+            meetingType
+            ===
+            "QUICK_FIXED"
                 ? quickFixedPageUrl
                 : meetingPageUrl;
+
 
         if (!meetingId)
         {
@@ -1828,11 +1968,18 @@
             meetingId
         );
 
+
         myMeetingsLoaded =
             false;
 
+
         myQuickMeetingsLoaded =
             false;
+
+
+        // =========================================================
+        // 자동 입장
+        // =========================================================
 
         if (autoEnter)
         {
@@ -1851,6 +1998,10 @@
         }
 
 
+        // =========================================================
+        // 수동 참가 결과 표시
+        // =========================================================
+
         joinedNickname.innerText =
             currentNickname
             ||
@@ -1868,6 +2019,7 @@
             .dataset
             .meetingId =
             meetingId;
+
 
         enterJoinedMeetingButton
             .dataset
@@ -2561,16 +2713,16 @@
 
             if (meetingType === "QUICK_FIXED")
             {
-
                 window.location.href =
-                    quickFixedPageUrl
+                    quickFixedCheckPageUrl
                     +
                     "?meetingId="
                     +
                     encodeURIComponent(
                         meetingId
-                    );
-
+                    )
+                    +
+                    "&from=create";
 
                 return;
             }
@@ -3003,6 +3155,55 @@
 
                                 return;
                             }
+
+                            // =========================================================
+                            // 기존 QUICK_VOTE 번개방
+                            //
+                            // 기존처럼 바로 참가 처리 후 모임방으로 이동
+                            // =========================================================
+
+                            if (!meeting.inviteCode)
+                            {
+                                showHomeMessage(
+                                    "초대코드를 확인할 수 없습니다.",
+                                    "error"
+                                );
+
+                                return;
+                            }
+
+                            // =========================================================
+                            // 고정 번개방
+                            //
+                            // 바로 참가시키지 않고
+                            // 귀가 가능 여부 확인 페이지로 먼저 이동한다.
+                            // =========================================================
+
+                            if (
+                                meeting.meetingType
+                                ===
+                                "QUICK_FIXED"
+                            )
+                            {
+                                window.location.href =
+                                    quickFixedCheckPageUrl
+                                    +
+                                    "?meetingId="
+                                    +
+                                    encodeURIComponent(
+                                        meeting.meetingId
+                                    );
+
+                                return;
+                            }
+
+
+                            // =========================================================
+                            // 기존 QUICK_VOTE 번개방
+                            //
+                            // 기존처럼 바로 참가 처리 후 모임방으로 이동
+                            // =========================================================
+
 
 
                             try

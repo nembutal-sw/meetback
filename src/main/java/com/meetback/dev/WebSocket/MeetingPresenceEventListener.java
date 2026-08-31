@@ -7,6 +7,7 @@ import com.meetback.dev.security.AuthenticatedUser;
 import com.meetback.dev.service.MeetingPresenceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -195,6 +196,7 @@ public class MeetingPresenceEventListener {
                         )
                 )
         );
+
     }
 
     /*

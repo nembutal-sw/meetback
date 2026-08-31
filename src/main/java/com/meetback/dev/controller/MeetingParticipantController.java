@@ -609,4 +609,32 @@ public class MeetingParticipantController {
                 .build();
     }
 
+    /*
+     * QUICK_FIXED 참가자 귀가지 등록 / 수정
+     */
+    @PutMapping("/meeting/{meetingId}/quick-fixed/return-location")
+    public ResponseEntity<Void> updateQuickFixedReturnLocation(
+
+            @PathVariable Long meetingId,
+
+            @AuthenticationPrincipal
+            AuthenticatedUser user,
+
+            @RequestBody
+            QuickFixedReturnLocationRequestDTO request
+    ) {
+
+        meetingParticipantService
+                .updateQuickFixedReturnLocation(
+                        meetingId,
+                        user.userId(),
+                        request
+                );
+
+
+        return ResponseEntity
+                .noContent()
+                .build();
+    }
+
 }

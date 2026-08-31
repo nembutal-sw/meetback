@@ -42,4 +42,12 @@ public interface MeetingMapper {
     );
 
     List<MyMeetingResponse> selectMyQuickMeetings(Long userId);
+
+    int clearFinalCandidate(
+            @Param("meetingId") Long meetingId
+    );
+
+    int deleteById(
+            @Param("meetingId") Long meetingId
+    );
 }

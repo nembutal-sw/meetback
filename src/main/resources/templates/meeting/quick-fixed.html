@@ -21,6 +21,12 @@
 
     <script src="/js/meeting-presence.js"></script>
 
+    <!-- NAVER MAP -->
+    <script
+            th:src="|https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${naverMapsClientId}|">
+    </script>
+
+
     <style>
 
         * {
@@ -32,6 +38,23 @@
             background: #f8f8fd;
             font-family: Arial, sans-serif;
             color: #191924;
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        button,
+        input {
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        button:disabled {
+            cursor: default;
         }
 
         .page {
@@ -126,12 +149,60 @@
 
         .return-card h2 {
             margin-top: 0;
+
+        /* =========================================================
+           모임 장소 버튼
+           ========================================================= */
+
+        .place-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .place-action-button {
+            min-height: 42px;
+            padding: 0 17px;
+
+            border: 1px solid #d9d5ff;
+            border-radius: 10px;
+
+            background: #f4f2ff;
+            color: #5143df;
+
+            font-weight: bold;
+
+            transition:
+                    background 0.18s ease,
+                    border-color 0.18s ease;
+        }
+
+        .place-action-button:hover:not(:disabled) {
+            background: #eae7ff;
+            border-color: #bcb4ff;
+        }
+
+        .place-action-button.map-button {
+            background: #ffffff;
         }
 
         .return-description {
             color: #777788;
             line-height: 1.6;
+        .place-action-button.map-button:hover:not(:disabled) {
+            background: #f8f7ff;
         }
+
+        .place-action-button:disabled {
+            color: #aaa8b8;
+            background: #f4f4f7;
+            border-color: #e4e3eb;
+        }
+
+
+        /* =========================================================
+           메시지
+           ========================================================= */
 
         .message {
             display: none;
@@ -177,6 +248,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            gap: 10px;
         }
 
         .participant-name {
@@ -205,6 +277,10 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* =========================================================
+           채팅
+           ========================================================= */
 
         .chat-header {
             display: flex;
@@ -258,6 +334,11 @@
             font-weight: bold;
             cursor: pointer;
         }
+
+
+        /* =========================================================
+           참가 / 강퇴 버튼
+           ========================================================= */
 
         .leave-button {
             margin-top: 18px;
@@ -327,6 +408,11 @@
             font-weight: bold;
         }
 
+
+        /* =========================================================
+           강퇴 Modal
+           ========================================================= */
+
         .kick-modal {
             display: none;
             position: fixed;
@@ -358,27 +444,418 @@
             font-weight: bold;
         }
 
+
+        /* =========================================================
+           귀가 경로 Map Modal
+           ========================================================= */
+
+        .route-map-modal {
+            display: none;
+
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+
+            align-items: center;
+            justify-content: center;
+
+            padding: 24px;
+
+            background: rgba(25, 25, 36, 0.58);
+        }
+
+        .route-map-modal.open {
+            display: flex;
+        }
+
+        .route-map-modal-content {
+            width: 900px;
+            max-width: 100%;
+            max-height: 92vh;
+
+            overflow-y: auto;
+
+            border-radius: 18px;
+            background: white;
+
+            box-shadow:
+                    0 24px 70px rgba(20, 20, 40, 0.28);
+        }
+
+        .route-map-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+
+            gap: 20px;
+
+            padding: 20px 22px;
+
+            border-bottom: 1px solid #ecebf3;
+        }
+
+        .route-map-modal-header h2 {
+            margin: 4px 0 0;
+        }
+
+        .route-map-label {
+            color: #6557f6;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.3px;
+        }
+
+        .route-map-close {
+            width: 40px;
+            height: 40px;
+
+            padding: 0;
+
+            border: 0;
+            border-radius: 50%;
+
+            background: #f2f1f6;
+            color: #555566;
+
+            font-size: 25px;
+            line-height: 1;
+        }
+
+        .route-map-body {
+            padding: 20px;
+        }
+
+        .route-map {
+            width: 100%;
+            height: 460px;
+
+            overflow: hidden;
+
+            border: 1px solid #e8e7f1;
+            border-radius: 14px;
+        }
+
+        .route-map-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+
+            margin-top: 14px;
+        }
+
+        .route-map-info span {
+            padding: 10px 13px;
+
+            border-radius: 9px;
+
+            background: #f8f8fd;
+
+            color: #777788;
+            font-size: 13px;
+        }
+
+        .route-map-info strong {
+            margin-left: 5px;
+            color: #191924;
+        }
+
+
+        /* =========================================================
+           노선 안내
+           ========================================================= */
+
+        .route-guide {
+            display: none;
+
+            margin-top: 14px;
+            padding: 15px;
+
+            border: 1px solid #ecebf3;
+            border-radius: 12px;
+
+            background: #fafafe;
+        }
+
+        .route-guide-content {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .route-guide-label {
+            margin-right: 4px;
+
+            color: #777788;
+
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        .route-guide-line-chip {
+            padding: 6px 9px;
+            border-radius: 999px;
+
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .route-guide-arrow {
+            color: #aaaabb;
+        }
+
+        .route-guide-transfer-station {
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .route-guide-transfer-badge {
+            padding: 4px 7px;
+
+            border-radius: 999px;
+
+            background: #eeeef5;
+            color: #777788;
+
+            font-size: 11px;
+        }
+
+
+        /* =========================================================
+           지도 위 역 마커
+           ========================================================= */
+
+        .route-station-marker {
+            --marker-color: #6557f6;
+            --marker-next-color: var(--marker-color);
+
+            position: relative;
+
+            min-width: 105px;
+
+            padding: 9px 11px;
+
+            transform: translate(-50%, -100%);
+
+            border: 1px solid #e5e4ed;
+            border-radius: 10px;
+
+            background: #ffffff;
+
+            box-shadow:
+                    0 5px 16px rgba(30, 30, 50, 0.18);
+
+            white-space: nowrap;
+        }
+
+        .route-station-marker-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .route-station-marker-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            min-width: 34px;
+            height: 20px;
+
+            padding: 0 6px;
+
+            border-radius: 999px;
+
+            background: var(--marker-color);
+
+            color: #ffffff;
+
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        /*
+         * 환승은 이전 호선 / 다음 호선 반반
+         */
+        .route-station-marker.transfer
+        .route-station-marker-badge {
+            background:
+                    linear-gradient(
+                            135deg,
+                            var(--marker-color) 0%,
+                            var(--marker-color) 48%,
+                            var(--marker-next-color) 52%,
+                            var(--marker-next-color) 100%
+                    );
+        }
+
+        .route-station-marker-name {
+            color: #191924;
+
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .route-station-marker-line {
+            margin-top: 6px;
+
+            color: var(--marker-color);
+
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        /*
+         * 환승 노선명도 두 호선 색상
+         */
+        .route-station-marker.transfer
+        .route-station-marker-line {
+            background:
+                    linear-gradient(
+                            90deg,
+                            var(--marker-color),
+                            var(--marker-next-color)
+                    );
+
+            background-clip: text;
+            -webkit-background-clip: text;
+
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+        }
+
+
+        /* =========================================================
+           모바일
+           ========================================================= */
+
+        @media (max-width: 700px) {
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .participant-list {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-row {
+                flex-direction: column;
+            }
+
+            .chat-send-button {
+                padding: 13px;
+            }
+
+            .place-actions {
+                flex-direction: column;
+            }
+
+            .place-action-button {
+                width: 100%;
+            }
+
+            .route-map-modal {
+                padding: 10px;
+            }
+
+            .route-map {
+                height: 380px;
+            }
+        }
+
     </style>
 
 </head>
 
+
 <body>
-    <div
-            id="kickModal"
-            class="kick-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-hidden="true">
 
-        <div class="kick-modal-box">
 
-            <div class="kick-modal-title">
-                모임에서 강퇴되었습니다.
+<!-- =========================================================
+     강퇴 Modal
+     ========================================================= -->
+
+<div
+        id="kickModal"
+        class="kick-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-hidden="true">
+
+    <div class="kick-modal-box">
+
+        <div class="kick-modal-title">
+            모임에서 강퇴되었습니다.
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     귀가 경로 지도 Modal
+     ========================================================= -->
+
+<div
+        id="routeMapModal"
+        class="route-map-modal"
+        onclick="handleRouteMapBackground(event)">
+
+    <div class="route-map-modal-content">
+
+        <div class="route-map-modal-header">
+
+            <div>
+
+                <div class="route-map-label">
+                    RETURN ROUTE
+                </div>
+
+                <h2 id="routeMapTitle">
+                    내 귀가 경로
+                </h2>
+
+            </div>
+
+
+            <button
+                    type="button"
+                    class="route-map-close"
+                    onclick="closeReturnRouteMap()">
+
+                ×
+
+            </button>
+
+        </div>
+
+
+        <div class="route-map-body">
+
+            <div
+                    id="routeMap"
+                    class="route-map">
+            </div>
+
+
+            <div
+                    id="routeMapInfo"
+                    class="route-map-info">
+            </div>
+
+
+            <div
+                    id="routeGuide"
+                    class="route-guide">
             </div>
 
         </div>
 
     </div>
+
+</div>
 
 
 <div class="page">
@@ -428,14 +905,11 @@
 
 
         <div class="meeting-type">
-
             ⚡ 고정 번개방
-
         </div>
 
 
         <div class="info-grid">
-
 
             <div class="info-item">
 
@@ -469,7 +943,6 @@
                 </div>
 
             </div>
-
 
         </div>
 
@@ -517,7 +990,7 @@
          고정 장소
          ========================================================= -->
 
-    <div class="card">
+    <div class="card place-card">
 
         <h2>
             모임 장소
@@ -541,11 +1014,38 @@
 
         </div>
 
+
+        <div class="place-actions">
+
+            <button
+                    type="button"
+                    class="place-action-button"
+                    onclick="openReturnCheck()">
+
+                내 귀가정보 확인
+
+            </button>
+
+
+            <button
+                    type="button"
+                    id="returnRouteMapButton"
+                    class="place-action-button map-button"
+                    onclick="openReturnRouteMap()"
+                    disabled>
+
+                🗺 귀가 경로 지도
+
+            </button>
+
+        </div>
+
     </div>
 
+
     <!-- =========================================================
-     참가자 현황
-     ========================================================= -->
+         참가자 현황
+         ========================================================= -->
 
     <div class="card">
 
@@ -587,8 +1087,8 @@
     </div>
 
     <!-- =========================================================
-     모임 채팅
-     ========================================================= -->
+         모임 채팅
+         ========================================================= -->
 
     <div class="card">
 
@@ -619,10 +1119,10 @@
                     id="chatInput"
                     placeholder="메시지를 입력하세요"
                     onkeydown="
-                    if (event.key === 'Enter') {
-                        sendChat();
-                    }
-                ">
+                        if (event.key === 'Enter') {
+                            sendChat();
+                        }
+                    ">
 
             <button
                     type="button"
@@ -638,31 +1138,7 @@
     </div>
 
 
-    <!-- =========================================================
-         내 귀가 정보
-         이후 구현 영역
-         ========================================================= -->
-
-    <div class="card return-card">
-
-        <h2>
-            내 귀가 확인
-        </h2>
-
-
-        <div class="return-description">
-
-            귀가 장소를 입력하면
-            모임 종료 후 집에 돌아갈 수 있는지 확인하고
-            귀가 경로를 볼 수 있습니다.
-
-        </div>
-
-    </div>
-
-
 </div>
-
 
 
 <script>
@@ -674,15 +1150,18 @@
     let meetingId =
         null;
 
-
     let meeting =
         null;
-
 
     let fixedPlace =
         null;
 
-    let currentUser = null;
+    let currentUser =
+        null;
+
+    let currentParticipant =
+        null;
+
 
     let stompClient = null;
 
@@ -694,6 +1173,21 @@
                 + "-"
                 + Math.random()
         ).toString();
+    // =========================================================
+    // 귀가 지도 상태
+    // =========================================================
+
+    let returnPreviewResult =
+        null;
+
+    let routeMap =
+        null;
+
+    let routePolylines =
+        [];
+
+    let routeMarkers =
+        [];
 
     let roomSessionReplaced = false;
 
@@ -708,34 +1202,34 @@
             "message"
         );
 
-
     const meetingTitle =
         document.getElementById(
             "meetingTitle"
         );
-
 
     const meetingStartAt =
         document.getElementById(
             "meetingStartAt"
         );
 
-
     const desiredEndAt =
         document.getElementById(
             "desiredEndAt"
         );
-
 
     const inviteCode =
         document.getElementById(
             "inviteCode"
         );
 
-
     const inviteCodeButton =
         document.getElementById(
             "inviteCodeButton"
+        );
+
+    const leaveMeetingButton =
+        document.getElementById(
+            "leaveMeetingButton"
         );
 
     const closeRecruitmentButton =
@@ -747,7 +1241,6 @@
         document.getElementById(
             "fixedPlaceName"
         );
-
 
     const fixedPlaceAddress =
         document.getElementById(
@@ -774,6 +1267,10 @@
             "kickedParticipantList"
         );
 
+    const returnRouteMapButton =
+        document.getElementById(
+            "returnRouteMapButton"
+        );
 
 
     // =========================================================
@@ -784,15 +1281,12 @@
         text
     )
     {
-
         message.textContent =
             text;
-
 
         message.className =
             "message show message-error";
     }
-
 
 
     // =========================================================
@@ -801,11 +1295,1367 @@
 
     function goHome()
     {
-
         location.href =
             "/home";
     }
 
+
+    // =========================================================
+    // 내 귀가정보 확인 페이지 이동
+    // =========================================================
+
+    function openReturnCheck()
+    {
+        if (!meetingId)
+        {
+            showMessage(
+                "모임 ID를 확인할 수 없습니다."
+            );
+
+            return;
+        }
+
+
+        location.href =
+            "/quick-fixed-check?meetingId="
+            +
+            encodeURIComponent(
+                meetingId
+            )
+            +
+            "&from=room";
+    }
+
+
+    // =========================================================
+    // 귀가 결과 불러오기
+    //
+    // 1. sessionStorage 결과가 있으면 우선 재사용
+    // 2. 없거나 사용할 수 없는 결과면
+    //    DB에 저장된 현재 참가자의 귀가지 기준으로 조회
+    // =========================================================
+
+    async function loadSavedReturnPreview()
+    {
+        returnPreviewResult =
+            null;
+
+
+        const storageKey =
+            `quickFixedReturnResult:${meetingId}`;
+
+
+        const savedText =
+            sessionStorage.getItem(
+                storageKey
+            );
+
+
+        // =====================================================
+        // 1. sessionStorage 확인
+        // =====================================================
+
+        if (savedText)
+        {
+            try
+            {
+                const saved =
+                    JSON.parse(
+                        savedText
+                    );
+
+
+                if (
+                    saved
+                    &&
+                    Number(saved.meetingId)
+                    ===
+                    Number(meetingId)
+                    &&
+                    saved.result
+                )
+                {
+                    let validSavedResult =
+                        true;
+
+
+                    // =============================================
+                    // 모임 종료시간 변경 여부
+                    // =============================================
+
+                    if (
+                        meeting?.desiredEndAt
+                        &&
+                        saved.result.desiredEndAt
+                    )
+                    {
+                        const currentEndTime =
+                            new Date(
+                                meeting.desiredEndAt
+                            ).getTime();
+
+
+                        const savedEndTime =
+                            new Date(
+                                saved.result.desiredEndAt
+                            ).getTime();
+
+
+                        if (
+                            !Number.isNaN(
+                                currentEndTime
+                            )
+                            &&
+                            !Number.isNaN(
+                                savedEndTime
+                            )
+                            &&
+                            currentEndTime
+                            !==
+                            savedEndTime
+                        )
+                        {
+                            validSavedResult =
+                                false;
+
+
+                            sessionStorage.removeItem(
+                                storageKey
+                            );
+                        }
+                    }
+
+
+                    if (validSavedResult)
+                    {
+                        returnPreviewResult =
+                            saved.result;
+
+
+                        // =========================================
+                        // 예전 routeMapData 세션 호환
+                        // =========================================
+
+                        if (
+                            !returnPreviewResult.routeMap
+                            &&
+                            returnPreviewResult.routeMapData
+                        )
+                        {
+                            try
+                            {
+                                returnPreviewResult.routeMap =
+                                    typeof returnPreviewResult.routeMapData
+                                    ===
+                                    "string"
+                                        ? JSON.parse(
+                                            returnPreviewResult.routeMapData
+                                        )
+                                        : returnPreviewResult.routeMapData;
+                            }
+                            catch (error)
+                            {
+                                console.warn(
+                                    "[OLD ROUTE MAP DATA PARSE ERROR]",
+                                    error
+                                );
+                            }
+                        }
+
+
+                        const walking =
+                            !returnPreviewResult.lastTrainDepartureAt;
+
+
+                        /*
+                         * 도보 결과는 지도 데이터가 없는 것이 정상.
+                         *
+                         * 대중교통 결과는 routeMap.lines가 있어야
+                         * 세션 결과를 그대로 사용한다.
+                         */
+                        if (
+                            walking
+                            ||
+                            (
+                                returnPreviewResult.routeMap
+                                &&
+                                Array.isArray(
+                                    returnPreviewResult.routeMap.lines
+                                )
+                                &&
+                                returnPreviewResult.routeMap.lines.length > 0
+                            )
+                        )
+                        {
+                            updateReturnRouteMapButton();
+
+                            return;
+                        }
+
+
+                        returnPreviewResult =
+                            null;
+                    }
+                }
+            }
+            catch (error)
+            {
+                console.warn(
+                    "[QUICK FIXED SESSION PREVIEW ERROR]",
+                    error
+                );
+
+
+                sessionStorage.removeItem(
+                    storageKey
+                );
+
+
+                returnPreviewResult =
+                    null;
+            }
+        }
+
+
+        // =====================================================
+        // 2. 세션 결과가 없으면
+        //    DB 귀가지 기준으로 현재 참가자의 결과 조회
+        // =====================================================
+
+        try
+        {
+            const response =
+                await MeetBack.authenticatedFetch(
+                    `/calculations/meeting/${meetingId}/quick-fixed/return-check`,
+                    {
+                        method:
+                            "POST",
+
+                        cache:
+                            "no-store"
+                    }
+                );
+
+
+            if (!response.ok)
+            {
+                console.warn(
+                    "[QUICK FIXED RETURN CHECK FAILED]",
+                    response.status
+                );
+
+
+                returnPreviewResult =
+                    null;
+
+
+                updateReturnRouteMapButton();
+
+
+                return;
+            }
+
+
+            returnPreviewResult =
+                await response.json();
+
+
+            updateReturnRouteMapButton();
+        }
+        catch (error)
+        {
+            console.error(
+                "[QUICK FIXED RETURN CHECK ERROR]",
+                error
+            );
+
+
+            returnPreviewResult =
+                null;
+
+
+            updateReturnRouteMapButton();
+        }
+    }
+
+
+    // =========================================================
+    // 지도 버튼 상태
+    // =========================================================
+
+    function updateReturnRouteMapButton()
+    {
+        const routeData =
+            returnPreviewResult?.routeMap;
+
+
+        if (
+            routeData
+            &&
+            Array.isArray(
+                routeData.lines
+            )
+            &&
+            routeData.lines.length > 0
+        )
+        {
+            returnRouteMapButton.disabled =
+                false;
+
+
+            returnRouteMapButton.textContent =
+                "🗺 귀가 경로 지도";
+
+
+            return;
+        }
+
+
+        returnRouteMapButton.disabled =
+            true;
+
+
+        if (
+            returnPreviewResult
+            &&
+            !returnPreviewResult.lastTrainDepartureAt
+        )
+        {
+            returnRouteMapButton.textContent =
+                "🚶 도보 귀가";
+        }
+        else
+        {
+            returnRouteMapButton.textContent =
+                "🗺 귀가 경로 지도";
+        }
+    }
+
+
+    // =========================================================
+    // 귀가 지도 열기
+    // =========================================================
+
+    async function openReturnRouteMap()
+    {
+        /*
+         * 초기화에서 이미 결과를 읽지만
+         * 혹시 결과가 없다면 다시 조회한다.
+         */
+        if (!returnPreviewResult)
+        {
+            await loadSavedReturnPreview();
+        }
+
+
+        const routeData =
+            returnPreviewResult?.routeMap;
+
+
+        // =====================================================
+        // 도보 귀가
+        // =====================================================
+
+        if (
+            returnPreviewResult
+            &&
+            !returnPreviewResult.lastTrainDepartureAt
+        )
+        {
+            showMessage(
+                "도보 귀가 가능한 거리입니다."
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // 지도 데이터 확인
+        // =====================================================
+
+        if (
+            !routeData
+            ||
+            !Array.isArray(
+                routeData.lines
+            )
+            ||
+            routeData.lines.length === 0
+        )
+        {
+            showMessage(
+                "표시할 귀가 경로가 없습니다. 내 귀가정보 확인에서 다시 계산해주세요."
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // NAVER MAP SDK 확인
+        // =====================================================
+
+        if (
+            typeof naver === "undefined"
+            ||
+            !naver.maps
+        )
+        {
+            showMessage(
+                "네이버 지도를 불러오지 못했습니다."
+            );
+
+            return;
+        }
+
+
+        // =====================================================
+        // 제목
+        // =====================================================
+
+        document.getElementById(
+            "routeMapTitle"
+        ).textContent =
+            (
+                routeData.startName
+                ||
+                fixedPlace?.placeName
+                ||
+                "모임 장소"
+            )
+            +
+            " → "
+            +
+            (
+                routeData.endName
+                ||
+                "귀가 장소"
+            );
+
+
+        // =====================================================
+        // Modal
+        // =====================================================
+
+        document.getElementById(
+            "routeMapModal"
+        ).classList.add(
+            "open"
+        );
+
+
+        document.body.classList.add(
+            "modal-open"
+        );
+
+
+        renderReturnRouteInfo();
+
+
+        renderRouteGuide(
+            routeData.steps,
+            routeData.lines
+        );
+
+
+        setTimeout(
+            () =>
+            {
+                drawRouteMap(
+                    routeData.lines,
+                    routeData.startName,
+                    routeData.endName,
+                    routeData.steps
+                );
+            },
+            100
+        );
+    }
+
+
+    // =========================================================
+    // 지도 상단 귀가 정보
+    // =========================================================
+
+    function renderReturnRouteInfo()
+    {
+        const info =
+            document.getElementById(
+                "routeMapInfo"
+            );
+
+
+        if (!returnPreviewResult)
+        {
+            info.innerHTML =
+                "";
+
+            return;
+        }
+
+
+        info.innerHTML =
+            `
+            <span>
+                예상 귀가시간
+                <strong>
+                    ${
+                returnPreviewResult.returnMinutes == null
+                    ? "-"
+                    : returnPreviewResult.returnMinutes + "분"
+            }
+                </strong>
+            </span>
+
+            <span>
+                환승
+                <strong>
+                    ${
+                returnPreviewResult.transferCount == null
+                    ? "-"
+                    : returnPreviewResult.transferCount + "회"
+            }
+                </strong>
+            </span>
+
+            <span>
+                막차
+                <strong>
+                    ${
+                returnPreviewResult.lastTrainDepartureAt
+                    ? formatTimeOnly(
+                        returnPreviewResult.lastTrainDepartureAt
+                    )
+                    : "-"
+            }
+                </strong>
+            </span>
+            `;
+    }
+
+
+    // =========================================================
+    // 노선명 정리
+    // =========================================================
+
+    function normalizeLineName(
+        lineName
+    )
+    {
+        if (!lineName)
+        {
+            return "노선 정보 없음";
+        }
+
+
+        return String(
+            lineName
+        )
+            .replace(
+                /^수도권\s*/,
+                ""
+            )
+            .trim();
+    }
+
+
+    // =========================================================
+    // 지하철 호선 색
+    // =========================================================
+
+    function getSubwayLineColor(
+        type
+    )
+    {
+        const colors = {
+
+            1: "#0052A4",
+            2: "#00A84D",
+            3: "#EF7C1C",
+            4: "#00A5DE",
+            5: "#996CAC",
+            6: "#CD7C2F",
+            7: "#747F00",
+            8: "#E6186C",
+            9: "#BDB092"
+
+        };
+
+
+        return colors[type]
+            ||
+            "#6557f6";
+    }
+
+
+    // =========================================================
+    // 이용 노선 안내
+    // =========================================================
+
+    function renderRouteGuide(
+        steps,
+        lines
+    )
+    {
+        const guide =
+            document.getElementById(
+                "routeGuide"
+            );
+
+
+        if (
+            !Array.isArray(steps)
+            ||
+            steps.length === 0
+        )
+        {
+            guide.innerHTML =
+                "";
+
+
+            guide.style.display =
+                "none";
+
+
+            return;
+        }
+
+
+        let html =
+            `
+            <div class="route-guide-content">
+
+                <span class="route-guide-label">
+                    이용 노선
+                </span>
+            `;
+
+
+        steps.forEach(
+            (
+                step,
+                index
+            ) =>
+            {
+                const lineType =
+                    lines?.[index]?.type;
+
+
+                const lineColor =
+                    getSubwayLineColor(
+                        Number(
+                            lineType
+                        )
+                    );
+
+
+                const lineName =
+                    MeetBack.escapeHtml(
+                        normalizeLineName(
+                            step.lineName
+                        )
+                    );
+
+
+                html +=
+                    `
+                    <span
+                            class="route-guide-line-chip"
+                            style="
+                                color: ${lineColor};
+                                border: 1px solid ${lineColor}40;
+                                background: ${lineColor}18;
+                            ">
+
+                        ${lineName}
+
+                    </span>
+                    `;
+
+
+                if (
+                    index
+                    <
+                    steps.length - 1
+                )
+                {
+                    html +=
+                        `
+                        <span class="route-guide-arrow">
+                            →
+                        </span>
+
+                        <span class="route-guide-transfer-station">
+                            ${
+                            MeetBack.escapeHtml(
+                                step.endStationName
+                                ||
+                                "환승역"
+                            )
+                        }
+                        </span>
+
+                        <span class="route-guide-transfer-badge">
+                            환승
+                        </span>
+
+                        <span class="route-guide-arrow">
+                            →
+                        </span>
+                        `;
+                }
+            }
+        );
+
+
+        html +=
+            `
+            </div>
+            `;
+
+
+        guide.innerHTML =
+            html;
+
+
+        guide.style.display =
+            "block";
+    }
+
+
+    // =========================================================
+    // 지도 역 마커
+    // =========================================================
+
+    function createRouteStationMarker(
+        position,
+        type,
+        stationName,
+        lineText,
+        lineType,
+        nextLineType = null
+    )
+    {
+        if (
+            !position
+            ||
+            !routeMap
+        )
+        {
+            return;
+        }
+
+
+        let badgeText =
+            "경유";
+
+
+        if (type === "start")
+        {
+            badgeText =
+                "출발";
+        }
+        else if (type === "transfer")
+        {
+            badgeText =
+                "환승";
+        }
+        else if (type === "end")
+        {
+            badgeText =
+                "도착";
+        }
+
+
+        const lineColor =
+            getSubwayLineColor(
+                Number(
+                    lineType
+                )
+            );
+
+
+        const nextLineColor =
+            nextLineType == null
+                ? lineColor
+                : getSubwayLineColor(
+                    Number(
+                        nextLineType
+                    )
+                );
+
+
+        const safeStationName =
+            MeetBack.escapeHtml(
+                stationName
+                ||
+                "역 정보 없음"
+            );
+
+
+        const safeLineText =
+            MeetBack.escapeHtml(
+                lineText
+                ||
+                ""
+            );
+
+
+        const marker =
+            new naver.maps.Marker(
+                {
+
+                    map:
+                    routeMap,
+
+                    position:
+                    position,
+
+                    zIndex:
+                        type === "transfer"
+                            ? 150
+                            : 120,
+
+                    icon: {
+
+                        content:
+                            `
+                            <div
+                                    class="route-station-marker ${type}"
+                                    style="
+                                        --marker-color: ${lineColor};
+                                        --marker-next-color: ${nextLineColor};
+                                    ">
+
+                                <div class="route-station-marker-header">
+
+                                    <span class="route-station-marker-badge">
+                                        ${badgeText}
+                                    </span>
+
+                                    <span class="route-station-marker-name">
+                                        ${safeStationName}
+                                    </span>
+
+                                </div>
+
+                                ${
+                                safeLineText
+                                    ? `
+                                            <div class="route-station-marker-line">
+                                                ${safeLineText}
+                                            </div>
+                                          `
+                                    : ""
+                            }
+
+                            </div>
+                            `
+                    }
+                }
+            );
+
+
+        routeMarkers.push(
+            marker
+        );
+    }
+
+
+    // =========================================================
+    // 네이버 지도 출력
+    // =========================================================
+
+    function drawRouteMap(
+        lines,
+        startName,
+        endName,
+        steps
+    )
+    {
+        if (
+            typeof naver === "undefined"
+            ||
+            !naver.maps
+        )
+        {
+            return;
+        }
+
+
+        const allPoints =
+            [];
+
+
+        lines.forEach(
+            line =>
+            {
+                if (
+                    !Array.isArray(
+                        line.points
+                    )
+                    ||
+                    line.points.length === 0
+                )
+                {
+                    return;
+                }
+
+
+                line.points.forEach(
+                    point =>
+                    {
+                        const latitude =
+                            Number(
+                                point.latitude
+                            );
+
+
+                        const longitude =
+                            Number(
+                                point.longitude
+                            );
+
+
+                        if (
+                            Number.isNaN(latitude)
+                            ||
+                            Number.isNaN(longitude)
+                        )
+                        {
+                            return;
+                        }
+
+
+                        allPoints.push(
+                            new naver.maps.LatLng(
+                                latitude,
+                                longitude
+                            )
+                        );
+                    }
+                );
+            }
+        );
+
+
+        if (allPoints.length === 0)
+        {
+            showMessage(
+                "표시할 경로 좌표가 없습니다."
+            );
+
+            return;
+        }
+
+
+        if (!routeMap)
+        {
+            routeMap =
+                new naver.maps.Map(
+                    "routeMap",
+                    {
+
+                        center:
+                            allPoints[0],
+
+                        zoom:
+                            13
+                    }
+                );
+        }
+
+
+        naver.maps.Event.trigger(
+            routeMap,
+            "resize"
+        );
+
+
+        routePolylines.forEach(
+            polyline =>
+                polyline.setMap(
+                    null
+                )
+        );
+
+
+        routePolylines =
+            [];
+
+
+        routeMarkers.forEach(
+            marker =>
+                marker.setMap(
+                    null
+                )
+        );
+
+
+        routeMarkers =
+            [];
+
+
+        // =====================================================
+        // 경로선
+        // =====================================================
+
+        lines.forEach(
+            line =>
+            {
+                if (
+                    !Array.isArray(
+                        line.points
+                    )
+                    ||
+                    line.points.length === 0
+                )
+                {
+                    return;
+                }
+
+
+                const path =
+                    line.points.map(
+                        point =>
+                            new naver.maps.LatLng(
+                                Number(
+                                    point.latitude
+                                ),
+                                Number(
+                                    point.longitude
+                                )
+                            )
+                    );
+
+
+                const polyline =
+                    new naver.maps.Polyline(
+                        {
+
+                            map:
+                            routeMap,
+
+                            path:
+                            path,
+
+                            strokeColor:
+                                getSubwayLineColor(
+                                    Number(
+                                        line.type
+                                    )
+                                ),
+
+                            strokeWeight:
+                                6,
+
+                            strokeOpacity:
+                                0.9,
+
+                            strokeLineCap:
+                                "round",
+
+                            strokeLineJoin:
+                                "round"
+                        }
+                    );
+
+
+                routePolylines.push(
+                    polyline
+                );
+            }
+        );
+
+
+        // =====================================================
+        // 역 마커
+        // =====================================================
+
+        if (
+            Array.isArray(steps)
+            &&
+            steps.length > 0
+        )
+        {
+            const firstStep =
+                steps[0];
+
+
+            const lastStep =
+                steps[
+                steps.length - 1
+                    ];
+
+
+            // =================================================
+            // 출발역
+            // =================================================
+
+            let startPosition =
+                allPoints[0];
+
+
+            if (
+                firstStep.startLatitude != null
+                &&
+                firstStep.startLongitude != null
+            )
+            {
+                startPosition =
+                    new naver.maps.LatLng(
+                        Number(
+                            firstStep.startLatitude
+                        ),
+                        Number(
+                            firstStep.startLongitude
+                        )
+                    );
+            }
+
+
+            createRouteStationMarker(
+                startPosition,
+                "start",
+                firstStep.startStationName
+                ||
+                startName
+                ||
+                "출발역",
+                normalizeLineName(
+                    firstStep.lineName
+                ),
+                lines[0]?.type
+            );
+
+
+            // =================================================
+            // 환승역
+            // =================================================
+
+            for (
+                let i = 0;
+                i < steps.length - 1;
+                i++
+            )
+            {
+                const currentStep =
+                    steps[i];
+
+
+                const nextStep =
+                    steps[i + 1];
+
+
+                if (
+                    currentStep.endLatitude == null
+                    ||
+                    currentStep.endLongitude == null
+                )
+                {
+                    continue;
+                }
+
+
+                const transferPosition =
+                    new naver.maps.LatLng(
+                        Number(
+                            currentStep.endLatitude
+                        ),
+                        Number(
+                            currentStep.endLongitude
+                        )
+                    );
+
+
+                createRouteStationMarker(
+                    transferPosition,
+                    "transfer",
+                    currentStep.endStationName
+                    ||
+                    "환승역",
+                    normalizeLineName(
+                        currentStep.lineName
+                    )
+                    +
+                    " → "
+                    +
+                    normalizeLineName(
+                        nextStep.lineName
+                    ),
+                    lines[i]?.type,
+                    lines[i + 1]?.type
+                );
+            }
+
+
+            // =================================================
+            // 도착역
+            // =================================================
+
+            let endPosition =
+                allPoints[
+                allPoints.length - 1
+                    ];
+
+
+            if (
+                lastStep.endLatitude != null
+                &&
+                lastStep.endLongitude != null
+            )
+            {
+                endPosition =
+                    new naver.maps.LatLng(
+                        Number(
+                            lastStep.endLatitude
+                        ),
+                        Number(
+                            lastStep.endLongitude
+                        )
+                    );
+            }
+
+
+            createRouteStationMarker(
+                endPosition,
+                "end",
+                lastStep.endStationName
+                ||
+                endName
+                ||
+                "도착역",
+                normalizeLineName(
+                    lastStep.lineName
+                ),
+                lines[
+                lines.length - 1
+                    ]?.type
+            );
+        }
+
+
+        // =====================================================
+        // 지도 범위
+        // =====================================================
+
+        const bounds =
+            new naver.maps.LatLngBounds();
+
+
+        allPoints.forEach(
+            point =>
+                bounds.extend(
+                    point
+                )
+        );
+
+
+        routeMap.fitBounds(
+            bounds
+        );
+    }
+
+
+    // =========================================================
+    // 지도 닫기
+    // =========================================================
+
+    function closeReturnRouteMap()
+    {
+        document.getElementById(
+            "routeMapModal"
+        ).classList.remove(
+            "open"
+        );
+
+
+        document.body.classList.remove(
+            "modal-open"
+        );
+    }
+
+
+    function handleRouteMapBackground(
+        event
+    )
+    {
+        if (
+            event.target.id
+            ===
+            "routeMapModal"
+        )
+        {
+            closeReturnRouteMap();
+        }
+    }
+
+
+    document.addEventListener(
+        "keydown",
+        event =>
+        {
+            if (
+                event.key
+                ===
+                "Escape"
+            )
+            {
+                closeReturnRouteMap();
+            }
+        }
+    );
+
+
+    // =========================================================
+    // 시간만 표시
+    // =========================================================
+
+    function formatTimeOnly(
+        value
+    )
+    {
+        if (!value)
+        {
+            return "-";
+        }
+
+
+        const date =
+            new Date(
+                value
+            );
+
+
+        if (
+            Number.isNaN(
+                date.getTime()
+            )
+        )
+        {
+            return "-";
+        }
+
+
+        return new Intl.DateTimeFormat(
+            "ko-KR",
+            {
+
+                hour:
+                    "2-digit",
+
+                minute:
+                    "2-digit",
+
+                hour12:
+                    false
+
+            }
+        ).format(
+            date
+        );
+    }
 
 
     // =========================================================
@@ -814,7 +2664,6 @@
 
     async function copyInviteUrl()
     {
-
         if (
             !meeting
             ||
@@ -837,7 +2686,6 @@
 
         try
         {
-
             await navigator.clipboard.writeText(
                 inviteUrl
             );
@@ -854,18 +2702,14 @@
             setTimeout(
                 () =>
                 {
-
                     inviteCodeButton.innerHTML =
                         originalText;
-
                 },
                 1500
             );
-
         }
         catch (error)
         {
-
             console.error(
                 "[INVITE COPY ERROR]",
                 error
@@ -873,6 +2717,10 @@
         }
     }
 
+
+    // =========================================================
+    // 참가 모집 버튼
+    // =========================================================
 
     function updateRecruitmentButton()
     {
@@ -917,7 +2765,6 @@
 
     async function loadMeeting()
     {
-
         const response =
             await MeetBack.authenticatedFetch(
                 "/meetings/"
@@ -928,7 +2775,6 @@
 
         if (!response.ok)
         {
-
             throw new Error(
                 "모임 정보를 불러오지 못했습니다."
             );
@@ -945,7 +2791,6 @@
             "QUICK_FIXED"
         )
         {
-
             throw new Error(
                 "고정 번개방이 아닙니다."
             );
@@ -987,14 +2832,12 @@
     }
 
 
-
     // =========================================================
     // 고정 장소 조회
     // =========================================================
 
     async function loadFixedPlace()
     {
-
         const response =
             await MeetBack.authenticatedFetch(
                 "/participants/meeting/"
@@ -1007,7 +2850,6 @@
 
         if (!response.ok)
         {
-
             throw new Error(
                 "모임 장소를 불러오지 못했습니다."
             );
@@ -1024,7 +2866,6 @@
             )
         )
         {
-
             throw new Error(
                 "모임 장소 정보가 올바르지 않습니다."
             );
@@ -1046,7 +2887,6 @@
 
         if (!fixedPlace)
         {
-
             throw new Error(
                 "확정된 모임 장소를 찾을 수 없습니다."
             );
@@ -1175,18 +3015,18 @@
 
                 item.innerHTML =
                     `
-            <span class="participant-name">
-                ${host ? "👑 " : ""}
-                ${MeetBack.escapeHtml(nickname)}
-                ${me ? " (나)" : ""}
-            </span>
+                    <span class="participant-name">
+                        ${host ? "👑 " : ""}
+                        ${MeetBack.escapeHtml(nickname)}
+                        ${me ? " (나)" : ""}
+                    </span>
 
-            <span class="
-                presence-badge
-                ${participant.online ? "online" : "offline"}
-            ">
-                ${participant.online ? "● ON" : "● OFF"}
-            </span>
+                    <span class="
+                        presence-badge
+                        ${participant.online ? "online" : "offline"}
+                    ">
+                        ${participant.online ? "● ON" : "● OFF"}
+                    </span>
 
             ${
                         canKick
@@ -1226,6 +3066,11 @@
             }
         );
     }
+
+
+    // =========================================================
+    // 강퇴 참가자 조회
+    // =========================================================
 
     async function loadKickedParticipants()
     {
@@ -1307,22 +3152,22 @@
 
                 item.innerHTML =
                     `
-                <span class="participant-name">
-                    ${MeetBack.escapeHtml(nickname)}
-                </span>
+                    <span class="participant-name">
+                        ${MeetBack.escapeHtml(nickname)}
+                    </span>
 
-                <span class="kicked-participant-badge">
-                    강퇴됨
-                </span>
+                    <span class="kicked-participant-badge">
+                        강퇴됨
+                    </span>
 
-                <button
-                        type="button"
-                        class="participant-kick-cancel-button">
+                    <button
+                            type="button"
+                            class="participant-kick-cancel-button">
 
-                    강퇴 취소
+                        강퇴 취소
 
-                </button>
-                `;
+                    </button>
+                    `;
 
                 item.querySelector(
                     ".participant-kick-cancel-button"
@@ -1344,6 +3189,10 @@
         );
     }
 
+
+    // =========================================================
+    // 강퇴
+    // =========================================================
 
     async function requestKick(
         participantId,
@@ -1389,6 +3238,10 @@
     }
 
 
+    // =========================================================
+    // 강퇴 취소
+    // =========================================================
+
     async function requestCancelKick(
         participantId,
         nickname
@@ -1432,6 +3285,10 @@
         await loadKickedParticipants();
     }
 
+
+    // =========================================================
+    // 강퇴 모달
+    // =========================================================
 
     function showKickModal()
     {
@@ -1533,7 +3390,7 @@
 
 
     // =========================================================
-    // 기존 채팅 내역 조회
+    // 기존 채팅 내역
     // =========================================================
 
     async function loadChatHistory()
@@ -1969,7 +3826,6 @@
                 }
                 catch (error)
                 {
-                    // JSON 응답이 아니면 기본 문구 사용
                 }
 
                 throw new Error(
@@ -1990,6 +3846,11 @@
             updateRecruitmentButton();
         }
     }
+
+
+    // =========================================================
+    // 방 나가기
+    // =========================================================
 
     async function leaveMeeting()
     {
@@ -2087,7 +3948,6 @@
 
     async function initialize()
     {
-
         currentUser =
             await MeetBack.checkLogin();
 
@@ -2104,18 +3964,15 @@
 
         if (!meetingId)
         {
-
             showMessage(
                 "모임 ID를 확인할 수 없습니다."
             );
-
 
             return;
         }
 
         try
         {
-
             await loadMeeting();
 
             await loadFixedPlace();
@@ -2124,12 +3981,21 @@
 
             await loadKickedParticipants();
 
-            connectChat();
 
+            /*
+             * sessionStorage 결과가 있으면 재사용.
+             *
+             * 없거나 사용할 수 없는 경우
+             * DB의 현재 귀가지 기준으로
+             * /return-check를 호출한다.
+             */
+            await loadSavedReturnPreview();
+
+
+            connectChat();
         }
         catch (error)
         {
-
             console.error(
                 "[QUICK FIXED INITIALIZE ERROR]",
                 error
@@ -2142,7 +4008,6 @@
             );
         }
     }
-
 
 
     // =========================================================

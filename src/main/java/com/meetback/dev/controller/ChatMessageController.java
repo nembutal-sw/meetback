@@ -10,6 +10,7 @@ import com.meetback.dev.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import com.meetback.dev.service.MeetingPresenceService;
@@ -88,7 +89,5 @@ public class ChatMessageController {
                 )
         );
     }
-
-
 
 }
