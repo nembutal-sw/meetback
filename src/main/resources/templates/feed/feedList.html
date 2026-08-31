@@ -1461,6 +1461,11 @@
 
                     renderLike();
 
+
+                    updateFeedSummaryLike(
+                        feed
+                    );
+
                 }
                 catch (error) {
 
@@ -1502,6 +1507,55 @@
         card.appendChild(
             likeArea
         );
+    }
+
+
+    // ============================================================
+    // 목록 카드 좋아요 즉시 갱신
+    // ============================================================
+
+    function updateFeedSummaryLike(
+        feed
+    ) {
+
+        const summaryCard =
+            feedContainer.querySelector(
+                '.feed-summary-card[data-feed-id="'
+                + feed.feedId
+                + '"]'
+            );
+
+
+        if (
+            !summaryCard
+        ) {
+
+            return;
+        }
+
+
+        const summaryLike =
+            summaryCard.querySelector(
+                ".feed-summary-like"
+            );
+
+
+        if (
+            !summaryLike
+        ) {
+
+            return;
+        }
+
+
+        summaryLike.textContent =
+            "♥ "
+            + (
+                Number(
+                    feed.likeCount
+                )
+                || 0
+            );
     }
 
 
