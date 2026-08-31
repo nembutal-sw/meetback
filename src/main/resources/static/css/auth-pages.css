@@ -1,0 +1,463 @@
+/* MeetBack design-system auth surfaces. */
+
+.mb-auth-page {
+    --auth-background: var(--mb-background, var(--background, #FAF9F6));
+    --auth-foreground: var(--mb-foreground, var(--foreground, #1C1B2E));
+    --auth-card: var(--mb-card, var(--card, #FFFFFF));
+    --auth-primary: var(--mb-primary, var(--primary, #5B6AF0));
+    --auth-secondary: var(--mb-secondary, var(--secondary, #EEF0FF));
+    --auth-muted: var(--mb-muted, var(--muted, #F4F2EC));
+    --auth-muted-foreground: var(--mb-muted-foreground, var(--muted-foreground, #7B7A8E));
+    --auth-accent: var(--mb-accent, var(--accent, #FF7D54));
+    --auth-success: var(--mb-success, var(--success, #34C98A));
+    --auth-border: var(--mb-border, var(--border, rgba(0, 0, 0, 0.08)));
+    --auth-input: var(--mb-input, var(--input, #F4F2EC));
+    --auth-radius: var(--mb-radius, var(--radius, 0.875rem));
+    min-height: 100vh;
+    margin: 0;
+    padding: clamp(1.5rem, 4vw, 4rem) 1rem;
+    display: grid;
+    place-items: center;
+    color: var(--auth-foreground);
+    background-color: var(--auth-background);
+    background-image:
+            radial-gradient(circle at 13% 12%, color-mix(in srgb, var(--auth-primary) 13%, transparent), transparent 29rem),
+            radial-gradient(circle at 88% 86%, color-mix(in srgb, var(--auth-accent) 12%, transparent), transparent 27rem),
+            linear-gradient(135deg, var(--auth-background) 0%, var(--auth-secondary) 55%, color-mix(in srgb, var(--auth-accent) 9%, var(--auth-background)) 100%);
+}
+
+.mb-auth-page :where(*) {
+    box-sizing: border-box;
+}
+
+.mb-auth-page :where(
+    .login-container,
+    .signup-container,
+    .find-email-container,
+    .forgot-password-container,
+    .reset-password-container,
+    .kakao-login-container
+) {
+    position: relative;
+    width: min(100%, 31rem);
+    margin: auto;
+    padding: clamp(1.5rem, 4vw, 2.75rem);
+    overflow: hidden;
+    color: var(--auth-foreground);
+    background: var(--auth-card);
+    border: 1px solid var(--auth-border);
+    border-radius: calc(var(--auth-radius) + 0.625rem);
+    box-shadow: 0 1.5rem 4.5rem color-mix(in srgb, var(--auth-foreground) 11%, transparent);
+}
+
+.mb-auth-page :where(
+    .login-container,
+    .signup-container,
+    .find-email-container,
+    .forgot-password-container,
+    .reset-password-container,
+    .kakao-login-container
+)::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 0.3rem;
+    background: linear-gradient(90deg, var(--auth-primary), var(--auth-accent));
+}
+
+.mb-auth-page :where(
+    .login-container,
+    .signup-container,
+    .find-email-container,
+    .forgot-password-container,
+    .reset-password-container
+)::after {
+    content: "MeetBack";
+    display: block;
+    width: max-content;
+    margin: 2rem auto 0;
+    color: var(--auth-muted-foreground);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.mb-auth-page h1 {
+    margin: 0 0 0.65rem;
+    padding: 0;
+    color: var(--auth-foreground);
+    font-size: clamp(1.65rem, 5vw, 2.15rem);
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.045em;
+}
+
+.mb-auth-page h1::before {
+    content: "";
+    display: inline-block;
+    width: 0.7rem;
+    height: 0.7rem;
+    margin-right: 0.65rem;
+    vertical-align: 0.12em;
+    background: var(--auth-primary);
+    border-radius: 0.22rem;
+    box-shadow: 0.28rem 0.28rem 0 color-mix(in srgb, var(--auth-accent) 80%, transparent);
+    transform: rotate(-8deg);
+}
+
+.mb-auth-page h1::after {
+    content: none;
+}
+
+.mb-auth-page h3 {
+    margin: 1.65rem 0 0.7rem;
+    color: var(--auth-foreground);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.mb-auth-page p {
+    margin: 0.25rem 0;
+    color: var(--auth-muted-foreground);
+    font-size: 0.9rem;
+    line-height: 1.65;
+}
+
+.mb-auth-page :where(
+    .login-container,
+    .signup-container,
+    .find-email-container,
+    .forgot-password-container,
+    .reset-password-container,
+    .kakao-login-container,
+    form,
+    .social-login-container,
+    #socialSignupContainer,
+    #kakaoSignupContainer
+) > br {
+    display: none;
+}
+
+.mb-auth-page form {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.75rem;
+}
+
+.mb-auth-page form > div {
+    min-width: 0;
+}
+
+.mb-auth-page form > div:has(> label + input + button),
+.mb-auth-page #socialSignupContainer > div:has(> label + input + button),
+.mb-auth-page #kakaoSignupContainer > div:has(> label + input + button) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.55rem;
+    align-items: end;
+}
+
+.mb-auth-page form > div:has(> label + input + button) > label,
+.mb-auth-page #socialSignupContainer > div:has(> label + input + button) > label,
+.mb-auth-page #kakaoSignupContainer > div:has(> label + input + button) > label {
+    grid-column: 1 / -1;
+}
+
+.mb-auth-page label {
+    display: block;
+    margin: 0 0 0.45rem;
+    color: var(--auth-foreground);
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.mb-auth-page :where(input:not([type="checkbox"]), select, textarea) {
+    width: 100%;
+    min-height: 3.05rem;
+    padding: 0.75rem 0.9rem;
+    color: var(--auth-foreground);
+    caret-color: var(--auth-primary);
+    background: var(--auth-input);
+    border: 1px solid transparent;
+    border-radius: var(--auth-radius);
+    outline: none;
+    font: inherit;
+    font-size: 0.9rem;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.mb-auth-page :where(input:not([type="checkbox"]), select, textarea)::placeholder {
+    color: var(--auth-muted-foreground);
+    opacity: 0.82;
+}
+
+.mb-auth-page :where(input:not([type="checkbox"]), select, textarea):hover {
+    border-color: color-mix(in srgb, var(--auth-primary) 30%, var(--auth-border));
+}
+
+.mb-auth-page :where(input:not([type="checkbox"]), select, textarea):focus-visible {
+    background: var(--auth-card);
+    border-color: var(--auth-primary);
+    box-shadow: 0 0 0 0.22rem color-mix(in srgb, var(--auth-primary) 17%, transparent);
+}
+
+.mb-auth-page input[type="checkbox"] {
+    width: 1.05rem;
+    height: 1.05rem;
+    margin: 0.08rem 0 0;
+    flex: 0 0 auto;
+    accent-color: var(--auth-primary);
+}
+
+.mb-auth-page :where(button, a) {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mb-auth-page button {
+    min-height: 2.85rem;
+    padding: 0.68rem 1rem;
+    color: #FFFFFF;
+    background: var(--auth-primary);
+    border: 1px solid var(--auth-primary);
+    border-radius: var(--auth-radius);
+    font: inherit;
+    font-size: 0.88rem;
+    font-weight: 800;
+    line-height: 1.2;
+    cursor: pointer;
+    box-shadow: 0 0.5rem 1.15rem color-mix(in srgb, var(--auth-primary) 22%, transparent);
+    transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+}
+
+.mb-auth-page form > button,
+.mb-auth-page #socialSignupButton,
+.mb-auth-page #kakaoSignupButton {
+    width: 100%;
+}
+
+.mb-auth-page button:hover:not(:disabled) {
+    filter: brightness(0.96);
+    transform: translateY(-1px);
+    box-shadow: 0 0.72rem 1.4rem color-mix(in srgb, var(--auth-primary) 27%, transparent);
+}
+
+.mb-auth-page button:focus-visible,
+.mb-auth-page a:focus-visible {
+    outline: 0.2rem solid color-mix(in srgb, var(--auth-primary) 32%, transparent);
+    outline-offset: 0.18rem;
+}
+
+.mb-auth-page button:disabled {
+    color: var(--auth-muted-foreground);
+    background: var(--auth-muted);
+    border-color: var(--auth-border);
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
+.mb-auth-page a {
+    color: var(--auth-primary);
+    font-size: 0.84rem;
+    font-weight: 700;
+    text-decoration: none;
+    text-underline-offset: 0.2em;
+}
+
+.mb-auth-page a:hover {
+    text-decoration: underline;
+}
+
+.mb-auth-page .login-container > div:not(.social-login-container):not(#socialSignupContainer),
+.mb-auth-page .signup-container > div:last-child,
+.mb-auth-page .find-email-container > div:last-child,
+.mb-auth-page .forgot-password-container > div:last-child,
+.mb-auth-page .reset-password-container > div:last-child {
+    text-align: center;
+}
+
+.mb-auth-page .social-login-container {
+    position: relative;
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+    padding-top: 1.7rem;
+    border-top: 1px solid var(--auth-border);
+}
+
+.mb-auth-page .social-login-container > div:first-child {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    padding: 0 0.7rem;
+    color: var(--auth-muted-foreground);
+    background: var(--auth-card);
+    font-size: 0.74rem;
+    font-weight: 700;
+    transform: translate(-50%, -50%);
+}
+
+.mb-auth-page #kakaoLoginLink {
+    display: grid;
+    min-height: 2.85rem;
+    place-items: center;
+    color: var(--auth-primary);
+    background: var(--auth-secondary);
+    border: 1px solid color-mix(in srgb, var(--auth-primary) 15%, var(--auth-border));
+    border-radius: var(--auth-radius);
+}
+
+.mb-auth-page .g_id_signin {
+    display: inline-flex;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+
+.mb-auth-page :where(#socialSignupContainer, #kakaoSignupContainer) {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    background: var(--auth-secondary);
+    border: 1px solid color-mix(in srgb, var(--auth-primary) 15%, var(--auth-border));
+    border-radius: calc(var(--auth-radius) + 0.25rem);
+}
+
+.mb-auth-page :where(#socialTermsContainer, #kakaoTermsContainer, #termsContainer) {
+    display: grid;
+    gap: 0.65rem;
+    margin-top: 0.65rem;
+}
+
+.mb-auth-page :where(#socialTermsContainer, #kakaoTermsContainer, #termsContainer) > div {
+    padding: 0.8rem;
+    background: var(--auth-card);
+    border: 1px solid var(--auth-border);
+    border-radius: var(--auth-radius);
+}
+
+.mb-auth-page :where(#socialTermsContainer, #kakaoTermsContainer, #termsContainer) label {
+    display: flex;
+    gap: 0.55rem;
+    align-items: flex-start;
+    margin: 0;
+}
+
+.mb-auth-page :where(#socialTermsContainer, #kakaoTermsContainer, #termsContainer) details {
+    margin-top: 0.6rem;
+    color: var(--auth-muted-foreground);
+    font-size: 0.78rem;
+    line-height: 1.6;
+}
+
+.mb-auth-page :where(#socialTermsContainer, #kakaoTermsContainer, #termsContainer) summary {
+    color: var(--auth-primary);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.mb-auth-page :where(
+    #loginMessage,
+    #socialMessage,
+    #socialSignupMessage,
+    #socialTermsMessage,
+    #kakaoLoginMessage,
+    #kakaoSignupMessage,
+    #kakaoTermsMessage,
+    #emailCheckMessage,
+    #nicknameCheckMessage,
+    #passwordMessage,
+    #passwordConfirmMessage,
+    #termsMessage,
+    #signupMessage,
+    #findEmailMessage,
+    #forgotPasswordMessage,
+    #resetPasswordMessage
+) {
+    min-height: 0;
+    color: var(--auth-muted-foreground);
+    font-size: 0.78rem;
+    line-height: 1.55;
+}
+
+.mb-auth-page #kakaoLoginMessage {
+    padding: 1rem;
+    color: var(--auth-primary);
+    background: var(--auth-secondary);
+    border-radius: var(--auth-radius);
+    text-align: center;
+    font-weight: 700;
+}
+
+.mb-auth-page .is-hidden {
+    display: none;
+}
+
+@media (max-width: 38rem) {
+    .mb-auth-page {
+        padding: 0;
+        place-items: stretch;
+        background-image: linear-gradient(180deg, var(--auth-secondary), var(--auth-background) 14rem);
+    }
+
+    .mb-auth-page :where(
+        .login-container,
+        .signup-container,
+        .find-email-container,
+        .forgot-password-container,
+        .reset-password-container,
+        .kakao-login-container
+    ) {
+        width: 100%;
+        min-height: 100vh;
+        padding: 2.5rem 1.25rem 2rem;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .mb-auth-page form > div:has(> label + input + button),
+    .mb-auth-page #socialSignupContainer > div:has(> label + input + button),
+    .mb-auth-page #kakaoSignupContainer > div:has(> label + input + button) {
+        grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .mb-auth-page .g_id_signin {
+        display: flex;
+        margin: 0.65rem 0 0;
+    }
+
+    .mb-auth-page .login-container > div:not(.social-login-container):not(#socialSignupContainer) {
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+
+    .mb-auth-page #loginForm ~ div:not(.social-login-container):has(a[href*="signup"])::before {
+        display: block;
+        margin-bottom: 0.45rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mb-auth-page *,
+    .mb-auth-page *::before,
+    .mb-auth-page *::after {
+        scroll-behavior: auto;
+        transition-duration: 0.01ms;
+    }
+}
+
+/* Legacy auth styles use ID selectors; keep the sample's exact solid primary. */
+.mb-auth-page #loginForm > button[type="submit"],
+.mb-auth-page #signupForm > button[type="submit"],
+.mb-auth-page #findEmailForm > button[type="submit"],
+.mb-auth-page #forgotPasswordForm > button[type="submit"],
+.mb-auth-page #resetPasswordForm > button[type="submit"],
+.mb-auth-page #socialSignupButton,
+.mb-auth-page #kakaoSignupButton {
+    color: var(--mb-primary-foreground, #FFFFFF) !important;
+    border: 1px solid var(--auth-primary) !important;
+    background: var(--auth-primary) !important;
+    background-image: none !important;
+    box-shadow: none !important;
+}

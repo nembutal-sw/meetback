@@ -1,0 +1,405 @@
+/* MeetBack content and administration pages. */
+
+.page-admin-term,
+.page-feed-write {
+    --content-background: var(--mb-background, var(--background, #FAF9F6));
+    --content-foreground: var(--mb-foreground, var(--foreground, #1C1B2E));
+    --content-card: var(--mb-card, var(--card, #FFFFFF));
+    --content-primary: var(--mb-primary, var(--primary, #5B6AF0));
+    --content-secondary: var(--mb-secondary, var(--secondary, #EEF0FF));
+    --content-muted: var(--mb-muted, var(--muted, #F4F2EC));
+    --content-muted-foreground: var(--mb-muted-foreground, var(--muted-foreground, #7B7A8E));
+    --content-accent: var(--mb-accent, var(--accent, #FF7D54));
+    --content-success: var(--mb-success, var(--success, #34C98A));
+    --content-border: var(--mb-border, var(--border, rgba(0, 0, 0, 0.08)));
+    --content-input: var(--mb-input, var(--input, #F4F2EC));
+    --content-radius: var(--mb-radius, var(--radius, 0.875rem));
+    min-height: 100vh;
+    margin: 0;
+    color: var(--content-foreground);
+    background: var(--content-background);
+}
+
+.page-admin-term *,
+.page-feed-write * {
+    box-sizing: border-box;
+}
+
+.page-admin-term {
+    width: min(100%, 76rem);
+    margin-inline: auto;
+    padding: clamp(1.25rem, 4vw, 3.5rem);
+}
+
+.page-feed-write {
+    display: grid;
+    place-items: start center;
+    padding: clamp(1.25rem, 4vw, 4rem) 1rem;
+    background-image: linear-gradient(135deg, var(--content-background) 0%, var(--content-secondary) 58%, color-mix(in srgb, var(--content-accent) 8%, var(--content-background)) 100%);
+}
+
+.page-feed-write > div {
+    width: min(100%, 48rem);
+    padding: clamp(1.35rem, 4vw, 2.5rem);
+    background: var(--content-card);
+    border: 1px solid var(--content-border);
+    border-radius: calc(var(--content-radius) + 0.6rem);
+    box-shadow: 0 1.4rem 4rem color-mix(in srgb, var(--content-foreground) 10%, transparent);
+}
+
+.page-admin-term > h1,
+.page-feed-write h1 {
+    margin: 0;
+    color: var(--content-foreground);
+    font-size: clamp(1.75rem, 4vw, 2.45rem);
+    font-weight: 800;
+    line-height: 1.18;
+    letter-spacing: -0.045em;
+}
+
+.page-admin-term > h1::before,
+.page-feed-write h1::before {
+    content: "";
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    margin-right: 0.7rem;
+    vertical-align: 0.12em;
+    background: var(--content-primary);
+    border-radius: 0.22rem;
+    box-shadow: 0.3rem 0.3rem 0 color-mix(in srgb, var(--content-accent) 82%, transparent);
+    transform: rotate(-8deg);
+}
+
+.page-admin-term > h2 {
+    margin: 2rem 0 0.85rem;
+    font-size: 1.15rem;
+    font-weight: 800;
+    letter-spacing: -0.025em;
+}
+
+.page-admin-term > hr {
+    height: 1px;
+    margin: 2rem 0;
+    background: var(--content-border);
+    border: 0;
+}
+
+.page-admin-term > div:first-of-type {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: 1.5rem;
+    padding: 0.45rem;
+    background: var(--content-muted);
+    border-radius: calc(var(--content-radius) + 0.1rem);
+}
+
+.page-admin-term #termForm,
+.page-admin-term table {
+    width: 100%;
+    background: var(--content-card);
+    border: 1px solid var(--content-border);
+    border-radius: calc(var(--content-radius) + 0.35rem);
+    box-shadow: 0 0.8rem 2.5rem color-mix(in srgb, var(--content-foreground) 6%, transparent);
+}
+
+.page-admin-term #termForm {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    padding: clamp(1.1rem, 3vw, 1.75rem);
+}
+
+.page-admin-term #termForm > br {
+    display: none;
+}
+
+.page-admin-term #termForm > div {
+    min-width: 0;
+}
+
+.page-admin-term #termForm > div:has(#content) {
+    grid-column: 1 / -1;
+}
+
+.page-admin-term #termForm > button {
+    justify-self: start;
+}
+
+.page-feed-write #feedForm {
+    display: grid;
+    gap: 1.15rem;
+    margin-top: 1.7rem;
+}
+
+.page-feed-write #feedForm > br {
+    display: none;
+}
+
+.page-feed-write #feedForm > div {
+    min-width: 0;
+}
+
+.page-admin-term label,
+.page-feed-write label {
+    display: block;
+    margin: 0 0 0.45rem;
+    color: var(--content-foreground);
+    font-size: 0.82rem;
+    font-weight: 750;
+}
+
+.page-admin-term :where(input, select, textarea),
+.page-feed-write :where(input:not([type="file"]), select, textarea) {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.75rem 0.9rem;
+    color: var(--content-foreground);
+    caret-color: var(--content-primary);
+    background: var(--content-input);
+    border: 1px solid transparent;
+    border-radius: var(--content-radius);
+    outline: none;
+    font: inherit;
+    font-size: 0.9rem;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.page-admin-term textarea,
+.page-feed-write textarea {
+    min-height: 13rem;
+    resize: vertical;
+    line-height: 1.65;
+}
+
+.page-admin-term :where(input, select, textarea):focus-visible,
+.page-feed-write :where(input:not([type="file"]), select, textarea):focus-visible {
+    background: var(--content-card);
+    border-color: var(--content-primary);
+    box-shadow: 0 0 0 0.22rem color-mix(in srgb, var(--content-primary) 17%, transparent);
+}
+
+.page-admin-term input[readonly] {
+    color: var(--content-muted-foreground);
+    cursor: not-allowed;
+}
+
+.page-admin-term button,
+.page-feed-write button,
+.page-feed-write #feedForm > a {
+    display: inline-flex;
+    min-height: 2.8rem;
+    padding: 0.68rem 1rem;
+    align-items: center;
+    justify-content: center;
+    color: #FFFFFF;
+    background: var(--content-primary);
+    border: 1px solid var(--content-primary);
+    border-radius: var(--content-radius);
+    font: inherit;
+    font-size: 0.86rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 150ms ease, filter 150ms ease, box-shadow 150ms ease;
+}
+
+.page-admin-term button:hover,
+.page-feed-write button:hover,
+.page-feed-write #feedForm > a:hover {
+    filter: brightness(0.96);
+    transform: translateY(-1px);
+    box-shadow: 0 0.55rem 1.15rem color-mix(in srgb, var(--content-primary) 23%, transparent);
+}
+
+.page-admin-term button:focus-visible,
+.page-feed-write :where(button, a):focus-visible {
+    outline: 0.2rem solid color-mix(in srgb, var(--content-primary) 32%, transparent);
+    outline-offset: 0.18rem;
+}
+
+.page-admin-term > div:first-of-type button {
+    color: var(--content-muted-foreground);
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.page-admin-term > div:first-of-type button:hover,
+.page-admin-term > div:first-of-type button:focus-visible {
+    color: var(--content-primary);
+    background: var(--content-card);
+    border-color: var(--content-border);
+    box-shadow: 0 0.35rem 0.9rem color-mix(in srgb, var(--content-foreground) 7%, transparent);
+}
+
+.page-admin-term #resetButton,
+.page-feed-write #feedForm > a {
+    color: var(--content-primary);
+    background: var(--content-secondary);
+    border-color: color-mix(in srgb, var(--content-primary) 16%, var(--content-border));
+    box-shadow: none;
+}
+
+.page-feed-write input[type="file"] {
+    width: 100%;
+    padding: 0.45rem;
+    color: var(--content-muted-foreground);
+    background: var(--content-muted);
+    border: 1px dashed color-mix(in srgb, var(--content-primary) 34%, var(--content-border));
+    border-radius: var(--content-radius);
+    font: inherit;
+    font-size: 0.82rem;
+}
+
+.page-feed-write input[type="file"]::file-selector-button {
+    margin-right: 0.75rem;
+    padding: 0.55rem 0.8rem;
+    color: var(--content-primary);
+    background: var(--content-secondary);
+    border: 0;
+    border-radius: calc(var(--content-radius) - 0.25rem);
+    font: inherit;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.page-feed-write #feedImages + div {
+    margin-top: 0.45rem;
+    color: var(--content-muted-foreground);
+    font-size: 0.75rem;
+}
+
+.page-feed-write #imagePreviewContainer {
+    min-height: 5.5rem;
+    padding: 1rem;
+    overflow-x: auto;
+    color: var(--content-muted-foreground);
+    background: var(--content-muted);
+    border: 1px dashed var(--content-border);
+    border-radius: var(--content-radius);
+    font-size: 0.8rem;
+}
+
+.page-feed-write #imagePreviewContainer img {
+    display: block;
+    max-width: 100%;
+    margin-block: 0.45rem;
+    border-radius: calc(var(--content-radius) - 0.2rem);
+}
+
+.page-feed-write #imagePreviewContainer button {
+    min-height: 2rem;
+    padding: 0.4rem 0.65rem;
+    color: var(--content-accent);
+    background: color-mix(in srgb, var(--content-accent) 11%, var(--content-card));
+    border-color: color-mix(in srgb, var(--content-accent) 24%, var(--content-border));
+    font-size: 0.72rem;
+    box-shadow: none;
+}
+
+.page-feed-write #feedMessage,
+.page-admin-term #message {
+    min-height: 1.25rem;
+    color: var(--content-muted-foreground);
+    font-size: 0.82rem;
+    line-height: 1.55;
+}
+
+.page-feed-write #feedForm > a {
+    margin-left: 0.45rem;
+}
+
+.page-admin-term table {
+    display: block;
+    overflow-x: auto;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.page-admin-term thead,
+.page-admin-term tbody {
+    display: table;
+    width: 100%;
+    min-width: 48rem;
+    table-layout: fixed;
+}
+
+.page-admin-term th,
+.page-admin-term td {
+    padding: 0.85rem 0.75rem;
+    border-bottom: 1px solid var(--content-border);
+    text-align: left;
+    vertical-align: middle;
+    font-size: 0.8rem;
+    line-height: 1.45;
+}
+
+.page-admin-term th {
+    color: var(--content-muted-foreground);
+    background: var(--content-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+}
+
+.page-admin-term tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.page-admin-term tbody tr:hover td {
+    background: color-mix(in srgb, var(--content-secondary) 55%, transparent);
+}
+
+.page-admin-term td button {
+    min-height: 2.1rem;
+    padding: 0.42rem 0.65rem;
+    color: var(--content-primary);
+    background: var(--content-secondary);
+    border-color: color-mix(in srgb, var(--content-primary) 16%, var(--content-border));
+    box-shadow: none;
+    font-size: 0.72rem;
+}
+
+@media (max-width: 44rem) {
+    .page-admin-term {
+        padding: 1.25rem 1rem 2rem;
+    }
+
+    .page-admin-term #termForm {
+        grid-template-columns: 1fr;
+    }
+
+    .page-admin-term #termForm > div:has(#content) {
+        grid-column: auto;
+    }
+
+    .page-admin-term #termForm > button,
+    .page-feed-write #feedForm > button,
+    .page-feed-write #feedForm > a {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .page-feed-write {
+        padding: 0;
+        background: var(--content-card);
+    }
+
+    .page-feed-write > div {
+        min-height: 100vh;
+        padding: 2rem 1.1rem;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-admin-term *,
+    .page-feed-write * {
+        transition-duration: 0.01ms;
+    }
+}
