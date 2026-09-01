@@ -7,7 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>MeetBack 후기 작성</title>
+    <title>MeetBack 게시글 작성</title>
 
     <link rel="stylesheet" href="/css/meetback-theme.css">
     <link rel="stylesheet" href="/css/content-pages.css">
@@ -21,8 +21,16 @@
 
 <div>
 
+    <button
+            type="button"
+            class="mb-theme-toggle"
+            data-theme-toggle
+            aria-label="다크 모드"
+            aria-pressed="false">
+    </button>
+
     <h1>
-        후기 작성
+        게시글 작성
     </h1>
 
 
@@ -49,7 +57,7 @@
                     id="feedTitle"
                     name="title"
                     maxlength="255"
-                    placeholder="후기 제목을 입력하세요">
+                    placeholder="게시글 제목을 입력하세요">
 
         </div>
 
@@ -75,7 +83,7 @@
                     id="feedContent"
                     name="content"
                     rows="10"
-                    placeholder="후기 내용을 작성해주세요."></textarea>
+                    placeholder="게시글 내용을 작성해주세요."></textarea>
 
         </div>
 
@@ -141,7 +149,7 @@
                 type="submit"
                 id="submitFeedButton">
 
-            후기 등록
+            게시글 등록
 
         </button>
 
