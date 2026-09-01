@@ -17,6 +17,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.meetback.dev.realtime.event.AuthInvalidationReason;
+import com.meetback.dev.realtime.event.RealtimeEvent;
+import com.meetback.dev.realtime.publisher.RealtimeEventPublisher;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -43,6 +46,7 @@ public class AuthService {
     private final GoogleIdentityProvider googleIdentityProvider;
     private final MailService mailService;
     private final TermService termService;
+    private final RealtimeEventPublisher realtimeEventPublisher;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
@@ -1552,30 +1556,45 @@ public class AuthService {
     ) {
 
         if (userId == null) {
-
             throw new IllegalArgumentException(
                     "사용자 정보가 없습니다."
             );
         }
 
-
         refreshTokenMapper.deleteByUserId(
                 userId
         );
-
 
         int updatedRows =
                 userMapper.increaseTokenVersion(
                         userId
                 );
 
-
         if (updatedRows == 0) {
-
             throw new IllegalArgumentException(
                     "사용자를 찾을 수 없습니다."
             );
         }
+
+        // 여기부터 추가
+        User updatedUser =
+                userMapper.selectById(userId);
+
+        if (updatedUser == null
+                || updatedUser.getTokenVersion() == null)
+        {
+            throw new IllegalStateException(
+                    "변경된 Token Version을 확인할 수 없습니다."
+            );
+        }
+
+        realtimeEventPublisher.publish(
+                RealtimeEvent.authInvalidated(
+                        AuthInvalidationReason.LOGOUT,
+                        userId,
+                        updatedUser.getTokenVersion()
+                )
+        );
     }
 
 
@@ -2132,6 +2151,15 @@ public class AuthService {
                 refreshToken
         );
 
+        // 기존 로그인 세션 무효화 이벤트 발행
+        realtimeEventPublisher.publish(
+                RealtimeEvent.authInvalidated(
+                        AuthInvalidationReason.LOGIN_REPLACED,
+                        updatedUser.getUserId(),
+                        updatedUser.getTokenVersion()
+                )
+        );
+
 
         return new LoginToken(
                 accessToken,
@@ -2189,6 +2217,8 @@ public class AuthService {
                         newTokenHash,
                         expiresAt
                 );
+
+
 
 
         if (updatedRows != 1) {
