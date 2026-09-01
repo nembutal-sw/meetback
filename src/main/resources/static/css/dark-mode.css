@@ -150,9 +150,12 @@
     background: var(--mb-primary) !important;
 }
 
-:root[data-theme="dark"] .mb-page :where(.quick-search-button, .join-button, .chat-send-button),
-:root.dark .mb-page :where(.quick-search-button, .join-button, .chat-send-button) {
-    border-color: transparent;
+:root[data-theme="dark"] .page-quick-fixed .chat-send-button,
+:root.dark .page-quick-fixed .chat-send-button {
+    border-color: transparent !important;
+    background: var(--mb-primary) !important;
+    color: var(--mb-primary-foreground) !important;
+    box-shadow: 0 8px 18px rgba(91, 106, 240, 0.2) !important;
 }
 
 :root[data-theme="dark"] .page-home .home-flash-section .quick-meeting-join-button:not(:disabled),

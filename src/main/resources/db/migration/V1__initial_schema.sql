@@ -4,15 +4,6 @@
 -- =========================================
 
 -- ============================================================
--- 참고용 전체 스키마 파일
---
--- 실제 DB 생성 및 변경은 Flyway migration 파일을 사용합니다.
--- src/main/resources/db/migration/
---
--- Flyway를 사용하는 환경에서는 이 파일을 직접 실행하지 마세요.
--- ============================================================
-
--- ============================================================
 -- 1. USERS
 -- ============================================================
 
@@ -564,97 +555,42 @@ ALTER TABLE meetings
 -- ============================================================
 
 CREATE TABLE meeting_participant_kick_history (
-    kick_history_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    meeting_id BIGINT NOT NULL,
-    participant_id BIGINT NOT NULL,
-    kicked_user_id BIGINT NOT NULL,
-    kicked_by_user_id BIGINT NOT NULL,
-    kicked_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    canceled_by_user_id BIGINT,
+                                                  kick_history_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+                                                  meeting_id BIGINT NOT NULL,
+                                                  participant_id BIGINT NOT NULL,
+                                                  kicked_user_id BIGINT NOT NULL,
+                                                  kicked_by_user_id BIGINT NOT NULL,
+                                                  kicked_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                                  canceled_by_user_id BIGINT,
 
-    canceled_at DATETIME,
-    INDEX idx_kick_history_participant (
+                                                  canceled_at DATETIME,
+                                                  INDEX idx_kick_history_participant (
     participant_id,
     canceled_at
     ),
 
-    CONSTRAINT fk_kick_history_meeting
-      FOREIGN KEY (meeting_id)
-          REFERENCES meetings(meeting_id)
-          ON DELETE CASCADE,
+                                                  CONSTRAINT fk_kick_history_meeting
+                                                      FOREIGN KEY (meeting_id)
+                                                          REFERENCES meetings(meeting_id)
+                                                          ON DELETE CASCADE,
 
-    CONSTRAINT fk_kick_history_participant
-      FOREIGN KEY (participant_id)
-          REFERENCES meeting_participants(participant_id)
-          ON DELETE CASCADE,
+                                                  CONSTRAINT fk_kick_history_participant
+                                                      FOREIGN KEY (participant_id)
+                                                          REFERENCES meeting_participants(participant_id)
+                                                          ON DELETE CASCADE,
 
-    CONSTRAINT fk_kick_history_kicked_user
-      FOREIGN KEY (kicked_user_id)
-          REFERENCES users(user_id)
-          ON DELETE RESTRICT,
+                                                  CONSTRAINT fk_kick_history_kicked_user
+                                                      FOREIGN KEY (kicked_user_id)
+                                                          REFERENCES users(user_id)
+                                                          ON DELETE RESTRICT,
 
-    CONSTRAINT fk_kick_history_kicked_by_user
-      FOREIGN KEY (kicked_by_user_id)
-          REFERENCES users(user_id)
-          ON DELETE RESTRICT,
+                                                  CONSTRAINT fk_kick_history_kicked_by_user
+                                                      FOREIGN KEY (kicked_by_user_id)
+                                                          REFERENCES users(user_id)
+                                                          ON DELETE RESTRICT,
 
-    CONSTRAINT fk_kick_history_canceled_by_user
-      FOREIGN KEY (canceled_by_user_id)
-          REFERENCES users(user_id)
-          ON DELETE RESTRICT
+                                                  CONSTRAINT fk_kick_history_canceled_by_user
+                                                      FOREIGN KEY (canceled_by_user_id)
+                                                          REFERENCES users(user_id)
+                                                          ON DELETE RESTRICT
 );
-
--- ============================================================
--- INITIAL TERMS DATA
--- ============================================================
-
-INSERT INTO terms
-(
-    term_code,
-    term_name,
-    content,
-    version,
-    kakao_tag,
-    required,
-    active,
-    effective_at,
-    created_at,
-    updated_at
-)
-VALUES
-    (
-        'SERVICE',
-        '서비스 이용약관',
-        'MeetBack 서비스 이용약관',
-        '1.0',
-        NULL,
-        TRUE,
-        TRUE,
-        NOW(),
-        NOW(),
-        NOW()
-    ),
-    (
-        'PRIVACY',
-        '개인정보 수집·이용 동의',
-        'MeetBack 회원가입 개인정보 수집·이용 동의',
-        '1.0',
-        NULL,
-        TRUE,
-        TRUE,
-        NOW(),
-        NOW(),
-        NOW()
-    ),
-    (
-        'LOCATION',
-        '개인위치정보 이용 및 위치기반서비스 이용약관',
-        'MeetBack 개인위치정보 이용 및 위치기반서비스 이용약관',
-        '1.0',
-        NULL,
-        TRUE,
-        TRUE,
-        NOW(),
-        NOW(),
-        NOW()
-    );
