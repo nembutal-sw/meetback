@@ -245,7 +245,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         AuthenticatedUser authenticatedUser =
                 new AuthenticatedUser(
                         user.getUserId(),
-                        user.getRole()
+                        user.getRole(),
+                        tokenVersion
                 );
 
 

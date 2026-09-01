@@ -13,7 +13,6 @@
     <link rel="stylesheet" href="/css/meetback-theme.css">
     <link rel="stylesheet" href="/css/app-pages.css">
 
-    <script src="/js/auth-session-guard.js" defer></script>
     <script src="/js/home-ui.js" defer></script>
 
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js">
@@ -4795,6 +4794,35 @@
                                 "[QUICK LOBBY STOMP ERROR]",
                                 frame
                             );
+                        },
+
+
+                    onWebSocketClose:
+                        function(event)
+                        {
+                            const reason =
+                                String(event?.reason || "");
+
+                            if (
+                                Number(event?.code) !== 4001
+                                && !reason.startsWith(
+                                    "AUTH_INVALIDATED"
+                                )
+                            ) {
+                                return;
+                            }
+
+                            quickLobbyClient.reconnectDelay =
+                                0;
+
+                            clearLoginStorage();
+
+                            sessionStorage.setItem(
+                                "authLogoutMessage",
+                                "다른 곳에서 새로 로그인되어 기존 로그인이 종료되었습니다."
+                            );
+
+                            redirectToLogin();
                         }
                 }
             );
@@ -4885,19 +4913,7 @@
 
     async function initializeHome()
     {
-
         preserveInviteCode();
-
-
-        const serverRestarted =
-            await checkServerRestart();
-
-
-        if (serverRestarted)
-        {
-            return;
-        }
-
 
         const loggedIn =
             await checkLogin();
@@ -4908,18 +4924,14 @@
             return;
         }
 
-
         await loadQuickMeetings();
 
-
         connectQuickMeetingLobby();
-
 
         const pendingInviteCode =
             sessionStorage.getItem(
                 "pendingInviteCode"
             );
-
 
         if (!pendingInviteCode)
         {

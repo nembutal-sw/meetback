@@ -1,5 +1,6 @@
 package com.meetback.dev.security;
 
+import com.meetback.dev.WebSocket.WebSocketSessionControl;
 import com.meetback.dev.repository.ParticipantMapper;
 import com.meetback.dev.security.AuthenticatedUser;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
+import com.meetback.dev.domain.User;
+import com.meetback.dev.repository.UserMapper;
 
 import java.util.List;
 
@@ -24,6 +27,8 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
 
     private final JwtProvider jwtProvider;
     private final ParticipantMapper participantMapper;
+    private final UserMapper userMapper;
+    private final WebSocketSessionControl webSocketSessionControl;
 
     @Override
     public Message<?> preSend(
@@ -82,16 +87,36 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
 
             String role = jwtProvider.getRole(token);
 
-            if(userId == null || role == null || role.isBlank())
+            Integer tokenVersion = jwtProvider.getTokenVersion(token);
+
+            if(userId == null
+                    || role == null
+                    || role.isBlank()
+                    || tokenVersion == null)
             {
                 throw new BadCredentialsException(
                         "사용자 정보를 확인할 수 없습니다."
                 );
             }
 
+            User currentUser =
+                    userMapper.selectById(userId);
+
+            if(currentUser == null
+                    || currentUser.getTokenVersion() == null
+                    || !tokenVersion.equals(
+                    currentUser.getTokenVersion()
+            ))
+            {
+                throw new BadCredentialsException(
+                        "이미 무효화된 로그인입니다."
+                );
+            }
+
             AuthenticatedUser user = new AuthenticatedUser(
                     userId,
-                    role
+                    role,
+                    tokenVersion
             );
 
             String authority = role.startsWith("ROLE_") ? role : "ROLE_" + role;
@@ -107,6 +132,12 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
             );
 
             accessor.setUser(authentication);
+
+            webSocketSessionControl.authenticate(
+                    accessor.getSessionId(),
+                    userId,
+                    tokenVersion
+            );
         }
 
         // =========================================================
@@ -181,6 +212,11 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                             "해당 모임의 참가자만 채팅을 구독할 수 있습니다."
                     );
                 }
+
+                webSocketSessionControl.subscribeMeeting(
+                        accessor.getSessionId(),
+                        meetingId
+                );
 
             }
         }
