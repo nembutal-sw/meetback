@@ -103,15 +103,26 @@
         </div>
 
 
-        <button
-                type="button"
-                id="inviteCodeButton"
-                class="invite-code-button"
-                onclick="copyInviteUrl()">
+        <div class="meeting-meta-row">
 
-            초대코드 불러오는 중...
+            <span
+                    id="meetingTypeBadge"
+                    class="meeting-type-badge"
+                    hidden>
+            </span>
 
-        </button>
+
+            <button
+                    type="button"
+                    id="inviteCodeButton"
+                    class="invite-code-button"
+                    onclick="copyInviteUrl()">
+
+                초대코드 불러오는 중...
+
+            </button>
+
+        </div>
 
     </div>
 
@@ -833,6 +844,42 @@
                     currentMeeting.desiredEndAt
                 )
                 : "-";
+
+        const meetingTypeBadge =
+            document.getElementById(
+                "meetingTypeBadge"
+            );
+
+
+        const meetingTypeLabels =
+            {
+                QUICK_VOTE:
+                    "⚡ 자유 투표형 번개방",
+
+                FRIEND:
+                    "👥 친구방"
+            };
+
+
+        const meetingTypeLabel =
+            meetingTypeLabels[
+                currentMeeting.meetingType
+                ];
+
+
+        if (meetingTypeLabel)
+        {
+            meetingTypeBadge.textContent =
+                meetingTypeLabel;
+
+            meetingTypeBadge.hidden =
+                false;
+        }
+        else
+        {
+            meetingTypeBadge.hidden =
+                true;
+        }
 
 
         const inviteButton =
