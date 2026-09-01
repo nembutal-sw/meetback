@@ -4,6 +4,144 @@
     const STORAGE_KEY = "meetback-theme";
     const root = document.documentElement;
     const media = window.matchMedia("(prefers-color-scheme: dark)");
+    let feedbackTimer = null;
+    let feedbackConfirmResolve = null;
+    let feedbackEscapeHandler = null;
+
+    function ensureFeedbackToast() {
+        let toast = document.querySelector(".mb-feedback-toast");
+
+        if (!toast) {
+            const region = document.createElement("div");
+            region.className = "mb-feedback-toast-region";
+
+            toast = document.createElement("div");
+            toast.className = "mb-feedback-toast";
+            toast.innerHTML = [
+                '<div class="mb-feedback-toast__message"></div>',
+                '<div class="mb-feedback-toast__actions"></div>'
+            ].join("");
+
+            region.appendChild(toast);
+            document.body.appendChild(region);
+        }
+
+        return {
+            toast: toast,
+            message: toast.querySelector(".mb-feedback-toast__message"),
+            actions: toast.querySelector(".mb-feedback-toast__actions")
+        };
+    }
+
+    function settleFeedbackConfirm(result) {
+        const resolve = feedbackConfirmResolve;
+        feedbackConfirmResolve = null;
+
+        if (resolve) {
+            resolve(result);
+        }
+    }
+
+    function hideFeedbackToast(result = false) {
+        if (feedbackTimer) {
+            clearTimeout(feedbackTimer);
+            feedbackTimer = null;
+        }
+
+        if (feedbackEscapeHandler) {
+            document.removeEventListener("keydown", feedbackEscapeHandler);
+            feedbackEscapeHandler = null;
+        }
+
+        const toast = document.querySelector(".mb-feedback-toast");
+        if (toast) {
+            toast.classList.remove("is-visible");
+            toast.removeAttribute("role");
+            toast.removeAttribute("aria-modal");
+
+            const actions = toast.querySelector(".mb-feedback-toast__actions");
+            if (actions) {
+                actions.replaceChildren();
+            }
+        }
+
+        settleFeedbackConfirm(result);
+    }
+
+    function showFeedbackToast(message, type = "info", duration = 3500) {
+        hideFeedbackToast(false);
+
+        const ui = ensureFeedbackToast();
+        const normalizedType = ["success", "warning", "error", "info"].includes(type)
+            ? type
+            : "info";
+
+        ui.message.textContent = String(message || "알림");
+        ui.actions.replaceChildren();
+        ui.toast.className = "mb-feedback-toast mb-feedback-toast--" + normalizedType;
+        ui.toast.setAttribute("role", normalizedType === "error" ? "alert" : "status");
+
+        requestAnimationFrame(function () {
+            ui.toast.classList.add("is-visible");
+        });
+
+        if (duration > 0) {
+            feedbackTimer = window.setTimeout(function () {
+                hideFeedbackToast(false);
+            }, duration);
+        }
+    }
+
+    function showFeedbackConfirm(message, options = {}) {
+        hideFeedbackToast(false);
+
+        return new Promise(function (resolve) {
+            const ui = ensureFeedbackToast();
+            const cancelButton = document.createElement("button");
+            const confirmButton = document.createElement("button");
+
+            feedbackConfirmResolve = resolve;
+            ui.message.textContent = String(message || "계속 진행하시겠습니까?");
+            ui.toast.className = "mb-feedback-toast mb-feedback-toast--confirm";
+            ui.toast.setAttribute("role", "alertdialog");
+            ui.toast.setAttribute("aria-modal", "false");
+
+            cancelButton.type = "button";
+            cancelButton.className = "mb-feedback-toast__button mb-feedback-toast__button--cancel";
+            cancelButton.textContent = options.cancelText || "취소";
+            cancelButton.addEventListener("click", function () {
+                hideFeedbackToast(false);
+            });
+
+            confirmButton.type = "button";
+            confirmButton.className = "mb-feedback-toast__button mb-feedback-toast__button--confirm";
+            confirmButton.textContent = options.confirmText || "확인";
+            confirmButton.addEventListener("click", function () {
+                hideFeedbackToast(true);
+            });
+
+            ui.actions.replaceChildren(cancelButton, confirmButton);
+
+            feedbackEscapeHandler = function (event) {
+                if (event.key === "Escape") {
+                    event.preventDefault();
+                    hideFeedbackToast(false);
+                }
+            };
+            document.addEventListener("keydown", feedbackEscapeHandler);
+
+            requestAnimationFrame(function () {
+                ui.toast.classList.add("is-visible");
+                cancelButton.focus();
+            });
+        });
+    }
+
+    window.MeetBackToast = Object.freeze({
+        show: showFeedbackToast,
+        confirm: showFeedbackConfirm,
+        hide: hideFeedbackToast
+    });
 
     function readSavedTheme() {
         try {

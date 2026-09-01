@@ -6,6 +6,9 @@
 
     <meta charset="UTF-8">
 
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>MeetBack 고정 번개방</title>
 
     <script
@@ -2561,10 +2564,12 @@
     )
     {
         if (
-            !confirm(
-                nickname
-                +
-                "님을 강퇴하시겠습니까?"
+            !(
+                await MeetBackToast.confirm(
+                    nickname
+                    +
+                    "님을 강퇴하시겠습니까?"
+                )
             )
         )
         {
@@ -2609,10 +2614,12 @@
     )
     {
         if (
-            !confirm(
-                nickname
-                +
-                "님의 강퇴를 취소하시겠습니까?"
+            !(
+                await MeetBackToast.confirm(
+                    nickname
+                    +
+                    "님의 강퇴를 취소하시겠습니까?"
+                )
             )
         )
         {
@@ -3220,7 +3227,7 @@
     async function closeRecruitment()
     {
         const confirmed =
-            confirm(
+            await MeetBackToast.confirm(
                 "참가 모집을 마감하시겠습니까?\n"
                 +
                 "마감 후에는 새로운 참가자와 나간 참가자가 다시 들어올 수 없습니다."
@@ -3304,7 +3311,7 @@
         }
 
         const confirmed =
-            confirm(
+            await MeetBackToast.confirm(
                 "정말 이 모임에서 나가시겠습니까?"
             );
 

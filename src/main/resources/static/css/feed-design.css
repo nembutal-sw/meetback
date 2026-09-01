@@ -293,12 +293,16 @@ body.page-feed-list .feed-menu-button {
 }
 
 .page-feed-list .feed-menu-button {
-    width: 36px;
-    height: 36px;
-    padding: 0 0 9px;
+    flex: 0 0 40px;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    padding: 0 0 8px;
     border-radius: 10px;
     font-size: 1.375rem;
     line-height: 1;
+    overflow-wrap: normal;
 }
 
 body.page-feed-list .feed-summary-menu-button:hover,
@@ -383,15 +387,16 @@ body.page-feed-list .feed-menu-button:hover {
 }
 
 body.page-feed-list .feed-detail-close {
-    position: sticky;
-    top: 12px;
-    float: right;
+    position: static;
+    flex: 0 0 40px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
-    margin: 12px 12px -48px 0;
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    margin: 0 0 0 8px;
     padding: 0 0 2px;
     border: 1px solid var(--mb-border);
     border-radius: 10px;
@@ -400,10 +405,10 @@ body.page-feed-list .feed-detail-close {
     box-shadow: var(--mb-shadow-card);
     font-size: 1.25rem;
     line-height: 1;
+    overflow-wrap: normal;
     cursor: pointer;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
-    z-index: 200;
 }
 
 body.page-feed-list .feed-detail-close:hover {
