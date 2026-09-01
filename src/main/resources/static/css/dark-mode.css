@@ -243,3 +243,26 @@
 :root.dark .page-result .final-place-address {
     color: #b8b6c8;
 }
+
+/* =========================================================
+   강제 로그아웃 팝업 다크모드 보정
+   JS 로직 수정 없음
+   ========================================================= */
+
+html[data-theme="dark"] body > div[style*="z-index: 999999"] > div {
+    background: var(--mb-card) !important;
+    color: var(--mb-foreground) !important;
+    border: 1px solid var(--mb-border) !important;
+}
+
+html[data-theme="dark"] body > div[style*="z-index: 999999"] > div > div:first-child {
+    color: var(--mb-foreground) !important;
+}
+
+html[data-theme="dark"] body > div[style*="z-index: 999999"] > div > div:nth-child(2) {
+    color: var(--mb-muted-foreground) !important;
+}
+
+html[data-theme="dark"] body > div[style*="z-index: 999999"] > div > div:nth-child(3) {
+    color: var(--mb-muted-foreground) !important;
+}
