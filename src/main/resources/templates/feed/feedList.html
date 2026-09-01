@@ -15,9 +15,7 @@
 
     <link rel="stylesheet" href="/css/dark-mode.css">
     <link rel="stylesheet" href="/css/mobile-responsive.css">
-
     <script src="/js/theme-toggle.js"></script>
-
 </head>
 
 
@@ -96,67 +94,6 @@
 </div>
 
 
-<!-- ============================================================
-     공용 삭제 확인 모달
-     후기 삭제 / 댓글 삭제 공용
-     ============================================================ -->
-
-<div
-        id="confirmModal"
-        class="feed-confirm-modal">
-
-    <div
-            class="feed-confirm-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="confirmTitle">
-
-        <div
-                id="confirmTitle"
-                class="feed-confirm-title">
-
-            삭제 확인
-
-        </div>
-
-
-        <div
-                id="confirmMessage"
-                class="feed-confirm-message">
-
-            정말 삭제하시겠습니까?
-
-        </div>
-
-
-        <div class="feed-confirm-actions">
-
-            <button
-                    id="confirmCancelButton"
-                    class="feed-confirm-cancel"
-                    type="button">
-
-                취소
-
-            </button>
-
-
-            <button
-                    id="confirmOkButton"
-                    class="feed-confirm-ok"
-                    type="button">
-
-                삭제
-
-            </button>
-
-        </div>
-
-    </div>
-
-</div>
-
-
 <script>
 
     // ============================================================
@@ -205,36 +142,6 @@
         );
 
 
-    const confirmModal =
-        document.getElementById(
-            "confirmModal"
-        );
-
-
-    const confirmTitle =
-        document.getElementById(
-            "confirmTitle"
-        );
-
-
-    const confirmMessage =
-        document.getElementById(
-            "confirmMessage"
-        );
-
-
-    const confirmCancelButton =
-        document.getElementById(
-            "confirmCancelButton"
-        );
-
-
-    const confirmOkButton =
-        document.getElementById(
-            "confirmOkButton"
-        );
-
-
     const accessToken =
         localStorage.getItem(
             "accessToken"
@@ -255,105 +162,6 @@
 
     let currentTotalPages =
         0;
-
-
-    // ============================================================
-    // 공용 삭제 확인 모달
-    // ============================================================
-
-    let confirmResolver =
-        null;
-
-
-    function showConfirmModal(
-        title,
-        message
-    ) {
-
-        confirmTitle.textContent =
-            title;
-
-
-        confirmMessage.textContent =
-            message;
-
-
-        confirmModal.classList.add(
-            "open"
-        );
-
-
-        return new Promise(
-            function(resolve) {
-
-                confirmResolver =
-                    resolve;
-            }
-        );
-    }
-
-
-    function closeConfirmModal(
-        result
-    ) {
-
-        confirmModal.classList.remove(
-            "open"
-        );
-
-
-        if (
-            confirmResolver
-        ) {
-
-            confirmResolver(
-                result
-            );
-
-
-            confirmResolver =
-                null;
-        }
-    }
-
-
-    confirmCancelButton.addEventListener(
-        "click",
-        function() {
-
-            closeConfirmModal(
-                false
-            );
-        }
-    );
-
-
-    confirmOkButton.addEventListener(
-        "click",
-        function() {
-
-            closeConfirmModal(
-                true
-            );
-        }
-    );
-
-
-    confirmModal.addEventListener(
-        "click",
-        function(event) {
-
-            if (
-                event.target ===
-                confirmModal
-            ) {
-
-                closeConfirmModal(
-                    false
-                );
-            }
-        }
-    );
 
 
     // ============================================================
@@ -2773,8 +2581,7 @@
     ) {
 
         const confirmed =
-            await showConfirmModal(
-                "후기 삭제",
+            window.confirm(
                 "정말 이 후기를 삭제하시겠습니까?"
             );
 
@@ -3351,15 +3158,10 @@
                 "click",
                 async function() {
 
-                    const confirmed =
-                        await showConfirmModal(
-                            "댓글 삭제",
-                            "댓글을 삭제하시겠습니까?"
-                        );
-
-
                     if (
-                        !confirmed
+                        !window.confirm(
+                            "댓글을 삭제하시겠습니까?"
+                        )
                     ) {
 
                         return;
@@ -3860,7 +3662,8 @@
 
 
             // ====================================================
-            // 마지막 페이지 글 삭제 후 이전 페이지로
+            // 마지막 페이지 글 삭제 후
+            // 이전 페이지로
             // ====================================================
 
             if (
@@ -3986,9 +3789,7 @@
 
 
     // ============================================================
-    // ESC
-    // 삭제 확인창 열려 있으면 삭제창 먼저 닫기
-    // 아니면 상세창 닫기
+    // ESC로 상세 닫기
     // ============================================================
 
     document.addEventListener(
@@ -3998,21 +3799,6 @@
             if (
                 event.key === "Escape"
             ) {
-
-                if (
-                    confirmModal.classList.contains(
-                        "open"
-                    )
-                ) {
-
-                    closeConfirmModal(
-                        false
-                    );
-
-
-                    return;
-                }
-
 
                 closeFeedDetail();
             }

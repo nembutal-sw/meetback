@@ -59,16 +59,18 @@
             rel="stylesheet"
             href="/css/mobile-responsive.css">
 
+
     <script src="/js/theme-toggle.js">
     </script>
 
-
 </head>
+
 
 <body class="mb-page mb-auth-page page-login">
 
 
 <div class="login-container">
+
 
     <h1>
         MeetBack 로그인
@@ -81,11 +83,13 @@
 
     <form id="loginForm">
 
+
         <div>
 
             <label for="email">
                 이메일
             </label>
+
 
             <input
                     type="email"
@@ -105,6 +109,7 @@
             <label for="password">
                 비밀번호
             </label>
+
 
             <input
                     type="password"
@@ -130,6 +135,7 @@
             로그인
         </button>
 
+
     </form>
 
 
@@ -146,13 +152,17 @@
             회원가입
         </a>
 
+
         &nbsp; | &nbsp;
+
 
         <a th:href="@{/find-email}">
             아이디 찾기
         </a>
 
+
         &nbsp; | &nbsp;
+
 
         <a th:href="@{/forgot-password}">
             비밀번호 찾기
@@ -182,9 +192,6 @@
 
         <div class="kakao-login-container">
 
-        <!-- 카카오 로그인 -->
-
-        <div>
 
             <a
                     id="kakaoLoginLink"
@@ -223,6 +230,7 @@
 
 
             </a>
+
 
         </div>
 
@@ -285,35 +293,37 @@
             </div>
 
 
-            <div>
+            <!--
+                ★ 실제 Google 공식 버튼
 
-                <span>
-                    Google 로그인
-                </span>
+                디자인 위에 거의 투명한 상태로 올라가서
+                실제 클릭과 Google 인증을 처리함
+            -->
 
-                <div
-                        class="g_id_signin"
-                        data-type="icon"
-                        data-shape="rectangular"
-                        data-theme="outline"
-                        data-size="large">
-                </div>
-
+            <div
+                    id="googleOfficialButton"
+                    th:attr="data-client-id=${googleClientId}">
             </div>
 
+
         </div>
 
 
-        <div th:unless="${googleLoginEnabled}">
-            Google 로그인을 사용하려면 GOOGLE_CLIENT_ID 설정이 필요합니다.
+        <!-- Google 비활성 -->
+
+        <div
+                class="google-login-disabled"
+                th:unless="${googleLoginEnabled}">
+
+            Google 로그인을 사용하려면
+            GOOGLE_CLIENT_ID 설정이 필요합니다.
+
         </div>
-
-
-        <br>
 
 
         <div id="socialMessage">
         </div>
+
 
     </div>
 
@@ -329,9 +339,11 @@
             id="socialSignupContainer"
             class="is-hidden">
 
+
         <h3>
             닉네임 설정
         </h3>
+
 
         <p>
             MeetBack에서 사용할 닉네임을 입력해주세요.
@@ -344,10 +356,12 @@
                 닉네임
             </label>
 
+
             <input
                     type="text"
                     id="socialNickname"
                     placeholder="닉네임을 입력하세요">
+
 
             <button
                     type="button"
@@ -403,7 +417,9 @@
         <div id="socialSignupMessage">
         </div>
 
+
     </div>
+
 
 </div>
 
@@ -490,23 +506,7 @@
 
 
     // ============================================================
-    // ★ 로그인 성공 후 이동할 주소
-    //
-    // 일반 로그인:
-    //
-    // /login
-    //      ↓
-    // /home
-    //
-    //
-    // 초대 링크에서 온 경우:
-    //
-    // /login?redirect=%2Fhome%3FinviteCode%3DABC123
-    //      ↓
-    // /home?inviteCode=ABC123
-    //
-    // 이후 home.html에서 자동 참가 후
-    // /meeting?meetingId=...
+    // 로그인 성공 후 이동 주소
     // ============================================================
 
     function getLoginRedirectUrl()
@@ -524,22 +524,12 @@
             );
 
 
-        /*
-         * redirect가 없다면
-         * 기존처럼 Home으로 이동
-         */
         if (!redirect)
         {
             return "/home";
         }
 
 
-        /*
-         * 외부 사이트로 강제 이동시키는
-         * Open Redirect 방지
-         *
-         * MeetBack 내부 상대경로만 허용
-         */
         if (
             !redirect.startsWith("/")
             ||
@@ -556,7 +546,7 @@
 
 
     // ============================================================
-    // 카카오 로그인에도 현재 redirect 전달
+    // 카카오 로그인 redirect
     // ============================================================
 
     const kakaoLoginLink =
@@ -596,7 +586,7 @@
 
 
     // ============================================================
-    // 이미 로그인된 사용자 처리
+    // 이미 로그인된 사용자
     // ============================================================
 
     function redirectAlreadyLoggedIn()
@@ -648,7 +638,7 @@
     }
 
 
-    // 현재는 기존 코드대로 비활성화
+    // 현재 비활성화
     // redirectAlreadyLoggedIn();
 
 
@@ -706,7 +696,7 @@
 
 
     // ============================================================
-    // 닉네임 필터용 정규화
+    // 닉네임 정규화
     // ============================================================
 
     function normalizeNicknameForFilter(
@@ -725,7 +715,7 @@
 
 
     // ============================================================
-    // 닉네임 사용 가능 형식 검사
+    // 닉네임 검사
     // ============================================================
 
     function isValidNickname(
@@ -846,30 +836,12 @@
                 data.nickname
             );
         }
-
-
-        /*
-         * 필요 시 로그인 세션 분리 기능 사용
-         *
-         * const loginSessionId =
-         *     crypto.randomUUID();
-         *
-         * localStorage.setItem(
-         *     "activeLoginSessionId",
-         *     loginSessionId
-         * );
-         *
-         * sessionStorage.setItem(
-         *     "tabLoginSessionId",
-         *     loginSessionId
-         * );
-         */
     }
 
 
 
     // ============================================================
-    // 소셜 회원가입용 약관 조회
+    // 소셜 회원가입 약관 조회
     // ============================================================
 
     async function loadSocialTerms()
@@ -1093,7 +1065,7 @@
 
 
     // ============================================================
-    // 동의한 약관 ID 조회
+    // 약관 ID
     // ============================================================
 
     function getAgreedTermIds()
@@ -1118,7 +1090,7 @@
 
 
     // ============================================================
-    // 필수 약관 동의 여부
+    // 필수 약관 검사
     // ============================================================
 
     function areRequiredTermsAgreed()
@@ -1154,7 +1126,7 @@
 
 
     // ============================================================
-    // ★ 일반 로그인
+    // 일반 로그인
     // ============================================================
 
     loginForm.addEventListener(
@@ -1279,7 +1251,7 @@
 
 
     // ============================================================
-    // ★ Google 로그인
+    // Google 로그인 응답
     // ============================================================
 
     window.handleGoogleCredentialResponse =
@@ -1354,9 +1326,7 @@
                 }
 
 
-                // ====================================================
-                // 신규 Google 회원
-                // ====================================================
+                // 신규 회원
 
                 if (
                     data.status
@@ -1424,9 +1394,7 @@
                 }
 
 
-                // ====================================================
-                // 기존 Google 회원
-                // ====================================================
+                // 기존 회원
 
                 if (
                     data.status
