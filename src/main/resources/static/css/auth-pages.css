@@ -1,29 +1,18 @@
 /* MeetBack design-system auth surfaces. */
 
 .mb-auth-page {
-    --auth-background: var(--mb-background, var(--background, #FAF9F6));
-    --auth-foreground: var(--mb-foreground, var(--foreground, #1C1B2E));
-    --auth-card: var(--mb-card, var(--card, #FFFFFF));
-    --auth-primary: var(--mb-primary, var(--primary, #5B6AF0));
-    --auth-secondary: var(--mb-secondary, var(--secondary, #EEF0FF));
-    --auth-muted: var(--mb-muted, var(--muted, #F4F2EC));
-    --auth-muted-foreground: var(--mb-muted-foreground, var(--muted-foreground, #7B7A8E));
-    --auth-accent: var(--mb-accent, var(--accent, #FF7D54));
-    --auth-success: var(--mb-success, var(--success, #34C98A));
-    --auth-border: var(--mb-border, var(--border, rgba(0, 0, 0, 0.08)));
-    --auth-input: var(--mb-input, var(--input, #F4F2EC));
-    --auth-radius: var(--mb-radius, var(--radius, 0.875rem));
-    min-height: 100vh;
-    margin: 0;
-    padding: clamp(1.5rem, 4vw, 4rem) 1rem;
-    display: grid;
-    place-items: center;
-    color: var(--auth-foreground);
-    background-color: var(--auth-background);
-    background-image:
-            radial-gradient(circle at 13% 12%, color-mix(in srgb, var(--auth-primary) 13%, transparent), transparent 29rem),
-            radial-gradient(circle at 88% 86%, color-mix(in srgb, var(--auth-accent) 12%, transparent), transparent 27rem),
-            linear-gradient(135deg, var(--auth-background) 0%, var(--auth-secondary) 55%, color-mix(in srgb, var(--auth-accent) 9%, var(--auth-background)) 100%);
+    --auth-background: var(--mb-background, #FAF9F6);
+    --auth-foreground: var(--mb-foreground, #1C1B2E);
+    --auth-card: var(--mb-card, #FFFFFF);
+    --auth-primary: var(--mb-primary, #5B6AF0);
+    --auth-secondary: var(--mb-secondary, #EEF0FF);
+    --auth-muted: var(--mb-muted, #F4F2EC);
+    --auth-muted-foreground: var(--mb-muted-foreground, #7B7A8E);
+    --auth-accent: var(--mb-accent, #FF7D54);
+    --auth-success: var(--mb-success, #34C98A);
+    --auth-border: var(--mb-border, rgba(0, 0, 0, 0.08));
+    --auth-input: var(--mb-input, #F4F2EC);
+    --auth-radius: var(--mb-radius, 0.875rem);
 }
 
 .mb-auth-page :where(*) {
@@ -153,6 +142,153 @@
 }
 
 .page-login .login-container > h1 {
+    padding-right: 3.25rem;
+}
+
+.page-forgot-password .forgot-password-container > .mb-theme-toggle {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    min-width: 2.75rem;
+    max-width: 2.75rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
+    max-height: 2.75rem;
+    margin: 0;
+    padding: 0;
+    aspect-ratio: 1;
+    box-sizing: border-box;
+    appearance: none;
+    border: 1px solid var(--auth-border);
+    border-radius: 0.75rem;
+    background: var(--auth-secondary);
+    color: var(--auth-muted-foreground);
+    box-shadow: 0 0.5rem 1.25rem color-mix(in srgb, var(--auth-foreground) 10%, transparent);
+    line-height: 1;
+    transform: none;
+}
+
+.page-forgot-password .forgot-password-container > .mb-theme-toggle:hover {
+    border-color: color-mix(in srgb, var(--auth-primary) 42%, var(--auth-border));
+    background: color-mix(in srgb, var(--auth-primary) 10%, var(--auth-secondary));
+    color: var(--auth-primary);
+    transform: none;
+}
+
+.page-forgot-password .forgot-password-container > .mb-theme-toggle:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--auth-primary) 70%, transparent);
+    outline-offset: 2px;
+}
+
+.page-forgot-password .forgot-password-container > .mb-theme-toggle svg {
+    display: block;
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.page-forgot-password .forgot-password-container > h1 {
+    padding-right: 3.25rem;
+}
+
+.page-find-email .find-email-container > .mb-theme-toggle {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    min-width: 2.75rem;
+    max-width: 2.75rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
+    max-height: 2.75rem;
+    margin: 0;
+    padding: 0;
+    aspect-ratio: 1;
+    box-sizing: border-box;
+    appearance: none;
+    border: 1px solid var(--auth-border);
+    border-radius: 0.75rem;
+    background: var(--auth-secondary);
+    color: var(--auth-muted-foreground);
+    box-shadow: 0 0.5rem 1.25rem color-mix(in srgb, var(--auth-foreground) 10%, transparent);
+    line-height: 1;
+    transform: none;
+}
+
+.page-find-email .find-email-container > .mb-theme-toggle:hover {
+    border-color: color-mix(in srgb, var(--auth-primary) 42%, var(--auth-border));
+    background: color-mix(in srgb, var(--auth-primary) 10%, var(--auth-secondary));
+    color: var(--auth-primary);
+    transform: none;
+}
+
+.page-find-email .find-email-container > .mb-theme-toggle:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--auth-primary) 70%, transparent);
+    outline-offset: 2px;
+}
+
+.page-find-email .find-email-container > .mb-theme-toggle svg {
+    display: block;
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.page-find-email .find-email-container > h1 {
+    padding-right: 3.25rem;
+}
+
+.page-signup .signup-container > .mb-theme-toggle {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    min-width: 2.75rem;
+    max-width: 2.75rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
+    max-height: 2.75rem;
+    margin: 0;
+    padding: 0;
+    aspect-ratio: 1;
+    box-sizing: border-box;
+    appearance: none;
+    border: 1px solid var(--auth-border);
+    border-radius: 0.75rem;
+    background: var(--auth-secondary);
+    color: var(--auth-muted-foreground);
+    box-shadow: 0 0.5rem 1.25rem color-mix(in srgb, var(--auth-foreground) 10%, transparent);
+    line-height: 1;
+    transform: none;
+}
+
+.page-signup .signup-container > .mb-theme-toggle:hover {
+    border-color: color-mix(in srgb, var(--auth-primary) 42%, var(--auth-border));
+    background: color-mix(in srgb, var(--auth-primary) 10%, var(--auth-secondary));
+    color: var(--auth-primary);
+    transform: none;
+}
+
+.page-signup .signup-container > .mb-theme-toggle:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--auth-primary) 70%, transparent);
+    outline-offset: 2px;
+}
+
+.page-signup .signup-container > .mb-theme-toggle svg {
+    display: block;
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.page-signup .signup-container > h1 {
     padding-right: 3.25rem;
 }
 
@@ -402,6 +538,32 @@
     cursor: pointer;
 }
 
+.page-signup #signupForm #termsContainer label {
+    display: grid;
+    grid-template-columns: 1.1rem minmax(0, 1fr);
+    align-items: start;
+    gap: 0.55rem;
+    margin: 0;
+    color: var(--auth-foreground);
+}
+
+.page-signup #signupForm #termsContainer input[type="checkbox"] {
+    width: 1.1rem;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    margin: 0.12rem 0 0;
+}
+
+.page-signup #signupForm #termsContainer label > span {
+    min-width: 0;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.page-signup #signupForm #termsContainer details {
+    margin-left: 1.65rem;
+}
+
 .mb-auth-page :where(
     #loginMessage,
     #socialMessage,
@@ -447,6 +609,42 @@
         min-width: 2.5rem;
         height: 2.5rem;
         min-height: 2.5rem;
+        border-radius: 0.7rem;
+    }
+
+    .page-forgot-password .forgot-password-container > .mb-theme-toggle {
+        top: 0.8rem;
+        right: 0.8rem;
+        width: 2.5rem;
+        min-width: 2.5rem;
+        max-width: 2.5rem;
+        height: 2.5rem;
+        min-height: 2.5rem;
+        max-height: 2.5rem;
+        border-radius: 0.7rem;
+    }
+
+    .page-find-email .find-email-container > .mb-theme-toggle {
+        top: 0.8rem;
+        right: 0.8rem;
+        width: 2.5rem;
+        min-width: 2.5rem;
+        max-width: 2.5rem;
+        height: 2.5rem;
+        min-height: 2.5rem;
+        max-height: 2.5rem;
+        border-radius: 0.7rem;
+    }
+
+    .page-signup .signup-container > .mb-theme-toggle {
+        top: 0.8rem;
+        right: 0.8rem;
+        width: 2.5rem;
+        min-width: 2.5rem;
+        max-width: 2.5rem;
+        height: 2.5rem;
+        min-height: 2.5rem;
+        max-height: 2.5rem;
         border-radius: 0.7rem;
     }
 
