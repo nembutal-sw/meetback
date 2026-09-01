@@ -59,12 +59,11 @@
             rel="stylesheet"
             href="/css/mobile-responsive.css">
 
-
     <script src="/js/theme-toggle.js">
     </script>
 
-</head>
 
+</head>
 
 <body class="mb-page mb-auth-page page-login">
 
@@ -78,7 +77,6 @@
 
 <div class="login-container">
 
-
     <h1>
         MeetBack 로그인
     </h1>
@@ -90,13 +88,11 @@
 
     <form id="loginForm">
 
-
         <div>
 
             <label for="email">
                 이메일
             </label>
-
 
             <input
                     type="email"
@@ -116,7 +112,6 @@
             <label for="password">
                 비밀번호
             </label>
-
 
             <input
                     type="password"
@@ -142,7 +137,6 @@
             로그인
         </button>
 
-
     </form>
 
 
@@ -159,17 +153,13 @@
             회원가입
         </a>
 
-
         &nbsp; | &nbsp;
-
 
         <a th:href="@{/find-email}">
             아이디 찾기
         </a>
 
-
         &nbsp; | &nbsp;
-
 
         <a th:href="@{/forgot-password}">
             비밀번호 찾기
@@ -198,7 +188,6 @@
              ======================================================== -->
 
         <div class="kakao-login-container">
-
 
             <a
                     id="kakaoLoginLink"
@@ -237,7 +226,6 @@
 
 
             </a>
-
 
         </div>
 
@@ -301,10 +289,12 @@
 
 
             <!--
-                ★ 실제 Google 공식 버튼
+                실제 Google 공식 버튼
 
-                디자인 위에 거의 투명한 상태로 올라가서
-                실제 클릭과 Google 인증을 처리함
+                login_test.css에서 거의 투명하게 만든 뒤
+                위의 커스텀 Google 버튼 전체를 덮는다.
+
+                실제 클릭은 이 영역이 받는다.
             -->
 
             <div
@@ -328,9 +318,11 @@
         </div>
 
 
+        <br>
+
+
         <div id="socialMessage">
         </div>
-
 
     </div>
 
@@ -346,11 +338,9 @@
             id="socialSignupContainer"
             class="is-hidden">
 
-
         <h3>
             닉네임 설정
         </h3>
-
 
         <p>
             MeetBack에서 사용할 닉네임을 입력해주세요.
@@ -363,12 +353,10 @@
                 닉네임
             </label>
 
-
             <input
                     type="text"
                     id="socialNickname"
                     placeholder="닉네임을 입력하세요">
-
 
             <button
                     type="button"
@@ -424,9 +412,7 @@
         <div id="socialSignupMessage">
         </div>
 
-
     </div>
-
 
 </div>
 
@@ -631,7 +617,7 @@
 
 
     // ============================================================
-    // 이미 로그인된 사용자
+    // 이미 로그인된 사용자 처리
     // ============================================================
 
     function redirectAlreadyLoggedIn()
@@ -741,7 +727,7 @@
 
 
     // ============================================================
-    // 닉네임 정규화
+    // 닉네임 필터용 정규화
     // ============================================================
 
     function normalizeNicknameForFilter(
@@ -1110,7 +1096,7 @@
 
 
     // ============================================================
-    // 약관 ID
+    // 동의한 약관 ID
     // ============================================================
 
     function getAgreedTermIds()
@@ -1135,7 +1121,7 @@
 
 
     // ============================================================
-    // 필수 약관 검사
+    // 필수 약관 동의 여부
     // ============================================================
 
     function areRequiredTermsAgreed()
@@ -1482,10 +1468,7 @@
 
 
     // ============================================================
-    // ★ Google 공식 버튼 초기화
-    //
-    // 디자인은 안 바꿈.
-    // 실제 클릭용 공식 버튼만 렌더링.
+    // Google 공식 버튼 초기화
     // ============================================================
 
     let googleIdentityInitialized =
@@ -1501,12 +1484,20 @@
             );
 
 
+        /*
+         * GOOGLE_CLIENT_ID가 설정되지 않은 경우
+         * Thymeleaf에서 공식 버튼 영역 자체를 만들지 않는다.
+         */
         if (!googleOfficialButton)
         {
             return;
         }
 
 
+        /*
+         * Google JS가 async로 로딩되므로
+         * 아직 준비되지 않았으면 잠시 후 재시도
+         */
         if (
             !window.google
             ||
@@ -1542,6 +1533,9 @@
         }
 
 
+        /*
+         * initialize는 최초 한 번만 실행
+         */
         if (!googleIdentityInitialized)
         {
 
@@ -1566,17 +1560,16 @@
         }
 
 
+        /*
+         * 중복 렌더링 방지
+         */
         googleOfficialButton.innerHTML =
             "";
 
 
         /*
          * 실제 Google 공식 버튼 생성
-         *
-         * opacity 0.01 상태로
-         * 커스텀 디자인 위에 정확히 덮임.
          */
-
         google.accounts.id.renderButton(
             googleOfficialButton,
             {
