@@ -381,21 +381,8 @@
         padding: 0.75rem 0 calc(3.5rem + env(safe-area-inset-bottom));
     }
 
-    .page-quick-fixed .header {
-        position: relative;
-        top: auto;
-        min-height: 52px;
-        padding: 0.5rem 0.625rem;
-        border-radius: 0.875rem;
-    }
-
-    .page-quick-fixed .header h1 {
-        min-width: 0;
-        font-size: 1rem;
-    }
-
     .page-quick-fixed .page > .card,
-    .page-quick-fixed .page > .card:nth-child(3),
+    .page-quick-fixed .meeting-summary-card,
     .page-quick-fixed-check .page > .card,
     .page-quick-fixed-check .meeting-summary-card,
     .page-quick-fixed-check .result-card {
@@ -415,7 +402,7 @@
         grid-template-columns: minmax(0, 1fr);
     }
 
-    .page-quick-fixed .page > .card:nth-child(3) :where(button, a),
+    .page-quick-fixed .meeting-summary-card :where(button, a),
     .page-quick-fixed .place-actions :where(button, a),
     .page-quick-fixed .chat-row button,
     .page-quick-fixed-check .action-row :where(button, a),
