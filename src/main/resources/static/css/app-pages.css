@@ -1681,6 +1681,10 @@
         min-width: 0;
     }
 
+    .page-home .user-info {
+        display: none;
+    }
+
     .page-quick-meetings .quick-meeting-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
