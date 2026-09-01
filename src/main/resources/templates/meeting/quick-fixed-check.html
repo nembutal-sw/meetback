@@ -3591,7 +3591,7 @@
         )
         {
             const confirmed =
-                confirm(
+                await MeetBackToast.confirm(
                     "모임 생성을 취소하고 홈으로 돌아가시겠습니까?"
                 );
 
@@ -3657,6 +3657,48 @@
         location.href =
             "/home";
     }
+
+
+    // =========================================================
+    // 생성 직후 공통 헤더 홈 이동
+    // =========================================================
+
+    document.addEventListener(
+        "click",
+        function handleSiteHeaderHomeClick(event)
+        {
+            const target =
+                event.target instanceof Element
+                    ? event.target
+                    : null;
+
+
+            const homeLink =
+                target
+                    ? target.closest(
+                        '.mb-site-header a[href="/home"]'
+                    )
+                    : null;
+
+
+            if (
+                !homeLink
+                ||
+                !fromCreate
+                ||
+                !meetingId
+            )
+            {
+                return;
+            }
+
+
+            event.preventDefault();
+
+
+            goBack();
+        }
+    );
 
 
     // =========================================================

@@ -1814,7 +1814,7 @@
 
 
         const confirmed =
-            confirm(
+            await MeetBackToast.confirm(
                 "이 모임에서 나가시겠습니까?\n"
                 + "입력한 장소와 후보 정보가 초기화됩니다."
             );
@@ -1943,7 +1943,7 @@
     )
     {
         const confirmed =
-            confirm(
+            await MeetBackToast.confirm(
                 nickname
                 + "님을 강퇴하시겠습니까?"
             );
@@ -1987,7 +1987,7 @@
     )
     {
         const confirmed =
-            confirm(
+            await MeetBackToast.confirm(
                 nickname
                 + "님의 강퇴를 취소하시겠습니까?"
             );
