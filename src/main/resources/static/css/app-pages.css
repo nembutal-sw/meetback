@@ -753,6 +753,15 @@
     color: var(--_mb-foreground);
 }
 
+.page-home #withdrawConfirm .withdraw-retention-note {
+    display: block;
+    margin-top: 6px;
+    color: var(--_mb-muted-foreground);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
 .page-home .created-invite-button,
 .page-home .my-meeting-code-button {
     color: var(--_mb-primary);

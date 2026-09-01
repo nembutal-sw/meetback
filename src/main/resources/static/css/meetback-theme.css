@@ -353,6 +353,15 @@ body.mb-page {
     background: rgba(91, 106, 240, 0.08);
 }
 
+.mb-site-nav a[href="/feed"] {
+    font-size: 0;
+}
+
+.mb-site-nav a[href="/feed"]::after {
+    content: "자유";
+    font-size: 13px;
+}
+
 .mb-site-header__actions {
     display: flex;
     margin-left: auto;
@@ -386,6 +395,15 @@ body.mb-page {
 .mb-site-create:hover {
     color: var(--mb-accent-foreground) !important;
     filter: brightness(0.96);
+}
+
+.page-location .mb-site-create,
+.page-meeting-room .mb-site-create,
+.page-vote .mb-site-create,
+.page-result .mb-site-create,
+.page-quick-fixed .mb-site-create,
+.page-quick-fixed-check .mb-site-create {
+    display: none;
 }
 
 .mb-page ::selection {
@@ -453,6 +471,10 @@ body.mb-page {
         min-height: 45px;
         padding: 0 4px;
         border-radius: 0;
+        font-size: 10px;
+    }
+
+    .mb-site-nav a[href="/feed"]::after {
         font-size: 10px;
     }
 }
