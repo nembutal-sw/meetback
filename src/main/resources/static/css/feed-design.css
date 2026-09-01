@@ -62,7 +62,10 @@
     font-weight: 700;
     line-height: 1.4;
     text-decoration: none;
-    transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease;
+    transition:
+            border-color 150ms ease,
+            background-color 150ms ease,
+            transform 150ms ease;
 }
 
 .page-feed-list .feed-navigation a:first-child {
@@ -101,7 +104,10 @@
     display: none;
 }
 
-/* Feed card grid */
+
+/* ============================================================
+   Feed card grid
+   ============================================================ */
 
 .page-feed-list #feedContainer {
     display: grid;
@@ -119,7 +125,10 @@
     background: var(--mb-card);
     box-shadow: var(--mb-shadow-card);
     cursor: pointer;
-    transition: border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+    transition:
+            border-color 150ms ease,
+            box-shadow 150ms ease,
+            transform 150ms ease;
 }
 
 .page-feed-list .feed-summary-card:hover {
@@ -256,7 +265,10 @@
     font-weight: 500;
 }
 
-/* Card and detail menus */
+
+/* ============================================================
+   Card and detail menus
+   ============================================================ */
 
 .page-feed-list .feed-summary-menu-area {
     top: 10px;
@@ -287,9 +299,16 @@ body.page-feed-list .feed-menu-button {
     line-height: 1;
 }
 
+
+/*
+ * 상세 ⋯ 버튼
+ * X와 같은 라인으로 맞추고
+ * 기존보다 간격을 줄인다.
+ */
 .page-feed-list .feed-menu-area {
     position: relative;
     margin-left: auto;
+    margin-right: 36px;
 }
 
 .page-feed-list .feed-menu-button {
@@ -308,8 +327,10 @@ body.page-feed-list .feed-menu-button:hover {
 }
 
 .page-feed-list .feed-menu-popup {
+    position: absolute;
     top: calc(100% + 8px);
     right: 0;
+    display: none;
     min-width: 140px;
     overflow: hidden;
     border: 1px solid var(--mb-border);
@@ -349,7 +370,10 @@ body.page-feed-list .feed-menu-button:hover {
     background: var(--mb-muted);
 }
 
-/* Detail modal */
+
+/* ============================================================
+   Detail modal
+   ============================================================ */
 
 .page-feed-list .feed-detail-modal {
     position: fixed;
@@ -382,27 +406,53 @@ body.page-feed-list .feed-menu-button:hover {
     overscroll-behavior: contain;
 }
 
+
+/*
+ * X 버튼
+ * ⋯ 버튼과 같은 높이에 오도록 수정
+ */
 body.page-feed-list .feed-detail-close {
     position: sticky;
-    top: 12px;
+    top: 0;
     float: right;
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
+
     width: 36px;
     height: 36px;
-    margin: 12px 12px -48px 0;
+
+    margin:
+            16px
+            12px
+            -52px
+            0;
+
     padding: 0 0 2px;
+
     border: 1px solid var(--mb-border);
     border-radius: 10px;
+
     color: var(--mb-foreground);
-    background: color-mix(in srgb, var(--mb-card) 90%, transparent);
+
+    background:
+            color-mix(
+                    in srgb,
+                    var(--mb-card) 90%,
+                    transparent
+            );
+
     box-shadow: var(--mb-shadow-card);
+
     font-size: 1.25rem;
     line-height: 1;
+
     cursor: pointer;
+
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+
     z-index: 200;
 }
 
@@ -443,6 +493,11 @@ body.page-feed-list .feed-detail-close:hover {
     white-space: nowrap;
 }
 
+
+/* ============================================================
+   Detail image
+   ============================================================ */
+
 .page-feed-list .feed-image-area {
     position: relative;
     display: flex;
@@ -470,23 +525,40 @@ body.page-feed-list .feed-detail-close:hover {
 body.page-feed-list .feed-slide-button {
     position: absolute;
     top: 50%;
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
+
     width: 40px;
     height: 40px;
+
     padding: 0 0 3px;
+
     border: 1px solid var(--mb-border);
     border-radius: 50%;
+
     color: var(--mb-foreground);
-    background: color-mix(in srgb, var(--mb-card) 88%, transparent);
+
+    background:
+            color-mix(
+                    in srgb,
+                    var(--mb-card) 88%,
+                    transparent
+            );
+
     box-shadow: var(--mb-shadow-card);
+
     font-size: 1.5rem;
     line-height: 1;
+
     cursor: pointer;
+
     transform: translateY(-50%);
+
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+
     z-index: 5;
 }
 
@@ -523,6 +595,11 @@ body.page-feed-list .feed-slide-button:hover {
     background: var(--mb-primary);
 }
 
+
+/* ============================================================
+   Like
+   ============================================================ */
+
 .page-feed-list .feed-like-area {
     display: flex;
     align-items: center;
@@ -554,6 +631,11 @@ body.page-feed-list .feed-like-button:hover {
     font-weight: 500;
 }
 
+
+/* ============================================================
+   Feed body
+   ============================================================ */
+
 .page-feed-list .feed-body {
     padding: 16px 20px 20px;
 }
@@ -583,7 +665,10 @@ body.page-feed-list .feed-like-button:hover {
     font-size: 0.6875rem;
 }
 
-/* Inline editing */
+
+/* ============================================================
+   Inline editing
+   ============================================================ */
 
 .page-feed-list .feed-edit-title,
 .page-feed-list .feed-edit-content,
@@ -655,18 +740,25 @@ body.page-feed-list .feed-like-button:hover {
     position: absolute;
     top: -7px;
     right: -7px;
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
+
     width: 24px;
     height: 24px;
+
     padding: 0 0 2px;
+
     border: 2px solid var(--mb-card);
     border-radius: 50%;
+
     color: var(--mb-danger-foreground);
     background: var(--mb-danger);
+
     font-size: 0.875rem;
     line-height: 1;
+
     cursor: pointer;
 }
 
@@ -694,12 +786,16 @@ body.page-feed-list .feed-like-button:hover {
 body.page-feed-list .feed-comment-submit {
     min-height: 40px;
     padding: 9px 14px;
+
     border: 1px solid transparent;
     border-radius: var(--mb-radius);
+
     color: var(--mb-primary-foreground);
     background: var(--mb-primary);
+
     font-size: 0.8125rem;
     font-weight: 700;
+
     cursor: pointer;
 }
 
@@ -714,13 +810,25 @@ body.page-feed-list .feed-comment-submit:hover {
     filter: brightness(0.96);
 }
 
-/* Comments */
+
+/* ============================================================
+   Comments
+   ============================================================ */
 
 .page-feed-list .feed-comment-area {
     padding: 16px 20px 20px;
+
     border-top: 1px solid var(--mb-border);
+
     color: var(--mb-foreground);
-    background: color-mix(in srgb, var(--mb-muted) 42%, var(--mb-card));
+
+    background:
+            color-mix(
+                    in srgb,
+                    var(--mb-muted) 42%,
+                    var(--mb-card)
+            );
+
     font-size: 0.75rem;
 }
 
@@ -741,10 +849,14 @@ body.page-feed-list .feed-comment-submit:hover {
     display: flex;
     align-items: flex-start;
     gap: 7px;
+
     padding: 9px 10px;
+
     border: 1px solid var(--mb-border);
     border-radius: 10px;
+
     background: var(--mb-card);
+
     line-height: 1.5;
 }
 
@@ -757,7 +869,9 @@ body.page-feed-list .feed-comment-submit:hover {
 .page-feed-list .feed-comment-content {
     min-width: 0;
     flex: 1;
+
     color: var(--mb-foreground);
+
     white-space: pre-wrap;
     word-break: break-word;
 }
@@ -771,11 +885,15 @@ body.page-feed-list .feed-comment-submit:hover {
 .page-feed-list .feed-comment-actions button {
     min-height: 24px;
     padding: 2px 5px;
+
     border: 0;
+
     color: var(--mb-muted-foreground);
     background: transparent;
+
     font-size: 0.625rem;
     font-weight: 600;
+
     cursor: pointer;
 }
 
@@ -809,7 +927,10 @@ body.page-feed-list .feed-comment-submit:hover {
     min-width: 64px;
 }
 
-/* Pagination */
+
+/* ============================================================
+   Pagination
+   ============================================================ */
 
 .page-feed-list .feed-pagination {
     display: flex;
@@ -824,17 +945,24 @@ body.page-feed-list .feed-comment-submit:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+
     min-width: 38px;
     height: 38px;
+
     padding: 0 10px;
+
     border: 1px solid var(--mb-border);
     border-radius: 10px;
+
     color: var(--mb-muted-foreground);
     background: var(--mb-card);
+
     box-shadow: none;
+
     font-family: var(--mb-font-mono);
     font-size: 0.75rem;
     font-weight: 500;
+
     cursor: pointer;
 }
 
@@ -854,15 +982,138 @@ body.page-feed-list .feed-comment-submit:hover {
     cursor: default;
 }
 
+
+/* ============================================================
+   Delete confirm modal
+   ============================================================ */
+
+.page-feed-list .feed-confirm-modal {
+    position: fixed;
+    inset: 0;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    background: rgba(0, 0, 0, 0.55);
+
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+
+    z-index: 10000;
+}
+
+.page-feed-list .feed-confirm-modal.open {
+    display: flex;
+}
+
+.page-feed-list .feed-confirm-dialog {
+    width: min(100%, 420px);
+
+    padding: 28px;
+
+    border: 1px solid var(--mb-border);
+    border-radius: 18px;
+
+    color: var(--mb-foreground);
+    background: var(--mb-card);
+
+    box-shadow: var(--mb-shadow-dialog);
+}
+
+.page-feed-list .feed-confirm-title {
+    margin-bottom: 12px;
+
+    color: var(--mb-foreground);
+
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.page-feed-list .feed-confirm-message {
+    margin-bottom: 24px;
+
+    color: var(--mb-muted-foreground);
+
+    font-size: 0.875rem;
+    line-height: 1.6;
+
+    word-break: keep-all;
+}
+
+.page-feed-list .feed-confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.page-feed-list .feed-confirm-actions button {
+    min-width: 82px;
+    min-height: 42px;
+
+    padding: 9px 16px;
+
+    border-radius: var(--mb-radius);
+
+    font-size: 0.875rem;
+    font-weight: 700;
+
+    cursor: pointer;
+}
+
+.page-feed-list .feed-confirm-cancel {
+    border: 1px solid var(--mb-border);
+
+    color: var(--mb-muted-foreground);
+    background: var(--mb-muted);
+}
+
+.page-feed-list .feed-confirm-ok {
+    border: 1px solid transparent;
+
+    color: var(--mb-danger-foreground);
+    background: var(--mb-danger);
+}
+
+.page-feed-list .feed-confirm-cancel:hover {
+    background: var(--mb-secondary);
+}
+
+.page-feed-list .feed-confirm-ok:hover {
+    filter: brightness(0.96);
+}
+
+
+/* ============================================================
+   Tablet
+   ============================================================ */
+
 @media (max-width: 1023px) {
+
     .page-feed-list #feedContainer {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns:
+                repeat(
+                        2,
+                        minmax(0, 1fr)
+                );
     }
 }
 
+
+/* ============================================================
+   Mobile
+   ============================================================ */
+
 @media (max-width: 639px) {
+
     .page-feed-list .feed-page {
-        padding: 80px 16px 96px;
+        padding:
+                80px
+                16px
+                96px;
     }
 
     .page-feed-list .feed-page-header {
@@ -887,7 +1138,12 @@ body.page-feed-list .feed-comment-submit:hover {
     }
 
     .page-feed-list #feedContainer {
-        grid-template-columns: minmax(0, 1fr);
+        grid-template-columns:
+                minmax(
+                        0,
+                        1fr
+                );
+
         gap: 14px;
     }
 
@@ -902,8 +1158,10 @@ body.page-feed-list .feed-comment-submit:hover {
     .page-feed-list .feed-detail-dialog {
         width: 100%;
         max-width: none;
+
         height: 100dvh;
         max-height: 100dvh;
+
         border: 0;
         border-radius: 0;
     }
@@ -912,8 +1170,35 @@ body.page-feed-list .feed-comment-submit:hover {
         padding: 14px 16px;
     }
 
+
+    /*
+     * 모바일도 ⋯ / X 간격 최소화
+     */
+    .page-feed-list .feed-menu-area {
+        margin-right: 36px;
+    }
+
+
+    /*
+     * 모바일 헤더 padding 14px에 맞춰
+     * X도 같은 라인으로 맞춘다.
+     */
+    body.page-feed-list .feed-detail-close {
+        top: 0;
+
+        margin:
+                14px
+                12px
+                -50px
+                0;
+    }
+
     .page-feed-list .feed-image-area {
-        height: min(100vw, 430px);
+        height:
+                min(
+                        100vw,
+                        430px
+                );
     }
 
     .page-feed-list .feed-like-area,
@@ -932,9 +1217,29 @@ body.page-feed-list .feed-comment-submit:hover {
         padding-right: 10px;
         padding-left: 10px;
     }
+
+    .page-feed-list .feed-confirm-dialog {
+        width: 100%;
+        padding: 22px;
+        border-radius: 16px;
+    }
+
+    .page-feed-list .feed-confirm-actions {
+        flex-direction: column-reverse;
+    }
+
+    .page-feed-list .feed-confirm-actions button {
+        width: 100%;
+    }
 }
 
+
+/* ============================================================
+   Touch device
+   ============================================================ */
+
 @media (hover: none) {
+
     .page-feed-list .feed-summary-card:hover,
     .page-feed-list .feed-navigation a:hover {
         transform: none;
@@ -945,7 +1250,13 @@ body.page-feed-list .feed-comment-submit:hover {
     }
 }
 
+
+/* ============================================================
+   Reduced motion
+   ============================================================ */
+
 @media (prefers-reduced-motion: reduce) {
+
     .page-feed-list .feed-summary-card,
     .page-feed-list .feed-summary-image,
     .page-feed-list .feed-navigation a {
@@ -953,7 +1264,13 @@ body.page-feed-list .feed-comment-submit:hover {
     }
 }
 
+
+/* ============================================================
+   Site header
+   ============================================================ */
+
 @media (max-width: 767px) {
+
     .mb-has-site-header.page-feed-list .feed-page {
         padding-top: 126px;
     }
