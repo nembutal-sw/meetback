@@ -51,30 +51,6 @@
 
 <div class="page">
 
-    <!-- =========================================================
-         HEADER
-         ========================================================= -->
-
-    <div class="header">
-
-        <h1>
-            MeetBack
-        </h1>
-
-
-        <button
-                type="button"
-                id="headerBackButton"
-                class="back-button"
-                onclick="goBack()">
-
-            돌아가기
-
-        </button>
-
-    </div>
-
-
     <div
             id="message"
             class="message">
@@ -85,7 +61,7 @@
          모임 정보
          ========================================================= -->
 
-    <div class="card">
+    <div class="card meeting-summary-card">
 
         <div
                 id="meetingTypeLabel"
@@ -179,6 +155,16 @@
 
         <div class="place-box">
 
+            <button
+                    type="button"
+                    id="headerBackButton"
+                    class="back-button"
+                    onclick="goBack()">
+
+                돌아가기
+
+            </button>
+
             <div class="info-label">
                 모임 장소
             </div>
@@ -210,7 +196,7 @@
          귀가지 검색
          ========================================================= -->
 
-    <div class="card">
+    <div class="card return-check-card">
 
         <h2>
             내 귀가 가능 여부 확인
@@ -763,11 +749,7 @@
 
             await loadMeeting();
 
-
-            if (fromRoom)
-            {
-                loadSavedPreviewFromSession();
-            }
+            loadSavedPreviewFromSession();
         }
         catch (error)
         {

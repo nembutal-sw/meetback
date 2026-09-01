@@ -207,6 +207,7 @@
     }
 
     .page-home .my-meeting-list {
+        position: fixed;
         top: 4.75rem;
         right: 12px;
         left: 12px;
@@ -398,7 +399,7 @@
     .page-quick-fixed .page > .card,
     .page-quick-fixed .page > .card:nth-child(3),
     .page-quick-fixed-check .page > .card,
-    .page-quick-fixed-check .page > .card:nth-child(3),
+    .page-quick-fixed-check .meeting-summary-card,
     .page-quick-fixed-check .result-card {
         min-width: 0;
         padding: 1.125rem;
@@ -651,5 +652,191 @@
 
     .page-feed-list .feed-navigation {
         grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+/* =========================================================
+   Home header: tablet / half-width desktop
+   ========================================================= */
+
+@media (min-width: 560px) and (max-width: 1040px) {
+    .page-home .home-header-actions {
+        display: flex !important;
+        min-width: 0;
+        align-items: center;
+        justify-content: flex-end;
+        flex-flow: row nowrap;
+        gap: 4px;
+    }
+
+    .page-home .home-header-actions .my-meeting-menu {
+        display: block !important;
+        width: auto !important;
+        min-width: 0;
+        flex: 0 0 auto;
+    }
+
+    .page-home .home-header-actions .my-meeting-toggle-button,
+    .page-home .home-header-logout-button,
+    .page-home .home-create-link {
+        display: inline-flex !important;
+        width: auto !important;
+        min-width: 0 !important;
+        min-height: 34px;
+        height: 34px;
+        padding: 0 8px;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        line-height: 1;
+        white-space: nowrap;
+    }
+
+    .page-home .home-user-session {
+        display: flex !important;
+        width: auto;
+        min-width: 0;
+        align-items: center;
+        gap: 0;
+    }
+
+    .page-home .home-user-session .user-info {
+        display: none !important;
+    }
+
+    .page-home .mb-theme-toggle {
+        width: 34px !important;
+        min-width: 34px !important;
+        height: 34px;
+        min-height: 34px;
+        flex: 0 0 34px;
+    }
+
+    .page-home .home-create-link {
+        order: 20;
+    }
+}
+
+@media (min-width: 560px) and (max-width: 760px) {
+    .page-home .my-meeting-list {
+        top: 108px;
+    }
+}
+
+/* =========================================================
+   Home header: mobile
+   ========================================================= */
+
+@media (max-width: 559px) {
+    .page-home .home-header {
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        grid-template-rows: 44px 34px 42px;
+        min-height: 120px;
+        padding: 0 10px;
+        gap: 0 4px;
+    }
+
+    .page-home .home-header-title {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .page-home .home-header-title h1::before {
+        width: 32px;
+        height: 32px;
+        flex-basis: 32px;
+    }
+
+    .page-home .home-header-actions {
+        display: contents !important;
+    }
+
+    .page-home .mb-theme-toggle {
+        grid-column: 2;
+        grid-row: 1;
+        justify-self: start;
+        width: 32px !important;
+        min-width: 32px !important;
+        height: 32px;
+        min-height: 32px;
+        padding: 0;
+    }
+
+    .page-home .home-user-session {
+        grid-column: 3 / 5;
+        grid-row: 1;
+        display: flex !important;
+        width: 100%;
+        min-width: 0;
+        align-items: center;
+        gap: 0;
+    }
+
+    .page-home .home-user-session .user-info {
+        display: none !important;
+    }
+
+    .page-home .home-header-logout-button,
+    .page-home .home-create-link {
+        display: inline-flex !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 32px;
+        min-height: 32px;
+        padding: 0 5px;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        font-size: 9px;
+        line-height: 1;
+        white-space: nowrap;
+    }
+
+    .page-home .home-create-link {
+        grid-column: 5 / 7;
+        grid-row: 1;
+        order: 0;
+    }
+
+    .page-home .home-header-actions .my-meeting-menu {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0;
+        margin: 0;
+    }
+
+    .page-home .home-header-actions .my-meeting-menu:first-of-type {
+        grid-column: 1 / 4;
+        grid-row: 2;
+    }
+
+    .page-home .home-header-actions .my-meeting-menu:nth-of-type(2) {
+        grid-column: 4 / 7;
+        grid-row: 2;
+    }
+
+    .page-home .home-header-actions .my-meeting-toggle-button {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 30px;
+        min-height: 30px;
+        padding: 0 6px;
+        font-size: 10px;
+        line-height: 1;
+        white-space: nowrap;
+    }
+
+    .page-home .home-primary-nav {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        height: 42px;
+    }
+
+    .page-home .home-primary-nav a {
+        height: 41px;
+    }
+
+    .page-home .my-meeting-list {
+        top: 124px;
     }
 }
