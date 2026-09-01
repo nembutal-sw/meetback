@@ -49,7 +49,7 @@
     }
 
     .mb-page :where(
-        button:not(.mb-theme-toggle):not(.feed-menu-button):not(.feed-summary-menu-button):not(.feed-indicator),
+        button:not(.mb-theme-toggle):not(.feed-menu-button):not(.feed-summary-menu-button):not(.feed-detail-close):not(.feed-indicator),
         a.primary,
         a.primary-button,
         a.home-button,
