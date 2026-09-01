@@ -65,10 +65,9 @@
 }
 
 
-.page-quick-fixed-check .header,
 .page-quick-fixed-check .page > .message,
-.page-quick-fixed-check .page > .card:nth-child(3),
-.page-quick-fixed-check .page > .card:nth-child(4) {
+.page-quick-fixed-check .meeting-summary-card,
+.page-quick-fixed-check .return-check-card {
     grid-column: 1 / -1;
 }
 
@@ -259,7 +258,7 @@
 }
 
 
-.page-quick-fixed-check .page > .card:nth-child(3) {
+.page-quick-fixed-check .meeting-summary-card {
     display: grid;
 
     grid-template-columns:
@@ -282,7 +281,7 @@
 }
 
 
-.page-quick-fixed-check .page > .card:nth-child(3)::after {
+.page-quick-fixed-check .meeting-summary-card::after {
     content: "";
 
     position: absolute;
@@ -300,7 +299,7 @@
 }
 
 
-.page-quick-fixed-check .page > .card:nth-child(3) > * {
+.page-quick-fixed-check .meeting-summary-card > * {
     position: relative;
 
     z-index: 1;
@@ -435,6 +434,34 @@
                     var(--_qfc-card) 75%,
                     transparent
             );
+}
+
+
+.page-quick-fixed-check .place-box > .info-label {
+    display: flex;
+
+    min-height: 38px;
+
+    padding-right: 88px;
+
+    align-items: center;
+}
+
+
+.page-quick-fixed-check .place-box .back-button {
+    position: absolute;
+
+    top: 14px;
+    right: 14px;
+
+    z-index: 2;
+
+    min-width: 76px;
+    min-height: 38px;
+
+    padding: 0 13px;
+
+    white-space: nowrap;
 }
 
 
@@ -636,7 +663,7 @@
 
 .page-quick-fixed-check
 .page:has(.result-card.show)
-> .card:nth-child(4) {
+> .return-check-card {
     grid-column:
             span 5;
 }
@@ -797,7 +824,7 @@
 @media (max-width: 900px) {
 
     .page-quick-fixed-check
-    .page > .card:nth-child(3) {
+    .meeting-summary-card {
         grid-template-columns: 1fr;
     }
 
@@ -817,7 +844,7 @@
 
     .page-quick-fixed-check
     .page:has(.result-card.show)
-    > .card:nth-child(4),
+    > .return-check-card,
 
     .page-quick-fixed-check
     .page:has(.result-card.show)
@@ -863,7 +890,7 @@
 
     .page-quick-fixed-check .page > .card,
     .page-quick-fixed-check
-    .page > .card:nth-child(3) {
+    .meeting-summary-card {
         padding: 20px;
     }
 
