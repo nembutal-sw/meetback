@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="7 2 50 50" role="img" aria-label="MeetBack">
+    <rect x="7" y="2" width="50" height="50" rx="15" fill="#5B6AF0"/>
+    <rect x="21" y="15" width="22" height="4" rx="1" fill="#FFFFFF"/>
+    <rect x="21" y="27" width="22" height="4" rx="1" fill="#FFFFFF"/>
+    <circle cx="26" cy="41" r="3.5" fill="#FFFFFF"/>
+    <circle cx="38" cy="41" r="3.5" fill="#FFFFFF"/>
+</svg>
