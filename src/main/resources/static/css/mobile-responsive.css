@@ -381,8 +381,7 @@
         padding: 0.75rem 0 calc(3.5rem + env(safe-area-inset-bottom));
     }
 
-    .page-quick-fixed .header,
-    .page-quick-fixed-check .header {
+    .page-quick-fixed .header {
         position: relative;
         top: auto;
         min-height: 52px;
@@ -390,8 +389,7 @@
         border-radius: 0.875rem;
     }
 
-    .page-quick-fixed .header h1,
-    .page-quick-fixed-check .header h1 {
+    .page-quick-fixed .header h1 {
         min-width: 0;
         font-size: 1rem;
     }
@@ -739,6 +737,8 @@
     .page-home .home-header-title {
         grid-column: 1;
         grid-row: 1;
+        align-self: center;
+        min-width: 0;
     }
 
     .page-home .home-header-title h1::before {
@@ -765,6 +765,7 @@
     .page-home .home-user-session {
         grid-column: 3 / 5;
         grid-row: 1;
+        justify-self: end;
         display: flex !important;
         width: 100%;
         min-width: 0;
@@ -829,14 +830,25 @@
     .page-home .home-primary-nav {
         grid-column: 1 / -1;
         grid-row: 3;
+        display: flex;
+        width: calc(100% + 20px);
         height: 42px;
+        margin: 0 -10px;
+        padding: 0;
+        border-top: 1px solid var(--_mb-border);
     }
 
     .page-home .home-primary-nav a {
+        display: grid;
+        place-items: center;
+        flex: 1;
         height: 41px;
+        padding: 0;
+        border-radius: 0;
     }
 
     .page-home .my-meeting-list {
         top: 124px;
+        min-width: 0;
     }
 }
