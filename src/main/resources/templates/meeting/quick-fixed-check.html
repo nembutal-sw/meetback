@@ -1836,9 +1836,11 @@
         )
         {
             marginElement.textContent =
-                previewResult.marginMinutes
+                formatHourMinute(
+                    previewResult.marginMinutes
+                )
                 +
-                "분 여유";
+                " 여유";
 
 
             marginElement.classList.add(
@@ -1848,11 +1850,11 @@
         else
         {
             marginElement.textContent =
-                Math.abs(
+                formatHourMinute(
                     previewResult.marginMinutes
                 )
                 +
-                "분 초과";
+                " 초과";
 
 
             marginElement.classList.add(
@@ -3349,7 +3351,49 @@
 
 
     // =========================================================
-    // 날짜
+    // 분 단위 시간
+    // =========================================================
+
+    function formatHourMinute(
+        totalMinutes
+    )
+    {
+        const absoluteMinutes =
+            Math.abs(
+                Number(totalMinutes)
+            );
+
+
+        if (!Number.isFinite(absoluteMinutes))
+        {
+            return "-";
+        }
+
+
+        const hours =
+            Math.floor(
+                absoluteMinutes / 60
+            );
+
+
+        const minutes =
+            Math.floor(
+                absoluteMinutes % 60
+            );
+
+
+        if (hours > 0)
+        {
+            return `${hours}시간 ${minutes}분`;
+        }
+
+
+        return `${minutes}분`;
+    }
+
+
+    // =========================================================
+    // 날짜 및 시간
     // =========================================================
 
     function formatDateTime(

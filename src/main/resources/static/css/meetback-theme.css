@@ -320,13 +320,7 @@ body.mb-page {
     width: 32px;
     height: 32px;
     flex: 0 0 32px;
-    border-radius: 10px;
-    background:
-        linear-gradient(#FFFFFF, #FFFFFF) 9px 8px / 14px 3px no-repeat,
-        linear-gradient(#FFFFFF, #FFFFFF) 9px 15px / 14px 3px no-repeat,
-        radial-gradient(circle, #FFFFFF 0 2px, transparent 2.5px) 8px 21px / 6px 6px no-repeat,
-        radial-gradient(circle, #FFFFFF 0 2px, transparent 2.5px) 18px 21px / 6px 6px no-repeat,
-        var(--mb-primary);
+    background: url("../images/meetback-logo.svg") center / contain no-repeat;
 }
 
 .mb-site-nav {
