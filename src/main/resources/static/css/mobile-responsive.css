@@ -415,29 +415,40 @@
         display: flex;
         min-height: 100dvh;
         padding:
-            max(12px, env(safe-area-inset-top))
-            max(12px, env(safe-area-inset-right))
-            max(12px, env(safe-area-inset-bottom))
-            max(12px, env(safe-area-inset-left));
+                max(12px, env(safe-area-inset-top))
+                max(12px, env(safe-area-inset-right))
+                max(12px, env(safe-area-inset-bottom))
+                max(12px, env(safe-area-inset-left));
         align-items: flex-start;
         justify-content: center;
     }
 
+    /*
+     * 로그인 페이지 내부의 .kakao-login-container는
+     * 카카오 버튼 래퍼이므로 전체 화면 높이를 적용하지 않는다.
+     *
+     * 실제 카카오 로그인 처리 페이지의 컨테이너만
+     * .page-kakao-login > .kakao-login-container 로 지정한다.
+     */
     .mb-auth-page :where(
         .login-container,
         .signup-container,
         .find-email-container,
         .forgot-password-container,
-        .reset-password-container,
-        .kakao-login-container
-    ) {
+        .reset-password-container
+    ),
+    .page-kakao-login > .kakao-login-container {
         width: 100%;
         min-height: calc(100dvh - 24px);
         margin: 0;
         padding: 2.5rem 1.25rem 2rem;
         border: 1px solid var(--auth-border);
         border-radius: 1.25rem;
-        box-shadow: 0 1rem 2.75rem color-mix(in srgb, var(--auth-foreground) 9%, transparent);
+        box-shadow: 0 1rem 2.75rem color-mix(
+                in srgb,
+                var(--auth-foreground) 9%,
+                transparent
+        );
     }
 
     .mb-auth-page h1 {
@@ -539,10 +550,10 @@
 
     .page-feed-write {
         padding:
-            max(12px, env(safe-area-inset-top))
-            max(12px, env(safe-area-inset-right))
-            max(12px, env(safe-area-inset-bottom))
-            max(12px, env(safe-area-inset-left));
+                max(12px, env(safe-area-inset-top))
+                max(12px, env(safe-area-inset-right))
+                max(12px, env(safe-area-inset-bottom))
+                max(12px, env(safe-area-inset-left));
     }
 
     .page-feed-write > div {
@@ -550,7 +561,11 @@
         padding: 1.5rem 1rem;
         border: 1px solid var(--content-border);
         border-radius: 1.25rem;
-        box-shadow: 0 1rem 2.75rem color-mix(in srgb, var(--content-foreground) 8%, transparent);
+        box-shadow: 0 1rem 2.75rem color-mix(
+                in srgb,
+                var(--content-foreground) 8%,
+                transparent
+        );
     }
 
     .page-feed-write h1 {
@@ -606,6 +621,7 @@
     }
 }
 
+
 @media (max-width: 380px) {
     .mb-site-brand__name {
         display: none;
@@ -623,14 +639,17 @@
         font-size: 0.75rem;
     }
 
+    /*
+     * 위와 동일하게 로그인 페이지 내부 카카오 버튼 래퍼는 제외한다.
+     */
     .mb-auth-page :where(
         .login-container,
         .signup-container,
         .find-email-container,
         .forgot-password-container,
-        .reset-password-container,
-        .kakao-login-container
-    ) {
+        .reset-password-container
+    ),
+    .page-kakao-login > .kakao-login-container {
         padding-right: 1rem;
         padding-left: 1rem;
     }
@@ -639,6 +658,7 @@
         grid-template-columns: minmax(0, 1fr);
     }
 }
+
 
 /* =========================================================
    Home header: tablet / half-width desktop
@@ -730,11 +750,13 @@
     }
 }
 
+
 @media (min-width: 560px) and (max-width: 760px) {
     .page-home .my-meeting-list {
         top: 108px;
     }
 }
+
 
 /* =========================================================
    Home header: mobile
