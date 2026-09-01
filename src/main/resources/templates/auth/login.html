@@ -68,6 +68,13 @@
 
 <body class="mb-page mb-auth-page page-login">
 
+<div
+        id="authLogoutToast"
+        class="auth-logout-toast"
+        role="status"
+        aria-live="polite">
+</div>
+
 
 <div class="login-container">
 
@@ -440,6 +447,44 @@
         document.getElementById(
             "loginMessage"
         );
+
+    const authLogoutToast =
+        document.getElementById(
+            "authLogoutToast"
+        );
+
+    const authLogoutMessage =
+        sessionStorage.getItem(
+            "authLogoutMessage"
+        );
+
+    if (
+        authLogoutToast
+        &&
+        authLogoutMessage
+    )
+    {
+        sessionStorage.removeItem(
+            "authLogoutMessage"
+        );
+
+        authLogoutToast.textContent =
+            authLogoutMessage;
+
+        authLogoutToast.classList.add(
+            "show"
+        );
+
+        setTimeout(
+            () =>
+            {
+                authLogoutToast.classList.remove(
+                    "show"
+                );
+            },
+            5000
+        );
+    }
 
 
     const socialMessage =

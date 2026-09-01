@@ -12,11 +12,6 @@
     <title>MeetBack 고정 번개방</title>
 
     <script
-            src="/js/auth-session-guard.js"
-            defer>
-    </script>
-
-    <script
             src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js">
     </script>
 
@@ -3145,8 +3140,22 @@
                     },
 
                 onWebSocketClose:
-                    function()
+                    function(event)
                     {
+                        if (
+                            Number(event?.code)
+                            === 4001
+                        ) {
+                            stompClient.reconnectDelay =
+                                0;
+
+                            MeetBack.handleAuthWebSocketClose(
+                                event
+                            );
+
+                            return;
+                        }
+
                         document.getElementById(
                             "chatStatus"
                         ).textContent =
