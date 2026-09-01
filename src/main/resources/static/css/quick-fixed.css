@@ -47,49 +47,10 @@
     padding: 16px 0 76px;
 }
 
-.page-quick-fixed .header,
 .page-quick-fixed .page > .message,
-.page-quick-fixed .page > .card:nth-child(3),
+.page-quick-fixed .meeting-summary-card,
 .page-quick-fixed .page > .card:last-child {
     grid-column: 1 / -1;
-}
-
-.page-quick-fixed .header {
-    position: sticky;
-    top: 12px;
-    z-index: 30;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 60px;
-    padding: 8px 12px 8px 18px;
-    border: 1px solid var(--_qf-border);
-    border-radius: 14px;
-    background: color-mix(in srgb, var(--_qf-card) 92%, transparent);
-    box-shadow: 0 8px 28px rgba(28, 27, 46, 0.06);
-    backdrop-filter: blur(16px);
-}
-
-.page-quick-fixed .header h1 {
-    display: flex;
-    align-items: center;
-    gap: 11px;
-    margin: 0;
-    color: var(--_qf-foreground);
-    font-size: 18px;
-    font-weight: 800;
-    letter-spacing: -0.45px;
-}
-
-.page-quick-fixed .header h1::before {
-    content: "";
-    width: 30px;
-    height: 30px;
-    border-radius: 9px;
-    background:
-        linear-gradient(var(--_qf-card), var(--_qf-card)) 8px 9px / 14px 3px no-repeat,
-        linear-gradient(var(--_qf-card), var(--_qf-card)) 8px 18px / 14px 3px no-repeat,
-        var(--_qf-primary);
 }
 
 .page-quick-fixed .home-button {
@@ -139,7 +100,7 @@
     box-shadow: none;
 }
 
-.page-quick-fixed .page > .card:nth-child(3) {
+.page-quick-fixed .meeting-summary-card {
     display: grid;
     grid-template-columns: minmax(0, 1fr) repeat(4, auto);
     align-items: center;
@@ -149,7 +110,7 @@
     background: linear-gradient(135deg, var(--_qf-card) 0%, var(--_qf-secondary) 100%);
 }
 
-.page-quick-fixed .page > .card:nth-child(3)::after {
+.page-quick-fixed .meeting-summary-card::after {
     content: "";
     position: absolute;
     z-index: 0;
@@ -161,7 +122,7 @@
     background: rgba(91, 106, 240, 0.1);
 }
 
-.page-quick-fixed .page > .card:nth-child(3) > * {
+.page-quick-fixed .meeting-summary-card > * {
     position: relative;
     z-index: 1;
 }
@@ -611,14 +572,14 @@
 }
 
 @media (max-width: 900px) {
-    .page-quick-fixed .page > .card:nth-child(3) {
+    .page-quick-fixed .meeting-summary-card {
         grid-template-columns: minmax(0, 1fr) auto;
     }
 
-    .page-quick-fixed .page > .card:nth-child(3) .invite-button,
-    .page-quick-fixed .page > .card:nth-child(3) .leave-button,
-    .page-quick-fixed .page > .card:nth-child(3) .home-button,
-    .page-quick-fixed .page > .card:nth-child(3) .close-recruitment-button {
+    .page-quick-fixed .meeting-summary-card .invite-button,
+    .page-quick-fixed .meeting-summary-card .leave-button,
+    .page-quick-fixed .meeting-summary-card .home-button,
+    .page-quick-fixed .meeting-summary-card .close-recruitment-button {
         grid-column: 2;
     }
 
@@ -635,35 +596,20 @@
         padding-top: 8px;
     }
 
-    .page-quick-fixed .header {
-        top: 6px;
-        min-height: 54px;
-        padding: 7px 9px 7px 12px;
-    }
-
-    .page-quick-fixed .header h1::before {
-        width: 27px;
-        height: 27px;
-        background:
-            linear-gradient(var(--_qf-card), var(--_qf-card)) 7px 8px / 13px 3px no-repeat,
-            linear-gradient(var(--_qf-card), var(--_qf-card)) 7px 17px / 13px 3px no-repeat,
-            var(--_qf-primary);
-    }
-
     .page-quick-fixed .page > .card,
-    .page-quick-fixed .page > .card:nth-child(3) {
+    .page-quick-fixed .meeting-summary-card {
         grid-column: 1 / -1;
         padding: 20px;
     }
 
-    .page-quick-fixed .page > .card:nth-child(3) {
+    .page-quick-fixed .meeting-summary-card {
         grid-template-columns: 1fr;
     }
 
-    .page-quick-fixed .page > .card:nth-child(3) .invite-button,
-    .page-quick-fixed .page > .card:nth-child(3) .leave-button,
-    .page-quick-fixed .page > .card:nth-child(3) .home-button,
-    .page-quick-fixed .page > .card:nth-child(3) .close-recruitment-button {
+    .page-quick-fixed .meeting-summary-card .invite-button,
+    .page-quick-fixed .meeting-summary-card .leave-button,
+    .page-quick-fixed .meeting-summary-card .home-button,
+    .page-quick-fixed .meeting-summary-card .close-recruitment-button {
         grid-column: auto;
         width: 100%;
     }
@@ -702,7 +648,7 @@
    고정 번개방 상단 정보 배치 보정
    ========================================================= */
 
-.page-quick-fixed .page > .card:nth-child(3) {
+.page-quick-fixed .meeting-summary-card {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 28px;
@@ -735,7 +681,7 @@
     max-width: 100%;
 }
 
-.page-quick-fixed .page > .card:nth-child(3) .info-grid {
+.page-quick-fixed .meeting-summary-card .info-grid {
     grid-column: auto;
 }
 
@@ -757,7 +703,7 @@
 /* 태블릿 */
 @media (max-width: 900px) {
 
-    .page-quick-fixed .page > .card:nth-child(3) {
+    .page-quick-fixed .meeting-summary-card {
         grid-template-columns: 1fr;
     }
 
@@ -795,7 +741,7 @@
    고정 번개방 상단 정보 정렬
    ========================================================= */
 
-.page-quick-fixed .page > .card:nth-child(3) {
+.page-quick-fixed .meeting-summary-card {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: 28px;
