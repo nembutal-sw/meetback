@@ -39,6 +39,7 @@
 }
 
 .page-feed-write > div {
+    position: relative;
     width: min(100%, 48rem);
     padding: clamp(1.35rem, 4vw, 2.5rem);
     background: var(--content-card);
@@ -220,6 +221,57 @@
     outline-offset: 0.18rem;
 }
 
+.page-feed-write > div > .mb-theme-toggle {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 3;
+    display: grid;
+    place-items: center;
+    width: 2.75rem;
+    min-width: 2.75rem;
+    max-width: 2.75rem;
+    height: 2.75rem;
+    min-height: 2.75rem;
+    max-height: 2.75rem;
+    margin: 0;
+    padding: 0;
+    aspect-ratio: 1;
+    box-sizing: border-box;
+    appearance: none;
+    border: 1px solid var(--content-border);
+    border-radius: 0.75rem;
+    color: var(--content-muted-foreground);
+    background: var(--content-secondary);
+    box-shadow: 0 0.5rem 1.25rem color-mix(in srgb, var(--content-foreground) 10%, transparent);
+    line-height: 1;
+    transform: none;
+}
+
+.page-feed-write > div > .mb-theme-toggle:hover {
+    color: var(--content-primary);
+    background: color-mix(in srgb, var(--content-primary) 10%, var(--content-secondary));
+    border-color: color-mix(in srgb, var(--content-primary) 42%, var(--content-border));
+    box-shadow: 0 0.5rem 1.25rem color-mix(in srgb, var(--content-foreground) 10%, transparent);
+    filter: none;
+    transform: none;
+}
+
+.page-feed-write > div > .mb-theme-toggle:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--content-primary) 70%, transparent);
+    outline-offset: 2px;
+}
+
+.page-feed-write > div > .mb-theme-toggle svg {
+    display: block;
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.page-feed-write > div > h1 {
+    padding-right: 3.25rem;
+}
+
 .page-admin-term > div:first-of-type button {
     color: var(--content-muted-foreground);
     background: transparent;
@@ -394,6 +446,18 @@
         border: 0;
         border-radius: 0;
         box-shadow: none;
+    }
+
+    .page-feed-write > div > .mb-theme-toggle {
+        top: 0.8rem;
+        right: 0.8rem;
+        width: 2.5rem;
+        min-width: 2.5rem;
+        max-width: 2.5rem;
+        height: 2.5rem;
+        min-height: 2.5rem;
+        max-height: 2.5rem;
+        border-radius: 0.7rem;
     }
 }
 
