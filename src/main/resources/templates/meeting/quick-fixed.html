@@ -831,6 +831,61 @@
 
             if (!response.ok)
             {
+                let errorMessage = "";
+
+
+                try
+                {
+                    const errorBody =
+                        await response.clone().json();
+
+
+                    errorMessage =
+                        errorBody?.message
+                        ||
+                        "";
+                }
+                catch (error)
+                {
+                    console.warn(
+                        "[QUICK FIXED RETURN CHECK MESSAGE ERROR]",
+                        error
+                    );
+                }
+
+
+                const currentUserIsHost =
+                    meeting
+                    &&
+                    currentUser
+                    &&
+                    Number(meeting.hostUserId)
+                        === Number(currentUser.userId);
+
+
+                if (
+                    response.status === 409
+                    &&
+                    currentUserIsHost
+                    &&
+                    errorMessage.includes(
+                        "귀가 장소를 먼저 등록"
+                    )
+                )
+                {
+                    location.replace(
+                        "/quick-fixed-check?meetingId="
+                        +
+                        encodeURIComponent(meetingId)
+                        +
+                        "&from=create"
+                    );
+
+
+                    return;
+                }
+
+
                 console.warn(
                     "[QUICK FIXED RETURN CHECK FAILED]",
                     response.status

@@ -194,7 +194,7 @@ body.dark-mode .login-container {
 .login-container > h1 {
     position: relative;
     margin: 0 0 38px;
-    padding-left: 34px;
+    padding-left: 42px;
 
     color: var(--text);
     font-size: 30px;
@@ -206,16 +206,20 @@ body.dark-mode .login-container {
     content: "";
     position: absolute;
     left: 0;
-    top: 7px;
-    width: 21px;
-    height: 21px;
-    border: 6px solid var(--primary);
-    border-radius: 50%;
+    top: 50%;
+    width: 32px;
+    height: 32px;
+    border: 0;
+    border-radius: 0;
+    background: url("../images/meetback-logo.svg") center / contain no-repeat;
+    box-shadow: none;
+    margin: 0;
+    vertical-align: initial;
+    transform: translateY(-50%);
 }
 
 .login-container > h1::after {
-    content: ".";
-    color: var(--primary);
+    content: none;
 }
 
 
@@ -413,11 +417,10 @@ body.dark-mode #loginForm input::placeholder {
 .social-login-container {
     width: 100% !important;
     margin-top: 30px !important;
-    padding: 28px 0 0 !important;
+    padding: 0 !important;
 
     background: transparent !important;
     border: 0 !important;
-    border-top: 1px solid var(--divider) !important;
     border-radius: 0 !important;
     box-shadow: none !important;
 }
@@ -429,6 +432,7 @@ body.dark-mode #loginForm input::placeholder {
 
 .social-login-title {
     display: flex !important;
+    position: static !important;
     align-items: center !important;
     gap: 14px !important;
 
@@ -447,9 +451,11 @@ body.dark-mode #loginForm input::placeholder {
 
     font-size: 12px !important;
     font-weight: 700 !important;
+    line-height: 1 !important;
     text-align: center !important;
 
     white-space: nowrap;
+    transform: none !important;
 }
 
 .social-login-title::before,
@@ -814,16 +820,15 @@ input:focus-visible {
     }
 
     .login-container > h1 {
-        padding-left: 29px;
+        padding-left: 38px;
         margin-bottom: 31px;
         font-size: 25px;
     }
 
     .login-container > h1::before {
-        top: 6px;
-        width: 18px;
-        height: 18px;
-        border-width: 5px;
+        top: 50%;
+        width: 28px;
+        height: 28px;
     }
 
     #loginForm input[type="email"],
