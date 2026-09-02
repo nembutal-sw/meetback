@@ -2710,8 +2710,14 @@
                 },
 
 
-                reconnectDelay:
+                heartbeatIncoming:
                     5000,
+
+                heartbeatOutgoing:
+                    5000,
+
+                reconnectDelay:
+                    1000,
 
 
                 onConnect:
@@ -2807,6 +2813,10 @@
                                     === "PRESENCE_UPDATED"
                                 )
                                 {
+                                    updateParticipantPresence(
+                                        data.userId,
+                                        data.online
+                                    );
 
                                     /*
                                      * WebSocket 이벤트의 ON/OFF 값을 그대로 적용하지 않고
@@ -2815,7 +2825,7 @@
                                      * 화면 이동 과정에서 OFF와 ON 이벤트의 도착 순서가
                                      * 뒤바뀌더라도 최종 상태를 정확하게 표시할 수 있습니다.
                                      */
-                                    await loadParticipants();
+                                    schedulePresenceResync();
 
                                     return;
                                 }
@@ -3017,12 +3027,24 @@
                 onWebSocketClose:
                     function(event)
                     {
-                        if (
-                            Number(event?.code)
-                            === 4001
-                        ) {
-                            stompClient.reconnectDelay =
-                                0;
+                        const closeCode =
+                            Number(event?.code);
+
+                        if (closeCode === 4002)
+                        {
+                            stompClient.reconnectDelay = 0;
+
+                            MeetBack
+                                .handleMeetingAccessWebSocketClose(
+                                    event
+                                );
+
+                            return;
+                        }
+
+                        if (closeCode === 4001)
+                        {
+                            stompClient.reconnectDelay = 0;
                         }
 
                         MeetBack.handleAuthWebSocketClose(
@@ -3446,34 +3468,33 @@
             return;
         }
 
+        badge.classList.toggle("online", online);
+        badge.classList.toggle("offline",!online);
 
-        badge.classList.remove(
-            "online",
-            "offline"
-        );
+        const text = badge.querySelector(".presence-text");
 
+        if(text)
+        {
+            text.textContent = online ? "ON" : "OFF";
+        }
 
-        badge.classList.add(
-            online
-                ? "online"
-                : "offline"
-        );
+    }
 
+    let presenceResyncTimer = null;
 
-        const text =
-            badge.querySelector(
-                ".presence-text"
+    function schedulePresenceResync()
+    {
+        clearTimeout(presenceResyncTimer);
+
+        presenceResyncTimer =
+            setTimeout(
+                () =>
+                {
+                    loadParticipants().catch(console.error);
+                },
+                500
             );
 
-
-        if (text)
-        {
-
-            text.textContent =
-                online
-                    ? "ON"
-                    : "OFF";
-        }
     }
 
 

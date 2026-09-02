@@ -6,6 +6,7 @@ window.MeetBack = (() => {
     let authLogoutInProgress =
         false;
 
+    let meetingKickRedirecting = false;
 
     const loginUrl = "/login";
     const refreshUrl = "/auth/refresh";
@@ -519,6 +520,44 @@ window.MeetBack = (() => {
         return true;
     }
 
+    function handleMeetingAccessWebSocketClose(event)
+    {
+        const reason = String(event?.reason || "");
+
+        const accessRevoked =
+            Number(event?.code) === 4002
+            ||
+            reason.startsWith(
+                "MEETING_ACCESS_REVOKED"
+            );
+
+        if (!accessRevoked)
+        {
+            return false;
+        }
+
+        if (meetingKickRedirecting)
+        {
+            return true;
+        }
+
+        meetingKickRedirecting = true;
+
+        showAuthLogoutToast(
+            "모임에서 강퇴되었습니다."
+        );
+
+        setTimeout(
+            () =>
+            {
+                location.replace("/home");
+            },
+            1500
+        );
+
+        return true;
+    }
+
 
     function escapeHtml(value) {
 
@@ -581,6 +620,7 @@ window.MeetBack = (() => {
         getMeetingId,
         getAccessToken,
         handleAuthWebSocketClose,
+        handleMeetingAccessWebSocketClose,
         escapeHtml,
         formatDateTime
 

@@ -10,6 +10,8 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -35,9 +37,36 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setApplicationDestinationPrefixes(
                 "/app"
         );
+
         registry.enableSimpleBroker(
                 "/topic"
+        )
+        .setHeartbeatValue(
+                new long[]{5000,5000}
+        )
+        .setTaskScheduler(
+                stompHeartbeatTaskScheduler()
         );
+    }
+
+    @Bean
+    public ThreadPoolTaskScheduler
+    stompHeartbeatTaskScheduler()
+    {
+        ThreadPoolTaskScheduler scheduler =
+                new ThreadPoolTaskScheduler();
+
+        scheduler.setPoolSize(1);
+
+        scheduler.setThreadNamePrefix(
+                "stomp-heartbeat-"
+        );
+
+        scheduler.setRemoveOnCancelPolicy(
+                true
+        );
+
+        return scheduler;
     }
 
     @Override
