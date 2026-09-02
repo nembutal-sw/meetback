@@ -27,18 +27,6 @@ public class CandidateEvaluationService {
     private final MeetingCandidateMapper candidateMapper;
     private final CandidateReturnResultMapper returnResultMapper;
 
-
-    /*
-     * 후보 장소의 Deadline 계산
-     *
-     * 막차를 이용하는 참가자들의
-     * lastSafeDepartureAt 중 가장 빠른 시간
-     *
-     * 도보 귀가자는 lastSafeDepartureAt = null 이므로 제외
-     *
-     * 전원이 도보 귀가라면
-     * 막차 제한이 없으므로 null 반환
-     */
     public LocalDateTime calculateDeadline(
             List<CandidateReturnResult> results
     ) {
@@ -57,14 +45,6 @@ public class CandidateEvaluationService {
     }
 
 
-    /*
-     * Golden Margin 계산
-     *
-     * Deadline - 희망 종료시간
-     *
-     * 전원이 도보 귀가라 Deadline이 없으면
-     * Golden Margin은 0으로 처리
-     */
     public int calculateGoldenMargin(
             LocalDateTime desiredEndAt,
             LocalDateTime deadlineAt
@@ -97,11 +77,6 @@ public class CandidateEvaluationService {
     }
 
 
-    /*
-     * 참가자 귀가시간 편차 계산
-     *
-     * 최대 귀가시간 - 최소 귀가시간
-     */
     public int calculateFairnessGap(
             List<CandidateReturnResult> results
     ) {
@@ -139,9 +114,6 @@ public class CandidateEvaluationService {
     }
 
 
-    /*
-     * Fairness Score 계산
-     */
     public int calculateFairnessScore(
             int fairnessGapMinutes
     ) {
@@ -166,9 +138,6 @@ public class CandidateEvaluationService {
     }
 
 
-    /*
-     * 후보 평가 계산 및 저장
-     */
     public CandidateEvaluation evaluateAndSave(
             Long candidateId,
             Long meetingId,
@@ -188,11 +157,6 @@ public class CandidateEvaluationService {
         }
 
 
-        /*
-         * 도보 귀가자는 Deadline 계산에서 제외
-         *
-         * 전원이 도보라면 deadline = null
-         */
         LocalDateTime deadline =
                 calculateDeadline(
                         results
@@ -329,9 +293,6 @@ public class CandidateEvaluationService {
     }
 
 
-    /*
-     * 후보 순위 계산
-     */
     public void rankCandidates(
             List<CandidateEvaluation> evaluations
     ) {
@@ -349,7 +310,7 @@ public class CandidateEvaluationService {
                 (a, b) -> {
 
                     /*
-                     * 1. Rule Score 높은 후보 우선
+                     //1. Rule Score 높은 후보 우선
                      */
                     int scoreCompare =
                             Double.compare(
