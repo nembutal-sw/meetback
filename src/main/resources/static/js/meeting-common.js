@@ -497,10 +497,21 @@ window.MeetBack = (() => {
         localStorage.removeItem("role");
         localStorage.removeItem("nickname");
 
-        sessionStorage.setItem(
-            "authLogoutMessage",
-            "다른 곳에서 새로 로그인되어 기존 로그인이 종료되었습니다."
-        );
+        if (
+            reason
+            ===
+            "AUTH_INVALIDATED:LOGIN_REPLACED"
+        ) {
+            sessionStorage.setItem(
+                "authLogoutMessage",
+                "다른 곳에서 새로 로그인되어 기존 로그인이 종료되었습니다."
+            );
+        }
+        else {
+            sessionStorage.removeItem(
+                "authLogoutMessage"
+            );
+        }
 
         location.replace(
             loginUrl

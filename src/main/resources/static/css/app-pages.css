@@ -1628,6 +1628,14 @@
 }
 
 
+.mb-app-page .toast.confirm,
+.mb-app-page .toast-container .toast.confirm {
+    border-color: color-mix(in srgb, var(--_mb-primary) 30%, var(--_mb-border));
+    background: color-mix(in srgb, var(--_mb-card) 88%, var(--_mb-secondary));
+    color: var(--_mb-foreground);
+}
+
+
 /* =========================================================
    Confirm / Kick Overlay
    ========================================================= */
