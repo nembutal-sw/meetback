@@ -168,6 +168,23 @@
                             "[PRESENCE WS ERROR]",
                             error
                         );
+                    },
+
+
+                onWebSocketClose:
+                    function (event)
+                    {
+                        if (
+                            Number(event?.code)
+                            === 4001
+                        ) {
+                            presenceClient.reconnectDelay =
+                                0;
+                        }
+
+                        MeetBack.handleAuthWebSocketClose(
+                            event
+                        );
                     }
 
             });

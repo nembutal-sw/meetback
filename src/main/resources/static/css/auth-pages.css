@@ -715,3 +715,29 @@
     background-image: none !important;
     box-shadow: none !important;
 }
+
+.auth-logout-toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    z-index: 99999;
+
+    padding: 14px 20px;
+    border-radius: 12px;
+
+    color: #ffffff;
+    background: var(--mb-danger, #e25555);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, -12px);
+    transition:
+            opacity 0.25s ease,
+            transform 0.25s ease;
+}
+
+.auth-logout-toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}

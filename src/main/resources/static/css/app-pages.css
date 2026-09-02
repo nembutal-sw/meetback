@@ -1092,6 +1092,7 @@
     gap: 8px;
 }
 
+.page-meeting-room .leave-meeting-button,
 .page-meeting-room .participant-kick-button,
 .page-meeting-room .participant-kick-cancel-button {
     min-height: 32px;

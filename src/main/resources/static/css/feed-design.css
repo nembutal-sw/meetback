@@ -293,16 +293,12 @@ body.page-feed-list .feed-menu-button {
 }
 
 .page-feed-list .feed-menu-button {
-    flex: 0 0 40px;
-    width: 40px;
-    min-width: 40px;
-    height: 40px;
-    min-height: 40px;
-    padding: 0 0 8px;
+    width: 36px;
+    height: 36px;
+    padding: 0 0 9px;
     border-radius: 10px;
     font-size: 1.375rem;
     line-height: 1;
-    overflow-wrap: normal;
 }
 
 body.page-feed-list .feed-summary-menu-button:hover,

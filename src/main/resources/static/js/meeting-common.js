@@ -3,6 +3,9 @@ window.MeetBack = (() => {
     let accessToken =
         localStorage.getItem("accessToken");
 
+    let authLogoutInProgress =
+        false;
+
 
     const loginUrl = "/login";
     const refreshUrl = "/auth/refresh";
@@ -237,15 +240,6 @@ window.MeetBack = (() => {
 
     async function checkLogin() {
 
-        const serverRestarted =
-            await checkServerRestart();
-
-
-        if (serverRestarted)
-        {
-            return null;
-        }
-
         if (!accessToken) {
 
             const refreshed =
@@ -419,6 +413,101 @@ window.MeetBack = (() => {
             loginUrl;
     }
 
+    function showAuthLogoutToast(message)
+    {
+        let toast =
+            document.getElementById(
+                "authLogoutToast"
+            );
+
+        if (!toast)
+        {
+            toast =
+                document.createElement(
+                    "div"
+                );
+
+            toast.id =
+                "authLogoutToast";
+
+            toast.style.cssText = `
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translate(-50%, -12px);
+            z-index: 99999;
+            padding: 14px 20px;
+            border-radius: 12px;
+            background: #ef4444;
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+            opacity: 0;
+            transition: all 0.25s ease;
+        `;
+
+            document.body.appendChild(
+                toast
+            );
+        }
+
+        toast.textContent =
+            message;
+
+        requestAnimationFrame(
+            () =>
+            {
+                toast.style.opacity =
+                    "1";
+
+                toast.style.transform =
+                    "translate(-50%, 0)";
+            }
+        );
+    }
+
+
+    function handleAuthWebSocketClose(event) {
+
+        const reason =
+            String(event?.reason || "");
+
+        const authInvalidated =
+            Number(event?.code) === 4001
+            || reason.startsWith("AUTH_INVALIDATED");
+
+        if (!authInvalidated) {
+            return false;
+        }
+
+        if (authLogoutInProgress) {
+            return true;
+        }
+
+        authLogoutInProgress =
+            true;
+
+        accessToken =
+            null;
+
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("role");
+        localStorage.removeItem("nickname");
+
+        sessionStorage.setItem(
+            "authLogoutMessage",
+            "다른 곳에서 새로 로그인되어 기존 로그인이 종료되었습니다."
+        );
+
+        location.replace(
+            loginUrl
+        );
+
+        return true;
+    }
+
 
     function escapeHtml(value) {
 
@@ -480,6 +569,7 @@ window.MeetBack = (() => {
         authenticatedFetch,
         getMeetingId,
         getAccessToken,
+        handleAuthWebSocketClose,
         escapeHtml,
         formatDateTime
 
