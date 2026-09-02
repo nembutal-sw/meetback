@@ -774,11 +774,12 @@ button:disabled {
 
     padding: 0 10px;
 
+    border: 1px solid var(--border);
     border-radius: 9px;
 
-    background: #f3f2f8;
+    background: var(--primary-light);
 
-    color: #777788;
+    color: var(--text-sub);
 
     font-size: 11px;
     font-weight: 700;

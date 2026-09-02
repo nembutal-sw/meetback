@@ -780,6 +780,16 @@
                             participantResult.canReturn
                             === true;
 
+
+                        const walking =
+                            canReturn
+                            &&
+                            participantResult.returnMinutes != null
+                            &&
+                            !participantResult.lastTrainDepartureAt
+                            &&
+                            !participantResult.lastSafeDepartureAt;
+
                         const participantName =
                             participantResult.nickname
                             || (
@@ -814,6 +824,16 @@
                             }
 
                             </span>
+
+                            ${
+                                walking
+                                    ? `
+                                    <span class="walking-return-label">
+                                        도보 이용
+                                    </span>
+                                    `
+                                    : ""
+                            }
 
                             <br>
 
