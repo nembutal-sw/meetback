@@ -1590,34 +1590,41 @@
 .mb-app-page .toast-container .toast {
     border: 1px solid var(--_mb-border);
     border-radius: 12px;
-    background: var(--_mb-foreground);
-    color: var(--_mb-card);
+    background: var(--_mb-card);
+    color: var(--_mb-foreground);
     box-shadow: 0 16px 40px rgba(15, 15, 28, 0.2);
 }
 
 
-.mb-app-page .toast-success,
-.mb-app-page .toast.success {
-    border-color: rgba(52, 201, 138, 0.35);
-    background: var(--_mb-success);
-    color: #071a12;
+.mb-app-page .toast.toast-success,
+.mb-app-page .toast-container .toast.toast-success,
+.mb-app-page .toast.success,
+.mb-app-page .toast-container .toast.success {
+    border-color: color-mix(in srgb, var(--_mb-success) 42%, var(--_mb-border));
+    background: color-mix(in srgb, var(--_mb-card) 88%, var(--_mb-success));
+    color: var(--_mb-success);
 }
 
 
-.mb-app-page .toast-error,
-.mb-app-page .toast.error {
-    border-color: rgba(226, 85, 85, 0.35);
-    background: var(--_mb-danger);
-    color: #ffffff;
+.mb-app-page .toast.toast-error,
+.mb-app-page .toast-container .toast.toast-error,
+.mb-app-page .toast.error,
+.mb-app-page .toast-container .toast.error {
+    border-color: color-mix(in srgb, var(--_mb-danger) 40%, var(--_mb-border));
+    background: color-mix(in srgb, var(--_mb-card) 90%, var(--_mb-danger));
+    color: var(--_mb-danger);
 }
 
 
-.mb-app-page .toast-info,
+.mb-app-page .toast.toast-info,
+.mb-app-page .toast-container .toast.toast-info,
 .mb-app-page .toast.info,
-.mb-app-page .toast.loading {
-    border-color: rgba(91, 106, 240, 0.32);
-    background: var(--_mb-primary);
-    color: var(--_mb-primary-foreground);
+.mb-app-page .toast-container .toast.info,
+.mb-app-page .toast.loading,
+.mb-app-page .toast-container .toast.loading {
+    border-color: color-mix(in srgb, var(--_mb-primary) 30%, var(--_mb-border));
+    background: color-mix(in srgb, var(--_mb-card) 92%, var(--_mb-secondary));
+    color: var(--_mb-foreground);
 }
 
 
