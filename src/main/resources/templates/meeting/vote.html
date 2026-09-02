@@ -1768,9 +1768,14 @@
 
                         },
 
+                    heartbeatIncoming:
+                    5000,
+
+                    heartbeatOutgoing:
+                    5000,
 
                     reconnectDelay:
-                        5000,
+                        1000,
 
 
                     onConnect:
@@ -1811,22 +1816,51 @@
                                         data
                                     );
 
-
                                     // =====================================
-                                    // 누군가 후보 투표 / 재투표 / 기권
+                                    // 현재 사용자가 강퇴된 경우
                                     // =====================================
+                                    if (
+                                        data.messageType === "EVENT"
+                                        &&
+                                        data.eventType === "PARTICIPANT_KICKED"
+                                        &&
+                                        Number(data.userId)
+                                        === Number(currentUser.userId)
+                                    )
+                                    {
+                                        stompClient.reconnectDelay = 0;
 
+                                        showToast(
+                                            "모임에서 강퇴되었습니다.",
+                                            "error"
+                                        );
+
+                                        stompClient
+                                            .deactivate()
+                                            .catch(console.error);
+
+                                        setTimeout(
+                                            () =>
+                                            {
+                                                location.replace("/home");
+                                            },
+                                            1500
+                                        );
+
+                                        return;
+                                    }
+
+
+                                    // 기존 VOTE_UPDATED 검사
                                     if (
                                         data.eventType
                                         === "VOTE_UPDATED"
                                     )
                                     {
-
                                         await refreshVoteState();
 
                                         return;
                                     }
-
 
                                     // =====================================
                                     // 방장이 최종 장소 확정
@@ -1866,12 +1900,26 @@
                     onWebSocketClose:
                         function(event)
                         {
-                            if (
-                                Number(event?.code)
-                                === 4001
-                            ) {
-                                stompClient.reconnectDelay =
-                                    0;
+                            const closeCode =
+                                Number(event?.code);
+
+                            // 강퇴로 인한 WebSocket 종료
+                            if (closeCode === 4002)
+                            {
+                                stompClient.reconnectDelay = 0;
+
+                                MeetBack
+                                    .handleMeetingAccessWebSocketClose(
+                                        event
+                                    );
+
+                                return;
+                            }
+
+                            // 로그인 무효화로 인한 WebSocket 종료
+                            if (closeCode === 4001)
+                            {
+                                stompClient.reconnectDelay = 0;
                             }
 
                             MeetBack.handleAuthWebSocketClose(

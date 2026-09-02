@@ -2426,6 +2426,63 @@
         );
     }
 
+    function updateParticipantPresence(
+        userId,
+        online
+    )
+    {
+        const badge =
+            document.getElementById(
+                "presence-user-" + userId
+            );
+
+        if (!badge)
+        {
+            return;
+        }
+
+        badge.classList.toggle(
+            "online",
+            online
+        );
+
+        badge.classList.toggle(
+            "offline",
+            !online
+        );
+
+        const text =
+            badge.querySelector(
+                ".presence-text"
+            );
+
+        if (text)
+        {
+            text.textContent =
+                online ? "ON" : "OFF";
+        }
+    }
+
+
+    let presenceResyncTimer = null;
+
+    function schedulePresenceResync()
+    {
+        clearTimeout(
+            presenceResyncTimer
+        );
+
+        presenceResyncTimer =
+            setTimeout(
+                () =>
+                {
+                    loadParticipants()
+                        .catch(console.error);
+                },
+                500
+            );
+    }
+
 
     // =========================================================
     // 강퇴 참가자 조회
@@ -2965,8 +3022,14 @@
                         MeetBack.getAccessToken()
                 },
 
-                reconnectDelay:
+                heartbeatIncoming:
                     5000,
+
+                heartbeatOutgoing:
+                    5000,
+
+                reconnectDelay:
+                    1000,
 
                 onConnect:
                     async function()
@@ -3103,21 +3166,29 @@
 
                                 if (
                                     data.eventType === "PRESENCE_UPDATED"
-                                    ||
+                                )
+                                {
+                                    updateParticipantPresence(
+                                        data.userId,
+                                        data.online
+                                    );
+
+                                    schedulePresenceResync();
+
+                                    return;
+                                }
+
+                                if (
                                     data.eventType === "PARTICIPANT_JOINED"
                                     ||
                                     data.eventType === "PARTICIPANT_LEFT"
                                 )
                                 {
                                     await loadParticipants();
+
+                                    return;
                                 }
 
-                                if (
-                                    data.eventType === "RECRUITMENT_CLOSED"
-                                )
-                                {
-                                    await loadMeeting();
-                                }
                                 if (
                                     data.eventType
                                     ===
@@ -3142,24 +3213,29 @@
                 onWebSocketClose:
                     function(event)
                     {
-                        if (
-                            Number(event?.code)
-                            === 4001
-                        ) {
-                            stompClient.reconnectDelay =
-                                0;
+                        const closeCode =
+                            Number(event?.code);
 
-                            MeetBack.handleAuthWebSocketClose(
-                                event
-                            );
+                        if (closeCode === 4002)
+                        {
+                            stompClient.reconnectDelay = 0;
+
+                            MeetBack
+                                .handleMeetingAccessWebSocketClose(
+                                    event
+                                );
 
                             return;
                         }
 
-                        document.getElementById(
-                            "chatStatus"
-                        ).textContent =
-                            "DISCONNECTED";
+                        if (closeCode === 4001)
+                        {
+                            stompClient.reconnectDelay = 0;
+                        }
+
+                        MeetBack.handleAuthWebSocketClose(
+                            event
+                        );
                     },
 
                 onStompError:

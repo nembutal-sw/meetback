@@ -75,9 +75,14 @@
 
                     },
 
+                heartbeatIncoming:
+                    5000,
+
+                heartbeatOutgoing:
+                    5000,
 
                 reconnectDelay:
-                    5000,
+                    1000,
 
 
                 onConnect:
@@ -172,14 +177,26 @@
 
 
                 onWebSocketClose:
-                    function (event)
+                    function(event)
                     {
-                        if (
-                            Number(event?.code)
-                            === 4001
-                        ) {
-                            presenceClient.reconnectDelay =
-                                0;
+                        const closeCode =
+                            Number(event?.code);
+
+                        if (closeCode === 4002)
+                        {
+                            presenceClient.reconnectDelay = 0;
+
+                            MeetBack
+                                .handleMeetingAccessWebSocketClose(
+                                    event
+                                );
+
+                            return;
+                        }
+
+                        if (closeCode === 4001)
+                        {
+                            presenceClient.reconnectDelay = 0;
                         }
 
                         MeetBack.handleAuthWebSocketClose(

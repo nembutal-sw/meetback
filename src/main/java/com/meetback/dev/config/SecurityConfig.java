@@ -91,7 +91,13 @@ public class SecurityConfig {
                                                 "/meeting",
                                                 "/meeting/location",
                                                 "/meeting/vote",
-                                                "/meeting/result"
+                                                "/meeting/result",
+
+                                                // 도커 상태 확인
+                                                "/actuator/health",
+                                                "/actuator/health/**",
+                                                "/livez",
+                                                "/readyz"
                                         )
                                         .permitAll()
 

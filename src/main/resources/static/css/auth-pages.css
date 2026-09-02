@@ -659,9 +659,9 @@
         .signup-container,
         .find-email-container,
         .forgot-password-container,
-        .reset-password-container
-    ),
-    .page-kakao-login > .kakao-login-container {
+        .reset-password-container,
+        .kakao-login-container
+    ) {
         width: 100%;
         min-height: 100vh;
         padding: 2.5rem 1.25rem 2rem;
